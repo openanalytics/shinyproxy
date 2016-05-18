@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head lang="en">
+	<title>Error</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link
+		href="http://cdn.jsdelivr.net/webjars/bootstrap/3.3.6/css/bootstrap.min.css"
+		th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}" rel="stylesheet" media="screen" />
+	<script src="http://cdn.jsdelivr.net/webjars/jquery/2.2.2/jquery.min.js"
+		th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
+</head>
+<body>
+	<div style="margin-top: 15px; margin-left: 15px;">
+		<h1>Error</h1>
+		<p>
+			<b>Status code:</b> <span th:text="${status}"></span>
+		</p>
+		<p>
+			<b>Message:</b> <span th:text="${message}"></span>
+		</p>
+	</div>
+</body>
+</html>

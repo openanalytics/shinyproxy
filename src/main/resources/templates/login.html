@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head lang="en">
+	<title th:text="${title}"></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link
+		href="http://cdn.jsdelivr.net/webjars/bootstrap/3.3.6/css/bootstrap.min.css"
+		th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"
+		type="text/css" rel="stylesheet" media="screen" />
+	<script src="http://cdn.jsdelivr.net/webjars/jquery/2.2.2/jquery.min.js"
+		th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
+	<!-- Custom styles for this template -->
+	<link th:href="@{/css/signin.css}" 
+		type="text/css" rel="stylesheet" media="screen" ></link>
+</head>
+<body>
+	<!-- navigation bar -->
+	<div th:replace="../fragments/navbar :: navbar"></div>
+
+	<!-- content -->
+	<div class="container">
+
+		<form class="form-signin" action="login" method="POST">
+			<h2 class="form-signin-heading">Please sign in</h2>
+			<div class="alert alert-danger" th:if="${error}">
+  				<strong>Could not sign in!</strong><br/><span th:text="${error}"></span>.
+			</div>
+			<label for="username" class="sr-only">Email address</label> 
+			<input name="username" id="username" class="form-control" placeholder="User name" required="required" autofocus="autofocus"></input> 
+			<label for="password" class="sr-only">Password</label>
+			<input name="password" type="password" id="password" class="form-control" placeholder="Password" required="required"></input>
+			<!-- not supported 
+	        <div class="checkbox">
+	          <label>
+	            <input type="checkbox" value="remember-me"></input> Remember me
+	          </label>
+	        </div>
+	        -->
+			<button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+		</form>
+
+	</div>
+
+</body>
+</html>

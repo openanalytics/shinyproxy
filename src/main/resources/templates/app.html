@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head lang="en">
+	<title th:text="${title}"></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link
+		href="http://cdn.jsdelivr.net/webjars/bootstrap/3.3.6/css/bootstrap.min.css"
+		th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"
+		rel="stylesheet" media="screen" />
+	<script src="http://cdn.jsdelivr.net/webjars/jquery/2.2.2/jquery.min.js"
+		th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
+</head>
+<body>
+	<!-- navigation bar -->
+	<div th:replace="../fragments/navbar :: navbar"></div>
+	
+	<!-- content -->
+    <iframe id="shinyframe" th:src="${container}" width="100%" style="margin-top: 50px; border: 0px;"></iframe>
+	<script type="text/javascript"> 
+		$('#shinyframe').css('height', ($(window).height()-50)+'px');
+	</script>
+</body>
+</html>

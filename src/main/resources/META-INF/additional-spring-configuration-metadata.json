@@ -1,0 +1,62 @@
+{"properties": [
+  {
+    "name": "shiny.proxy.docker.url",
+    "type": "java.lang.String",
+    "description": "A description for 'shiny.proxy.docker.url'"
+  },
+  {
+    "name": "shiny.proxy.docker.cert-path",
+    "type": "java.lang.String",
+    "description": "A description for 'shiny.proxy.docker.cert-path'"
+  },
+  {
+    "name": "shiny.proxy.docker.host",
+    "type": "java.lang.String",
+    "description": "A description for 'shiny.proxy.docker.host'"
+  },
+  {
+    "name": "shiny.proxy.ldap.url",
+    "type": "java.lang.String",
+    "description": "Specifies the LDAP server URL when not using the embedded LDAP server. For example, 'ldaps://ldap.example.com:33389/dc=myco,dc=org'."
+  },
+  {
+    "name": "shiny.proxy.ldap.manager-dn",
+    "type": "java.lang.String",
+    "description": "User name (DN) of the 'manager' user identity (i.e. 'uid=admin,ou=system') which will be used to authenticate to a (non-embedded) LDAP server. If omitted, anonymous access will be used."
+  },
+  {
+    "name": "shiny.proxy.ldap.manager-password",
+    "type": "java.lang.String",
+    "description": "The password for the manager DN. This is required if the manager-dn is specified."
+  },
+  {
+    "name": "shiny.proxy.docker.port-range-start",
+    "type": "java.lang.Integer",
+    "description": "The port number to start on when assigning containers."
+  },
+  {
+    "name": "shiny.proxy.docker.number-of-containers",
+    "type": "java.lang.Integer",
+    "description": "The number of containers to create and start."
+  },
+  {
+    "name": "shiny.proxy.docker.image-name",
+    "type": "java.lang.String",
+    "description": "The name of the Docker image to use for containers.'"
+  },
+  {
+    "name": "shiny.proxy.title",
+    "type": "java.lang.String",
+    "description": "Title to use in the toolbar"
+  },
+  {
+    "name": "shiny.proxy.landing-page",
+    "type": "java.lang.String",
+    "description": "The Shiny page to open when logged in, i.e. '/sample-apps/'"
+  },
+  {
+    "name": "shiny.proxy.logo-url",
+    "type": "java.lang.String",
+    "description": "URL for the logo to use in the toolbar"
+  }
+]}

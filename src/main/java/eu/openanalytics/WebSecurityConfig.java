@@ -28,6 +28,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import eu.openanalytics.components.LogoutHandler;
+import eu.openanalytics.services.AppService;
+import eu.openanalytics.services.AppService.ShinyApp;
 
 /**
  * @author Torkild U. Resheim, Itema AS
@@ -39,22 +41,30 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Inject
 	LogoutHandler logoutHandler;
 	
+	@Inject
+	AppService appService;
+	
+	@Override
 	public void configure(WebSecurity web) throws Exception {
         web
             .ignoring().antMatchers("/css/**").and()
         	.ignoring().antMatchers("/webjars/**");
     }
+	
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		http
 			// must disable or handle in proxy
 			.csrf()
-				.disable()
-			// force authentication
-			.authorizeRequests()
-				.antMatchers("/login").permitAll()
-				.anyRequest().fullyAuthenticated()
-				.and()
+				.disable();
+		
+		http.authorizeRequests().antMatchers("/login").permitAll();
+		for (ShinyApp app: appService.getApps()) {
+			http.authorizeRequests().antMatchers("/app/" + app.getName()).hasAnyRole(appService.getAppRoles(app.getName()));
+		}
+		http.authorizeRequests().anyRequest().fullyAuthenticated();
+		
+		http
 			.formLogin()
 				.loginPage("/login")
 				.and()
@@ -83,14 +93,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				auth
 					.ldapAuthentication()
 						.userDnPatterns("uid={0}")
+						.groupSearchBase(environment.getProperty("shiny.proxy.ldap.group-search-base"))
 						.contextSource().url(environment.getProperty("shiny.proxy.ldap.url"))
 						.managerPassword(environment.getProperty("shiny.proxy.ldap.manager-password"))
 						.managerDn(environment.getProperty("shiny.proxy.ldap.manager-dn"));
 			} else {
 				auth
-				.ldapAuthentication()
-					.userDnPatterns("uid={0}")
-					.contextSource().url(environment.getProperty("shiny.proxy.ldap.url"));
+					.ldapAuthentication()
+						.userDnPatterns("uid={0}")
+						.contextSource().url(environment.getProperty("shiny.proxy.ldap.url"));
 				}
 			}
 		}

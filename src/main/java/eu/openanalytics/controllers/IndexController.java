@@ -15,9 +15,12 @@
  */
 package eu.openanalytics.controllers;
 
+import java.security.Principal;
+
 import javax.inject.Inject;
 
 import org.springframework.core.env.Environment;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,10 +40,10 @@ public class IndexController {
 	Environment environment;
 
 	@RequestMapping("/")
-    String index(ModelMap map) {
+    String index(ModelMap map, Principal principal) {
 		map.put("title", environment.getProperty("shiny.proxy.title"));
 		map.put("logo", environment.getProperty("shiny.proxy.logo-url"));
-		map.put("apps", appService.getApps().toArray());
+		map.put("apps", appService.getApps((Authentication) principal).toArray());
         return "index";
     }
 }

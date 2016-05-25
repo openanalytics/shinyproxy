@@ -19,11 +19,11 @@ shiny:
   - name: 01_hello
     docker-cmd: ["R", "-e shinyproxy::run_01_hello()"]
     docker-image: openanalytics/shinyproxy-demo
-    ldap-groups: [scientists, hello]
+    ldap-groups: [scientists, mathematicians]
   - name: 06_tabsets
     docker-cmd: ["R", "-e shinyproxy::run_06_tabsets()"]
     docker-image: openanalytics/shinyproxy-demo
-    ldap-groups: [tabsets]
+    ldap-groups: [scientists]
 # useful when debugging
 spring:
   thymeleaf:

@@ -101,7 +101,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			} else {
 				auth
 					.ldapAuthentication()
-						.userDnPatterns("uid={0}")
+						.userDnPatterns(environment.getProperty("shiny.proxy.ldap.user-dn-pattern"))
+						.groupSearchBase(environment.getProperty("shiny.proxy.ldap.group-search-base"))
+						.groupSearchFilter(environment.getProperty("shiny.proxy.ldap.group-search-filter"))
 						.contextSource().url(environment.getProperty("shiny.proxy.ldap.url"));
 				}
 			}

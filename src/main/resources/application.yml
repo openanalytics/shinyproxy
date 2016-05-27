@@ -30,3 +30,7 @@ shiny:
 spring:
   thymeleaf:
     cache: false
+# logging
+logging:
+  file:
+    shinyproxy.log

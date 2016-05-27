@@ -91,8 +91,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			String[] userDnPatterns = { environment.getProperty("shiny.proxy.ldap.user-dn-pattern") };
 			if (userDnPatterns[0] == null || userDnPatterns[0].isEmpty()) userDnPatterns = new String[0];
 			
-			boolean secured = null != environment.getProperty("shiny.proxy.ldap.manager-dn");
-			if (secured) {
+			String managerDn = environment.getProperty("shiny.proxy.ldap.manager-dn");
+			if (managerDn != null && managerDn.isEmpty()) managerDn = null;
+			if (managerDn != null) {
 				auth
 					.ldapAuthentication()
 						.userDnPatterns(userDnPatterns)
@@ -102,7 +103,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 						.groupSearchFilter(environment.getProperty("shiny.proxy.ldap.group-search-filter", "(uniqueMember={0})"))
 						.contextSource().url(environment.getProperty("shiny.proxy.ldap.url"))
 						.managerPassword(environment.getProperty("shiny.proxy.ldap.manager-password"))
-						.managerDn(environment.getProperty("shiny.proxy.ldap.manager-dn"));
+						.managerDn(managerDn);
 			} else {
 				auth
 					.ldapAuthentication()

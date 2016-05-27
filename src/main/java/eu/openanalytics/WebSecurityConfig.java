@@ -93,6 +93,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				auth
 					.ldapAuthentication()
 						.userDnPatterns(environment.getProperty("shiny.proxy.ldap.user-dn-pattern"))
+						.userSearchBase(environment.getProperty("shiny.proxy.ldap.user-search-base"))
+						.userSearchFilter(environment.getProperty("shiny.proxy.ldap.user-search-filter"))
 						.groupSearchBase(environment.getProperty("shiny.proxy.ldap.group-search-base"))
 						.groupSearchFilter(environment.getProperty("shiny.proxy.ldap.group-search-filter"))
 						.contextSource().url(environment.getProperty("shiny.proxy.ldap.url"))
@@ -102,6 +104,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				auth
 					.ldapAuthentication()
 						.userDnPatterns(environment.getProperty("shiny.proxy.ldap.user-dn-pattern"))
+						.userSearchBase(environment.getProperty("shiny.proxy.ldap.user-search-base"))
+						.userSearchFilter(environment.getProperty("shiny.proxy.ldap.user-search-filter"))
 						.groupSearchBase(environment.getProperty("shiny.proxy.ldap.group-search-base"))
 						.groupSearchFilter(environment.getProperty("shiny.proxy.ldap.group-search-filter"))
 						.contextSource().url(environment.getProperty("shiny.proxy.ldap.url"));

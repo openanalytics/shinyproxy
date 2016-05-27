@@ -92,8 +92,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			if (secured) {
 				auth
 					.ldapAuthentication()
-						.userDnPatterns("uid={0}")
-						.userSearchBase(environment.getProperty("shiny.proxy.ldap.user-search-base"))
+						.userDnPatterns(environment.getProperty("shiny.proxy.ldap.user-dn-pattern"))
 						.groupSearchBase(environment.getProperty("shiny.proxy.ldap.group-search-base"))
 						.contextSource().url(environment.getProperty("shiny.proxy.ldap.url"))
 						.managerPassword(environment.getProperty("shiny.proxy.ldap.manager-password"))

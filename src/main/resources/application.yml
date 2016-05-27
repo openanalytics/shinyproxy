@@ -6,7 +6,7 @@ shiny:
     # LDAP configuration
     ldap:
       url: ldap://ldap.forumsys.com:389/dc=example,dc=com
-      user-search-base:
+      user-dn-pattern: uid={0}
       group-search-base:
       manager-dn: cn=read-only-admin,dc=example,dc=com
       manager-password: password

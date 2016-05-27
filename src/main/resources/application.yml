@@ -8,6 +8,7 @@ shiny:
       url: ldap://ldap.forumsys.com:389/dc=example,dc=com
       user-dn-pattern: uid={0}
       group-search-base:
+      group-search-filter: (uniqueMember={0})
       manager-dn: cn=read-only-admin,dc=example,dc=com
       manager-password: password
     # Docker configuration

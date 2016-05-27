@@ -88,26 +88,29 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 		@Override
 		public void init(AuthenticationManagerBuilder auth) throws Exception {
+			String[] userDnPatterns = { environment.getProperty("shiny.proxy.ldap.user-dn-pattern") };
+			if (userDnPatterns[0] == null || userDnPatterns[0].isEmpty()) userDnPatterns = new String[0];
+			
 			boolean secured = null != environment.getProperty("shiny.proxy.ldap.manager-dn");
 			if (secured) {
 				auth
 					.ldapAuthentication()
-						.userDnPatterns(environment.getProperty("shiny.proxy.ldap.user-dn-pattern"))
-						.userSearchBase(environment.getProperty("shiny.proxy.ldap.user-search-base"))
+						.userDnPatterns(userDnPatterns)
+						.userSearchBase(environment.getProperty("shiny.proxy.ldap.user-search-base", ""))
 						.userSearchFilter(environment.getProperty("shiny.proxy.ldap.user-search-filter"))
-						.groupSearchBase(environment.getProperty("shiny.proxy.ldap.group-search-base"))
-						.groupSearchFilter(environment.getProperty("shiny.proxy.ldap.group-search-filter"))
+						.groupSearchBase(environment.getProperty("shiny.proxy.ldap.group-search-base", ""))
+						.groupSearchFilter(environment.getProperty("shiny.proxy.ldap.group-search-filter", "(uniqueMember={0})"))
 						.contextSource().url(environment.getProperty("shiny.proxy.ldap.url"))
 						.managerPassword(environment.getProperty("shiny.proxy.ldap.manager-password"))
 						.managerDn(environment.getProperty("shiny.proxy.ldap.manager-dn"));
 			} else {
 				auth
 					.ldapAuthentication()
-						.userDnPatterns(environment.getProperty("shiny.proxy.ldap.user-dn-pattern"))
-						.userSearchBase(environment.getProperty("shiny.proxy.ldap.user-search-base"))
+						.userDnPatterns(userDnPatterns)
+						.userSearchBase(environment.getProperty("shiny.proxy.ldap.user-search-base", ""))
 						.userSearchFilter(environment.getProperty("shiny.proxy.ldap.user-search-filter"))
-						.groupSearchBase(environment.getProperty("shiny.proxy.ldap.group-search-base"))
-						.groupSearchFilter(environment.getProperty("shiny.proxy.ldap.group-search-filter"))
+						.groupSearchBase(environment.getProperty("shiny.proxy.ldap.group-search-base", ""))
+						.groupSearchFilter(environment.getProperty("shiny.proxy.ldap.group-search-filter", "(uniqueMember={0})"))
 						.contextSource().url(environment.getProperty("shiny.proxy.ldap.url"));
 				}
 			}

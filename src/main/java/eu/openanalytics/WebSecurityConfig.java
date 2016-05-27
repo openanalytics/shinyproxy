@@ -15,16 +15,29 @@
  */
 package eu.openanalytics;
 
-import javax.inject.Inject;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.inject.Inject;
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.ldap.core.ContextSource;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configurers.GlobalAuthenticationConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.ldap.DefaultSpringSecurityContextSource;
+import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import eu.openanalytics.components.LogoutHandler;
@@ -37,51 +50,50 @@ import eu.openanalytics.services.AppService.ShinyApp;
 @Configuration
 @EnableWebSecurity
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-	
+
 	@Inject
 	LogoutHandler logoutHandler;
-	
+
 	@Inject
 	AppService appService;
-	
+
 	@Override
 	public void configure(WebSecurity web) throws Exception {
-        web
-            .ignoring().antMatchers("/css/**").and()
-        	.ignoring().antMatchers("/webjars/**");
-    }
-	
+		web
+		.ignoring().antMatchers("/css/**").and()
+		.ignoring().antMatchers("/webjars/**");
+	}
+
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		http
-			// must disable or handle in proxy
-			.csrf()
-				.disable();
-		
+		// must disable or handle in proxy
+		.csrf()
+		.disable();
+
 		http.authorizeRequests().antMatchers("/login").permitAll();
 		for (ShinyApp app: appService.getApps()) {
 			http.authorizeRequests().antMatchers("/app/" + app.getName()).hasAnyRole(appService.getAppRoles(app.getName()));
 		}
 		http.authorizeRequests().anyRequest().fullyAuthenticated();
-		
+
 		http
-			.formLogin()
-				.loginPage("/login")
-				.and()
-			.logout()
-				.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-				.logoutSuccessHandler(logoutHandler)
-				.logoutSuccessUrl("/login")
-		        .and()
-			// disable X-Frame-Options
-			.headers()
-				.frameOptions()
-					.sameOrigin();
+		.formLogin()
+		.loginPage("/login")
+		.and()
+		.logout()
+		.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+		.logoutSuccessHandler(logoutHandler)
+		.logoutSuccessUrl("/login")
+		.and()
+		// disable X-Frame-Options
+		.headers()
+		.frameOptions()
+		.sameOrigin();
 	}
 
 	@Configuration
-	protected static class AuthenticationConfiguration extends
-			GlobalAuthenticationConfigurerAdapter {
+	protected static class AuthenticationConfiguration extends GlobalAuthenticationConfigurerAdapter {
 
 		@Inject
 		private Environment environment;		
@@ -90,30 +102,89 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		public void init(AuthenticationManagerBuilder auth) throws Exception {
 			String[] userDnPatterns = { environment.getProperty("shiny.proxy.ldap.user-dn-pattern") };
 			if (userDnPatterns[0] == null || userDnPatterns[0].isEmpty()) userDnPatterns = new String[0];
-			
+
 			String managerDn = environment.getProperty("shiny.proxy.ldap.manager-dn");
 			if (managerDn != null && managerDn.isEmpty()) managerDn = null;
+
+			// Manually instantiate contextSource so it can be passed into authoritiesPopulator below.
+			String ldapUrl = environment.getProperty("shiny.proxy.ldap.url");
+			DefaultSpringSecurityContextSource contextSource = new DefaultSpringSecurityContextSource(ldapUrl);
 			if (managerDn != null) {
-				auth
-					.ldapAuthentication()
-						.userDnPatterns(userDnPatterns)
-						.userSearchBase(environment.getProperty("shiny.proxy.ldap.user-search-base", ""))
-						.userSearchFilter(environment.getProperty("shiny.proxy.ldap.user-search-filter"))
-						.groupSearchBase(environment.getProperty("shiny.proxy.ldap.group-search-base", ""))
-						.groupSearchFilter(environment.getProperty("shiny.proxy.ldap.group-search-filter", "(uniqueMember={0})"))
-						.contextSource().url(environment.getProperty("shiny.proxy.ldap.url"))
-						.managerPassword(environment.getProperty("shiny.proxy.ldap.manager-password"))
-						.managerDn(managerDn);
-			} else {
-				auth
-					.ldapAuthentication()
-						.userDnPatterns(userDnPatterns)
-						.userSearchBase(environment.getProperty("shiny.proxy.ldap.user-search-base", ""))
-						.userSearchFilter(environment.getProperty("shiny.proxy.ldap.user-search-filter"))
-						.groupSearchBase(environment.getProperty("shiny.proxy.ldap.group-search-base", ""))
-						.groupSearchFilter(environment.getProperty("shiny.proxy.ldap.group-search-filter", "(uniqueMember={0})"))
-						.contextSource().url(environment.getProperty("shiny.proxy.ldap.url"));
-				}
+				contextSource.setUserDn(managerDn);
+				contextSource.setPassword(environment.getProperty("shiny.proxy.ldap.manager-password"));
 			}
+			contextSource.afterPropertiesSet();
+
+			// Manually instantiate authoritiesPopulator because it uses a customized class.
+			CNLdapAuthoritiesPopulator authoritiesPopulator = new CNLdapAuthoritiesPopulator(
+					contextSource,
+					environment.getProperty("shiny.proxy.ldap.group-search-base", ""));
+			authoritiesPopulator.setGroupRoleAttribute("cn");
+			authoritiesPopulator.setGroupSearchFilter(environment.getProperty("shiny.proxy.ldap.group-search-filter", "(uniqueMember={0})"));
+
+			auth
+			.ldapAuthentication()
+			.userDnPatterns(userDnPatterns)
+			.userSearchBase(environment.getProperty("shiny.proxy.ldap.user-search-base", ""))
+			.userSearchFilter(environment.getProperty("shiny.proxy.ldap.user-search-filter"))
+			.ldapAuthoritiesPopulator(authoritiesPopulator)
+			.contextSource(contextSource);
 		}
+	}
+
+	private static class CNLdapAuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
+
+		private static final Log logger = LogFactory.getLog(DefaultLdapAuthoritiesPopulator.class);
+
+		public CNLdapAuthoritiesPopulator(ContextSource contextSource, String groupSearchBase) {
+			super(contextSource, groupSearchBase);
+		}
+
+		@Override
+		public Set<GrantedAuthority> getGroupMembershipRoles(String userDn, String username) {
+			if (getGroupSearchBase() == null) {
+				return new HashSet<GrantedAuthority>();
+			}
+
+			Set<GrantedAuthority> authorities = new HashSet<GrantedAuthority>();
+
+			if (logger.isDebugEnabled()) {
+				logger.debug("Searching for roles for user '" + username + "', DN = " + "'"
+						+ userDn + "', with filter " + getGroupSearchFilter()
+						+ " in search base '" + getGroupSearchBase() + "'");
+			}
+
+			// Here's the modification: added {2}, which refers to the user cn if available.
+			Set<String> userRoles = getLdapTemplate().searchForSingleAttributeValues(
+					getGroupSearchBase(), getGroupSearchFilter(),
+					new String[] { userDn, username, getCn(userDn) }, getGroupRoleAttribute());
+
+			if (logger.isDebugEnabled()) {
+				logger.debug("Roles from search: " + userRoles);
+			}
+
+			for (String role : userRoles) {
+
+				if (isConvertToUpperCase()) {
+					role = role.toUpperCase();
+				}
+
+				authorities.add(new SimpleGrantedAuthority(getRolePrefix() + role));
+			}
+
+			return authorities;
+		}
+
+		private String getCn(String dn) {
+			try {
+				LdapName ln = new LdapName(dn);
+				for (Rdn rdn : ln.getRdns()) {
+					if (rdn.getType().equalsIgnoreCase("CN")) {
+						return rdn.getValue().toString();
+					}
+				}
+			} catch (InvalidNameException e) {}
+			return "";
+		}
+	}
 }

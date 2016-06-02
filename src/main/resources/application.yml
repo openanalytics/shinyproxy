@@ -27,7 +27,11 @@ shiny:
     docker-cmd: ["R", "-e shinyproxy::run_06_tabsets()"]
     docker-image: openanalytics/shinyproxy-demo
     ldap-groups: [scientists]
-# useful when debugging
+# useful when debugging; set to 'true' when running in production
 spring:
   thymeleaf:
-    cache: false
+    cache: true
+# logging
+logging:
+  file:
+    shinyproxy.log

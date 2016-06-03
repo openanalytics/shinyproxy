@@ -57,7 +57,7 @@ public class AppService {
 	
 	public boolean canAccess(Authentication principalAuth, String appName) {
 		String[] appRoles = getAppRoles(appName);
-		if (appRoles.length == 0) return true;
+		if (appRoles.length == 0 || principalAuth == null) return true;
 		Arrays.sort(appRoles);
 		for (GrantedAuthority auth: principalAuth.getAuthorities()) {
 			String role = auth.getAuthority().toUpperCase();

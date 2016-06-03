@@ -55,41 +55,45 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	LogoutHandler logoutHandler;
 
 	@Inject
+	Environment environment;		
+	
+	@Inject
 	AppService appService;
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
 		web
-		.ignoring().antMatchers("/css/**").and()
-		.ignoring().antMatchers("/webjars/**");
+			.ignoring().antMatchers("/css/**").and()
+			.ignoring().antMatchers("/webjars/**");
 	}
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		http
-		// must disable or handle in proxy
-		.csrf()
-		.disable();
+			// must disable or handle in proxy
+			.csrf()
+				.disable()
+			// disable X-Frame-Options
+			.headers()
+				.frameOptions()
+					.sameOrigin();
 
-		http.authorizeRequests().antMatchers("/login").permitAll();
-		for (ShinyApp app: appService.getApps()) {
-			http.authorizeRequests().antMatchers("/app/" + app.getName()).hasAnyRole(appService.getAppRoles(app.getName()));
+		if (environment.getProperty("shiny.proxy.ldap.url") != null) {
+			http.authorizeRequests().antMatchers("/login").permitAll();
+			for (ShinyApp app: appService.getApps()) {
+				http.authorizeRequests().antMatchers("/app/" + app.getName()).hasAnyRole(appService.getAppRoles(app.getName()));
+			}
+			http.authorizeRequests().anyRequest().fullyAuthenticated();
+
+			http
+				.formLogin()
+					.loginPage("/login")
+					.and()
+				.logout()
+					.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+					.logoutSuccessHandler(logoutHandler)
+					.logoutSuccessUrl("/login");
 		}
-		http.authorizeRequests().anyRequest().fullyAuthenticated();
-
-		http
-		.formLogin()
-		.loginPage("/login")
-		.and()
-		.logout()
-		.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-		.logoutSuccessHandler(logoutHandler)
-		.logoutSuccessUrl("/login")
-		.and()
-		// disable X-Frame-Options
-		.headers()
-		.frameOptions()
-		.sameOrigin();
 	}
 
 	@Configuration
@@ -100,14 +104,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 		@Override
 		public void init(AuthenticationManagerBuilder auth) throws Exception {
+			String ldapUrl = environment.getProperty("shiny.proxy.ldap.url");
+			if (ldapUrl == null) return;
+			
 			String[] userDnPatterns = { environment.getProperty("shiny.proxy.ldap.user-dn-pattern") };
 			if (userDnPatterns[0] == null || userDnPatterns[0].isEmpty()) userDnPatterns = new String[0];
 
 			String managerDn = environment.getProperty("shiny.proxy.ldap.manager-dn");
 			if (managerDn != null && managerDn.isEmpty()) managerDn = null;
-
+			
 			// Manually instantiate contextSource so it can be passed into authoritiesPopulator below.
-			String ldapUrl = environment.getProperty("shiny.proxy.ldap.url");
 			DefaultSpringSecurityContextSource contextSource = new DefaultSpringSecurityContextSource(ldapUrl);
 			if (managerDn != null) {
 				contextSource.setUserDn(managerDn);
@@ -123,12 +129,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			authoritiesPopulator.setGroupSearchFilter(environment.getProperty("shiny.proxy.ldap.group-search-filter", "(uniqueMember={0})"));
 
 			auth
-			.ldapAuthentication()
-			.userDnPatterns(userDnPatterns)
-			.userSearchBase(environment.getProperty("shiny.proxy.ldap.user-search-base", ""))
-			.userSearchFilter(environment.getProperty("shiny.proxy.ldap.user-search-filter"))
-			.ldapAuthoritiesPopulator(authoritiesPopulator)
-			.contextSource(contextSource);
+				.ldapAuthentication()
+					.userDnPatterns(userDnPatterns)
+					.userSearchBase(environment.getProperty("shiny.proxy.ldap.user-search-base", ""))
+					.userSearchFilter(environment.getProperty("shiny.proxy.ldap.user-search-filter"))
+					.ldapAuthoritiesPopulator(authoritiesPopulator)
+					.contextSource(contextSource);
 		}
 	}
 

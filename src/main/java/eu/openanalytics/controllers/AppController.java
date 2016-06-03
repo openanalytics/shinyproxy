@@ -44,9 +44,10 @@ public class AppController {
 
 	@RequestMapping("/app/*")
 	String app(ModelMap map, Principal principal, HttpServletRequest request) {
-		Matcher m = Pattern.compile(".*/app/(.*)").matcher(request.getRequestURI());
-		String appName = m.matches() ? m.group(1) : null;
-		String mapping = dockerService.getMapping(principal.getName(), appName);
+		String userName = (principal == null) ? request.getSession().getId() : principal.getName();
+		Matcher matcher = Pattern.compile(".*/app/(.*)").matcher(request.getRequestURI());
+		String appName = matcher.matches() ? matcher.group(1) : null;
+		String mapping = dockerService.getMapping(userName, appName);
 		
 		map.put("title", environment.getProperty("shiny.proxy.title"));
 		map.put("logo", environment.getProperty("shiny.proxy.logo-url"));

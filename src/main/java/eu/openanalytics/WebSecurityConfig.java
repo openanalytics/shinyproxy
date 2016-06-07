@@ -78,7 +78,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 				.frameOptions()
 					.sameOrigin();
 
-		if (environment.getProperty("shiny.proxy.ldap.url") != null) {
+		if (hasAuth(environment)) {
 			http.authorizeRequests().antMatchers("/login").permitAll();
 			for (ShinyApp app: appService.getApps()) {
 				http.authorizeRequests().antMatchers("/app/" + app.getName()).hasAnyRole(appService.getAppRoles(app.getName()));
@@ -96,6 +96,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		}
 	}
 
+	private static boolean hasAuth(Environment env) {
+		String auth = env.getProperty("shiny.proxy.authentication", "").toLowerCase();
+		return (!auth.isEmpty() && !auth.equals("none"));
+	}
+	
 	@Configuration
 	protected static class AuthenticationConfiguration extends GlobalAuthenticationConfigurerAdapter {
 
@@ -104,8 +109,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
 		@Override
 		public void init(AuthenticationManagerBuilder auth) throws Exception {
-			String ldapUrl = environment.getProperty("shiny.proxy.ldap.url");
-			if (ldapUrl == null) return;
+			if (!hasAuth(environment)) return;
 			
 			String[] userDnPatterns = { environment.getProperty("shiny.proxy.ldap.user-dn-pattern") };
 			if (userDnPatterns[0] == null || userDnPatterns[0].isEmpty()) userDnPatterns = new String[0];
@@ -114,6 +118,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			if (managerDn != null && managerDn.isEmpty()) managerDn = null;
 			
 			// Manually instantiate contextSource so it can be passed into authoritiesPopulator below.
+			String ldapUrl = environment.getProperty("shiny.proxy.ldap.url");
 			DefaultSpringSecurityContextSource contextSource = new DefaultSpringSecurityContextSource(ldapUrl);
 			if (managerDn != null) {
 				contextSource.setUserDn(managerDn);

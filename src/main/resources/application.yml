@@ -4,6 +4,7 @@ shiny:
     logo-url: http://www.openanalytics.eu/sites/www.openanalytics.eu/themes/oa/logo.png
     landing-page: /
     port: 8080
+    authentication: ldap
     # LDAP configuration
     ldap:
       url: ldap://ldap.forumsys.com:389/dc=example,dc=com

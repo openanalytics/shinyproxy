@@ -19,10 +19,13 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -35,14 +38,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
-import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.CreateContainerResponse;
-import com.github.dockerjava.api.command.InspectContainerResponse;
-import com.github.dockerjava.api.model.Container;
-import com.github.dockerjava.api.model.ExposedPort;
-import com.github.dockerjava.api.model.Ports;
-import com.github.dockerjava.core.DockerClientBuilder;
-import com.github.dockerjava.core.DockerClientConfig;
+import com.spotify.docker.client.DefaultDockerClient;
+import com.spotify.docker.client.DockerCertificates;
+import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.exceptions.DockerCertificateException;
+import com.spotify.docker.client.exceptions.DockerException;
+import com.spotify.docker.client.messages.Container;
+import com.spotify.docker.client.messages.ContainerConfig;
+import com.spotify.docker.client.messages.ContainerCreation;
+import com.spotify.docker.client.messages.ContainerInfo;
+import com.spotify.docker.client.messages.HostConfig;
+import com.spotify.docker.client.messages.PortBinding;
 
 import eu.openanalytics.ShinyProxyException;
 import eu.openanalytics.services.AppService.ShinyApp;
@@ -77,22 +83,28 @@ public class DockerService {
 	
 	@Bean
 	public DockerClient getDockerClient() {
-		DockerClientConfig config = DockerClientConfig
-				.createDefaultConfigBuilder()
-				.withDockerCertPath(environment.getProperty("shiny.proxy.docker.cert-path"))
-				.withUri(environment.getProperty("shiny.proxy.docker.url"))
-			    .build();
-		return DockerClientBuilder.getInstance(config).build();			
+		try {
+			return DefaultDockerClient.builder()
+				.dockerCertificates(DockerCertificates.builder().dockerCertPath(Paths.get(environment.getProperty("shiny.proxy.docker.cert-path"))).build().orNull())
+				.uri(environment.getProperty("shiny.proxy.docker.url"))
+				.build();
+		} catch (DockerCertificateException e) {
+			throw new ShinyProxyException("Failed to initialize docker client", e);
+		}
 	}
 
 	public List<Container> getShinyContainers() {
 		List<Container> shinyContainers = new ArrayList<>();
-		List<Container> exec = dockerClient.listContainersCmd().exec();
-		String imageName = environment.getProperty("shiny.proxy.docker.image-name");
-		for (Container container : exec) {
-			if (container.getImage().equals(imageName)){
-				shinyContainers.add(container);
+		try {
+			List<Container> exec = dockerClient.listContainers();
+			String imageName = environment.getProperty("shiny.proxy.docker.image-name");
+			for (Container container : exec) {
+				if (container.image().equals(imageName)) {
+					shinyContainers.add(container);
+				}
 			}
+		} catch (DockerException | InterruptedException e) {
+			log.error("Failed to list containers", e);
 		}
 		return shinyContainers;
 	}
@@ -149,12 +161,10 @@ public class DockerService {
 			@Override
 			public void run() {
 				try {
-					synchronized (dockerClient) {
-						dockerClient.stopContainerCmd(proxy.containerId).exec();
-						dockerClient.removeContainerCmd(proxy.containerId).exec();
-						releasePort(proxy.port);
-						log.info(String.format("Proxy released [user: %s] [app: %s] [port: %d]", proxy.userName, proxy.appName, proxy.port));
-					}
+					dockerClient.stopContainer(proxy.containerId, 3);
+					dockerClient.removeContainer(proxy.containerId);
+					releasePort(proxy.port);
+					log.info(String.format("Proxy released [user: %s] [app: %s] [port: %d]", proxy.userName, proxy.appName, proxy.port));
 				} catch (Exception e){
 					log.error("Failed to stop container " + proxy.name, e);
 				}
@@ -189,23 +199,25 @@ public class DockerService {
 		proxy.port = getFreePort();
 		
 		try {
-			ExposedPort tcp3838 = ExposedPort.tcp(3838);
-			Ports portBindings = new Ports();
-			portBindings.bind(tcp3838, Ports.Binding(proxy.port));
-		
-			synchronized (dockerClient) {
-				CreateContainerResponse container = dockerClient
-						.createContainerCmd(app.getDockerImage())
-						.withExposedPorts(tcp3838)
-						.withPortBindings(portBindings)
-						.withCmd(app.getDockerCmd())
-						.exec();
-				dockerClient.startContainerCmd(container.getId()).exec();
-				
-				InspectContainerResponse inspectContainerResponse = dockerClient.inspectContainerCmd(container.getId()).exec();
-				proxy.name = inspectContainerResponse.getName().substring(1);
-				proxy.containerId = container.getId();
-			}
+			final Map<String, List<PortBinding>> portBindings = new HashMap<String, List<PortBinding>>();
+			List<PortBinding> hostPorts = new ArrayList<PortBinding>();
+		    hostPorts.add(PortBinding.of("0.0.0.0", proxy.port));
+			portBindings.put("3838", hostPorts);
+			final HostConfig hostConfig = HostConfig.builder().portBindings(portBindings).build();
+			
+			final ContainerConfig containerConfig = ContainerConfig.builder()
+				    .hostConfig(hostConfig)
+				    .image(app.getDockerImage())
+				    .exposedPorts("3838")
+				    .cmd(app.getDockerCmd())
+				    .build();
+			
+			ContainerCreation container = dockerClient.createContainer(containerConfig);
+			dockerClient.startContainer(container.id());
+
+			ContainerInfo info = dockerClient.inspectContainer(container.id());
+			proxy.name = info.name().substring(1);
+			proxy.containerId = container.id();
 		} catch (Exception e) {
 			releasePort(proxy.port);
 			throw new ShinyProxyException("Failed to start container: " + e.getMessage(), e);

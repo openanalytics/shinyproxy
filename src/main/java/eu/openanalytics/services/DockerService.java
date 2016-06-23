@@ -155,6 +155,14 @@ public class DockerService {
 		if (proxy != null) releaseProxy(proxy, true);
 	}
 	
+	public void releaseProxyByName(String mapping) {
+		synchronized (activeProxies) {
+			for (Proxy proxy: activeProxies) {
+				if (mapping.equals(proxy.name)) releaseProxy(proxy, true);
+			}
+		}
+	}
+	
 	private void releaseProxy(Proxy proxy, boolean async) {
 		activeProxies.remove(proxy);
 		Runnable r = new Runnable() {

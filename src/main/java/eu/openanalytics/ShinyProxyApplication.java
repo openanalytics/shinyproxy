@@ -16,9 +16,11 @@
 package eu.openanalytics;
 
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
+import org.apache.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
@@ -29,7 +31,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.security.core.context.SecurityContext;
 
 import eu.openanalytics.services.AppService;
 import eu.openanalytics.services.DockerService;
@@ -40,13 +41,15 @@ import io.undertow.UndertowOptions;
 import io.undertow.server.HandlerWrapper;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
+import io.undertow.server.ServerConnection;
+import io.undertow.server.ServerConnection.CloseListener;
 import io.undertow.server.handlers.PathHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
+import io.undertow.server.handlers.proxy.ProxyCallback;
 import io.undertow.server.handlers.proxy.ProxyClient;
+import io.undertow.server.handlers.proxy.ProxyConnection;
 import io.undertow.server.handlers.proxy.ProxyHandler;
 import io.undertow.server.handlers.proxy.SimpleProxyClientProvider;
-import io.undertow.server.session.Session;
-import io.undertow.server.session.SessionListener;
 import io.undertow.servlet.api.DeploymentInfo;
 
 /**
@@ -73,23 +76,21 @@ public class ShinyProxyApplication {
 	@Bean
 	public EmbeddedServletContainerFactory servletContainer() {
 		int port = Integer.parseInt(environment.getProperty("shiny.proxy.port", "8080"));
-		int sessionTimeout = Integer.parseInt(environment.getProperty("shiny.proxy.session-timeout", "1800"));
+		int idleTimeout = Integer.parseInt(environment.getProperty("shiny.proxy.idle-timeout", "1800"));
 		
 		UndertowEmbeddedServletContainerFactory factory = new UndertowEmbeddedServletContainerFactory();
 		factory.addDeploymentInfoCustomizers(new UndertowDeploymentInfoCustomizer() {
 			@Override
 			public void customize(DeploymentInfo deploymentInfo) {
 				deploymentInfo.addInitialHandlerChainWrapper(new RootHandlerWrapper());
-				deploymentInfo.addSessionListener(new SessionClosedListener());
 			}
 		});
 		factory.addBuilderCustomizers(new UndertowBuilderCustomizer() {
 			@Override
 			public void customize(Builder builder) {
-				builder.setServerOption(UndertowOptions.IDLE_TIMEOUT, sessionTimeout*1000);
+				builder.setServerOption(UndertowOptions.IDLE_TIMEOUT, idleTimeout*1000);
 			}
 		});
-		factory.setSessionTimeout(sessionTimeout);
 		factory.setPort(port);
 		return factory;	
 	}
@@ -100,7 +101,7 @@ public class ShinyProxyApplication {
 			dockerService.addMappingListener(new MappingListener() {
 				@Override
 				public void mappingAdded(String mapping, URI target) {
-					ProxyClient proxyClient = new SimpleProxyClientProvider(target);
+					ProxyClient proxyClient = new CustomProxyClientProvider(mapping, target);
 					HttpHandler handler = new ProxyHandler(proxyClient, ResponseCodeHandler.HANDLE_404);
 					pathHandler.addPrefixPath(mapping, handler);
 				}
@@ -113,40 +114,30 @@ public class ShinyProxyApplication {
 		}
 	}
 	
-	private class SessionClosedListener implements SessionListener {
-
-		@Override
-		public void sessionDestroyed(Session session, HttpServerExchange exchange, SessionDestroyedReason reason) {
-			String userName = session.getId();
-			SecurityContext ctx = (SecurityContext) session.getAttribute("SPRING_SECURITY_CONTEXT");
-			if (ctx != null) userName = ctx.getAuthentication().getName();
-			dockerService.releaseProxy(userName);
+	private class CustomProxyClientProvider extends SimpleProxyClientProvider {
+		
+		private String mapping;
+		private boolean attached;
+		
+		public CustomProxyClientProvider(String mapping, URI target) {
+			super(target);
+			this.mapping = mapping;
+			this.attached = false;
 		}
 		
 		@Override
-		public void sessionCreated(Session session, HttpServerExchange exchange) {
-			// Do nothing
+		public void getConnection(ProxyTarget target, HttpServerExchange exchange, ProxyCallback<ProxyConnection> callback, long timeout, TimeUnit timeUnit) {
+			if (!attached) {
+				exchange.getConnection().addCloseListener(new CloseListener() {
+					@Override
+					public void closed(ServerConnection connection) {
+						Logger.getLogger(ShinyProxyApplication.class).warn("ServerConnection closed");
+						dockerService.releaseProxyByName(mapping);
+					}
+				});
+				attached = true;
+			}
+			super.getConnection(target, exchange, callback, timeout, timeUnit);
 		}
-
-		@Override
-		public void attributeAdded(Session session, String name, Object value) {
-			// Do nothing
-		}
-
-		@Override
-		public void attributeUpdated(Session session, String name, Object newValue, Object oldValue) {
-			// Do nothing
-		}
-
-		@Override
-		public void attributeRemoved(Session session, String name, Object oldValue) {
-			// Do nothing
-		}
-
-		@Override
-		public void sessionIdChanged(Session session, String oldSessionId) {
-			// Do nothing
-		}
-		
 	}
 }

@@ -16,15 +16,12 @@
 package eu.openanalytics;
 
 import java.net.URI;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
-import org.springframework.boot.context.embedded.undertow.UndertowBuilderCustomizer;
 import org.springframework.boot.context.embedded.undertow.UndertowDeploymentInfoCustomizer;
 import org.springframework.boot.context.embedded.undertow.UndertowEmbeddedServletContainerFactory;
 import org.springframework.context.annotation.Bean;
@@ -36,18 +33,11 @@ import eu.openanalytics.services.AppService;
 import eu.openanalytics.services.DockerService;
 import eu.openanalytics.services.DockerService.MappingListener;
 import io.undertow.Handlers;
-import io.undertow.Undertow.Builder;
-import io.undertow.UndertowOptions;
 import io.undertow.server.HandlerWrapper;
 import io.undertow.server.HttpHandler;
-import io.undertow.server.HttpServerExchange;
-import io.undertow.server.ServerConnection;
-import io.undertow.server.ServerConnection.CloseListener;
 import io.undertow.server.handlers.PathHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
-import io.undertow.server.handlers.proxy.ProxyCallback;
 import io.undertow.server.handlers.proxy.ProxyClient;
-import io.undertow.server.handlers.proxy.ProxyConnection;
 import io.undertow.server.handlers.proxy.ProxyHandler;
 import io.undertow.server.handlers.proxy.SimpleProxyClientProvider;
 import io.undertow.servlet.api.DeploymentInfo;
@@ -75,9 +65,6 @@ public class ShinyProxyApplication {
 
 	@Bean
 	public EmbeddedServletContainerFactory servletContainer() {
-		int port = Integer.parseInt(environment.getProperty("shiny.proxy.port", "8080"));
-		int idleTimeout = Integer.parseInt(environment.getProperty("shiny.proxy.idle-timeout", "1800"));
-		
 		UndertowEmbeddedServletContainerFactory factory = new UndertowEmbeddedServletContainerFactory();
 		factory.addDeploymentInfoCustomizers(new UndertowDeploymentInfoCustomizer() {
 			@Override
@@ -85,13 +72,7 @@ public class ShinyProxyApplication {
 				deploymentInfo.addInitialHandlerChainWrapper(new RootHandlerWrapper());
 			}
 		});
-		factory.addBuilderCustomizers(new UndertowBuilderCustomizer() {
-			@Override
-			public void customize(Builder builder) {
-				builder.setServerOption(UndertowOptions.IDLE_TIMEOUT, idleTimeout*1000);
-			}
-		});
-		factory.setPort(port);
+		factory.setPort(Integer.parseInt(environment.getProperty("shiny.proxy.port", "8080")));
 		return factory;	
 	}
 
@@ -101,7 +82,7 @@ public class ShinyProxyApplication {
 			dockerService.addMappingListener(new MappingListener() {
 				@Override
 				public void mappingAdded(String mapping, URI target) {
-					ProxyClient proxyClient = new CustomProxyClientProvider(mapping, target);
+					ProxyClient proxyClient = new SimpleProxyClientProvider(target);
 					HttpHandler handler = new ProxyHandler(proxyClient, ResponseCodeHandler.HANDLE_404);
 					pathHandler.addPrefixPath(mapping, handler);
 				}
@@ -111,33 +92,6 @@ public class ShinyProxyApplication {
 				}
 			});
 			return pathHandler;
-		}
-	}
-	
-	private class CustomProxyClientProvider extends SimpleProxyClientProvider {
-		
-		private String mapping;
-		private boolean attached;
-		
-		public CustomProxyClientProvider(String mapping, URI target) {
-			super(target);
-			this.mapping = mapping;
-			this.attached = false;
-		}
-		
-		@Override
-		public void getConnection(ProxyTarget target, HttpServerExchange exchange, ProxyCallback<ProxyConnection> callback, long timeout, TimeUnit timeUnit) {
-			if (!attached) {
-				exchange.getConnection().addCloseListener(new CloseListener() {
-					@Override
-					public void closed(ServerConnection connection) {
-						Logger.getLogger(ShinyProxyApplication.class).warn("ServerConnection closed");
-						dockerService.releaseProxyByName(mapping);
-					}
-				});
-				attached = true;
-			}
-			super.getConnection(target, exchange, callback, timeout, timeUnit);
 		}
 	}
 }

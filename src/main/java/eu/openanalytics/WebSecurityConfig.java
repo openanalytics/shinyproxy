@@ -81,7 +81,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		if (hasAuth(environment)) {
 			http.authorizeRequests().antMatchers("/login").permitAll();
 			for (ShinyApp app: appService.getApps()) {
-				http.authorizeRequests().antMatchers("/app/" + app.getName()).hasAnyRole(appService.getAppRoles(app.getName()));
+				String[] appRoles = appService.getAppRoles(app.getName());
+				if (appRoles != null && appRoles.length > 0) http.authorizeRequests().antMatchers("/app/" + app.getName()).hasAnyRole(appRoles);
 			}
 			http.authorizeRequests().anyRequest().fullyAuthenticated();
 

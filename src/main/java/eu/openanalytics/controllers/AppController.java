@@ -52,6 +52,8 @@ public class AppController {
 		map.put("title", environment.getProperty("shiny.proxy.title"));
 		map.put("logo", environment.getProperty("shiny.proxy.logo-url"));
 		map.put("container", "/" + mapping + environment.getProperty("shiny.proxy.landing-page"));
+		map.put("heartbeatRate", environment.getProperty("shiny.proxy.heartbeat-rate", "10000"));
+		
 		return "app";
 	}
 }

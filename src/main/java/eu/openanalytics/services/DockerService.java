@@ -79,6 +79,7 @@ public class DockerService {
 		public String containerId;
 		public String userName;
 		public String appName;
+		public long startupTimestamp;
 	}
 	
 	@Bean
@@ -119,6 +120,7 @@ public class DockerService {
 				copy.containerId = proxy.containerId;
 				copy.userName = proxy.userName;
 				copy.appName = proxy.appName;
+				copy.startupTimestamp = proxy.startupTimestamp;
 				proxies.add(copy);
 			}
 		}
@@ -218,6 +220,7 @@ public class DockerService {
 			ContainerInfo info = dockerClient.inspectContainer(container.id());
 			proxy.name = info.name().substring(1);
 			proxy.containerId = container.id();
+			proxy.startupTimestamp = System.currentTimeMillis();
 		} catch (Exception e) {
 			releasePort(proxy.port);
 			throw new ShinyProxyException("Failed to start container: " + e.getMessage(), e);

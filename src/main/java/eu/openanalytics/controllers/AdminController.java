@@ -37,7 +37,7 @@ public class AdminController {
 	Environment environment;
 
 	@RequestMapping("/admin")
-	String debug(ModelMap map, Principal principal, HttpServletRequest request) {
+	String admin(ModelMap map, Principal principal, HttpServletRequest request) {
 		map.put("title", environment.getProperty("shiny.proxy.title"));
 		map.put("logo", environment.getProperty("shiny.proxy.logo-url"));
 		map.put("proxies", dockerService.listProxies());

@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import eu.openanalytics.services.AppService;
 import eu.openanalytics.services.DockerService;
+import eu.openanalytics.services.UserService;
 
 @Controller
 public class AppController {
@@ -39,6 +40,9 @@ public class AppController {
 	@Inject
 	AppService appService;
 
+	@Inject
+	UserService userService;
+	
 	@Inject
 	Environment environment;
 
@@ -53,6 +57,7 @@ public class AppController {
 		map.put("logo", environment.getProperty("shiny.proxy.logo-url"));
 		map.put("container", "/" + mapping + environment.getProperty("shiny.proxy.landing-page"));
 		map.put("heartbeatRate", environment.getProperty("shiny.proxy.heartbeat-rate", "10000"));
+		map.put("adminGroups", userService.getAdminRoles());
 		
 		return "app";
 	}

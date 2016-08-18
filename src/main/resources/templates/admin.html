@@ -24,13 +24,21 @@
     <div id="proxylist" style="margin-top: 60px; margin-left: 10px; border: 0px;">
     	<h3>Container Activity</h3>
     	<table border="1">
-    		<tr><th>Name</th><th>Port</th><th>Username</th><th>Appname</th><th>Container Id</th></tr>
+    		<tr>
+    			<th>Name</th>
+    			<th>Port</th>
+    			<th>Username</th>
+    			<th>Appname</th>
+    			<th>Container Id</th>
+    			<th>Uptime</th>
+    		</tr>
     		<tr th:each="proxy: ${proxies}">
     			<td th:text="${proxy.name}"></td>
     			<td th:text="${proxy.port}"></td>
     			<td th:text="${proxy.userName}"></td>
     			<td th:text="${proxy.appName}"></td>
     			<td th:text="${proxy.containerId}"></td>
+    			<td th:text="${@dockerService.getContainerUptime(proxy.containerId)}"></td>
     		</tr>
     	</table>
     </div>

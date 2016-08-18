@@ -110,6 +110,16 @@ public class DockerService {
 		return shinyContainers;
 	}
 	
+	public String getContainerUptime(String containerId) {
+		Proxy activeProxy = null;
+		for (Proxy p: activeProxies) {
+			if (containerId.equals(p.containerId)) activeProxy = p;
+		}
+		if (activeProxy == null) return "n/a";
+		long uptimeSec = (System.currentTimeMillis() - activeProxy.startupTimestamp)/1000;
+		return String.format("%d:%02d:%02d", uptimeSec/3600, (uptimeSec%3600)/60, uptimeSec%60);
+	}
+	
 	public List<Proxy> listProxies() {
 		List<Proxy> proxies = new ArrayList<>();
 		synchronized (activeProxies) {

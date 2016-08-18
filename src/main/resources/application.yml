@@ -23,6 +23,8 @@ shiny:
       port-range-start: 20000
   apps:
   - name: 01_hello
+    display-name: Hello Application
+    description: Application which demonstrates the basics of a Shiny app
     docker-cmd: ["R", "-e shinyproxy::run_01_hello()"]
     docker-image: openanalytics/shinyproxy-demo
     ldap-groups: [scientists, mathematicians]

@@ -18,7 +18,11 @@
 	<!-- content -->
     <div id="applist" style="margin-top: 60px; border: 0px;">
     	<ul>
-    		<li th:each="app: ${apps}"><a th:href="@{/app/}+${app.name}" th:text="${app.name}"></a></li>
+    		<li th:each="app: ${apps}">
+    			<a th:href="@{/app/}+${app.name}" th:text="${app.displayName == null} ? ${app.name} : ${app.displayName}"></a>
+    			<br th:if="${app.description != null}" />
+    			<span th:if="${app.description != null}" th:text="${app.description}"></span>
+    		</li>
     	</ul>
     </div>
 </body>

@@ -26,6 +26,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import eu.openanalytics.services.AppService;
+import eu.openanalytics.services.UserService;
  
 /**
  * @author Torkild U. Resheim, Itema AS
@@ -37,6 +38,9 @@ public class IndexController {
 	AppService appService;
 	
 	@Inject
+	UserService userService;
+	
+	@Inject
 	Environment environment;
 
 	@RequestMapping("/")
@@ -44,7 +48,7 @@ public class IndexController {
 		map.put("title", environment.getProperty("shiny.proxy.title"));
 		map.put("logo", environment.getProperty("shiny.proxy.logo-url"));
 		map.put("apps", appService.getApps((Authentication) principal).toArray());
+		map.put("adminGroups", userService.getAdminRoles());
         return "index";
     }
 }
-

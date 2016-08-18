@@ -15,6 +15,7 @@ shiny:
       group-search-filter: (uniqueMember={0})
       manager-dn: cn=read-only-admin,dc=example,dc=com
       manager-password: password
+      admin-groups: scientists
     # Docker configuration
     docker:
       cert-path: /home/none
@@ -27,11 +28,11 @@ shiny:
     description: Application which demonstrates the basics of a Shiny app
     docker-cmd: ["R", "-e shinyproxy::run_01_hello()"]
     docker-image: openanalytics/shinyproxy-demo
-    ldap-groups: [scientists, mathematicians]
+    ldap-groups: scientists, mathematicians
   - name: 06_tabsets
     docker-cmd: ["R", "-e shinyproxy::run_06_tabsets()"]
     docker-image: openanalytics/shinyproxy-demo
-    ldap-groups: [scientists]
+    ldap-groups: scientists
 # useful when debugging; set to 'true' when running in production
 spring:
   thymeleaf:

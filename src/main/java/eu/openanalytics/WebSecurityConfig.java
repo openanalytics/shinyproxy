@@ -43,6 +43,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import eu.openanalytics.components.LogoutHandler;
 import eu.openanalytics.services.AppService;
 import eu.openanalytics.services.AppService.ShinyApp;
+import eu.openanalytics.services.UserService;
 
 /**
  * @author Torkild U. Resheim, Itema AS
@@ -60,6 +61,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Inject
 	AppService appService;
 
+	@Inject
+	UserService userService;
+	
 	@Override
 	public void configure(WebSecurity web) throws Exception {
 		web
@@ -79,11 +83,17 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 					.sameOrigin();
 
 		if (hasAuth(environment)) {
+			// Limit access to the app pages
 			http.authorizeRequests().antMatchers("/login").permitAll();
 			for (ShinyApp app: appService.getApps()) {
 				String[] appRoles = appService.getAppRoles(app.getName());
 				if (appRoles != null && appRoles.length > 0) http.authorizeRequests().antMatchers("/app/" + app.getName()).hasAnyRole(appRoles);
 			}
+
+			// Limit access to the admin pages
+			http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminRoles());
+			
+			// All other pages are available to authenticated users
 			http.authorizeRequests().anyRequest().fullyAuthenticated();
 
 			http

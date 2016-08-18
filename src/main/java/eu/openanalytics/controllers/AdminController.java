@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import eu.openanalytics.services.DockerService;
 
 @Controller
-public class DebugController {
+public class AdminController {
 
 	@Inject
 	DockerService dockerService;
@@ -36,11 +36,11 @@ public class DebugController {
 	@Inject
 	Environment environment;
 
-	@RequestMapping("/debug")
+	@RequestMapping("/admin")
 	String debug(ModelMap map, Principal principal, HttpServletRequest request) {
 		map.put("title", environment.getProperty("shiny.proxy.title"));
 		map.put("logo", environment.getProperty("shiny.proxy.logo-url"));
 		map.put("proxies", dockerService.listProxies());
-		return "debug";
+		return "admin";
 	}
 }

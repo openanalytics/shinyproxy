@@ -19,6 +19,7 @@
 					<a class="navbar-brand" href="/" th:text="${title}"></a>
 				</div>
 				<div class="navbar-form navbar-right">
+					<a role="button" class="btn btn-primary btn-sm" th:href="@{/admin}" sec:authorize="hasAnyRole(#vars.adminGroups)">Admin</a>
 					<a role="button" class="btn btn-primary btn-sm" th:href="@{/logout}" sec:authorize="isAuthenticated()">Sign Out</a>
 				</div>
 				<!--/.navbar-collapse -->

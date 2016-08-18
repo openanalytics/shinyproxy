@@ -21,8 +21,9 @@
 	<div th:replace="../fragments/navbar :: navbar"></div>
 	
 	<!-- content -->
-    <div id="proxylist" style="margin-top: 60px; border: 0px;">
-    	<table style="margin-left: 10px;" border="1">
+    <div id="proxylist" style="margin-top: 60px; margin-left: 10px; border: 0px;">
+    	<h3>Container Activity</h3>
+    	<table border="1">
     		<tr><th>Name</th><th>Port</th><th>Username</th><th>Appname</th><th>Container Id</th></tr>
     		<tr th:each="proxy: ${proxies}">
     			<td th:text="${proxy.name}"></td>

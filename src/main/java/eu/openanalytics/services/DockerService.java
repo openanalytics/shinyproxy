@@ -215,7 +215,10 @@ public class DockerService {
 			List<PortBinding> hostPorts = new ArrayList<PortBinding>();
 		    hostPorts.add(PortBinding.of("0.0.0.0", proxy.port));
 			portBindings.put("3838", hostPorts);
-			final HostConfig hostConfig = HostConfig.builder().portBindings(portBindings).build();
+			final HostConfig hostConfig = HostConfig.builder()
+					.portBindings(portBindings)
+					.dns(app.getDockerDns())
+					.build();
 			
 			final ContainerConfig containerConfig = ContainerConfig.builder()
 				    .hostConfig(hostConfig)

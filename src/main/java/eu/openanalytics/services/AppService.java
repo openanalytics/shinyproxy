@@ -82,6 +82,7 @@ public class AppService {
 		private String description;
 		private String[] dockerCmd;
 		private String dockerImage;
+		private String[] dockerDns;
 		private String[] ldapGroups;
 		
 		public String getName() {
@@ -117,6 +118,13 @@ public class AppService {
 		}
 		public void setDockerImage(String dockerImage) {
 			this.dockerImage = dockerImage;
+		}
+		
+		public String[] getDockerDns() {
+			return dockerDns;
+		}
+		public void setDockerDns(String[] dockerDns) {
+			this.dockerDns = dockerDns;
 		}
 		
 		public String[] getLdapGroups() {

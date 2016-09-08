@@ -35,6 +35,10 @@ public class HeartbeatService {
 		heartbeatTimestamps.put(user, System.currentTimeMillis());
 	}
 	
+	public void clearHeartbeat(String user) {
+		heartbeatTimestamps.remove(user);
+	}
+	
 	private class AppCleaner implements Runnable {
 		@Override
 		public void run() {

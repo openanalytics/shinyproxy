@@ -19,6 +19,12 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 	@Inject
 	Environment environment;
 
+	@Inject
+	DockerService dockerService;
+	
+	@Inject
+	HeartbeatService heartbeatService;
+	
 	public String[] getAdminRoles() {
 		String[] adminGroups = environment.getProperty("shiny.proxy.ldap.admin-groups", String[].class);
 		if (adminGroups == null) adminGroups = new String[0];
@@ -39,4 +45,9 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 		}
 	}
 
+	public void onLogout(String userName) {
+		heartbeatService.clearHeartbeat(userName);
+		dockerService.releaseProxy(userName);
+		log.info(String.format("User logged out [user: %s]", userName));
+	}
 }

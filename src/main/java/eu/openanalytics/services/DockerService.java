@@ -225,6 +225,7 @@ public class DockerService {
 				    .image(app.getDockerImage())
 				    .exposedPorts("3838")
 				    .cmd(app.getDockerCmd())
+				    .env(String.format("SHINYPROXY_USERNAME=%s", userName))
 				    .build();
 			
 			ContainerCreation container = dockerClient.createContainer(containerConfig);

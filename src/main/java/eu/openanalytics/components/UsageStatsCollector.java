@@ -1,5 +1,6 @@
 package eu.openanalytics.components;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -10,6 +11,7 @@ import java.util.function.Consumer;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -39,7 +41,7 @@ public class UsageStatsCollector implements Consumer<Event> {
 			log.info("Disabled. Usage statistics will not be posted.");
 		} else {
 			eventService.addListener(this);
-			log.info(String.format("Enabled. Posting usage statistics to db %s at %s", dbName, baseURL));
+			log.info(String.format("Enabled. Posting usage statistics to %s at %s", dbName, baseURL));
 		}
 	}
 	
@@ -51,7 +53,7 @@ public class UsageStatsCollector implements Consumer<Event> {
 		try {
 			doPost(destination, body);
 		} catch (IOException e) {
-			log.error("Failed to submit user statistic event", e);
+			log.error("Failed to submit usage statistic event", e);
 		}
 	}
 	
@@ -63,8 +65,13 @@ public class UsageStatsCollector implements Consumer<Event> {
 			dos.writeBytes(body);
 			dos.flush();
 		}
-		//TODO Handle response
-//		int responseCode = conn.getResponseCode();
-//		System.out.println(responseCode);
+		int responseCode = conn.getResponseCode();
+		if (responseCode == 204) {
+			// All is well.
+		} else {
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			IOUtils.copy(conn.getErrorStream(), bos);
+			throw new IOException(new String(bos.toByteArray()));
+		}
 	}
 }

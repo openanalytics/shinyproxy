@@ -240,7 +240,7 @@ public class DockerService {
 			throw new ShinyProxyException("Failed to start container: " + e.getMessage(), e);
 		}
 
-		if (!testContainer(proxy, 20, 500)) {
+		if (!testContainer(proxy, 20, 500, 5000)) {
 			releaseProxy(proxy, true);
 			throw new ShinyProxyException("Container did not respond in time");
 		}
@@ -268,13 +268,17 @@ public class DockerService {
 		return null;
 	}
 	
-	private boolean testContainer(Proxy proxy, int maxTries, int waitMs) {
+	private boolean testContainer(Proxy proxy, int maxTries, int waitMs, int timeoutMs) {
+		String urlString = String.format("http://%s:%d", environment.getProperty("shiny.proxy.docker.host"), proxy.port);
 		for (int currentTry = 1; currentTry <= maxTries; currentTry++) {
 			try {
-				URL testURL = new URL("http://" + environment.getProperty("shiny.proxy.docker.host") + ":" + proxy.port);
-				int responseCode = ((HttpURLConnection) testURL.openConnection()).getResponseCode();
+				URL testURL = new URL(urlString);
+				HttpURLConnection connection = ((HttpURLConnection) testURL.openConnection());
+				connection.setConnectTimeout(timeoutMs);
+				int responseCode = connection.getResponseCode();
 				if (responseCode == 200) return true;
 			} catch (Exception e) {
+				log.warn(String.format("Container unresponsive, trying again (%d/%d): %s", currentTry, maxTries, urlString));
 				try { Thread.sleep(waitMs); } catch (InterruptedException ignore) {}
 			}
 		}

@@ -31,7 +31,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-import eu.openanalytics.services.AppService;
 import eu.openanalytics.services.DockerService;
 import eu.openanalytics.services.DockerService.MappingListener;
 import io.undertow.Handlers;
@@ -55,9 +54,6 @@ public class ShinyProxyApplication {
 	@Inject
 	DockerService dockerService;
 
-	@Inject
-	AppService appService;
-	
 	@Inject
 	Environment environment;
 

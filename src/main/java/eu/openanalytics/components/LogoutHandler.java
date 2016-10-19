@@ -42,7 +42,7 @@ public class LogoutHandler implements LogoutSuccessHandler {
 	public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
 		if (authentication != null && authentication.getPrincipal() instanceof LdapUserDetails) {
 			String userName = ((LdapUserDetails) authentication.getPrincipal()).getUsername();
-			userService.onLogout(userName);
+			userService.logout(userName);
 		}
 		response.sendRedirect("/");
 	}

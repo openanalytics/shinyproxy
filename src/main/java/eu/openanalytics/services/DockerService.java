@@ -52,6 +52,7 @@ import com.spotify.docker.client.messages.PortBinding;
 
 import eu.openanalytics.ShinyProxyException;
 import eu.openanalytics.services.AppService.ShinyApp;
+import eu.openanalytics.services.EventService.EventType;
 
 @Service
 public class DockerService {
@@ -69,6 +70,9 @@ public class DockerService {
 	
 	@Inject
 	AppService appService;
+	
+	@Inject
+	EventService eventService;
 	
 	@Inject
 	DockerClient dockerClient;
@@ -177,6 +181,7 @@ public class DockerService {
 					dockerClient.removeContainer(proxy.containerId);
 					releasePort(proxy.port);
 					log.info(String.format("Proxy released [user: %s] [app: %s] [port: %d]", proxy.userName, proxy.appName, proxy.port));
+					eventService.post(EventType.AppStop.toString(), proxy.userName, proxy.appName);
 				} catch (Exception e){
 					log.error("Failed to stop container " + proxy.name, e);
 				}
@@ -256,6 +261,8 @@ public class DockerService {
 		
 		activeProxies.add(proxy);
 		log.info(String.format("Proxy activated [user: %s] [app: %s] [port: %d]", userName, appName, proxy.port));
+		eventService.post(EventType.AppStart.toString(), userName, appName);
+		
 		return proxy;
 	}
 	

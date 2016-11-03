@@ -16,14 +16,21 @@
 	<div th:replace="../fragments/navbar :: navbar"></div>
 	
 	<!-- content -->
-    <div id="applist" style="margin-top: 60px; border: 0px;">
-    	<ul>
-    		<li th:each="app: ${apps}">
-    			<a th:href="@{/app/}+${app.name}" th:text="${app.displayName == null} ? ${app.name} : ${app.displayName}"></a>
-    			<br th:if="${app.description != null}" />
-    			<span th:if="${app.description != null}" th:text="${app.description}"></span>
-    		</li>
-    	</ul>
-    </div>
+    <div class="container" id="applist" style="margin-top: 60px; border: 0px;">
+		<div class="row" style="margin-top:20px;" th:each="app: ${apps}">
+			<div class="col-md-6 col-md-offset-3">
+				<div class="media">
+					<div class="media-left">
+						<img th:if="${app.logoUrl != null}" th:src="${app.logoUrl}"></img>
+					</div>
+					<div class="media-body">
+						<a th:href="@{/app/}+${app.name}" th:text="${app.displayName == null} ? ${app.name} : ${app.displayName}"></a>
+						<br th:if="${app.description != null}" />
+						<span th:if="${app.description != null}" th:text="${app.description}"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
 </body>
 </html>

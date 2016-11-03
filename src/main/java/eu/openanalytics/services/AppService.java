@@ -80,6 +80,7 @@ public class AppService {
 		private String name;
 		private String displayName;
 		private String description;
+		private String logoUrl;
 		private String[] dockerCmd;
 		private String dockerImage;
 		private String[] dockerDns;
@@ -104,6 +105,13 @@ public class AppService {
 		}
 		public void setDescription(String description) {
 			this.description = description;
+		}
+		
+		public String getLogoUrl() {
+			return logoUrl;
+		}
+		public void setLogoUrl(String logoUrl) {
+			this.logoUrl = logoUrl;
 		}
 		
 		public String[] getDockerCmd() {

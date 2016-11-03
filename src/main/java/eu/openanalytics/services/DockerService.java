@@ -152,23 +152,31 @@ public class DockerService {
 	}
 
 	public String getMapping(String userName, String appName) {
-		Proxy proxy = findProxy(userName);
+		Proxy proxy = findProxy(userName, appName);
 		if (proxy == null) {
 			// The user has no proxy yet.
-			proxy = startProxy(userName, appName);
-		} else if (appName.equals(proxy.appName)) {
-			// The user's proxy is good to go.
-		} else {
-			// The user's proxy is running the wrong app.
-			releaseProxy(proxy, true);
 			proxy = startProxy(userName, appName);
 		}
 		return (proxy == null) ? null : proxy.name;
 	}
 	
-	public void releaseProxy(String userName) {
-		Proxy proxy = findProxy(userName);
-		if (proxy != null) releaseProxy(proxy, true);
+	public void releaseProxies(String userName) {
+		List<Proxy> proxiesToRelease = new ArrayList<>();
+		synchronized (activeProxies) {
+			for (Proxy proxy: activeProxies) {
+				if (userName.equals(proxy.userName)) proxiesToRelease.add(proxy);
+			}
+		}
+		for (Proxy proxy: proxiesToRelease) {
+			releaseProxy(proxy, true);
+		}
+	}
+	
+	public void releaseProxy(String userName, String appName) {
+		Proxy proxy = findProxy(userName, appName);
+		if (proxy != null) {
+			releaseProxy(proxy, true);
+		}
 	}
 	
 	private void releaseProxy(Proxy proxy, boolean async) {
@@ -205,7 +213,7 @@ public class DockerService {
 			throw new ShinyProxyException("Cannot start container: unknown application: " + appName);
 		}
 		
-		Proxy proxy = findProxy(userName);
+		Proxy proxy = findProxy(userName, appName);
 		if (proxy != null) {
 			throw new ShinyProxyException("Cannot start container: user " + userName + " already has a running proxy");
 		}
@@ -266,10 +274,10 @@ public class DockerService {
 		return proxy;
 	}
 	
-	private Proxy findProxy(String userName) {
+	private Proxy findProxy(String userName, String appName) {
 		synchronized (activeProxies) {
 			for (Proxy proxy: activeProxies) {
-				if (userName.equals(proxy.userName)) return proxy;
+				if (userName.equals(proxy.userName) && appName.equals(proxy.appName)) return proxy;
 			}
 		}
 		return null;

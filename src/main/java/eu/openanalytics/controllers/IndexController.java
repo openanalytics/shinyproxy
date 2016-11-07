@@ -16,6 +16,7 @@
 package eu.openanalytics.controllers;
 
 import java.security.Principal;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -26,6 +27,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import eu.openanalytics.services.AppService;
+import eu.openanalytics.services.AppService.ShinyApp;
 import eu.openanalytics.services.UserService;
  
 /**
@@ -45,9 +47,15 @@ public class IndexController {
 
 	@RequestMapping("/")
     String index(ModelMap map, Principal principal) {
+		List<ShinyApp> apps = appService.getApps((Authentication) principal);
+		boolean displayAppLogos = false;
+		for (ShinyApp app: apps) {
+			if (app.getLogoUrl() != null) displayAppLogos = true;
+		}
 		map.put("title", environment.getProperty("shiny.proxy.title"));
 		map.put("logo", environment.getProperty("shiny.proxy.logo-url"));
-		map.put("apps", appService.getApps((Authentication) principal).toArray());
+		map.put("apps", apps.toArray());
+		map.put("displayAppLogos", displayAppLogos);
 		map.put("adminGroups", userService.getAdminRoles());
         return "index";
     }

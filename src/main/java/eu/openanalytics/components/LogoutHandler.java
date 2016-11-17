@@ -23,15 +23,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.security.core.Authentication;
-import org.springframework.security.ldap.userdetails.LdapUserDetails;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.stereotype.Component;
 
 import eu.openanalytics.services.UserService;
 
-/**
- * @author Torkild U. Resheim, Itema AS
- */
 @Component
 public class LogoutHandler implements LogoutSuccessHandler {
 
@@ -40,8 +37,8 @@ public class LogoutHandler implements LogoutSuccessHandler {
 	
 	@Override
 	public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-		if (authentication != null && authentication.getPrincipal() instanceof LdapUserDetails) {
-			String userName = ((LdapUserDetails) authentication.getPrincipal()).getUsername();
+		if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
+			String userName = ((UserDetails) authentication.getPrincipal()).getUsername();
 			userService.logout(userName);
 		}
 		response.sendRedirect("/");

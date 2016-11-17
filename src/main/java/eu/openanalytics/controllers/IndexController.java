@@ -26,7 +26,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import eu.openanalytics.services.AppService;
 import eu.openanalytics.services.AppService.ShinyApp;
 import eu.openanalytics.services.UserService;
  
@@ -37,9 +36,6 @@ import eu.openanalytics.services.UserService;
 public class IndexController {
 	
 	@Inject
-	AppService appService;
-	
-	@Inject
 	UserService userService;
 	
 	@Inject
@@ -47,7 +43,7 @@ public class IndexController {
 
 	@RequestMapping("/")
     String index(ModelMap map, Principal principal) {
-		List<ShinyApp> apps = appService.getApps((Authentication) principal);
+		List<ShinyApp> apps = userService.getAccessibleApps((Authentication) principal);
 		boolean displayAppLogos = false;
 		for (ShinyApp app: apps) {
 			if (app.getLogoUrl() != null) displayAppLogos = true;

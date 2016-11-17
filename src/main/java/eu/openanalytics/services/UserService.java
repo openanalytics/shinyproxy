@@ -15,8 +15,10 @@ import org.springframework.security.authentication.event.AbstractAuthenticationE
 import org.springframework.security.authentication.event.AbstractAuthenticationFailureEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
+import eu.openanalytics.services.AppService.ShinyApp;
 import eu.openanalytics.services.DockerService.Proxy;
 import eu.openanalytics.services.EventService.EventType;
 
@@ -36,18 +38,45 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 	@Inject
 	EventService eventService;
 	
+	@Inject
+	AppService appService;
+	
 	@PostConstruct
 	public void init() {
 		new Thread(new AppCleaner(), "HeartbeatThread").start();
 	}
 	
 	public String[] getAdminRoles() {
-		String[] adminGroups = environment.getProperty("shiny.proxy.ldap.admin-groups", String[].class);
+		String[] adminGroups = environment.getProperty("shiny.proxy.admin-groups", String[].class);
 		if (adminGroups == null) adminGroups = new String[0];
 		for (int i = 0; i < adminGroups.length; i++) {
 			adminGroups[i] = adminGroups[i].toUpperCase();
 		}
 		return adminGroups;
+	}
+	
+	public List<ShinyApp> getAccessibleApps(Authentication principalAuth) {
+		List<ShinyApp> accessibleApps = new ArrayList<>();
+		for (ShinyApp app: appService.getApps()) {
+			if (canAccess(principalAuth, app.getName())) accessibleApps.add(app);
+		}
+		return accessibleApps;
+	}
+	
+	private boolean canAccess(Authentication principalAuth, String appName) {
+		ShinyApp app = appService.getApp(appName);
+		if (app == null) return false;
+		if (app.getGroups() == null || app.getGroups().length == 0) return true;
+		if (principalAuth == null) return true;
+		
+		for (GrantedAuthority auth: principalAuth.getAuthorities()) {
+			String role = auth.getAuthority().toUpperCase();
+			if (role.startsWith("ROLE_")) role = role.substring(5);
+			for (String group: app.getGroups()) {
+				if (group.equalsIgnoreCase(role)) return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

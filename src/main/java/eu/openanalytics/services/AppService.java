@@ -16,15 +16,12 @@
 package eu.openanalytics.services;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.Environment;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 @ConfigurationProperties(prefix = "shiny")
@@ -47,34 +44,6 @@ public class AppService {
 		return apps;
 	}
 	
-	public List<ShinyApp> getApps(Authentication principalAuth) {
-		List<ShinyApp> accessibleApps = new ArrayList<>();
-		for (ShinyApp app: apps) {
-			if (canAccess(principalAuth, app.getName())) accessibleApps.add(app);
-		}
-		return accessibleApps;
-	}
-	
-	public boolean canAccess(Authentication principalAuth, String appName) {
-		String[] appRoles = getAppRoles(appName);
-		if (appRoles.length == 0 || principalAuth == null) return true;
-		Arrays.sort(appRoles);
-		for (GrantedAuthority auth: principalAuth.getAuthorities()) {
-			String role = auth.getAuthority().toUpperCase();
-			if (role.startsWith("ROLE_")) role = role.substring(5);
-			if (Arrays.binarySearch(appRoles, role) >= 0) return true;
-		}
-		return false;
-	}
-	
-	public String[] getAppRoles(String appName) {
-		ShinyApp app = getApp(appName);
-		if (app == null || app.getLdapGroups() == null) return new String[0];
-		String[] roles = new String[app.getLdapGroups().length];
-		for (int i = 0; i < roles.length; i++) roles[i] = app.getLdapGroups()[i].toUpperCase();
-		return roles;
-	}
-	
 	public static class ShinyApp {
 		
 		private String name;
@@ -84,7 +53,7 @@ public class AppService {
 		private String[] dockerCmd;
 		private String dockerImage;
 		private String[] dockerDns;
-		private String[] ldapGroups;
+		private String[] groups;
 		
 		public String getName() {
 			return name;
@@ -135,11 +104,11 @@ public class AppService {
 			this.dockerDns = dockerDns;
 		}
 		
-		public String[] getLdapGroups() {
-			return ldapGroups;
+		public String[] getGroups() {
+			return groups;
 		}
-		public void setLdapGroups(String[] ldapGroups) {
-			this.ldapGroups = ldapGroups;
+		public void setGroups(String[] groups) {
+			this.groups = groups;
 		}
 	}
 }

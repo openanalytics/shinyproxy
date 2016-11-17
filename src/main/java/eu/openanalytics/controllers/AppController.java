@@ -53,9 +53,13 @@ public class AppController {
 		String appName = matcher.matches() ? matcher.group(1) : null;
 		String mapping = dockerService.getMapping(userName, appName);
 		
+		String queryString = request.getQueryString();
+		if (queryString == null) queryString = "";
+		else queryString = "?" + queryString;
+		
 		map.put("title", environment.getProperty("shiny.proxy.title"));
 		map.put("logo", environment.getProperty("shiny.proxy.logo-url"));
-		map.put("container", "/" + mapping + environment.getProperty("shiny.proxy.landing-page"));
+		map.put("container", "/" + mapping + environment.getProperty("shiny.proxy.landing-page") + queryString);
 		map.put("heartbeatRate", environment.getProperty("shiny.proxy.heartbeat-rate", "10000"));
 		map.put("adminGroups", userService.getAdminRoles());
 		

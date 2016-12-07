@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
@@ -48,6 +50,7 @@ import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
 import com.spotify.docker.client.messages.ContainerInfo;
 import com.spotify.docker.client.messages.HostConfig;
+import com.spotify.docker.client.messages.HostConfig.Builder;
 import com.spotify.docker.client.messages.PortBinding;
 
 import eu.openanalytics.ShinyProxyException;
@@ -228,7 +231,12 @@ public class DockerService {
 			List<PortBinding> hostPorts = new ArrayList<PortBinding>();
 		    hostPorts.add(PortBinding.of("0.0.0.0", proxy.port));
 			portBindings.put("3838", hostPorts);
-			final HostConfig hostConfig = HostConfig.builder()
+			
+			long memoryLimit = convertMemory(app.getDockerMemory());
+			
+			Builder hostConfigBuilder = HostConfig.builder();
+			if (memoryLimit > 0) hostConfigBuilder.memory(memoryLimit);
+			final HostConfig hostConfig = hostConfigBuilder
 					.portBindings(portBindings)
 					.dns(app.getDockerDns())
 					.build();
@@ -312,6 +320,27 @@ public class DockerService {
 		occupiedPorts.remove(port);
 	}
 
+	private long convertMemory(String memory) {
+		if (memory == null || memory.isEmpty()) return -1;
+		Matcher matcher = Pattern.compile("(\\d+)([bkmg]?)").matcher(memory.toLowerCase());
+		if (!matcher.matches()) throw new IllegalArgumentException("Invalid memory argument: " + memory);
+		long mem = Long.parseLong(matcher.group(1));
+		String unit = matcher.group(2);
+		switch (unit) {
+		case "k":
+			mem *= 1024;
+			break;
+		case "m":
+			mem *= 1024*1024;
+			break;
+		case "g":
+			mem *= 1024*1024*1024;
+			break;
+		default:
+		}
+		return mem;
+	}
+	
 	public void addMappingListener(MappingListener listener) {
 		mappingListeners.add(listener);
 	}

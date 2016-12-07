@@ -53,6 +53,7 @@ public class AppService {
 		private String[] dockerCmd;
 		private String dockerImage;
 		private String[] dockerDns;
+		private String dockerMemory;
 		private String[] groups;
 		
 		public String getName() {
@@ -102,6 +103,13 @@ public class AppService {
 		}
 		public void setDockerDns(String[] dockerDns) {
 			this.dockerDns = dockerDns;
+		}
+		
+		public String getDockerMemory() {
+			return dockerMemory;
+		}
+		public void setDockerMemory(String dockerMemory) {
+			this.dockerMemory = dockerMemory;
 		}
 		
 		public String[] getGroups() {

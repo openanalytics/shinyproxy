@@ -62,12 +62,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	protected void configure(HttpSecurity http) throws Exception {
 		http
 			// must disable or handle in proxy
-			.csrf()
-				.disable()
+			.csrf().disable()
 			// disable X-Frame-Options
-			.headers()
-				.frameOptions()
-					.sameOrigin();
+			.headers().frameOptions().disable();
 
 		if (AuthenticationConfigurationFactory.hasAuth(environment)) {
 			// Limit access to the app pages

@@ -251,6 +251,7 @@ public class DockerService {
 				    .exposedPorts("3838")
 				    .cmd(app.getDockerCmd())
 				    .env(buildEnv(userName, app))
+				    .volumes(buildVolumes(app))
 				    .build();
 			
 			ContainerCreation container = dockerClient.createContainer(containerConfig);
@@ -326,6 +327,18 @@ public class DockerService {
 		}
 		
 		return env;
+	}
+	
+	private Set<String> buildVolumes(ShinyApp app) {
+		Set<String> volumes = new HashSet<>();
+
+		if (app.getDockerVolumes() != null) {
+			for (String vol: app.getDockerVolumes()) {
+				volumes.add(vol);
+			}
+		}
+		
+		return volumes;
 	}
 	
 	private int getFreePort() {

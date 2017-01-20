@@ -30,7 +30,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import eu.openanalytics.auth.AuthenticationConfigurationFactory;
-import eu.openanalytics.components.LogoutHandler;
+import eu.openanalytics.auth.LogoutHandler;
 import eu.openanalytics.services.AppService;
 import eu.openanalytics.services.AppService.ShinyApp;
 import eu.openanalytics.services.UserService;

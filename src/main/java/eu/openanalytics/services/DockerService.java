@@ -243,6 +243,7 @@ public class DockerService {
 			final HostConfig hostConfig = hostConfigBuilder
 					.portBindings(portBindings)
 					.dns(app.getDockerDns())
+					.binds(buildVolumes(app))
 					.build();
 			
 			final ContainerConfig containerConfig = ContainerConfig.builder()
@@ -251,7 +252,6 @@ public class DockerService {
 				    .exposedPorts("3838")
 				    .cmd(app.getDockerCmd())
 				    .env(buildEnv(userName, app))
-				    .volumes(buildVolumes(app))
 				    .build();
 			
 			ContainerCreation container = dockerClient.createContainer(containerConfig);
@@ -329,8 +329,8 @@ public class DockerService {
 		return env;
 	}
 	
-	private Set<String> buildVolumes(ShinyApp app) {
-		Set<String> volumes = new HashSet<>();
+	private List<String> buildVolumes(ShinyApp app) {
+		List<String> volumes = new ArrayList<>();
 
 		if (app.getDockerVolumes() != null) {
 			for (String vol: app.getDockerVolumes()) {

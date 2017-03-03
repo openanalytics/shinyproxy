@@ -240,10 +240,11 @@ public class DockerService {
 			
 			Builder hostConfigBuilder = HostConfig.builder();
 			if (memoryLimit > 0) hostConfigBuilder.memory(memoryLimit);
+			if (app.getDockerNetwork() != null) hostConfigBuilder.networkMode(app.getDockerNetwork());
 			final HostConfig hostConfig = hostConfigBuilder
 					.portBindings(portBindings)
 					.dns(app.getDockerDns())
-					.binds(buildVolumes(app))
+					.binds(getBindVolumes(app))
 					.build();
 			
 			final ContainerConfig containerConfig = ContainerConfig.builder()
@@ -335,7 +336,7 @@ public class DockerService {
 		return env;
 	}
 	
-	private List<String> buildVolumes(ShinyApp app) {
+	private List<String> getBindVolumes(ShinyApp app) {
 		List<String> volumes = new ArrayList<>();
 
 		if (app.getDockerVolumes() != null) {

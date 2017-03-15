@@ -18,8 +18,11 @@
 	<!-- content -->
     <iframe id="shinyframe" th:src="${container}" width="100%" style="margin-top: 50px; border: 0px;"></iframe>
 	<script type="text/javascript" th:inline="javascript"> 
-		$('#shinyframe').css('height', ($(window).height()-50)+'px');
-		
+		function setShinyframeHeight(){
+                    $('#shinyframe').css('height', ($(window).height()-50)+'px');
+                }
+                window.addEventListener("load", setShinyframeHeight);
+                window.addEventListener("resize",  setShinyframeHeight);		
 		function heartbeat() {
 		    setTimeout(function() {
 		        $.ajax("/heartbeat" + window.location.pathname).success(function(data) {

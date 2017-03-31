@@ -22,6 +22,12 @@
 					<a role="button" class="btn btn-primary btn-sm" th:href="@{/admin}" sec:authorize="hasAnyRole(#vars.adminGroups)">Admin</a>
 					<a role="button" class="btn btn-primary btn-sm" th:href="@{/logout}" sec:authorize="isAuthenticated()">Sign Out</a>
 				</div>
+				<div class="navbar-right" sec:authorize="isAuthenticated()">
+					<span class="navbar-text">
+						<span class="glyphicon glyphicon-user"></span>
+						<span sec:authentication="name"></span>
+					</span>
+				</div>
 				<!--/.navbar-collapse -->
 			</div>
 		</nav>

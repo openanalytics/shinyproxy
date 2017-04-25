@@ -21,6 +21,8 @@ import javax.inject.Inject;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configurers.GlobalAuthenticationConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -50,6 +52,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	
 	@Inject
 	AuthenticationTypeProxy authType;
+	
+	@Inject
+	AuthenticationEventPublisher eventPublisher;
 	
 	@Override
 	public void configure(WebSecurity web) throws Exception {
@@ -99,8 +104,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		return new GlobalAuthenticationConfigurerAdapter() {
 			@Override
 			public void init(AuthenticationManagerBuilder auth) throws Exception {
+				auth.authenticationEventPublisher(eventPublisher);
 				authType.get().configureAuthenticationManagerBuilder(auth);
 			}
 		};
+	}
+	
+	@Bean(name="authenticationManager")
+	@Override
+	public AuthenticationManager authenticationManagerBean() throws Exception {
+		return super.authenticationManagerBean();
 	}
 }

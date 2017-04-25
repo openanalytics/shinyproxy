@@ -40,6 +40,9 @@ public class AuthenticationTypeProxy {
 	@Inject
 	SocialAuthenticationType social;
 
+	@Inject
+	KeycloakAuthenticationType keycloak;
+	
 	public IAuthenticationType get() {
 		switch (name()) {
 		case "ldap":
@@ -48,6 +51,8 @@ public class AuthenticationTypeProxy {
 			return simple;
 		case "social":
 			return social;
+		case "keycloak":
+			return keycloak;
 		default:
 			return noop;
 		}

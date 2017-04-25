@@ -138,6 +138,16 @@
 		  <artifactId>spring-social-google</artifactId>
 		  <version>1.0.0.RELEASE</version>
 		</dependency>
+		<dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-undertow-adapter</artifactId>
+            <version>3.0.0.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-spring-security-adapter</artifactId>
+            <version>3.0.0.Final</version>
+        </dependency>
     	<dependency>
         	<groupId>org.apache.directory.server</groupId>
         	<artifactId>apacheds-server-jndi</artifactId>

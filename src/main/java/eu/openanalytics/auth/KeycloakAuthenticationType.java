@@ -3,7 +3,9 @@ package eu.openanalytics.auth;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.servlet.ServletException;
@@ -15,6 +17,7 @@ import org.keycloak.adapters.KeycloakDeploymentBuilder;
 import org.keycloak.adapters.spi.HttpFacade.Request;
 import org.keycloak.adapters.spi.KeycloakAccount;
 import org.keycloak.adapters.springsecurity.AdapterDeploymentContextFactoryBean;
+import org.keycloak.adapters.springsecurity.account.KeycloakRole;
 import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationEntryPoint;
 import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
 import org.keycloak.adapters.springsecurity.authentication.KeycloakLogoutHandler;
@@ -142,7 +145,12 @@ public class KeycloakAuthenticationType implements IAuthenticationType {
 			@Override
 			public Authentication authenticate(Authentication authentication) throws AuthenticationException {
 				KeycloakAuthenticationToken token = (KeycloakAuthenticationToken) super.authenticate(authentication);
-				return new KeycloakAuthenticationToken2(token.getAccount(), token.getAuthorities());
+				List<GrantedAuthority> auth = token.getAuthorities().stream()
+						.map(t -> t.getAuthority().toUpperCase())
+						.map(a -> a.startsWith("ROLE_") ? a : "ROLE_" + a)
+						.map(a -> new KeycloakRole(a))
+						.collect(Collectors.toList());
+				return new KeycloakAuthenticationToken2(token.getAccount(), auth);
 			}
 		};
 	}

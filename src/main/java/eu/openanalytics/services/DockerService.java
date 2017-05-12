@@ -47,6 +47,7 @@ import org.springframework.stereotype.Service;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerCertificates;
 import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.DockerClient.RemoveContainerParam;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.Container;
@@ -192,14 +193,14 @@ public class DockerService {
 			@Override
 			public void run() {
 				try {
-					dockerClient.stopContainer(proxy.containerId, 3);
-					dockerClient.removeContainer(proxy.containerId);
+					dockerClient.removeContainer(proxy.containerId, RemoveContainerParam.forceKill());
 					releasePort(proxy.port);
 					log.info(String.format("Proxy released [user: %s] [app: %s] [port: %d]", proxy.userName, proxy.appName, proxy.port));
 					eventService.post(EventType.AppStop.toString(), proxy.userName, proxy.appName);
 				} catch (Exception e){
-					log.error("Failed to stop container " + proxy.name, e);
+					log.error("Failed to remove container " + proxy.name, e);
 				}
+				
 			}
 		};
 		if (async) {

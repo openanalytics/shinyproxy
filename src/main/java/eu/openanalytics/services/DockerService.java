@@ -193,6 +193,12 @@ public class DockerService {
 			@Override
 			public void run() {
 				try {
+					ShinyApp app = appService.getApp(proxy.appName);
+					if (app != null && app.getDockerNetworkConnections() != null) {
+						for (String networkConnection: app.getDockerNetworkConnections()) {
+							dockerClient.disconnectFromNetwork(proxy.containerId, networkConnection);
+						}
+					}
 					dockerClient.removeContainer(proxy.containerId, RemoveContainerParam.forceKill());
 					releasePort(proxy.port);
 					log.info(String.format("Proxy released [user: %s] [app: %s] [port: %d]", proxy.userName, proxy.appName, proxy.port));

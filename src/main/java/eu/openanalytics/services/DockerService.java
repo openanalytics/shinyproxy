@@ -257,6 +257,11 @@ public class DockerService {
 				    .build();
 			
 			ContainerCreation container = dockerClient.createContainer(containerConfig);
+			if (app.getDockerNetworkConnections() != null) {
+				for (String networkConnection: app.getDockerNetworkConnections()) {
+					dockerClient.connectToNetwork(container.id(), networkConnection);
+				}
+			}
 			dockerClient.startContainer(container.id());
 
 			ContainerInfo info = dockerClient.inspectContainer(container.id());

@@ -54,6 +54,7 @@ public class AppService {
 		private String dockerImage;
 		private String[] dockerDns;
 		private String dockerNetwork;
+		private String[] dockerNetworkConnections;
 		private String dockerMemory;
 		private String dockerEnvFile;
 		private String[] dockerVolumes;
@@ -113,6 +114,13 @@ public class AppService {
 		}
 		public void setDockerNetwork(String dockerNetwork) {
 			this.dockerNetwork = dockerNetwork;
+		}
+		
+		public String[] getDockerNetworkConnections() {
+			return dockerNetworkConnections;
+		}
+		public void setDockerNetworkConnections(String[] dockerNetworkConnections) {
+			this.dockerNetworkConnections = dockerNetworkConnections;
 		}
 		
 		public String getDockerMemory() {

@@ -1,0 +1,22 @@
+FROM centos:7.2.1511
+
+ARG PROXY='http://webproxy.openanalytics.eu:8080'
+ARG PROXY_NO_PROXY='localhost,127.0.0.0,127.0.0.1,openanalytics.eu'
+
+ENV http_proxy $PROXY
+ENV https_proxy $PROXY
+ENV no_proxy $PROXY_NO_PROXY
+ 
+RUN yum -y install wget tar rpm-build initscripts java-1.8.0-openjdk.x86_64 java-1.8.0-openjdk-devel
+
+# maven
+RUN wget http://apache.cu.be/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz
+RUN tar xzvf apache-maven-3.5.0-bin.tar.gz -C /opt/
+
+RUN mkdir -p /root/shinyproxy
+COPY . /root/shinyproxy
+
+RUN mkdir -p /home/jenkins/.m2
+RUN mv /root/shinyproxy/settings.xml /home/jenkins/.m2/settings.xml
+
+WORKDIR /root/shinyproxy

@@ -213,7 +213,7 @@
         </executions>
         <configuration>
           <license>(c) Copyright Open Analytics NV, 2016-2017 - Apache License 2.0</license>
-          <release>2</release>
+          <release>3</release>
           <group>Development/Tools</group>
           <packager>Open Analytics</packager>
           <defineStatements>
@@ -254,7 +254,11 @@
               </sources>
             </mapping>
           </mappings>
-          <preinstallScriptlet>
+          <requires>
+            <require>java</require>
+            <require>docker</require>
+          </requires>
+<preinstallScriptlet>
             <script>echo "pre-install"</script>
           </preinstallScriptlet>
           <postinstallScriptlet>

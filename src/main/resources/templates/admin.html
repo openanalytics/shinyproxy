@@ -38,7 +38,7 @@
     			<td th:text="${proxy.userName}"></td>
     			<td th:text="${proxy.appName}"></td>
     			<td th:text="${proxy.containerId}"></td>
-    			<td th:text="${@dockerService.getContainerUptime(proxy.containerId)}"></td>
+    			<td th:text="${proxy.uptime()}"></td>
     		</tr>
     	</table>
     </div>

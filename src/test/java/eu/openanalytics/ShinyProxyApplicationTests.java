@@ -15,11 +15,8 @@
  */
 package eu.openanalytics;
 
-import java.util.List;
-
 import javax.inject.Inject;
 
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -27,8 +24,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
-
-import com.spotify.docker.client.messages.Container;
 
 import eu.openanalytics.services.DockerService;
 
@@ -52,8 +47,8 @@ public class ShinyProxyApplicationTests {
 	@Ignore
 	@Test
 	public void testGetDockerClient(){
-		List<Container> shinyContainers = dockerService.getShinyContainers();
-		Assert.assertEquals(1, shinyContainers.size());
+//		List<Container> shinyContainers = dockerService.getShinyContainers();
+//		Assert.assertEquals(1, shinyContainers.size());
 	}
 
 }

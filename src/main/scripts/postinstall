@@ -1,5 +1,9 @@
 cp -u /opt/shinyproxy/shinyproxy.service /etc/systemd/system/shinyproxy.service
 mkdir -p /etc/shinyproxy
+if [ ! -e /etc/shinyproxy/application.yml ];
+then
+  cp /opt/shinyproxy/application-demo.yml /etc/shinyproxy/application.yml
+fi
 
 TEST=$(ps auxwww | grep /opt/shinyproxy | grep -c -v grep)
 if [ $TEST -ne 0 ];

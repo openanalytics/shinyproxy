@@ -11,6 +11,11 @@
 	<name>shinyproxy</name>
 	<description>Shiny proxy with LDAP authentication</description>
 
+  <organization>
+    <name>Open Analytics NV</name>
+    <url>http://www.shinyproxy.io/</url>
+  </organization>
+  
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
@@ -207,6 +212,8 @@
           </execution>
         </executions>
         <configuration>
+          <license>(c) Copyright Open Analytics NV, 2016-2017 - Apache License 2.0</license>
+          <release>2</release>
           <group>Development/Tools</group>
           <packager>Open Analytics</packager>
           <defineStatements>
@@ -232,6 +239,17 @@
               <sources>
                 <source>
                   <location>src/main/scripts/shinyproxy.service</location>
+                </source>
+              </sources>
+            </mapping>
+            <mapping>
+              <directory>/opt/shinyproxy</directory>
+              <filemode>755</filemode>
+              <username>root</username>
+              <groupname>root</groupname>
+              <sources>
+                <source>
+                  <location>src/main/resources/application-demo.yml</location>
                 </source>
               </sources>
             </mapping>

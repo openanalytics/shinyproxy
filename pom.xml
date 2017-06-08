@@ -256,7 +256,6 @@
           </mappings>
           <requires>
             <require>java</require>
-            <require>docker</require>
           </requires>
 <preinstallScriptlet>
             <script>echo "pre-install"</script>

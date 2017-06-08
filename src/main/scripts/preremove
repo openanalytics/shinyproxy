@@ -1,0 +1,5 @@
+if [ $1 -eq 0 ]; 
+then
+  systemctl stop shinyproxy.service
+  systemctl disable shinyproxy.service
+fi

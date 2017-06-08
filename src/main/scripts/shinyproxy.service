@@ -1,0 +1,9 @@
+[Unit]
+Description=ShinyProxy
+After=docker.service
+[Service]
+WorkingDirectory=/etc/shinyproxy
+ExecStart=/opt/shinyproxy/shinyproxy-0.9.2.jar
+
+[Install]
+WantedBy=multi-user.target

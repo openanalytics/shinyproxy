@@ -1,0 +1,23 @@
+cp -u /opt/shinyproxy/shinyproxy.service /etc/systemd/system/shinyproxy.service
+
+TEST=$(ps auxwww | grep /opt/shinyproxy | grep -c -v grep)
+if [ $TEST -ne 0 ];
+then
+  echo shinyproxy is already running, restarting 
+  systemctl try-restart shinyproxy.service
+  exit 0
+else
+  echo No shinyproxy running, trying to start one...
+  systemctl enable shinyproxy.service  
+  systemctl start shinyproxy.service
+  sleep 1
+  TEST=$(ps auxwww | grep /opt/shinyproxy | grep -c -v grep)
+  if [ $TEST -ne 0 ];
+  then
+    echo shinyproxy start-up succeeded!
+    exit 0
+  else
+    echo shinyproxy start-up failed!
+    exit 1
+  fi
+fi

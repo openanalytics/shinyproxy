@@ -364,8 +364,8 @@ public class DockerService {
 	private boolean testProxy(Proxy proxy) {
 		// Default: 10 * 2sec = 20sec
 		int totalWaitMs = Integer.parseInt(environment.getProperty("shiny.proxy.container-wait-time", "20000"));
-		int maxTries = 10;
-		int waitMs = totalWaitMs / maxTries;
+		int waitMs = Math.min(2000, totalWaitMs);
+		int maxTries = totalWaitMs / waitMs;
 		int timeoutMs = Integer.parseInt(environment.getProperty("shiny.proxy.container-wait-timeout", "5000"));
 		
 		return retry(i -> {

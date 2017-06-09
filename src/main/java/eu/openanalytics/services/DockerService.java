@@ -458,8 +458,8 @@ public class DockerService {
 		return retVal;
 	}
 	
-	private long memoryToBytes(String memory) {
-		if (memory == null || memory.isEmpty()) return -1;
+	private Long memoryToBytes(String memory) {
+		if (memory == null || memory.isEmpty()) return null;
 		Matcher matcher = Pattern.compile("(\\d+)([bkmg]?)").matcher(memory.toLowerCase());
 		if (!matcher.matches()) throw new IllegalArgumentException("Invalid memory argument: " + memory);
 		long mem = Long.parseLong(matcher.group(1));

@@ -77,7 +77,9 @@ public class DockerService {
 		
 	private Logger log = Logger.getLogger(DockerService.class);
 
+	private List<Proxy> launchingProxies = Collections.synchronizedList(new ArrayList<>());
 	private List<Proxy> activeProxies = Collections.synchronizedList(new ArrayList<>());
+	
 	private List<MappingListener> mappingListeners = Collections.synchronizedList(new ArrayList<>());
 	private Set<Integer> occupiedPorts = Collections.synchronizedSet(new HashSet<>());
 	
@@ -165,6 +167,7 @@ public class DockerService {
 	}
 	
 	public String getMapping(String userName, String appName) {
+		waitForLaunchingProxy(userName, appName);
 		Proxy proxy = findProxy(userName, appName);
 		if (proxy == null) {
 			// The user has no proxy yet.
@@ -239,6 +242,7 @@ public class DockerService {
 		proxy.userName = userName;
 		proxy.appName = appName;
 		proxy.port = getFreePort();
+		launchingProxies.add(proxy);
 		
 		try {
 			if (swarmMode) {
@@ -346,6 +350,7 @@ public class DockerService {
 		} catch (URISyntaxException ignore) {}
 		
 		activeProxies.add(proxy);
+		launchingProxies.remove(proxy);
 		log.info(String.format("Proxy activated [user: %s] [app: %s] [port: %d]", userName, appName, proxy.port));
 		eventService.post(EventType.AppStart.toString(), userName, appName);
 		
@@ -361,8 +366,26 @@ public class DockerService {
 		return null;
 	}
 	
+	private void waitForLaunchingProxy(String userName, String appName) {
+		int totalWaitMs = Integer.parseInt(environment.getProperty("shiny.proxy.container-wait-time", "20000"));
+		int waitMs = Math.min(2000, totalWaitMs);
+		int maxTries = totalWaitMs / waitMs;
+		
+		boolean mayProceed = retry(i -> {
+			synchronized (launchingProxies) {
+				for (Proxy proxy: launchingProxies) {
+					if (userName.equals(proxy.userName) && appName.equals(proxy.appName)) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}, maxTries, waitMs);
+		
+		if (!mayProceed) throw new ShinyProxyException("Cannot proceed: waiting for proxy to launch");
+	}
+	
 	private boolean testProxy(Proxy proxy) {
-		// Default: 10 * 2sec = 20sec
 		int totalWaitMs = Integer.parseInt(environment.getProperty("shiny.proxy.container-wait-time", "20000"));
 		int waitMs = Math.min(2000, totalWaitMs);
 		int maxTries = totalWaitMs / waitMs;

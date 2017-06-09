@@ -16,7 +16,4 @@ RUN tar xzvf apache-maven-3.5.0-bin.tar.gz -C /opt/
 RUN mkdir -p /root/shinyproxy
 COPY . /root/shinyproxy
 
-RUN mkdir -p /home/jenkins/.m2
-RUN mv /root/shinyproxy/settings.xml /home/jenkins/.m2/settings.xml
-
 WORKDIR /root/shinyproxy

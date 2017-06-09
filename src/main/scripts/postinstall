@@ -2,6 +2,7 @@ cp -u /opt/shinyproxy/shinyproxy.service /etc/systemd/system/shinyproxy.service
 mkdir -p /etc/shinyproxy
 if [ ! -e /etc/shinyproxy/application.yml ];
 then
+  echo demo configuration file is created at /etc/application.yml
   cp /opt/shinyproxy/application-demo.yml /etc/shinyproxy/application.yml
 fi
 

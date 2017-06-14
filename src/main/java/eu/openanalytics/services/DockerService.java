@@ -24,6 +24,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -62,6 +63,7 @@ import com.spotify.docker.client.messages.mount.Mount;
 import com.spotify.docker.client.messages.swarm.ContainerSpec;
 import com.spotify.docker.client.messages.swarm.DnsConfig;
 import com.spotify.docker.client.messages.swarm.EndpointSpec;
+import com.spotify.docker.client.messages.swarm.NetworkAttachmentConfig;
 import com.spotify.docker.client.messages.swarm.Node;
 import com.spotify.docker.client.messages.swarm.PortConfig;
 import com.spotify.docker.client.messages.swarm.ServiceSpec;
@@ -246,11 +248,9 @@ public class DockerService {
 		
 		try {
 			if (swarmMode) {
-				//TODO Add container network connections
-
 				Mount[] mounts = getBindVolumes(app).stream()
 						.map(b -> b.split(":"))
-						.map(fromTo -> Mount.builder().source(fromTo[0]).target(fromTo[1]).build())
+						.map(fromTo -> Mount.builder().source(fromTo[0]).target(fromTo[1]).type("bind").build())
 						.toArray(i -> new Mount[i]);
 
 				ContainerSpec containerSpec = ContainerSpec.builder()
@@ -261,9 +261,15 @@ public class DockerService {
 						.mounts(mounts)
 						.build();
 				
+				NetworkAttachmentConfig[] networks = Arrays
+						.stream(Optional.ofNullable(app.getDockerNetworkConnections()).orElse(new String[0]))
+						.map(n -> NetworkAttachmentConfig.builder().target(n).build())
+						.toArray(i -> new NetworkAttachmentConfig[i]);
+				
 				proxy.name = proxy.appName + "_" + proxy.port;
 				proxy.serviceId = dockerClient.createService(ServiceSpec.builder()
 						.name(proxy.name)
+						.networks(networks)
 						.taskTemplate(TaskSpec.builder()
 								.containerSpec(containerSpec)
 								.build())

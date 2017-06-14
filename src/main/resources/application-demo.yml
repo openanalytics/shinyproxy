@@ -6,8 +6,8 @@ shiny:
     heartbeat-rate: 10000
     heartbeat-timeout: 60000
     port: 8080
-    authentication: ldap
-    admin-groups: scientists
+    authentication: simple
+    admin-groups: shinyproxy_admin
     # Simple auth configuration
     users:
     - name: jack
@@ -24,11 +24,34 @@ shiny:
       group-search-filter: (uniqueMember={0})
       manager-dn: cn=read-only-admin,dc=example,dc=com
       manager-password: password
+    # Social (OAuth2) configuration
+    social:
+      facebook:
+        app-id: 1903077663307662
+        app-secret: 4f77f34d916b9c641f53f47776573d1b
+      twitter:
+        app-id: HdRhL9NwyUUAnFGph44TviF6I
+        app-secret: 1wSlRMJI6zb19PEy2UbVIDbJ9M3xsFlKx8TmKnItv9hp4BdwFI
+      google:
+        app-id: 44983161084-jmi435n84jjilaafe5b0l62hfddo33p9.apps.googleusercontent.com
+        app-secret: D5l_BYSOGKKpCM8UqGLwu1in
+      github:
+        app-id: 6267cbee271bb8b692ba
+        app-secret: f10d2e5c55eddeab7e130728b3e0c0bd7a01d13f
+      linkedin:
+        app-id: 866sm3x5i1jqxe
+        app-secret: B1wrCsloZqDi3E6S
+    # Keycloak (sso) configuration
+    keycloak:
+      realm: oasso
+      auth-server-url: https://websso-tst.openanalytics.eu/auth
+      resource: shinyproxy-dev
+      credentials-secret: 397d70bb-ec88-4a13-be1c-689b5deb7935
     # Docker configuration
     docker:
       cert-path: /home/none
       url: http://localhost:2375
-      host: 127.0.0.1
+      #deprecated: host: 127.0.0.1
       port-range-start: 20000
   apps:
   - name: 01_hello
@@ -36,11 +59,26 @@ shiny:
     description: Application which demonstrates the basics of a Shiny app
     docker-cmd: ["R", "-e shinyproxy::run_01_hello()"]
     docker-image: openanalytics/shinyproxy-demo
+    docker-network-connections: [ "network1", "network2" ]
     groups: scientists, mathematicians
   - name: 06_tabsets
     docker-cmd: ["R", "-e shinyproxy::run_06_tabsets()"]
     docker-image: openanalytics/shinyproxy-demo
     groups: scientists
+  - name: 06_tabsets_for_all
+    docker-cmd: ["R", "-e shinyproxy::run_06_tabsets()"]
+    docker-image: openanalytics/shinyproxy-demo
+  - name: 06_tabsets_for_users
+    docker-cmd: ["R", "-e shinyproxy::run_06_tabsets()"]
+    docker-image: openanalytics/shinyproxy-demo
+    groups: shinyproxy_user
+  - name: 06_tabsets_for_admins
+    docker-cmd: ["R", "-e shinyproxy::run_06_tabsets()"]
+    docker-image: openanalytics/shinyproxy-demo
+    groups: shinyproxy_admin
+
+server:
+  useForwardHeaders: true
 
 logging:
   file:

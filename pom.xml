@@ -203,14 +203,14 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>rpm-maven-plugin</artifactId>
         <version>2.1.5</version>
-        <executions>
+<!--         <executions>
           <execution>
             <id>generate-rpm</id>
             <goals>
               <goal>rpm</goal>
             </goals>
           </execution>
-        </executions>
+        </executions> -->
         <configuration>
           <license>(c) Copyright Open Analytics NV, 2016-2017 - Apache License 2.0</license>
           <release>1</release>

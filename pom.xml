@@ -20,7 +20,7 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>1.5.2.RELEASE</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 
 	<properties>
@@ -56,12 +56,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 			<exclusions>
-        		<exclusion>
-            		<groupId>org.springframework.boot</groupId>
-            		<artifactId>spring-boot-starter-tomcat</artifactId>
-        		</exclusion>
-    		</exclusions>
-    	</dependency>
+				<exclusion>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-tomcat</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -70,20 +70,20 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
- 		<dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-messaging</artifactId>
-        </dependency>
-       	<dependency>
-	        <groupId>org.springframework.ldap</groupId>
-	        <artifactId>spring-ldap-core</artifactId>
-	    </dependency>
-    	<dependency>
-    		<groupId>com.spotify</groupId>
-    		<artifactId>docker-client</artifactId>
-    		<version>8.6.2</version>
-    	</dependency>
-    	<dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-messaging</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.ldap</groupId>
+			<artifactId>spring-ldap-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.spotify</groupId>
+			<artifactId>docker-client</artifactId>
+			<version>8.6.2</version>
+		</dependency>
+		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>bootstrap</artifactId>
 			<version>3.3.6</version>
@@ -97,97 +97,97 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-jdbc</artifactId>
 		</dependency>
-    	<dependency>
-        	<groupId>org.springframework.boot</groupId>
-        	<artifactId>spring-boot-starter-security</artifactId>
-    	</dependency>
-    	<dependency>
-        	<groupId>org.springframework.security</groupId>
-        	<artifactId>spring-security-ldap</artifactId>
-    	</dependency>
-    	<dependency>
-        	<groupId>org.springframework.security.oauth</groupId>
-        	<artifactId>spring-security-oauth2</artifactId>
-    	</dependency>
-    	<dependency>
-		    <groupId>org.springframework.social</groupId>
-		    <artifactId>spring-social-core</artifactId>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
 		</dependency>
 		<dependency>
-		    <groupId>org.springframework.social</groupId>
-		    <artifactId>spring-social-security</artifactId>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-ldap</artifactId>
 		</dependency>
 		<dependency>
-		    <groupId>org.springframework.social</groupId>
-		    <artifactId>spring-social-web</artifactId>
-		</dependency>
-        <dependency>
-            <groupId>org.springframework.social</groupId>
-            <artifactId>spring-social-twitter</artifactId>
-        </dependency>
-		<dependency>
-		  <groupId>org.springframework.social</groupId>
-		  <artifactId>spring-social-facebook</artifactId>
+			<groupId>org.springframework.security.oauth</groupId>
+			<artifactId>spring-security-oauth2</artifactId>
 		</dependency>
 		<dependency>
-		  <groupId>org.springframework.social</groupId>
-		  <artifactId>spring-social-linkedin</artifactId>
+			<groupId>org.springframework.social</groupId>
+			<artifactId>spring-social-core</artifactId>
 		</dependency>
 		<dependency>
-		  <groupId>org.springframework.social</groupId>
-		  <artifactId>spring-social-github</artifactId>
-		  <version>1.0.0.M4</version>
+			<groupId>org.springframework.social</groupId>
+			<artifactId>spring-social-security</artifactId>
 		</dependency>
 		<dependency>
-		  <groupId>org.springframework.social</groupId>
-		  <artifactId>spring-social-google</artifactId>
-		  <version>1.0.0.RELEASE</version>
+			<groupId>org.springframework.social</groupId>
+			<artifactId>spring-social-web</artifactId>
 		</dependency>
 		<dependency>
-            <groupId>org.keycloak</groupId>
-            <artifactId>keycloak-undertow-adapter</artifactId>
-            <version>3.0.0.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.keycloak</groupId>
-            <artifactId>keycloak-spring-security-adapter</artifactId>
-            <version>3.0.0.Final</version>
-        </dependency>
-    	<dependency>
-        	<groupId>org.apache.directory.server</groupId>
-        	<artifactId>apacheds-server-jndi</artifactId>
-        	<version>1.5.5</version>
-    	</dependency>				 		
-    	<dependency>
+			<groupId>org.springframework.social</groupId>
+			<artifactId>spring-social-twitter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.social</groupId>
+			<artifactId>spring-social-facebook</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.social</groupId>
+			<artifactId>spring-social-linkedin</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.social</groupId>
+			<artifactId>spring-social-github</artifactId>
+			<version>1.0.0.M4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.social</groupId>
+			<artifactId>spring-social-google</artifactId>
+			<version>1.0.0.RELEASE</version>
+		</dependency>
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-undertow-adapter</artifactId>
+			<version>3.0.0.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>org.keycloak</groupId>
+			<artifactId>keycloak-spring-security-adapter</artifactId>
+			<version>3.0.0.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.directory.server</groupId>
+			<artifactId>apacheds-server-jndi</artifactId>
+			<version>1.5.5</version>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-    	<dependency>
-    		<groupId>org.springframework.boot</groupId>
-    		<artifactId>spring-boot-starter-undertow</artifactId>
-    	</dependency>
-    	<dependency>
-    		<groupId>io.undertow</groupId>
-    		<artifactId>undertow-core</artifactId>
-    	</dependency>
-    	<dependency>
-    		<groupId>io.undertow</groupId>
-    		<artifactId>undertow-servlet</artifactId>
-    	</dependency>
-    	<dependency>
-    		<groupId>io.undertow</groupId>
-    		<artifactId>undertow-websockets-jsr</artifactId>
-    	</dependency>
-    	<dependency>
-    		<groupId>monetdb</groupId>
-    		<artifactId>monetdb-jdbc</artifactId>
-    		<version>2.24</version>
-    	</dependency>
-    	<dependency>
-    		<groupId>com.h2database</groupId>
-    		<artifactId>h2</artifactId>
-    	</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-undertow</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.undertow</groupId>
+			<artifactId>undertow-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.undertow</groupId>
+			<artifactId>undertow-servlet</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.undertow</groupId>
+			<artifactId>undertow-websockets-jsr</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>monetdb</groupId>
+			<artifactId>monetdb-jdbc</artifactId>
+			<version>2.24</version>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -199,6 +199,7 @@
 					<executable>true</executable>
 				</configuration>
 			</plugin>
+
 			<plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>rpm-maven-plugin</artifactId>
@@ -283,7 +284,70 @@
           </postremoveScriptlet>
         </configuration>
       </plugin>
+
+			<plugin>
+				<artifactId>jdeb</artifactId>
+				<groupId>org.vafer</groupId>
+				<version>1.5</version>
+<!-- 				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>jdeb</goal>
+						</goals>
+					</execution>
+				</executions>-->
+				<configuration>
+					<verbose>true</verbose>
+					<controlDir>${basedir}/src/deb/control</controlDir>
+					<dataSet>
+
+						<data>
+							<src>${project.build.directory}/${project.build.finalName}.jar</src>
+							<type>file</type>
+							<mapper>
+								<type>perm</type>
+								<prefix>/opt/${project.artifactId}</prefix>
+							</mapper>
+						</data>
+
+						<data>
+							<type>link</type>
+							<symlink>true</symlink>
+							<linkName>/opt/${project.artifactId}/${project.artifactId}.jar</linkName>
+							<linkTarget>/opt/${project.artifactId}/${project.build.finalName}.jar</linkTarget>
+						</data>
+
+						<data>
+							<src>${basedir}/src/deb/shinyproxy.service</src>
+							<type>file</type>
+							<mapper>
+								<type>perm</type>
+								<prefix>/opt/${project.artifactId}</prefix>
+							</mapper>
+						</data>
+
+						<data>
+							<src>${basedir}/src/main/resources/application-demo.yml</src>
+							<type>file</type>
+							<mapper>
+								<type>perm</type>
+								<prefix>/opt/${project.artifactId}</prefix>
+							</mapper>
+						</data>
+
+						<data>
+							<type>template</type>
+							<paths>
+								<path>etc/${project.artifactId}</path>
+							</paths>
+						</data>
+
+					</dataSet>
+				</configuration>
+			</plugin>
+
 		</plugins>
 	</build>
-	
+
 </project>

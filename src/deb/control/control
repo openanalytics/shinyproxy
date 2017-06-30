@@ -1,0 +1,9 @@
+Package: [[name]]
+Version: [[version]]
+Section: extra
+Priority: optional
+Architecture: all
+Description: [[description]]
+Maintainer: Maxim Nazarov <maxim.nazarov@openanalytics.eu>
+Homepage: http://www.shinyproxy.io/
+Depends: java8-runtime | default-jre-headless, docker-engine | docker-ce | docker-ee

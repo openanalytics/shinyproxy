@@ -1,0 +1,6 @@
+#!/bin/bash
+
+echo pre-remove
+
+systemctl stop shinyproxy.service
+systemctl disable shinyproxy.service

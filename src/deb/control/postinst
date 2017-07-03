@@ -1,25 +1,33 @@
 #!/bin/bash
 
-echo post-install
-
+cp -u /opt/shinyproxy/shinyproxy.conf /etc/init/shinyproxy.conf
 cp -u /opt/shinyproxy/shinyproxy.service /etc/systemd/system/shinyproxy.service
+
+# copy default configuration file
 mkdir -p /etc/shinyproxy
 if [ ! -e /etc/shinyproxy/application.yml ];
 then
   cp /opt/shinyproxy/application-demo.yml /etc/shinyproxy/application.yml
   echo demo configuration file is created at /etc/shinyproxy/application.yml
+else
+  echo using configuration file /etc/shinyproxy/application.yml
 fi
 
 TEST=$(ps auxwww | grep /opt/shinyproxy | grep -c -v grep)
 if [ $TEST -ne 0 ];
 then
   echo shinyproxy is already running, restarting 
-  systemctl try-restart shinyproxy.service
+  service shinyproxy restart
   exit 0
 else
   echo No shinyproxy running, trying to start one...
-  systemctl enable shinyproxy.service  
-  systemctl start shinyproxy.service
+  
+  service shinyproxy start
+  if [ -d /run/systemd/system ];
+  then
+    systemctl enable shinyproxy.service
+  fi
+
   sleep 1
   TEST=$(ps auxwww | grep /opt/shinyproxy | grep -c -v grep)
   if [ $TEST -ne 0 ];

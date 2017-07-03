@@ -1,8 +1,7 @@
 #!/bin/bash
 
-echo post-remove
-
-if [ $(dpkg-query -W -f='${Status}' shinyproxy 2>/dev/null | grep -c 'ok installed') -gt 0 ];
+if [ "$1" = "remove" ];
 then
   rm -f /etc/systemd/system/shinyproxy.service
+  rm -f /etc/init/shinyproxy.conf
 fi

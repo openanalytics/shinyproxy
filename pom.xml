@@ -211,7 +211,6 @@
 					<verbose>true</verbose>
 					<controlDir>${basedir}/src/deb/control</controlDir>
 					<dataSet>
-
 						<data>
 							<src>${project.build.directory}/${project.build.finalName}.jar</src>
 							<type>file</type>
@@ -220,23 +219,28 @@
 								<prefix>/opt/${project.artifactId}</prefix>
 							</mapper>
 						</data>
-
 						<data>
 							<type>link</type>
 							<symlink>true</symlink>
 							<linkName>/opt/${project.artifactId}/${project.artifactId}.jar</linkName>
 							<linkTarget>/opt/${project.artifactId}/${project.build.finalName}.jar</linkTarget>
 						</data>
-
-						<data>
-							<src>${basedir}/src/deb/shinyproxy.service</src>
-							<type>file</type>
-							<mapper>
-								<type>perm</type>
-								<prefix>/opt/${project.artifactId}</prefix>
-							</mapper>
-						</data>
-
+            <data>
+              <src>${basedir}/src/deb/shinyproxy.service</src>
+              <type>file</type>
+              <mapper>
+                <type>perm</type>
+                <prefix>/opt/${project.artifactId}</prefix>
+              </mapper>
+            </data>
+            <data>
+              <src>${basedir}/src/deb/shinyproxy.conf</src>
+              <type>file</type>
+              <mapper>
+                <type>perm</type>
+                <prefix>/opt/${project.artifactId}</prefix>
+              </mapper>
+            </data>
 						<data>
 							<src>${basedir}/src/main/resources/application-demo.yml</src>
 							<type>file</type>
@@ -245,14 +249,12 @@
 								<prefix>/opt/${project.artifactId}</prefix>
 							</mapper>
 						</data>
-
 						<data>
 							<type>template</type>
 							<paths>
 								<path>etc/${project.artifactId}</path>
 							</paths>
 						</data>
-
 					</dataSet>
 				</configuration>
 			</plugin>

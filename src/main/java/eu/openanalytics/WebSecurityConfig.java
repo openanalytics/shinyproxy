@@ -19,8 +19,10 @@ import java.util.Arrays;
 
 import javax.inject.Inject;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configurers.GlobalAuthenticationConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -29,7 +31,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import eu.openanalytics.auth.AuthenticationConfigurationFactory;
+import eu.openanalytics.auth.AuthenticationTypeProxy;
 import eu.openanalytics.auth.LogoutHandler;
 import eu.openanalytics.services.AppService;
 import eu.openanalytics.services.AppService.ShinyApp;
@@ -43,13 +45,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	LogoutHandler logoutHandler;
 
 	@Inject
-	Environment environment;		
-	
-	@Inject
 	AppService appService;
 
 	@Inject
 	UserService userService;
+	
+	@Inject
+	AuthenticationTypeProxy authType;
+	
+	@Inject
+	AuthenticationEventPublisher eventPublisher;
 	
 	@Override
 	public void configure(WebSecurity web) throws Exception {
@@ -66,9 +71,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			// disable X-Frame-Options
 			.headers().frameOptions().disable();
 
-		if (AuthenticationConfigurationFactory.hasAuth(environment)) {
+		if (authType.get().hasAuthorization()) {
 			// Limit access to the app pages
-			http.authorizeRequests().antMatchers("/login").permitAll();
+			http.authorizeRequests().antMatchers("/login", "/signin/**", "/signup").permitAll();
 			for (ShinyApp app: appService.getApps()) {
 				if (app.getGroups() == null || app.getGroups().length == 0) continue;
 				String[] appRoles = Arrays.stream(app.getGroups()).map(s -> s.toUpperCase()).toArray(i -> new String[i]);
@@ -90,17 +95,24 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 					.logoutSuccessHandler(logoutHandler)
 					.logoutSuccessUrl("/login");
 		}
+		
+		authType.get().configureHttpSecurity(http);
 	}
 
-	@Configuration
-	protected static class AuthenticationConfiguration extends GlobalAuthenticationConfigurerAdapter {
-
-		@Inject
-		private Environment environment;		
-
-		@Override
-		public void init(AuthenticationManagerBuilder auth) throws Exception {
-			AuthenticationConfigurationFactory.configure(auth, environment);
-		}
+	@Bean
+	public GlobalAuthenticationConfigurerAdapter authenticationConfiguration() {
+		return new GlobalAuthenticationConfigurerAdapter() {
+			@Override
+			public void init(AuthenticationManagerBuilder auth) throws Exception {
+				auth.authenticationEventPublisher(eventPublisher);
+				authType.get().configureAuthenticationManagerBuilder(auth);
+			}
+		};
+	}
+	
+	@Bean(name="authenticationManager")
+	@Override
+	public AuthenticationManager authenticationManagerBean() throws Exception {
+		return super.authenticationManagerBean();
 	}
 }

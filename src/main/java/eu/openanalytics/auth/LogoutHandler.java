@@ -37,9 +37,12 @@ public class LogoutHandler implements LogoutSuccessHandler {
 	
 	@Override
 	public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-		if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-			String userName = ((UserDetails) authentication.getPrincipal()).getUsername();
-			userService.logout(userName);
+		if (authentication != null) {
+			String userName = authentication.getName();
+			if (authentication.getPrincipal() instanceof UserDetails) {
+				userName = ((UserDetails) authentication.getPrincipal()).getUsername();
+			}
+			if (userName != null) userService.logout(userName);
 		}
 		response.sendRedirect("/");
 	}

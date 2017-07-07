@@ -16,13 +16,13 @@
 	<div th:replace="../fragments/navbar :: navbar"></div>
 	
 	<!-- content -->
-    <iframe id="shinyframe" th:src="${container}" width="100%" style="margin-top: 50px; border: 0px;"></iframe>
+    <iframe id="shinyframe" th:src="${container}" width="100%"></iframe>
 	<script type="text/javascript" th:inline="javascript"> 
-		function setShinyframeHeight(){
-                    $('#shinyframe').css('height', ($(window).height()-50)+'px');
-                }
-                window.addEventListener("load", setShinyframeHeight);
-                window.addEventListener("resize",  setShinyframeHeight);		
+		function setShinyframeHeight() {
+	      $('#shinyframe').css('height', ($(window).height()-50)+'px');
+	  }
+	  window.addEventListener("load", setShinyframeHeight);
+	  window.addEventListener("resize",  setShinyframeHeight);
 		function heartbeat() {
 		    setTimeout(function() {
 		        $.ajax("/heartbeat" + window.location.pathname).success(function(data) {

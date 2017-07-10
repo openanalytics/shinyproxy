@@ -11,11 +11,11 @@
 	<name>shinyproxy</name>
 	<description>Shiny proxy with LDAP authentication</description>
 
-  <organization>
-    <name>Open Analytics NV</name>
-    <url>http://www.shinyproxy.io/</url>
-  </organization>
-  
+	<organization>
+		<name>Open Analytics NV</name>
+		<url>http://www.shinyproxy.io/</url>
+	</organization>
+
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
@@ -201,98 +201,90 @@
 			</plugin>
 
 			<plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>rpm-maven-plugin</artifactId>
-        <version>2.1.5</version>
-<!--         <executions>
-          <execution>
-            <id>generate-rpm</id>
-            <goals>
-              <goal>rpm</goal>
-            </goals>
-          </execution>
-        </executions> -->
-        <configuration>
-          <license>(c) Copyright Open Analytics NV, 2016-2017 - Apache License 2.0</license>
-          <release>1</release>
-          <group>Development/Tools</group>
-          <packager>Open Analytics</packager>
-          <defineStatements>
-            <defineStatement>_unpackaged_files_terminate_build 0</defineStatement>
-          </defineStatements>
-          <mappings>
-            <mapping>
-              <directory>/opt/shinyproxy</directory>
-              <filemode>755</filemode>
-              <username>root</username>
-              <groupname>root</groupname>
-            </mapping>
-            <mapping>
-              <directory>/opt/shinyproxy</directory>
-              <filemode>755</filemode>
-              <username>root</username>
-              <groupname>root</groupname>
-              <artifact/>
-            </mapping>
-            <mapping>
-              <directory>/opt/shinyproxy</directory>
-              <filemode>755</filemode>
-              <username>root</username>
-              <groupname>root</groupname>
-              <sources>
-                <source>
-                  <location>src/main/scripts/shinyproxy.service</location>
-                </source>
-              </sources>
-            </mapping>
-            <mapping>
-              <directory>/opt/shinyproxy</directory>
-              <filemode>755</filemode>
-              <username>root</username>
-              <groupname>root</groupname>
-              <sources>
-                <source>
-                  <location>src/main/resources/application-demo.yml</location>
-                </source>
-              </sources>
-            </mapping>
-          </mappings>
-          <requires>
-            <require>java</require>
-          </requires>
-<!--           <preinstallScriptlet> -->
-<!--             <script>echo "pre-install"</script> -->
-<!--           </preinstallScriptlet> -->
-          <postinstallScriptlet>
-<!--             <script>echo "post-install"</script> -->
-            <scriptFile>src/main/scripts/postinstall</scriptFile>
-            <fileEncoding>utf-8</fileEncoding>
-          </postinstallScriptlet>
-          <preremoveScriptlet>
-<!--             <script>echo "pre-remove"</script> -->
-            <scriptFile>src/main/scripts/preremove</scriptFile>
-            <fileEncoding>utf-8</fileEncoding>
-          </preremoveScriptlet>
-          <postremoveScriptlet>
-<!--             <script>echo "post-remove"</script> -->
-            <scriptFile>src/main/scripts/postremove</scriptFile>
-            <fileEncoding>utf-8</fileEncoding>
-          </postremoveScriptlet>
-        </configuration>
-      </plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>rpm-maven-plugin</artifactId>
+				<version>2.1.5</version>
+				<!-- <executions> <execution> <id>generate-rpm</id> <goals> <goal>rpm</goal> 
+					</goals> </execution> </executions> -->
+				<configuration>
+					<license>(c) Copyright Open Analytics NV, 2016-2017 - Apache
+						License 2.0</license>
+					<release>1</release>
+					<group>Development/Tools</group>
+					<packager>Open Analytics</packager>
+					<defineStatements>
+						<defineStatement>_unpackaged_files_terminate_build 0</defineStatement>
+					</defineStatements>
+					<mappings>
+
+						<mapping>
+							<directory>/opt/shinyproxy</directory>
+							<filemode>755</filemode>
+							<username>root</username>
+							<groupname>root</groupname>
+						</mapping>
+
+						<mapping>
+							<directory>/opt/shinyproxy</directory>
+							<filemode>755</filemode>
+							<username>root</username>
+							<groupname>root</groupname>
+							<artifact />
+						</mapping>
+
+						<mapping>
+							<directory>/opt/shinyproxy</directory>
+							<sources>
+								<softlinkSource>
+									<destination>shinyproxy.jar</destination>
+									<location>shinyproxy-${project.version}.jar</location>
+								</softlinkSource>
+							</sources>
+						</mapping>
+
+						<mapping>
+							<directory>/opt/shinyproxy</directory>
+							<filemode>755</filemode>
+							<username>root</username>
+							<groupname>root</groupname>
+							<sources>
+								<source>
+									<location>src/deb/shinyproxy.service</location>
+								</source>
+								<source>
+									<location>src/deb/shinyproxy.conf</location>
+								</source>
+								<source>
+									<location>src/main/resources/application-demo.yml</location>
+								</source>
+							</sources>
+						</mapping>
+
+					</mappings>
+					<requires>
+						<require>java</require>
+					</requires>
+					<postinstallScriptlet>
+						<scriptFile>src/deb/control/postinst</scriptFile>
+						<fileEncoding>utf-8</fileEncoding>
+					</postinstallScriptlet>
+					<preremoveScriptlet>
+						<scriptFile>src/deb/control/prerm</scriptFile>
+						<fileEncoding>utf-8</fileEncoding>
+					</preremoveScriptlet>
+					<postremoveScriptlet>
+						<scriptFile>src/deb/control/postrm</scriptFile>
+						<fileEncoding>utf-8</fileEncoding>
+					</postremoveScriptlet>
+				</configuration>
+			</plugin>
 
 			<plugin>
 				<artifactId>jdeb</artifactId>
 				<groupId>org.vafer</groupId>
 				<version>1.5</version>
-<!-- 				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>jdeb</goal>
-						</goals>
-					</execution>
-				</executions>-->
+				<!-- <executions> <execution> <phase>package</phase> <goals> <goal>jdeb</goal> 
+					</goals> </execution> </executions> -->
 				<configuration>
 					<verbose>true</verbose>
 					<controlDir>${basedir}/src/deb/control</controlDir>
@@ -311,22 +303,22 @@
 							<linkName>/opt/${project.artifactId}/${project.artifactId}.jar</linkName>
 							<linkTarget>/opt/${project.artifactId}/${project.build.finalName}.jar</linkTarget>
 						</data>
-            <data>
-              <src>${basedir}/src/deb/shinyproxy.service</src>
-              <type>file</type>
-              <mapper>
-                <type>perm</type>
-                <prefix>/opt/${project.artifactId}</prefix>
-              </mapper>
-            </data>
-            <data>
-              <src>${basedir}/src/deb/shinyproxy.conf</src>
-              <type>file</type>
-              <mapper>
-                <type>perm</type>
-                <prefix>/opt/${project.artifactId}</prefix>
-              </mapper>
-            </data>
+						<data>
+							<src>${basedir}/src/deb/shinyproxy.service</src>
+							<type>file</type>
+							<mapper>
+								<type>perm</type>
+								<prefix>/opt/${project.artifactId}</prefix>
+							</mapper>
+						</data>
+						<data>
+							<src>${basedir}/src/deb/shinyproxy.conf</src>
+							<type>file</type>
+							<mapper>
+								<type>perm</type>
+								<prefix>/opt/${project.artifactId}</prefix>
+							</mapper>
+						</data>
 						<data>
 							<src>${basedir}/src/main/resources/application-demo.yml</src>
 							<type>file</type>

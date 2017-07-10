@@ -1,7 +1,15 @@
 #!/bin/bash
 
-cp -u /opt/shinyproxy/shinyproxy.conf /etc/init/shinyproxy.conf
-cp -u /opt/shinyproxy/shinyproxy.service /etc/systemd/system/shinyproxy.service
+if [ -d /etc/init ];
+then
+  cp -u /opt/shinyproxy/shinyproxy.conf /etc/init/shinyproxy.conf
+fi
+
+if [ -d /run/systemd/system ];
+then
+  cp -u /opt/shinyproxy/shinyproxy.service /etc/systemd/system/shinyproxy.service
+  systemctl daemon-reload   
+fi
 
 # copy default configuration file
 mkdir -p /etc/shinyproxy

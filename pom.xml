@@ -232,11 +232,7 @@
               <filemode>755</filemode>
               <username>root</username>
               <groupname>root</groupname>
-              <sources>
-                <source>
-                  <location>target/shinyproxy-0.9.2.jar</location>
-                </source>
-              </sources>
+              <artifact/>
             </mapping>
             <mapping>
               <directory>/opt/shinyproxy</directory>

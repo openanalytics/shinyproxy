@@ -18,7 +18,7 @@
 	<div th:replace="../fragments/navbar :: navbar"></div>
 	
 	<!-- content -->
-	<div th:if="${!displayAppLogos}" id="applist" style="padding-top: 10px;">
+	<div th:if="${!displayAppLogos}" id="applist">
 		<ul>
 			<li th:each="app: ${apps}">
 				<a th:href="@{/app/}+${app.name}" th:text="${app.displayName == null} ? ${app.name} : ${app.displayName}"></a>
@@ -28,7 +28,7 @@
 		</ul>
 	</div>
     
-    <div th:if="${displayAppLogos}" class="container" id="applist" style="padding-top: 10px;">
+    <div th:if="${displayAppLogos}" class="container" id="applist">
 		<div class="row" style="margin-top:20px;" th:each="app: ${apps}">
 			<div class="col-md-6 col-md-offset-3">
 				<div class="media">

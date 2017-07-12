@@ -1,7 +1,13 @@
-body { padding-top: 50px; }
+
+body > div { padding-top: 10px; }
+body > div#navbar { padding-top: 0px; }
+
+#navbar + div { padding-top: 60px; }
+
 @media screen and (max-width: 768px) {
-    body { padding-top: 140px; }
+   #navbar + div { padding-top: 150px; }
 }
+
 @media screen and (max-width: 360px) {
-    body { padding-top: 190px; }
+    #navbar + div { padding-top: 200px; }
 }

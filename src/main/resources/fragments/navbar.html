@@ -4,7 +4,7 @@
 	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head></head>
 <body>
-	<div th:fragment="navbar" th:if="${@environment.getProperty('shiny.proxy.hide-navbar') != 'true'}">
+	<div th:fragment="navbar" th:if="${@environment.getProperty('shiny.proxy.hide-navbar') != 'true'}" id="navbar">
 		<nav class="navbar navbar-inverse navbar-fixed-top">
 			<div class="container-fluid">
 				<div class="navbar-header">

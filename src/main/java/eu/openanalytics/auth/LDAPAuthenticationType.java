@@ -15,7 +15,9 @@
  */
 package eu.openanalytics.auth;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -28,6 +30,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.ldap.core.ContextSource;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configurers.ldap.LdapAuthenticationProviderConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -55,37 +58,83 @@ public class LDAPAuthenticationType implements IAuthenticationType {
 
 	@Override
 	public void configureAuthenticationManagerBuilder(AuthenticationManagerBuilder auth) throws Exception {
-		String[] userDnPatterns = { environment.getProperty("shiny.proxy.ldap.user-dn-pattern") };
-		if (userDnPatterns[0] == null || userDnPatterns[0].isEmpty()) userDnPatterns = new String[0];
+		LDAPProviderConfig[] configs = LDAPProviderConfig.loadAll(environment);
+		for (LDAPProviderConfig cfg: configs) {
+			LdapAuthenticationProviderConfigurer<AuthenticationManagerBuilder> configurer = new LdapAuthenticationProviderConfigurer<>();
+			
+			String[] userDnPatterns = { cfg.userDnPattern };
+			if (userDnPatterns[0] == null || userDnPatterns[0].isEmpty()) userDnPatterns = new String[0];
 
-		String managerDn = environment.getProperty("shiny.proxy.ldap.manager-dn");
-		if (managerDn != null && managerDn.isEmpty()) managerDn = null;
-		
-		// Manually instantiate contextSource so it can be passed into authoritiesPopulator below.
-		String ldapUrl = environment.getProperty("shiny.proxy.ldap.url");
-		DefaultSpringSecurityContextSource contextSource = new DefaultSpringSecurityContextSource(ldapUrl);
-		if (managerDn != null) {
-			contextSource.setUserDn(managerDn);
-			contextSource.setPassword(environment.getProperty("shiny.proxy.ldap.manager-password"));
-		}
-		contextSource.afterPropertiesSet();
+			if (cfg.managerDn != null && cfg.managerDn.isEmpty()) cfg.managerDn = null;
+			
+			// Manually instantiate contextSource so it can be passed into authoritiesPopulator below.
+			DefaultSpringSecurityContextSource contextSource = new DefaultSpringSecurityContextSource(cfg.url);
+			if (cfg.managerDn != null) {
+				contextSource.setUserDn(cfg.managerDn);
+				contextSource.setPassword(cfg.managerPassword);
+			}
+			contextSource.afterPropertiesSet();
 
-		// Manually instantiate authoritiesPopulator because it uses a customized class.
-		CNLdapAuthoritiesPopulator authoritiesPopulator = new CNLdapAuthoritiesPopulator(
-				contextSource,
-				environment.getProperty("shiny.proxy.ldap.group-search-base", ""));
-		authoritiesPopulator.setGroupRoleAttribute("cn");
-		authoritiesPopulator.setGroupSearchFilter(environment.getProperty("shiny.proxy.ldap.group-search-filter", "(uniqueMember={0})"));
+			// Manually instantiate authoritiesPopulator because it uses a customized class.
+			CNLdapAuthoritiesPopulator authoritiesPopulator = new CNLdapAuthoritiesPopulator(contextSource, cfg.groupSearchBase);
+			authoritiesPopulator.setGroupRoleAttribute("cn");
+			authoritiesPopulator.setGroupSearchFilter(cfg.groupSearchFilter);
 
-		auth
-			.ldapAuthentication()
+			configurer
 				.userDnPatterns(userDnPatterns)
-				.userSearchBase(environment.getProperty("shiny.proxy.ldap.user-search-base", ""))
-				.userSearchFilter(environment.getProperty("shiny.proxy.ldap.user-search-filter"))
+				.userSearchBase(cfg.userSearchBase)
+				.userSearchFilter(cfg.userSearchFilter)
 				.ldapAuthoritiesPopulator(authoritiesPopulator)
-				.contextSource(contextSource);
+				.contextSource(contextSource)
+				.configure(auth);
+		}
 	}
 	
+	private static class LDAPProviderConfig {
+		
+		public String url;
+		public String userDnPattern;
+		public String userSearchBase;
+		public String userSearchFilter;
+		public String groupSearchBase;
+		public String groupSearchFilter;
+		public String managerDn;
+		public String managerPassword;
+		
+		public static LDAPProviderConfig[] loadAll(Environment env) {
+			LDAPProviderConfig single = load(env, -1);
+			if (single != null) return new LDAPProviderConfig[] { single };
+			
+			List<LDAPProviderConfig> providers = new ArrayList<>();
+			for (int i=0 ;; i++) {
+				LDAPProviderConfig cfg = load(env, i);
+				if (cfg == null) break;
+				else providers.add(cfg);
+			}
+			return providers.toArray(new LDAPProviderConfig[providers.size()]);
+		}
+		
+		public static LDAPProviderConfig load(Environment env, int index) {
+			String prop = "shiny.proxy.ldap.%s";
+			if (index >= 0) prop = "shiny.proxy.ldap[%d].%s";
+			
+			String url = env.getProperty(String.format(prop, index, "url"));
+			if (url == null) return null;
+			
+			LDAPProviderConfig cfg = new LDAPProviderConfig();
+			cfg.url = url;
+			cfg.userDnPattern = env.getProperty(String.format(prop, index, "user-dn-pattern"));
+			cfg.userSearchBase = env.getProperty(String.format(prop, index, "user-search-base"), "");
+			cfg.userSearchFilter = env.getProperty(String.format(prop, index, "user-search-filter"));
+			cfg.groupSearchBase = env.getProperty(String.format(prop, index, "group-search-base"), "");
+			cfg.groupSearchFilter = env.getProperty(String.format(prop, index, "group-search-filter"), "(uniqueMember={0})");
+			cfg.managerDn = env.getProperty(String.format(prop, index, "manager-dn"));
+			cfg.managerPassword = env.getProperty(String.format(prop, index, "manager-password"));
+			
+			return cfg;
+		}
+	}
+
 	private static class CNLdapAuthoritiesPopulator extends DefaultLdapAuthoritiesPopulator {
 
 		private static final Log logger = LogFactory.getLog(DefaultLdapAuthoritiesPopulator.class);

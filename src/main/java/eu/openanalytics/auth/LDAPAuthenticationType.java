@@ -116,20 +116,20 @@ public class LDAPAuthenticationType implements IAuthenticationType {
 		
 		public static LDAPProviderConfig load(Environment env, int index) {
 			String prop = "shiny.proxy.ldap.%s";
-			if (index >= 0) prop = "shiny.proxy.ldap[%d].%s";
+			if (index >= 0) prop = String.format("shiny.proxy.ldap[%d]", index) + ".%s";
 			
-			String url = env.getProperty(String.format(prop, index, "url"));
+			String url = env.getProperty(String.format(prop, "url"));
 			if (url == null) return null;
 			
 			LDAPProviderConfig cfg = new LDAPProviderConfig();
 			cfg.url = url;
-			cfg.userDnPattern = env.getProperty(String.format(prop, index, "user-dn-pattern"));
-			cfg.userSearchBase = env.getProperty(String.format(prop, index, "user-search-base"), "");
-			cfg.userSearchFilter = env.getProperty(String.format(prop, index, "user-search-filter"));
-			cfg.groupSearchBase = env.getProperty(String.format(prop, index, "group-search-base"), "");
-			cfg.groupSearchFilter = env.getProperty(String.format(prop, index, "group-search-filter"), "(uniqueMember={0})");
-			cfg.managerDn = env.getProperty(String.format(prop, index, "manager-dn"));
-			cfg.managerPassword = env.getProperty(String.format(prop, index, "manager-password"));
+			cfg.userDnPattern = env.getProperty(String.format(prop, "user-dn-pattern"));
+			cfg.userSearchBase = env.getProperty(String.format(prop, "user-search-base"), "");
+			cfg.userSearchFilter = env.getProperty(String.format(prop, "user-search-filter"));
+			cfg.groupSearchBase = env.getProperty(String.format(prop, "group-search-base"), "");
+			cfg.groupSearchFilter = env.getProperty(String.format(prop, "group-search-filter"), "(uniqueMember={0})");
+			cfg.managerDn = env.getProperty(String.format(prop, "manager-dn"));
+			cfg.managerPassword = env.getProperty(String.format(prop, "manager-password"));
 			
 			return cfg;
 		}

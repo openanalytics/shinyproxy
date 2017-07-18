@@ -360,7 +360,7 @@ public class DockerService {
 			}
 		} catch (URISyntaxException ignore) {}
 		
-		if (logService.isEnabled()) {
+		if (logService.isContainerLoggingEnabled()) {
 			try {
 				LogStream logStream = dockerClient.logs(proxy.containerId, LogsParam.follow(), LogsParam.stdout(), LogsParam.stderr());
 				logService.attachLogWriter(proxy, logStream);

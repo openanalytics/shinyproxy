@@ -15,24 +15,33 @@
  */
 package eu.openanalytics.controllers;
 
-import java.util.Optional;
-
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+
+import eu.openanalytics.services.LogService;
+import eu.openanalytics.services.LogService.IssueForm;
+
 
 @Controller
-public class LoginController extends BaseController {
+public class IssueController extends BaseController {
 
-	@RequestMapping(value = "/login", method = RequestMethod.GET)
-    public String getLoginPage(@RequestParam Optional<String> error, ModelMap map, HttpServletRequest request) {
-		prepareMap(map, request);
-		if (error.isPresent()) map.put("error", "Invalid user name or password");
-        return "login";
-    }
+	@Inject
+	LogService logService;
 
+	@RequestMapping(value="/issue", method=RequestMethod.POST)
+	public String postIssue(HttpServletRequest request, HttpServletResponse response) {
+		IssueForm form = new IssueForm();
+		form.setUserName(getUserName(request));
+		form.setCurrentLocation(request.getParameter("currentLocation"));
+		form.setAppName(getAppName(form.getCurrentLocation()));
+		form.setCustomMessage(request.getParameter("customMessage"));
+		logService.sendSupportMail(form);
+		//TODO Redirect to current location
+		return "redirect:/";
+	}
 }

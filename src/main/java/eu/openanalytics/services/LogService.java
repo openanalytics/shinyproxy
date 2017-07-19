@@ -17,7 +17,6 @@ package eu.openanalytics.services;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -70,7 +69,7 @@ public class LogService {
 			}
 		}
 		
-		supportAddress = environment.getProperty("shiny.proxy.support.support-mail-address");
+		supportAddress = environment.getProperty("shiny.proxy.support.mail-to-address");
 	}
 	
 	@PreDestroy
@@ -83,7 +82,7 @@ public class LogService {
 	}
 	
 	public boolean isReportingEnabled() {
-		return supportAddress != null && mailSender != null;
+		return supportAddress != null;
 	}
 
 	public void attachLogWriter(Proxy proxy, LogStream logStream) {
@@ -111,7 +110,7 @@ public class LogService {
 
 			// Headers
 			
-			helper.setFrom(InetAddress.getLocalHost().getHostName() + "@shinyproxy.io");
+			helper.setFrom(environment.getProperty("shiny.proxy.support.mail-from-address", "issues@shinyproxy.io"));
 			helper.addTo(supportAddress);
 			helper.setSubject("ShinyProxy Error Report");
 

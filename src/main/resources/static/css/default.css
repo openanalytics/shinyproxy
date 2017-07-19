@@ -2,12 +2,31 @@
 body > div { padding-top: 10px; }
 body > div#navbar { padding-top: 0px; }
 
-#navbar + div { padding-top: 60px; }
+#navbar + div { padding-top: 50px; }
+#navbar + iframe { padding-top: 50px; }
 
 @media screen and (max-width: 768px) {
    #navbar + div { padding-top: 150px; }
+   #navbar + iframe { padding-top: 150px; }
 }
 
 @media screen and (max-width: 360px) {
     #navbar + div { padding-top: 200px; }
+    #navbar + iframe { padding-top: 200px; }
+}
+
+#applist {
+	margin-top: 10px;
+}
+
+#admin {
+	margin-left: 10px;
+}
+
+#admin th, td {
+	padding: 5px;
+}
+
+#error {
+	padding-left: 15px;
 }

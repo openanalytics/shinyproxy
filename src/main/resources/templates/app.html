@@ -15,18 +15,20 @@
 	
 	<!-- content -->
     <iframe id="shinyframe" th:src="${container}" width="100%"></iframe>
-	<script type="text/javascript" th:inline="javascript"> 
+    
+	<script type="text/javascript" th:inline="javascript">
 		function setShinyframeHeight() {
-	      $('#shinyframe').css('height', ($(window).height()-50)+'px');
-	  }
-	  window.addEventListener("load", setShinyframeHeight);
-	  window.addEventListener("resize",  setShinyframeHeight);
+			$('#shinyframe').css('height', ($(window).height()-6)+'px');
+		}
+		window.addEventListener("load", setShinyframeHeight);
+		window.addEventListener("resize",  setShinyframeHeight);
+		
 		function heartbeat() {
-		    setTimeout(function() {
-		        $.ajax("/heartbeat" + window.location.pathname).success(function(data) {
-		        	heartbeat();
-		        });
-		    }, [[${heartbeatRate}]]);
+			setTimeout(function() {
+				$.ajax("/heartbeat" + window.location.pathname).success(function(data) {
+					heartbeat();
+				});
+			}, [[${heartbeatRate}]]);
 		};
 		heartbeat();
 	</script>

@@ -18,32 +18,21 @@ package eu.openanalytics.services;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import javax.activation.DataHandler;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 
 import org.apache.log4j.Logger;
 import org.springframework.core.env.Environment;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import com.spotify.docker.client.LogStream;
@@ -53,13 +42,14 @@ import eu.openanalytics.services.DockerService.Proxy;
 @Service
 public class LogService {
 
+	private String supportAddress;
 	private String containerPath;
 	private ExecutorService executor;
-
-	private String supportAddress;
-	private String supportSMTPServer;
 	
 	private Logger log = Logger.getLogger(LogService.class);
+	
+	@Inject
+    JavaMailSender mailSender;
 	
 	@Inject
 	DockerService dockerService;
@@ -81,7 +71,6 @@ public class LogService {
 		}
 		
 		supportAddress = environment.getProperty("shiny.proxy.support.support-mail-address");
-		supportSMTPServer = environment.getProperty("shiny.proxy.support.support-smtp-server");
 	}
 	
 	@PreDestroy
@@ -94,7 +83,7 @@ public class LogService {
 	}
 	
 	public boolean isReportingEnabled() {
-		return supportAddress != null && supportSMTPServer != null;
+		return supportAddress != null && mailSender != null;
 	}
 
 	public void attachLogWriter(Proxy proxy, LogStream logStream) {
@@ -117,19 +106,16 @@ public class LogService {
 		}
 		
 		try {
-			Properties props = new Properties();
-			props.put("mail.smtp.host", supportSMTPServer);
-			Session session = Session.getDefaultInstance(props, null);
+			MimeMessage message = mailSender.createMimeMessage();
+			MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-			MimeMessage message = new MimeMessage(session);
+			// Headers
 			
-			String from = InetAddress.getLocalHost().getHostName() + "@shinyproxy.io";
-			message.setFrom(new InternetAddress(from));
-			message.addRecipient(Message.RecipientType.TO, new InternetAddress(supportAddress));
-			message.setSubject("ShinyProxy Error Report");
+			helper.setFrom(InetAddress.getLocalHost().getHostName() + "@shinyproxy.io");
+			helper.addTo(supportAddress);
+			helper.setSubject("ShinyProxy Error Report");
 
-			Multipart multipart = new MimeMultipart("mixed");
-			BodyPart textBodyPart = new MimeBodyPart();
+			// Body
 			
 			StringBuilder body = new StringBuilder();
 			String lineSep = System.getProperty("line.separator");
@@ -138,10 +124,10 @@ public class LogService {
 			if (form.appName != null) body.append(String.format("App: %s%s", form.appName, lineSep));
 			if (form.currentLocation != null) body.append(String.format("Location: %s%s", form.currentLocation, lineSep));
 			if (form.customMessage != null) body.append(String.format("Message: %s%s", form.customMessage, lineSep));
-			textBodyPart.setText(body.toString());
-			multipart.addBodyPart(textBodyPart);
+			helper.setText(body.toString());
+
+			// Attachments
 			
-			List<URL> attachments = new ArrayList<>();
 			if (isContainerLoggingEnabled()) {
 				Proxy activeProxy = null;
 				for (Proxy proxy: dockerService.listProxies()) {
@@ -153,20 +139,12 @@ public class LogService {
 				if (activeProxy != null) {
 					Path[] filePaths = getLogFilePaths(activeProxy.containerId);
 					for (Path p: filePaths) {
-						if (Files.exists(p)) attachments.add(p.toUri().toURL());
+						if (Files.exists(p)) helper.addAttachment(p.toFile().getName(), p.toFile());
 					}
 				}
 			}
 			
-			for (URL attachment: attachments) {
-				BodyPart attachmentBodyPart = new MimeBodyPart();
-				attachmentBodyPart.setDataHandler(new DataHandler(attachment));
-				attachmentBodyPart.setFileName(Paths.get(attachment.getFile()).getFileName().toString());
-				multipart.addBodyPart(attachmentBodyPart);
-			}
-			message.setContent(multipart);
-
-			Transport.send(message);
+			mailSender.send(message);
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to send email", e);
 		}

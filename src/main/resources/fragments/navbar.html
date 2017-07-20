@@ -16,7 +16,7 @@
 							class="icon-bar"></span>
 					</button>
 					<img class="navbar-brand" th:src="${logo}"></img>
-					<a class="navbar-brand" href="/" th:text="${title}"></a>
+					<a class="navbar-brand" th:href="@{/}" th:text="${title}"></a>
 				</div>
 				<div class="navbar-form navbar-right">
 					<a role="button" class="btn btn-primary btn-sm" th:if="${isLoggedIn and @logService.isReportingEnabled()}"

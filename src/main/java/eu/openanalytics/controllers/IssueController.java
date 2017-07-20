@@ -23,6 +23,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import eu.openanalytics.ShinyProxyApplication;
 import eu.openanalytics.services.LogService;
 import eu.openanalytics.services.LogService.IssueForm;
 
@@ -42,6 +43,6 @@ public class IssueController extends BaseController {
 		form.setCustomMessage(request.getParameter("customMessage"));
 		logService.sendSupportMail(form);
 		//TODO Redirect to current location
-		return "redirect:/";
+		return "redirect:" + ShinyProxyApplication.getContextPath(environment) + "/";
 	}
 }

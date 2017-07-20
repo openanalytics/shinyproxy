@@ -22,6 +22,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import eu.openanalytics.ShinyProxyApplication;
 import eu.openanalytics.services.AppService;
 import eu.openanalytics.services.DockerService;
 
@@ -44,8 +45,12 @@ public class AppController extends BaseController {
 		if (queryString == null) queryString = "";
 		else queryString = "?" + queryString;
 		
-		map.put("container", "/" + mapping + environment.getProperty("shiny.proxy.landing-page") + queryString);
+		String contextPath = ShinyProxyApplication.getContextPath(environment);
+		String containerPath = contextPath + "/" + mapping + environment.getProperty("shiny.proxy.landing-page") + queryString;
+
+		map.put("container", containerPath);
 		map.put("heartbeatRate", environment.getProperty("shiny.proxy.heartbeat-rate", "10000"));
+		map.put("heartbeatPath", contextPath + "/heartbeat");
 		
 		return "app";
 	}

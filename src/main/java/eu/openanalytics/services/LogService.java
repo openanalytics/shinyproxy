@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -47,7 +48,7 @@ public class LogService {
 	
 	private Logger log = Logger.getLogger(LogService.class);
 	
-	@Inject
+	@Autowired(required=false)
     JavaMailSender mailSender;
 	
 	@Inject
@@ -82,7 +83,7 @@ public class LogService {
 	}
 	
 	public boolean isReportingEnabled() {
-		return supportAddress != null;
+		return supportAddress != null && mailSender != null;
 	}
 
 	public void attachLogWriter(Proxy proxy, LogStream logStream) {

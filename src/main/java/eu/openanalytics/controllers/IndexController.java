@@ -15,44 +15,33 @@
  */
 package eu.openanalytics.controllers;
 
-import java.security.Principal;
 import java.util.List;
 
-import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.core.env.Environment;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import eu.openanalytics.services.AppService.ShinyApp;
-import eu.openanalytics.services.UserService;
  
-/**
- * @author Torkild U. Resheim, Itema AS
- */
 @Controller
-public class IndexController {
+public class IndexController extends BaseController {
 	
-	@Inject
-	UserService userService;
-	
-	@Inject
-	Environment environment;
-
 	@RequestMapping("/")
-    String index(ModelMap map, Principal principal) {
-		List<ShinyApp> apps = userService.getAccessibleApps((Authentication) principal);
+    String index(ModelMap map, HttpServletRequest request) {
+		prepareMap(map, request);
+		
+		List<ShinyApp> apps = userService.getAccessibleApps(SecurityContextHolder.getContext().getAuthentication());
+		map.put("apps", apps.toArray());
+
 		boolean displayAppLogos = false;
 		for (ShinyApp app: apps) {
 			if (app.getLogoUrl() != null) displayAppLogos = true;
 		}
-		map.put("title", environment.getProperty("shiny.proxy.title"));
-		map.put("logo", environment.getProperty("shiny.proxy.logo-url"));
-		map.put("apps", apps.toArray());
 		map.put("displayAppLogos", displayAppLogos);
-		map.put("adminGroups", userService.getAdminRoles());
-        return "index";
+
+		return "index";
     }
 }

@@ -66,6 +66,12 @@ public class ShinyProxyApplication {
 		app.run(args);
 	}
 
+	public static String getContextPath(Environment env) {
+		String contextPath = env.getProperty("server.contextPath");
+		if (contextPath == null) contextPath = "";
+		return contextPath;
+	}
+	
 	@Bean
 	public EmbeddedServletContainerFactory servletContainer() {
 		UndertowEmbeddedServletContainerFactory factory = new UndertowEmbeddedServletContainerFactory();

@@ -4,21 +4,17 @@
 <head lang="en">
 	<title th:text="${title}"></title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link
-		href="http://cdn.jsdelivr.net/webjars/bootstrap/3.3.6/css/bootstrap.min.css"
-		th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"
-		rel="stylesheet" media="screen" />
-	<script src="http://cdn.jsdelivr.net/webjars/jquery/2.2.2/jquery.min.js"
-		th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
-	<link th:href="@{/css/default.css}" 
-		type="text/css" rel="stylesheet" media="screen" ></link>
+	<link rel="stylesheet" media="screen" th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"/>
+	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
+	<script th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
+	<script th:src="@{/webjars/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
 </head>
 <body>
 	<!-- navigation bar -->
 	<div th:replace="../fragments/navbar :: navbar"></div>
 	
 	<!-- content -->
-	<div th:if="${!displayAppLogos}" id="applist" style="padding-top: 10px;">
+	<div th:if="${!displayAppLogos}" id="applist">
 		<ul>
 			<li th:each="app: ${apps}">
 				<a th:href="@{/app/}+${app.name}" th:text="${app.displayName == null} ? ${app.name} : ${app.displayName}"></a>
@@ -28,7 +24,7 @@
 		</ul>
 	</div>
     
-    <div th:if="${displayAppLogos}" class="container" id="applist" style="padding-top: 10px;">
+    <div th:if="${displayAppLogos}" class="container" id="applist">
 		<div class="row" style="margin-top:20px;" th:each="app: ${apps}">
 			<div class="col-md-6 col-md-offset-3">
 				<div class="media">

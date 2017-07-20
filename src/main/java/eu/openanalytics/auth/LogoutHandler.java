@@ -22,11 +22,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.stereotype.Component;
 
+import eu.openanalytics.ShinyProxyApplication;
 import eu.openanalytics.services.UserService;
 
 @Component
@@ -34,6 +36,9 @@ public class LogoutHandler implements LogoutSuccessHandler {
 
 	@Inject
 	UserService userService;
+	
+	@Inject
+	Environment environment;
 	
 	@Override
 	public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -44,7 +49,7 @@ public class LogoutHandler implements LogoutSuccessHandler {
 			}
 			if (userName != null) userService.logout(userName);
 		}
-		response.sendRedirect("/");
+		response.sendRedirect(ShinyProxyApplication.getContextPath(environment) + "/");
 	}
 	
 }

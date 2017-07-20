@@ -15,35 +15,42 @@
  */
 package eu.openanalytics.controllers;
 
-import javax.inject.Inject;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintWriter;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.util.NestedServletException;
 
 @Controller
-public class ErrorController implements org.springframework.boot.autoconfigure.web.ErrorController {
-	
-	@Inject
-	Environment environment;
+public class ErrorController extends BaseController implements org.springframework.boot.autoconfigure.web.ErrorController {
 	
 	@RequestMapping("/error")
 	String handleError(ModelMap map, HttpServletRequest request, HttpServletResponse response) {
-		map.put("title", environment.getProperty("shiny.proxy.title"));
-		map.put("logo", environment.getProperty("shiny.proxy.logo-url"));
-		map.put("status", response.getStatus());
+		prepareMap(map, request);
 		
 		String message = "";
-		Exception exception = (Exception) request.getAttribute("javax.servlet.error.exception");
+		String stackTrace = "";
+		Throwable exception = (Throwable) request.getAttribute("javax.servlet.error.exception");
 		if (exception instanceof NestedServletException && exception.getCause() instanceof Exception) {
 			exception = (Exception) exception.getCause();
 		}
-		if (exception != null && exception.getMessage() != null) message = exception.getMessage();
+		if (exception != null) {
+			if (exception.getMessage() != null) message = exception.getMessage();
+			ByteArrayOutputStream bos = new ByteArrayOutputStream();
+			try (PrintWriter writer = new PrintWriter(bos)) {
+				exception.printStackTrace(writer);
+			}
+			stackTrace = bos.toString();
+			stackTrace = stackTrace.replace(System.getProperty("line.separator"), "<br/>");
+		}
 		map.put("message", message);
+		map.put("stackTrace", stackTrace);
+		map.put("status", response.getStatus());
 		
 		return "error";
 	}

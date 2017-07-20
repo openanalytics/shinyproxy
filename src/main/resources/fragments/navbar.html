@@ -4,7 +4,7 @@
 	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head></head>
 <body>
-	<div th:fragment="navbar" th:if="${@environment.getProperty('shiny.proxy.hide-navbar') != 'true'}">
+	<div th:fragment="navbar" th:if="${showNavbar}" id="navbar">
 		<nav class="navbar navbar-inverse navbar-fixed-top">
 			<div class="container-fluid">
 				<div class="navbar-header">
@@ -16,11 +16,13 @@
 							class="icon-bar"></span>
 					</button>
 					<img class="navbar-brand" th:src="${logo}"></img>
-					<a class="navbar-brand" href="/" th:text="${title}"></a>
+					<a class="navbar-brand" th:href="@{/}" th:text="${title}"></a>
 				</div>
 				<div class="navbar-form navbar-right">
-					<a role="button" class="btn btn-primary btn-sm" th:href="@{/admin}" sec:authorize="hasAnyRole(#vars.adminGroups)">Admin</a>
-					<a role="button" class="btn btn-primary btn-sm" th:href="@{/logout}" sec:authorize="isAuthenticated()">Sign Out</a>
+					<a role="button" class="btn btn-primary btn-sm" th:if="${isLoggedIn and @logService.isReportingEnabled()}"
+						data-toggle="modal" data-target="#reportIssueModal">Report Issue</a>
+					<a role="button" class="btn btn-primary btn-sm" th:href="@{/admin}" th:if="${isAdmin}">Admin</a>
+					<a role="button" class="btn btn-primary btn-sm" th:href="@{/logout}" th:if="${isLoggedIn}">Sign Out</a>
 				</div>
 				<div class="navbar-right" sec:authorize="isAuthenticated()">
 					<span class="navbar-text">
@@ -28,10 +30,34 @@
 						<span sec:authentication="name"></span>
 					</span>
 				</div>
-				<!--/.navbar-collapse -->
 			</div>
 		</nav>
-
+		<div class="modal fade" id="reportIssueModal" role="dialog">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<form role="form" method="post" th:action="@{/issue}">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+							<h4 class="modal-title">Report Issue</h4>
+						</div>
+						<div class="modal-body">
+							<div class="form-group">
+								<label for="customMessage"><span class="glyphicon glyphicon-chat"></span> Message to add to the report:</label>
+								<textarea class="form-control" name="customMessage" placeholder="Enter message" cols="40" rows="5"></textarea>
+								<input type="hidden" name="currentLocation"></input>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="submit" class="btn btn-default btn-success">Submit</button>
+							<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+		<script lang="JavaScript">
+			$(document).ready(function() { $('input[name="currentLocation"]').val(window.location.href); });
+		</script>
 	</div>
 </body>
 </html>

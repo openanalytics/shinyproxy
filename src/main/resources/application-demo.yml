@@ -8,7 +8,7 @@ shiny:
     port: 8080
     authentication: ldap
     admin-groups: scientists
-    # Simple auth configuration
+    # Example: 'simple' authentication configuration
     users:
     - name: jack
       password: password
@@ -16,7 +16,7 @@ shiny:
     - name: jeff
       password: password
       groups: mathematicians
-    # LDAP configuration
+    # Example: 'ldap' authentication configuration
     ldap:
       url: ldap://ldap.forumsys.com:389/dc=example,dc=com
       user-dn-pattern: uid={0}
@@ -28,7 +28,6 @@ shiny:
     docker:
       cert-path: /home/none
       url: http://localhost:2375
-      host: 127.0.0.1
       port-range-start: 20000
   apps:
   - name: 01_hello

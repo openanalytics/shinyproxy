@@ -198,6 +198,36 @@
 					<executable>true</executable>
 				</configuration>
 			</plugin>
+			<plugin>
+        <groupId>com.mycila.maven-license-plugin</groupId>
+        <artifactId>maven-license-plugin</artifactId>
+        <version>1.9.0</version>
+        <configuration>
+          <header>LICENSE_HEADER</header>
+          <aggregate>true</aggregate>
+          <strictCheck>true</strictCheck>
+          <excludes>
+          	<exclude>*.log</exclude>
+          	<exclude>mvnw.cmd</exclude>
+          	<exclude>mvnw</exclude>
+          	<exclude>**/*.properties</exclude>
+          	<exclude>**/*.yml</exclude>
+          	<exclude>LICENSE</exclude>
+          	<exclude>LICENSE_HEADER</exclude>
+          	<exclude>README.md</exclude>
+          	<exclude>**/*.json</exclude>
+          	<exclude>.gitignore</exclude>
+          </excludes>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
 		</plugins>
 	</build>
 	

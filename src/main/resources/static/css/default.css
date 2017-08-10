@@ -1,7 +1,7 @@
 /**
- * RDepot
+ * ShinyProxy
  *
- * Copyright (C) 2012-${year} ${company}
+ * Copyright (C) 2012-2017 Open Analytics
  *
  * ===========================================================================
  *
@@ -18,7 +18,6 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
-
 body > div { padding-top: 10px; }
 body > div#navbar { padding-top: 0px; }
 

@@ -1,7 +1,7 @@
 /**
- * RDepot
+ * ShinyProxy
  *
- * Copyright (C) 2012-${year} ${company}
+ * Copyright (C) 2012-2017 Open Analytics
  *
  * ===========================================================================
  *

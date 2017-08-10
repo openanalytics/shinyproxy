@@ -20,18 +20,25 @@
  */
 package eu.openanalytics.controllers;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.security.Principal;
+import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.log4j.Logger;
 import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.ModelMap;
+import org.springframework.util.StreamUtils;
 
 import eu.openanalytics.services.UserService;
 
@@ -43,7 +50,9 @@ public abstract class BaseController {
 	@Inject
 	Environment environment;
 	
+	private static Logger logger = Logger.getLogger(BaseController.class);
 	private static Pattern appPattern = Pattern.compile(".*/app/(.*)");
+	private static String logoURI;
 	
 	protected String getUserName(HttpServletRequest request) {
 		Principal principal = request.getUserPrincipal();
@@ -63,12 +72,34 @@ public abstract class BaseController {
 	
 	protected void prepareMap(ModelMap map, HttpServletRequest request) {
 		map.put("title", environment.getProperty("shiny.proxy.title"));
-		map.put("logo", environment.getProperty("shiny.proxy.logo-url"));
-
+		if (logoURI == null) logoURI = toAccessibleURI(environment.getProperty("shiny.proxy.logo-url"));
+		map.put("logo", logoURI);
+		
 		map.put("showNavbar", !Boolean.valueOf(environment.getProperty("shiny.proxy.hide-navbar")));
 		
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		map.put("isLoggedIn", authentication != null && !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated());
 		map.put("isAdmin", userService.isAdmin(authentication));
+	}
+	
+	protected String toAccessibleURI(String resourceURI) {
+		if (!resourceURI.toLowerCase().startsWith("file")) return resourceURI;
+		
+		String mimetype = URLConnection.guessContentTypeFromName(resourceURI);
+		if (mimetype == null) {
+			logger.warn("Cannot determine mimetype for resource: " + resourceURI);
+			return resourceURI;
+		}
+
+		String encoded = null;
+		try (InputStream input = new URL(resourceURI).openConnection().getInputStream()) {
+			byte[] data = StreamUtils.copyToByteArray(input);
+			encoded = Base64.getEncoder().encodeToString(data);
+		} catch (IOException e) {
+			logger.warn("Failed to convert file URI to data URI: " + resourceURI, e);
+			return resourceURI;
+		}
+		
+		return String.format("data:%s;base64,%s", mimetype, encoded);
 	}
 }

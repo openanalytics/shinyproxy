@@ -83,7 +83,8 @@ public abstract class BaseController {
 	}
 	
 	protected String toAccessibleURI(String resourceURI) {
-		if (!resourceURI.toLowerCase().startsWith("file")) return resourceURI;
+		if (resourceURI == null || resourceURI.isEmpty()) return resourceURI;
+		if (!resourceURI.toLowerCase().startsWith("file://")) return resourceURI;
 		
 		String mimetype = URLConnection.guessContentTypeFromName(resourceURI);
 		if (mimetype == null) {

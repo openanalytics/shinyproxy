@@ -40,10 +40,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.ModelMap;
 import org.springframework.util.StreamUtils;
 
+import eu.openanalytics.services.AppService;
 import eu.openanalytics.services.UserService;
+import eu.openanalytics.services.AppService.ShinyApp;
 
 public abstract class BaseController {
 
+	@Inject
+	AppService appService;
+	
 	@Inject
 	UserService userService;
 	
@@ -68,6 +73,14 @@ public abstract class BaseController {
 		Matcher matcher = appPattern.matcher(uri);
 		String appName = matcher.matches() ? matcher.group(1) : null;
 		return appName;
+	}
+	
+	protected String getAppTitle(HttpServletRequest request) {
+		String appName = getAppName(request);
+		if (appName == null || appName.isEmpty()) return "";
+		ShinyApp app = appService.getApp(appName);
+		if (app == null || app.getDisplayName() == null || app.getDisplayName().isEmpty()) return appName;
+		else return app.getDisplayName();
 	}
 	
 	protected void prepareMap(ModelMap map, HttpServletRequest request) {

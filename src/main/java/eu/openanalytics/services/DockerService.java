@@ -178,10 +178,10 @@ public class DockerService {
 		}
 	}
 	
-	public String getMapping(String userName, String appName) {
+	public String getMapping(String userName, String appName, boolean startNew) {
 		waitForLaunchingProxy(userName, appName);
 		Proxy proxy = findProxy(userName, appName);
-		if (proxy == null) {
+		if (proxy == null && startNew) {
 			// The user has no proxy yet.
 			proxy = startProxy(userName, appName);
 		}

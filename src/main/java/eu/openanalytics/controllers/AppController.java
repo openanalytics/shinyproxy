@@ -26,6 +26,8 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import eu.openanalytics.ShinyProxyApplication;
 import eu.openanalytics.services.AppService;
@@ -40,23 +42,36 @@ public class AppController extends BaseController {
 	@Inject
 	AppService appService;
 
-	@RequestMapping("/app/*")
+	@RequestMapping(value="/app/*", method=RequestMethod.GET)
 	String app(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
 		
-		String mapping = dockerService.getMapping(getUserName(request), getAppName(request));
-		
-		String queryString = request.getQueryString();
-		if (queryString == null) queryString = "";
-		else queryString = "?" + queryString;
-		
+		String mapping = dockerService.getMapping(getUserName(request), getAppName(request), false);
 		String contextPath = ShinyProxyApplication.getContextPath(environment);
-		String containerPath = contextPath + "/" + mapping + environment.getProperty("shiny.proxy.landing-page") + queryString;
 
-		map.put("container", containerPath);
+		map.put("appTitle", getAppTitle(request));
+		map.put("container", buildContainerPath(mapping, request));
 		map.put("heartbeatRate", environment.getProperty("shiny.proxy.heartbeat-rate", "10000"));
 		map.put("heartbeatPath", contextPath + "/heartbeat");
 		
 		return "app";
+	}
+	
+	@RequestMapping(value="/app/*", method=RequestMethod.POST)
+	@ResponseBody
+	String startApp(HttpServletRequest request) {
+		String mapping = dockerService.getMapping(getUserName(request), getAppName(request), true);
+		return buildContainerPath(mapping, request);
+	}
+	
+	private String buildContainerPath(String mapping, HttpServletRequest request) {
+		if (mapping == null) return "";
+		
+		String queryString = request.getQueryString();
+		queryString = (queryString == null) ? "" : "?" + queryString;
+		
+		String contextPath = ShinyProxyApplication.getContextPath(environment);
+		String containerPath = contextPath + "/" + mapping + environment.getProperty("shiny.proxy.landing-page") + queryString;
+		return containerPath;
 	}
 }

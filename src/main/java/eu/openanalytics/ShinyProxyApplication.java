@@ -43,14 +43,10 @@ import io.undertow.server.HandlerWrapper;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.handlers.PathHandler;
 import io.undertow.server.handlers.ResponseCodeHandler;
-import io.undertow.server.handlers.proxy.ProxyClient;
+import io.undertow.server.handlers.proxy.LoadBalancingProxyClient;
 import io.undertow.server.handlers.proxy.ProxyHandler;
-import io.undertow.server.handlers.proxy.SimpleProxyClientProvider;
 import io.undertow.servlet.api.DeploymentInfo;
 
-/**
- * @author Torkild U. Resheim, Itema AS
- */
 @SpringBootApplication
 @EnableAsync
 @Configuration
@@ -96,7 +92,8 @@ public class ShinyProxyApplication {
 			dockerService.addMappingListener(new MappingListener() {
 				@Override
 				public void mappingAdded(String mapping, URI target) {
-					ProxyClient proxyClient = new SimpleProxyClientProvider(target);
+					LoadBalancingProxyClient proxyClient = new LoadBalancingProxyClient();
+					proxyClient.addHost(target);
 					HttpHandler handler = new ProxyHandler(proxyClient, ResponseCodeHandler.HANDLE_404);
 					pathHandler.addPrefixPath(mapping, handler);
 				}

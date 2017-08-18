@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
+import org.springframework.boot.context.embedded.PortInUseException;
 import org.springframework.boot.context.embedded.undertow.UndertowDeploymentInfoCustomizer;
 import org.springframework.boot.context.embedded.undertow.UndertowEmbeddedServletContainerFactory;
 import org.springframework.context.annotation.Bean;
@@ -64,7 +65,14 @@ public class ShinyProxyApplication {
 		boolean hasExternalConfig = Files.exists(Paths.get("application.yml"));
 		if (!hasExternalConfig) app.setAdditionalProfiles("demo");
 		
-		app.run(args);
+		try {
+			app.run(args);
+		} catch (Exception e) {
+			// Workaround for bug in UndertowEmbeddedServletContainer.start():
+			// If undertow.start() fails, started remains false which prevents undertow.stop() from ever being called.
+			// Undertow's (non-daemon) XNIO worker threads will then prevent the JVM from exiting.
+			if (e instanceof PortInUseException) System.exit(-1);
+		}
 	}
 
 	public static String getContextPath(Environment env) {

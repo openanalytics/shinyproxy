@@ -64,7 +64,9 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 	
 	@PostConstruct
 	public void init() {
-		new Thread(new AppCleaner(), "HeartbeatThread").start();
+		Thread heartbeatThread = new Thread(new AppCleaner(), "HeartbeatThread");
+		heartbeatThread.setDaemon(true);
+		heartbeatThread.start();
 	}
 	
 	public String[] getAdminRoles() {

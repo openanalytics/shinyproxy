@@ -34,6 +34,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.ldap.core.ContextSource;
+import org.springframework.ldap.core.support.DefaultTlsDirContextAuthenticationStrategy;
+import org.springframework.ldap.core.support.ExternalTlsDirContextAuthenticationStrategy;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configurers.ldap.LdapAuthenticationProviderConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -48,6 +50,9 @@ import eu.openanalytics.auth.AuthenticationTypeProxy.IAuthenticationType;
 @Component
 public class LDAPAuthenticationType implements IAuthenticationType {
 
+	private static final String STARTTLS_SIMPLE = "simple";
+	private static final String STARTTLS_EXTERNAL = "external";
+	
 	@Inject
 	Environment environment;
 	
@@ -78,6 +83,13 @@ public class LDAPAuthenticationType implements IAuthenticationType {
 				contextSource.setUserDn(cfg.managerDn);
 				contextSource.setPassword(cfg.managerPassword);
 			}
+			
+			if (Boolean.valueOf(cfg.startTLS) || STARTTLS_SIMPLE.equalsIgnoreCase(cfg.startTLS)) {
+				contextSource.setAuthenticationStrategy(new DefaultTlsDirContextAuthenticationStrategy());
+			} else if (STARTTLS_EXTERNAL.equalsIgnoreCase(cfg.startTLS)) {
+				contextSource.setAuthenticationStrategy(new ExternalTlsDirContextAuthenticationStrategy());
+			}
+			
 			contextSource.afterPropertiesSet();
 
 			// Manually instantiate authoritiesPopulator because it uses a customized class.
@@ -98,6 +110,7 @@ public class LDAPAuthenticationType implements IAuthenticationType {
 	private static class LDAPProviderConfig {
 		
 		public String url;
+		public String startTLS;
 		public String userDnPattern;
 		public String userSearchBase;
 		public String userSearchFilter;
@@ -128,6 +141,7 @@ public class LDAPAuthenticationType implements IAuthenticationType {
 			
 			LDAPProviderConfig cfg = new LDAPProviderConfig();
 			cfg.url = url;
+			cfg.startTLS = env.getProperty(String.format(prop, "starttls"));
 			cfg.userDnPattern = env.getProperty(String.format(prop, "user-dn-pattern"));
 			cfg.userSearchBase = env.getProperty(String.format(prop, "user-search-base"), "");
 			cfg.userSearchFilter = env.getProperty(String.format(prop, "user-search-filter"));

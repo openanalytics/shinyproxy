@@ -81,12 +81,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			http.authorizeRequests().antMatchers("/login", "/signin/**", "/signup").permitAll();
 			for (ShinyApp app: appService.getApps()) {
 				if (app.getGroups() == null || app.getGroups().length == 0) continue;
-				String[] appRoles = Arrays.stream(app.getGroups()).map(s -> s.toUpperCase()).toArray(i -> new String[i]);
-				http.authorizeRequests().antMatchers("/app/" + app.getName()).hasAnyRole(appRoles);
+				String[] appGroups = Arrays.stream(app.getGroups()).map(s -> s.toUpperCase()).toArray(i -> new String[i]);
+				http.authorizeRequests().antMatchers("/app/" + app.getName()).hasAnyRole(appGroups);
 			}
 
 			// Limit access to the admin pages
-			http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminRoles());
+			http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminGroups());
 			
 			// All other pages are available to authenticated users
 			http.authorizeRequests().anyRequest().fullyAuthenticated();

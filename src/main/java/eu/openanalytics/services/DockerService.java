@@ -103,6 +103,9 @@ public class DockerService {
 	AppService appService;
 	
 	@Inject
+	UserService userService;
+	
+	@Inject
 	EventService eventService;
 	
 	@Inject
@@ -435,6 +438,9 @@ public class DockerService {
 	private List<String> buildEnv(String userName, ShinyApp app) throws IOException {
 		List<String> env = new ArrayList<>();
 		env.add(String.format("SHINYPROXY_USERNAME=%s", userName));
+		
+		String[] groups = userService.getGroups(userService.getCurrentAuth());
+		env.add(String.format("SHINYPROXY_USERGROUPS=%s", Arrays.stream(groups).collect(Collectors.joining(","))));
 		
 		String envFile = app.getDockerEnvFile();
 		if (envFile != null && Files.isRegularFile(Paths.get(envFile))) {

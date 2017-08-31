@@ -257,6 +257,9 @@ public class DockerService {
 		launchingProxies.add(proxy);
 		
 		try {
+			URL hostURL = new URL(environment.getProperty("shiny.proxy.docker.url"));
+			proxy.protocol = environment.getProperty("shiny.proxy.docker.container-protocol", hostURL.getProtocol());
+			
 			if (swarmMode) {
 				Mount[] mounts = getBindVolumes(app).stream()
 						.map(b -> b.split(":"))
@@ -306,7 +309,6 @@ public class DockerService {
 						.filter(n -> n.id().equals(proxy.host)).findAny()
 						.orElseThrow(() -> new IllegalStateException(String.format("Swarm node not found [id: %s]", proxy.host)));
 				proxy.host = node.description().hostname();
-				proxy.protocol = "http";
 				
 				log.info(String.format("Container running in swarm [service: %s] [node: %s]", proxy.name, proxy.host));
 			} else {
@@ -335,12 +337,9 @@ public class DockerService {
 					}
 				}
 				dockerClient.startContainer(container.id());
-
-				URL hostURL = new URL(environment.getProperty("shiny.proxy.docker.url"));
-				proxy.host = hostURL.getHost();
-				proxy.protocol = hostURL.getProtocol();
 				
 				ContainerInfo info = dockerClient.inspectContainer(container.id());
+				proxy.host = hostURL.getHost();
 				proxy.name = info.name().substring(1);
 				proxy.containerId = container.id();
 			}

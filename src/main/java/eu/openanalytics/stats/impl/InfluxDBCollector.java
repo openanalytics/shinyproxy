@@ -43,7 +43,7 @@ public class InfluxDBCollector implements IStatCollector {
 	public void accept(Event event, Environment env) throws IOException {
 		String destination = env.getProperty("shiny.proxy.usage-stats-url");
 		String data = Optional.ofNullable(event.data).orElse("");
-		String body = String.format("event,username=\"%s\",type=%s data=\"%s\"", event.user, event.type, data);
+		String body = String.format("event,username=%s,type=%s data=\"%s\"", event.user.replace(" ", "\\ "), event.type.replace(" ", "\\ "), data);
 		doPost(destination, body);
 	}
 	

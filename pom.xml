@@ -247,6 +247,12 @@
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+          		   <algorithms>
+            	       <algorithm>SHA-256</algorithm>	   
+                       <algorithm>MD5</algorithm>
+                   </algorithms>
+        		</configuration>
 			</plugin>
 		</plugins>
 	</build>

@@ -5,11 +5,11 @@
 
 	<groupId>eu.openanalytics</groupId>
 	<artifactId>shinyproxy</artifactId>
-	<version>0.9.4</version>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>shinyproxy</name>
-	<description>Shiny proxy with LDAP authentication</description>
+	<description>deploy Shiny apps in an enterprise context</description>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>

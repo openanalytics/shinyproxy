@@ -14,7 +14,7 @@
 
 Middleware to Deploy Shiny Applications in an Enterprise Context
 
-Learn more at http://shinyproxy.io
+Learn more at https://shinyproxy.io
 
 #### (c) Copyright Open Analytics NV, 2016-2017 - Apache License 2.0
 
@@ -39,5 +39,5 @@ Navigate to http://localhost:8080 to access the application.  If the default con
 
 ## Further information
 
-http://shinyproxy.io
+https://shinyproxy.io
 

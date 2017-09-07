@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2012-2017 Open Analytics
+ * Copyright (C) 2016-2017 Open Analytics
  *
  * ===========================================================================
  *

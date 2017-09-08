@@ -4,19 +4,15 @@
 <head lang="en">
 	<title th:text="${title}"></title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link
-		href="http://cdn.jsdelivr.net/webjars/bootstrap/3.3.6/css/bootstrap.min.css"
-		th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"
-		type="text/css" rel="stylesheet" media="screen" />
-	<link href="https://cdn.jsdelivr.net/bootstrap-social/5.1.1/bootstrap-social.css" 
-		type="text/css" rel="stylesheet" media="screen" />
-	<link href="https://cdn.jsdelivr.net/fontawesome/4.7.0/css/font-awesome.min.css" 
-		type="text/css" rel="stylesheet" media="screen" />
-	<script src="http://cdn.jsdelivr.net/webjars/jquery/2.2.2/jquery.min.js"
-		th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
-	<!-- Custom styles for this template -->
-	<link th:href="@{/css/signin.css}" 
-		type="text/css" rel="stylesheet" media="screen" ></link>
+	<link rel="stylesheet" media="screen" type="text/css"
+		href="https://cdn.jsdelivr.net/bootstrap-social/5.1.1/bootstrap-social.css"/>
+	<link rel="stylesheet" media="screen" type="text/css"
+		href="https://cdn.jsdelivr.net/fontawesome/4.7.0/css/font-awesome.min.css"/>
+	<link rel="stylesheet" media="screen" type="text/css" th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"/>
+	<link rel="stylesheet" media="screen" type="text/css" th:href="@{/css/default.css}"/>
+	<link rel="stylesheet" media="screen" type="text/css" th:href="@{/css/signin.css}"/>
+	<script th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
+	<script th:src="@{/webjars/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
 </head>
 <body>
 	<!-- navigation bar -->

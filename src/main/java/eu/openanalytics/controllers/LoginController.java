@@ -17,31 +17,21 @@ package eu.openanalytics.controllers;
 
 import java.util.Optional;
 
-import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
-/**
- * @author Torkild U. Resheim, Itema AS
- */
 @Controller
-public class LoginController {
-
-	@Inject
-	Environment environment;
+public class LoginController extends BaseController {
 
 	@RequestMapping(value = "/login", method = RequestMethod.GET)
-    public String getLoginPage(@RequestParam Optional<String> error, ModelMap map) {
-		map.put("title", environment.getProperty("shiny.proxy.title"));
-		map.put("logo", environment.getProperty("shiny.proxy.logo-url"));
-		if (error.isPresent()){
-			map.put("error", "Invalid user name or password");
-		}
+    public String getLoginPage(@RequestParam Optional<String> error, ModelMap map, HttpServletRequest request) {
+		prepareMap(map, request);
+		if (error.isPresent()) map.put("error", "Invalid user name or password");
         return "login";
     }
 

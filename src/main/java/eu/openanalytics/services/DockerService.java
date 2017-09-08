@@ -50,7 +50,9 @@ import org.springframework.stereotype.Service;
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerCertificates;
 import com.spotify.docker.client.DockerClient;
+import com.spotify.docker.client.DockerClient.LogsParam;
 import com.spotify.docker.client.DockerClient.RemoveContainerParam;
+import com.spotify.docker.client.LogStream;
 import com.spotify.docker.client.exceptions.DockerCertificateException;
 import com.spotify.docker.client.exceptions.DockerException;
 import com.spotify.docker.client.messages.ContainerConfig;
@@ -97,6 +99,9 @@ public class DockerService {
 	
 	@Inject
 	EventService eventService;
+	
+	@Inject
+	LogService logService;
 	
 	@Inject
 	DockerClient dockerClient;
@@ -354,6 +359,17 @@ public class DockerService {
 				}
 			}
 		} catch (URISyntaxException ignore) {}
+		
+		if (logService.isContainerLoggingEnabled()) {
+			try {
+				LogStream logStream = dockerClient.logs(proxy.containerId, LogsParam.follow(), LogsParam.stdout(), LogsParam.stderr());
+				logService.attachLogWriter(proxy, logStream);
+			} catch (DockerException e) {
+				log.error("Failed to attach to container log " + proxy.containerId, e);
+			} catch (InterruptedException e) {
+				log.error("Interrupted while attaching to container log " + proxy.containerId, e);
+			}
+		}
 		
 		activeProxies.add(proxy);
 		launchingProxies.remove(proxy);

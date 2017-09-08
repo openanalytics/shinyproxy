@@ -5,7 +5,7 @@
 
 	<groupId>eu.openanalytics</groupId>
 	<artifactId>shinyproxy</artifactId>
-	<version>0.9.3</version>
+	<version>0.9.4</version>
 	<packaging>jar</packaging>
 
 	<name>shinyproxy</name>
@@ -70,20 +70,24 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-messaging</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.ldap</groupId>
-			<artifactId>spring-ldap-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.spotify</groupId>
-			<artifactId>docker-client</artifactId>
-			<version>8.6.2</version>
-		</dependency>
-		<dependency>
+    	<dependency>
+    		<groupId>org.springframework.boot</groupId>
+    		<artifactId>spring-boot-starter-mail</artifactId>
+    	</dependency>
+ 		<dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-messaging</artifactId>
+        </dependency>
+       	<dependency>
+	        <groupId>org.springframework.ldap</groupId>
+	        <artifactId>spring-ldap-core</artifactId>
+	    </dependency>
+    	<dependency>
+    		<groupId>com.spotify</groupId>
+    		<artifactId>docker-client</artifactId>
+    		<version>8.6.2</version>
+    	</dependency>
+    	<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>bootstrap</artifactId>
 			<version>3.3.6</version>
@@ -283,8 +287,14 @@
 				<artifactId>jdeb</artifactId>
 				<groupId>org.vafer</groupId>
 				<version>1.5</version>
-				<!-- <executions> <execution> <phase>package</phase> <goals> <goal>jdeb</goal> 
-					</goals> </execution> </executions> -->
+<!--        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>jdeb</goal>
+            </goals>
+          </execution>
+        </executions>-->
 				<configuration>
 					<verbose>true</verbose>
 					<controlDir>${basedir}/src/deb/control</controlDir>

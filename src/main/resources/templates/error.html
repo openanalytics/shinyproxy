@@ -4,20 +4,26 @@
 <head lang="en">
 	<title>Error</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link
-		href="http://cdn.jsdelivr.net/webjars/bootstrap/3.3.6/css/bootstrap.min.css"
-		th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}" rel="stylesheet" media="screen" />
-	<script src="http://cdn.jsdelivr.net/webjars/jquery/2.2.2/jquery.min.js"
-		th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
+	<link rel="stylesheet" media="screen" th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"/>
+	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
+	<script th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
+	<script th:src="@{/webjars/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
 </head>
 <body>
-	<div style="margin-top: 15px; margin-left: 15px;">
+	<!-- navigation bar -->
+	<div th:replace="../fragments/navbar :: navbar"></div>
+	
+	<!-- content -->
+	<div id="error">
 		<h1>Error</h1>
 		<p>
 			<b>Status code:</b> <span th:text="${status}"></span>
 		</p>
 		<p>
 			<b>Message:</b> <span th:text="${message}"></span>
+		</p>
+		<p>
+			<b>Stack Trace:</b> <br/><span th:utext="${stackTrace}"></span>
 		</p>
 	</div>
 </body>

@@ -15,12 +15,9 @@
  */
 package eu.openanalytics.controllers;
 
-import java.security.Principal;
-
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,18 +25,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import eu.openanalytics.services.DockerService;
 
 @Controller
-public class AdminController {
+public class AdminController extends BaseController {
 
 	@Inject
 	DockerService dockerService;
 
-	@Inject
-	Environment environment;
-
 	@RequestMapping("/admin")
-	String admin(ModelMap map, Principal principal, HttpServletRequest request) {
-		map.put("title", environment.getProperty("shiny.proxy.title"));
-		map.put("logo", environment.getProperty("shiny.proxy.logo-url"));
+	String admin(ModelMap map, HttpServletRequest request) {
+		prepareMap(map, request);
 		map.put("proxies", dockerService.listProxies());
 		return "admin";
 	}

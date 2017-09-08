@@ -5,11 +5,11 @@
 
 	<groupId>eu.openanalytics</groupId>
 	<artifactId>shinyproxy</artifactId>
-	<version>0.9.4</version>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>shinyproxy</name>
-	<description>Shiny proxy with LDAP authentication</description>
+	<description>deploy Shiny apps in an enterprise context</description>
 
 	<organization>
 		<name>Open Analytics NV</name>
@@ -352,6 +352,62 @@
 				</configuration>
 			</plugin>
 
+			<plugin>
+				<groupId>com.mycila.maven-license-plugin</groupId>
+				<artifactId>maven-license-plugin</artifactId>
+				<version>1.9.0</version>
+				<configuration>
+					<header>LICENSE_HEADER</header>
+					<aggregate>true</aggregate>
+					<strictCheck>true</strictCheck>
+					<excludes>
+						<exclude>*.log</exclude>
+						<exclude>mvnw.cmd</exclude>
+						<exclude>mvnw</exclude>
+						<exclude>**/*.properties</exclude>
+						<exclude>**/*.yml</exclude>
+						<exclude>LICENSE</exclude>
+						<exclude>LICENSE_HEADER</exclude>
+						<exclude>README.md</exclude>
+						<exclude>**/*.json</exclude>
+						<exclude>.gitignore</exclude>
+					</excludes>
+				</configuration>
+				<executions>
+					<!--<execution>
+						<id>generate-copyright-headers</id>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>format</goal>
+						</goals>
+					</execution>-->
+					<execution>
+						<id>check-copyright-headers</id>
+						<phase>package</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>net.nicoulaj.maven.plugins</groupId>
+				<artifactId>checksum-maven-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>artifacts</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+          		   <algorithms>
+            	       <algorithm>SHA-256</algorithm>	   
+                       <algorithm>MD5</algorithm>
+                   </algorithms>
+        		</configuration>
+			</plugin>
 		</plugins>
 	</build>
 

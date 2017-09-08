@@ -1,17 +1,22 @@
 /**
- * Copyright 2016 Open Analytics, Belgium
+ * ShinyProxy
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Copyright (C) 2016-2017 Open Analytics
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * ===========================================================================
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Apache License as published by
+ * The Apache Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * Apache License for more details.
+ *
+ * You should have received a copy of the Apache License
+ * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
 package eu.openanalytics.services;
 
@@ -98,6 +103,9 @@ public class DockerService {
 	AppService appService;
 	
 	@Inject
+	UserService userService;
+	
+	@Inject
 	EventService eventService;
 	
 	@Inject
@@ -173,10 +181,10 @@ public class DockerService {
 		}
 	}
 	
-	public String getMapping(String userName, String appName) {
+	public String getMapping(String userName, String appName, boolean startNew) {
 		waitForLaunchingProxy(userName, appName);
 		Proxy proxy = findProxy(userName, appName);
-		if (proxy == null) {
+		if (proxy == null && startNew) {
 			// The user has no proxy yet.
 			proxy = startProxy(userName, appName);
 		}
@@ -252,6 +260,9 @@ public class DockerService {
 		launchingProxies.add(proxy);
 		
 		try {
+			URL hostURL = new URL(environment.getProperty("shiny.proxy.docker.url"));
+			proxy.protocol = environment.getProperty("shiny.proxy.docker.container-protocol", hostURL.getProtocol());
+			
 			if (swarmMode) {
 				Mount[] mounts = getBindVolumes(app).stream()
 						.map(b -> b.split(":"))
@@ -301,7 +312,6 @@ public class DockerService {
 						.filter(n -> n.id().equals(proxy.host)).findAny()
 						.orElseThrow(() -> new IllegalStateException(String.format("Swarm node not found [id: %s]", proxy.host)));
 				proxy.host = node.description().hostname();
-				proxy.protocol = "http";
 				
 				log.info(String.format("Container running in swarm [service: %s] [node: %s]", proxy.name, proxy.host));
 			} else {
@@ -330,12 +340,9 @@ public class DockerService {
 					}
 				}
 				dockerClient.startContainer(container.id());
-
-				URL hostURL = new URL(environment.getProperty("shiny.proxy.docker.url"));
-				proxy.host = hostURL.getHost();
-				proxy.protocol = hostURL.getProtocol();
 				
 				ContainerInfo info = dockerClient.inspectContainer(container.id());
+				proxy.host = hostURL.getHost();
 				proxy.name = info.name().substring(1);
 				proxy.containerId = container.id();
 			}
@@ -431,6 +438,9 @@ public class DockerService {
 	private List<String> buildEnv(String userName, ShinyApp app) throws IOException {
 		List<String> env = new ArrayList<>();
 		env.add(String.format("SHINYPROXY_USERNAME=%s", userName));
+		
+		String[] groups = userService.getGroups(userService.getCurrentAuth());
+		env.add(String.format("SHINYPROXY_USERGROUPS=%s", Arrays.stream(groups).collect(Collectors.joining(","))));
 		
 		String envFile = app.getDockerEnvFile();
 		if (envFile != null && Files.isRegularFile(Paths.get(envFile))) {

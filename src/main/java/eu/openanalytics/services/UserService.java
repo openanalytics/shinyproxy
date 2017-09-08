@@ -1,17 +1,22 @@
 /**
- * Copyright 2016 Open Analytics, Belgium
+ * ShinyProxy
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Copyright (C) 2016-2017 Open Analytics
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * ===========================================================================
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Apache License as published by
+ * The Apache Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * Apache License for more details.
+ *
+ * You should have received a copy of the Apache License
+ * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
 package eu.openanalytics.services;
 
@@ -32,6 +37,7 @@ import org.springframework.security.authentication.event.AbstractAuthenticationF
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import eu.openanalytics.services.AppService.ShinyApp;
@@ -59,10 +65,16 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 	
 	@PostConstruct
 	public void init() {
-		new Thread(new AppCleaner(), "HeartbeatThread").start();
+		Thread heartbeatThread = new Thread(new AppCleaner(), "HeartbeatThread");
+		heartbeatThread.setDaemon(true);
+		heartbeatThread.start();
 	}
 	
-	public String[] getAdminRoles() {
+	public Authentication getCurrentAuth() {
+		return SecurityContextHolder.getContext().getAuthentication();
+	}
+	
+	public String[] getAdminGroups() {
 		String[] adminGroups = environment.getProperty("shiny.proxy.admin-groups", String[].class);
 		if (adminGroups == null) adminGroups = new String[0];
 		for (int i = 0; i < adminGroups.length; i++) {
@@ -79,19 +91,29 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 		return accessibleApps;
 	}
 	
+	public String[] getGroups(Authentication principalAuth) {
+		List<String> groups = new ArrayList<>();
+		if (principalAuth != null) {
+			for (GrantedAuthority auth: principalAuth.getAuthorities()) {
+				String authName = auth.getAuthority().toUpperCase();
+				if (authName.startsWith("ROLE_")) authName = authName.substring(5);
+				groups.add(authName);
+			}
+		}
+		return groups.toArray(new String[groups.size()]);
+	}
+	
 	public boolean isAdmin(Authentication principalAuth) {
-		for (String adminRole: getAdminRoles()) {
-			if (hasRole(principalAuth, adminRole)) return true;
+		for (String adminGroups: getAdminGroups()) {
+			if (isMember(principalAuth, adminGroups)) return true;
 		}
 		return false;
 	}
 	
-	private boolean hasRole(Authentication principalAuth, String roleName) {
-		if (principalAuth == null || roleName == null) return false;
-		for (GrantedAuthority auth: principalAuth.getAuthorities()) {
-			String role = auth.getAuthority().toUpperCase();
-			if (role.startsWith("ROLE_")) role = role.substring(5);
-			if (role.equalsIgnoreCase(roleName)) return true;
+	private boolean isMember(Authentication principalAuth, String groupName) {
+		if (principalAuth == null || groupName == null) return false;
+		for (String group: getGroups(principalAuth)) {
+			if (group.equalsIgnoreCase(groupName)) return true;
 		}
 		return false;
 	}
@@ -102,7 +124,7 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 		if (app.getGroups() == null || app.getGroups().length == 0) return true;
 		if (principalAuth == null || principalAuth instanceof AnonymousAuthenticationToken) return true;
 		for (String group: app.getGroups()) {
-			if (hasRole(principalAuth, group)) return true;
+			if (isMember(principalAuth, group)) return true;
 		}
 		return false;
 	}

@@ -1,0 +1,19 @@
+#!/bin/bash
+
+useradd -rMU shinyproxy || true
+
+if [ -d /etc/shinyproxy ];
+then
+  if [ `stat -c '%U' /etc/shinyproxy/` != "shinyproxy" ];
+  then
+    chown -R shinyproxy:shinyproxy /etc/shinyproxy || true
+  fi
+fi
+
+if [ -d /opt/shinyproxy ];
+then
+  if [ `stat -c '%U' /opt/shinyproxy/` != "shinyproxy" ];
+  then
+    chown -R shinyproxy:shinyproxy /opt/shinyproxy || true
+  fi
+fi

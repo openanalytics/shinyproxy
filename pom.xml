@@ -229,15 +229,15 @@
 						<mapping>
 							<directory>/opt/shinyproxy</directory>
 							<filemode>755</filemode>
-							<username>root</username>
-							<groupname>root</groupname>
+							<username>shinyproxy</username>
+							<groupname>shinyproxy</groupname>
 						</mapping>
 
 						<mapping>
 							<directory>/opt/shinyproxy</directory>
 							<filemode>755</filemode>
-							<username>root</username>
-							<groupname>root</groupname>
+							<username>shinyproxy</username>
+							<groupname>shinyproxy</groupname>
 							<artifact />
 						</mapping>
 
@@ -254,8 +254,8 @@
 						<mapping>
 							<directory>/opt/shinyproxy</directory>
 							<filemode>755</filemode>
-							<username>root</username>
-							<groupname>root</groupname>
+							<username>shinyproxy</username>
+							<groupname>shinyproxy</groupname>
 							<sources>
 								<source>
 									<location>src/deb/shinyproxy.service</location>
@@ -268,11 +268,22 @@
 								</source>
 							</sources>
 						</mapping>
+					  
+					  <mapping>
+              <directory>/etc/shinyproxy</directory>
+              <filemode>755</filemode>
+              <username>shinyproxy</username>
+              <groupname>shinyproxy</groupname>
+            </mapping>
 
 					</mappings>
 					<requires>
 						<require>java</require>
 					</requires>
+					<preinstallScriptlet>
+            <scriptFile>src/deb/control/preinst</scriptFile>
+            <fileEncoding>utf-8</fileEncoding>
+          </preinstallScriptlet>
 					<postinstallScriptlet>
 						<scriptFile>src/deb/control/postinst</scriptFile>
 						<fileEncoding>utf-8</fileEncoding>
@@ -310,6 +321,8 @@
 							<mapper>
 								<type>perm</type>
 								<prefix>/opt/${project.artifactId}</prefix>
+								<user>shinyproxy</user>
+								<group>shinyproxy</group>
 							</mapper>
 						</data>
 						<data>
@@ -324,6 +337,8 @@
 							<mapper>
 								<type>perm</type>
 								<prefix>/opt/${project.artifactId}</prefix>
+								<user>shinyproxy</user>
+                <group>shinyproxy</group>
 							</mapper>
 						</data>
 						<data>
@@ -332,6 +347,8 @@
 							<mapper>
 								<type>perm</type>
 								<prefix>/opt/${project.artifactId}</prefix>
+								<user>shinyproxy</user>
+                <group>shinyproxy</group>
 							</mapper>
 						</data>
 						<data>
@@ -340,6 +357,8 @@
 							<mapper>
 								<type>perm</type>
 								<prefix>/opt/${project.artifactId}</prefix>
+								<user>shinyproxy</user>
+                <group>shinyproxy</group>
 							</mapper>
 						</data>
 						<data>
@@ -347,6 +366,11 @@
 							<paths>
 								<path>etc/${project.artifactId}</path>
 							</paths>
+							<mapper>
+                <type>perm</type>
+                <user>shinyproxy</user>
+                <group>shinyproxy</group>
+              </mapper>
 						</data>
 					</dataSet>
 				</configuration>

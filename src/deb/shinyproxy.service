@@ -1,10 +1,16 @@
 [Unit]
 Description=ShinyProxy
-After=docker.service
+After=syslog.target network.target docker.service
 
 [Service]
+Type=simple
+User=shinyproxy
+Group=shinyproxy
 WorkingDirectory=/etc/shinyproxy
 ExecStart=/usr/bin/java -jar /opt/shinyproxy/shinyproxy.jar
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+PIDFile=/run/shinyproxy.lock
 
 [Install]
 WantedBy=multi-user.target

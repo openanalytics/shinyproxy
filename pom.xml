@@ -13,14 +13,14 @@
 
 	<organization>
 		<name>Open Analytics NV</name>
-		<url>http://www.shinyproxy.io/</url>
+		<url>https://www.shinyproxy.io/</url>
 	</organization>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>1.5.2.RELEASE</version>
-		<relativePath /> <!-- lookup parent from repository -->
+		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<properties>
@@ -56,12 +56,12 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 			<exclusions>
-				<exclusion>
-					<groupId>org.springframework.boot</groupId>
-					<artifactId>spring-boot-starter-tomcat</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
+        		<exclusion>
+            		<groupId>org.springframework.boot</groupId>
+            		<artifactId>spring-boot-starter-tomcat</artifactId>
+        		</exclusion>
+    		</exclusions>
+    	</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -101,97 +101,97 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-jdbc</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
+    	<dependency>
+        	<groupId>org.springframework.boot</groupId>
+        	<artifactId>spring-boot-starter-security</artifactId>
+    	</dependency>
+    	<dependency>
+        	<groupId>org.springframework.security</groupId>
+        	<artifactId>spring-security-ldap</artifactId>
+    	</dependency>
+    	<dependency>
+        	<groupId>org.springframework.security.oauth</groupId>
+        	<artifactId>spring-security-oauth2</artifactId>
+    	</dependency>
+    	<dependency>
+		    <groupId>org.springframework.social</groupId>
+		    <artifactId>spring-social-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-ldap</artifactId>
+		    <groupId>org.springframework.social</groupId>
+		    <artifactId>spring-social-security</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.security.oauth</groupId>
-			<artifactId>spring-security-oauth2</artifactId>
+		    <groupId>org.springframework.social</groupId>
+		    <artifactId>spring-social-web</artifactId>
+		</dependency>
+        <dependency>
+            <groupId>org.springframework.social</groupId>
+            <artifactId>spring-social-twitter</artifactId>
+        </dependency>
+		<dependency>
+		  <groupId>org.springframework.social</groupId>
+		  <artifactId>spring-social-facebook</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.social</groupId>
-			<artifactId>spring-social-core</artifactId>
+		  <groupId>org.springframework.social</groupId>
+		  <artifactId>spring-social-linkedin</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.social</groupId>
-			<artifactId>spring-social-security</artifactId>
+		  <groupId>org.springframework.social</groupId>
+		  <artifactId>spring-social-github</artifactId>
+		  <version>1.0.0.M4</version>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.social</groupId>
-			<artifactId>spring-social-web</artifactId>
+		  <groupId>org.springframework.social</groupId>
+		  <artifactId>spring-social-google</artifactId>
+		  <version>1.0.0.RELEASE</version>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.social</groupId>
-			<artifactId>spring-social-twitter</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.social</groupId>
-			<artifactId>spring-social-facebook</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.social</groupId>
-			<artifactId>spring-social-linkedin</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.social</groupId>
-			<artifactId>spring-social-github</artifactId>
-			<version>1.0.0.M4</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.social</groupId>
-			<artifactId>spring-social-google</artifactId>
-			<version>1.0.0.RELEASE</version>
-		</dependency>
-		<dependency>
-			<groupId>org.keycloak</groupId>
-			<artifactId>keycloak-undertow-adapter</artifactId>
-			<version>3.0.0.Final</version>
-		</dependency>
-		<dependency>
-			<groupId>org.keycloak</groupId>
-			<artifactId>keycloak-spring-security-adapter</artifactId>
-			<version>3.0.0.Final</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.directory.server</groupId>
-			<artifactId>apacheds-server-jndi</artifactId>
-			<version>1.5.5</version>
-		</dependency>
-		<dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-undertow-adapter</artifactId>
+            <version>3.0.0.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.keycloak</groupId>
+            <artifactId>keycloak-spring-security-adapter</artifactId>
+            <version>3.0.0.Final</version>
+        </dependency>
+    	<dependency>
+        	<groupId>org.apache.directory.server</groupId>
+        	<artifactId>apacheds-server-jndi</artifactId>
+        	<version>1.5.5</version>
+    	</dependency>				 		
+    	<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-undertow</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.undertow</groupId>
-			<artifactId>undertow-core</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.undertow</groupId>
-			<artifactId>undertow-servlet</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.undertow</groupId>
-			<artifactId>undertow-websockets-jsr</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>monetdb</groupId>
-			<artifactId>monetdb-jdbc</artifactId>
-			<version>2.24</version>
-		</dependency>
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-		</dependency>
+    	<dependency>
+    		<groupId>org.springframework.boot</groupId>
+    		<artifactId>spring-boot-starter-undertow</artifactId>
+    	</dependency>
+    	<dependency>
+    		<groupId>io.undertow</groupId>
+    		<artifactId>undertow-core</artifactId>
+    	</dependency>
+    	<dependency>
+    		<groupId>io.undertow</groupId>
+    		<artifactId>undertow-servlet</artifactId>
+    	</dependency>
+    	<dependency>
+    		<groupId>io.undertow</groupId>
+    		<artifactId>undertow-websockets-jsr</artifactId>
+    	</dependency>
+    	<dependency>
+    		<groupId>monetdb</groupId>
+    		<artifactId>monetdb-jdbc</artifactId>
+    		<version>2.24</version>
+    	</dependency>
+    	<dependency>
+    		<groupId>com.h2database</groupId>
+    		<artifactId>h2</artifactId>
+    	</dependency>
 	</dependencies>
 
 	<build>
@@ -371,6 +371,7 @@
 						<exclude>README.md</exclude>
 						<exclude>**/*.json</exclude>
 						<exclude>.gitignore</exclude>
+						<exclude>src/deb/**</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -410,5 +411,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
+	
 </project>

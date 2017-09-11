@@ -212,7 +212,7 @@
         	<execution>
 		        <id>generate-rpm</id>
 		        <goals>
-			       <goal>rpm</goal>
+			       <goal>attached-rpm</goal>
 		        </goals>
 	        </execution>
         </executions> -->

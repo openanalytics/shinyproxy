@@ -43,7 +43,7 @@ else
     echo shinyproxy start-up succeeded!
     exit 0
   else
-    echo shinyproxy start-up failed!
+    echo shinyproxy start-up failed! Please start manually with \`service shinyproxy start\`
     exit 1
   fi
 fi

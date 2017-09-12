@@ -218,7 +218,7 @@
         </executions> -->
 				<configuration>
 					<license>(c) Copyright Open Analytics NV, 2016-2017 - Apache License 2.0</license>
-					<release>1</release>
+					<release>1.el7</release>
 					<group>Development/Tools</group>
 					<packager>Open Analytics</packager>
 					<defineStatements>

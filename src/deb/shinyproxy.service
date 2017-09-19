@@ -1,6 +1,6 @@
 [Unit]
 Description=ShinyProxy
-After=syslog.target network.target docker.service
+After=syslog.target network.target
 
 [Service]
 Type=simple

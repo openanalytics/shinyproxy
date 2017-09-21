@@ -85,6 +85,8 @@ public class LDAPAuthenticationType implements IAuthenticationType {
 			}
 			
 			if (Boolean.valueOf(cfg.startTLS) || STARTTLS_SIMPLE.equalsIgnoreCase(cfg.startTLS)) {
+				// Explicitly disable connection pooling, or Spring may attempt to StartTLS twice on the same connection.
+				contextSource.setPooled(false);
 				contextSource.setAuthenticationStrategy(new DefaultTlsDirContextAuthenticationStrategy());
 			} else if (STARTTLS_EXTERNAL.equalsIgnoreCase(cfg.startTLS)) {
 				contextSource.setAuthenticationStrategy(new ExternalTlsDirContextAuthenticationStrategy());

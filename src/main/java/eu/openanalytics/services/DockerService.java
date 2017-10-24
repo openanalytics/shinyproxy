@@ -80,6 +80,9 @@ import com.spotify.docker.client.messages.swarm.TaskSpec;
 import eu.openanalytics.ShinyProxyException;
 import eu.openanalytics.services.AppService.ShinyApp;
 import eu.openanalytics.services.EventService.EventType;
+import io.undertow.server.HttpServerExchange;
+import io.undertow.server.handlers.Cookie;
+import io.undertow.servlet.handlers.ServletRequestContext;
 
 @Service
 public class DockerService {
@@ -124,6 +127,7 @@ public class DockerService {
 		public String serviceId;
 		public String userName;
 		public String appName;
+		public String sessionId;
 		public long startupTimestamp;
 		
 		public String uptime() {
@@ -140,6 +144,7 @@ public class DockerService {
 			target.serviceId = this.serviceId;
 			target.userName = this.userName;
 			target.appName = this.appName;
+			target.sessionId = this.sessionId;
 			target.startupTimestamp = this.startupTimestamp;
 			return target;
 		}
@@ -191,6 +196,27 @@ public class DockerService {
 		return (proxy == null) ? null : proxy.name;
 	}
 	
+	public boolean sessionOwnsProxy(HttpServerExchange exchange) {
+		String sessionId = getCurrentSessionId(exchange);
+		if (sessionId == null) return false;
+		String proxyName = exchange.getRelativePath();
+		synchronized (activeProxies) {
+			for (Proxy p: activeProxies) {
+				if (p.sessionId.equals(sessionId) && proxyName.startsWith("/" + p.name)) {
+					return true;
+				}
+			}
+		}
+		synchronized (launchingProxies) {
+			for (Proxy p: launchingProxies) {
+				if (p.sessionId.equals(sessionId) && proxyName.startsWith("/" + p.name)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
 	public void releaseProxies(String userName) {
 		List<Proxy> proxiesToRelease = new ArrayList<>();
 		synchronized (activeProxies) {
@@ -208,6 +234,16 @@ public class DockerService {
 		if (proxy != null) {
 			releaseProxy(proxy, true);
 		}
+	}
+	
+	private String getCurrentSessionId(HttpServerExchange exchange) {
+		if (exchange == null && ServletRequestContext.current() != null) {
+			exchange = ServletRequestContext.current().getExchange();
+		}
+		if (exchange == null) return null;
+		Cookie sessionCookie = exchange.getRequestCookies().get("JSESSIONID");
+		if (sessionCookie == null) return null;
+		return sessionCookie.getValue();
 	}
 	
 	private void releaseProxy(Proxy proxy, boolean async) {
@@ -257,6 +293,7 @@ public class DockerService {
 		proxy.userName = userName;
 		proxy.appName = appName;
 		proxy.port = getFreePort();
+		proxy.sessionId = getCurrentSessionId(null);
 		launchingProxies.add(proxy);
 		
 		try {

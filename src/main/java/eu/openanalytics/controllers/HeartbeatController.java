@@ -20,30 +20,20 @@
  */
 package eu.openanalytics.controllers;
 
-import java.io.IOException;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Logger;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class HeartbeatController extends BaseController {
 
-	private Logger log = Logger.getLogger(HeartbeatController.class);
-	
 	@RequestMapping("/heartbeat/**")
-	void heartbeat(HttpServletRequest request, HttpServletResponse response) {
+	@ResponseBody
+	String heartbeat(HttpServletRequest request, HttpServletResponse response) {
 		userService.heartbeatReceived(getUserName(request), getAppName(request), getTagOverride(request));
-		try {
-			response.setStatus(200);
-			response.setContentType("text/html");
-			response.getWriter().write("Ok");
-			response.getWriter().flush();
-		} catch (IOException e) {
-			log.error("Failed to send heartbeat response", e);
-		}
+		return "Ok";
 	}
 }

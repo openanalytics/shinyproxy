@@ -21,6 +21,7 @@
 package eu.openanalytics.services;
 
 import eu.openanalytics.ShinyProxyApplication;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,10 +38,10 @@ import org.springframework.stereotype.Service;
 public class AppService {
 
 	private List<ShinyApp> apps = new ArrayList<>();
-	
+
 	@Inject
 	Environment environment;
-	
+
 	public ShinyApp getApp(String name) {
 		for (ShinyApp app: apps) {
 			if (app.getName().equals(name)) return app;
@@ -51,13 +52,13 @@ public class AppService {
 	public List<ShinyApp> getApps() {
 		return apps;
 	}
-	
+
 	public String buildContainerPath(String mapping, HttpServletRequest request) {
 		if (mapping == null) return "";
 		
 		String queryString = request.getQueryString();
 		queryString = (queryString == null) ? "" : "?" + queryString;
-		
+
 		String contextPath = ShinyProxyApplication.getContextPath(environment);
 		String containerPath = contextPath + "/" + mapping + environment.getProperty("shiny.proxy.landing-page") + queryString;
 		return containerPath;

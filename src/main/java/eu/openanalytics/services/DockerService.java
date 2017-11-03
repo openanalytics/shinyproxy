@@ -172,7 +172,7 @@ public class DockerService {
 	public DockerClient getDockerClient() {
 		try {
 			return DefaultDockerClient.builder()
-				.dockerCertificates(DockerCertificates.builder().dockerCertPath(Paths.get(environment.getProperty("shiny.proxy.docker.cert-path"))).build().orNull())
+				.dockerCertificates(DockerCertificates.builder().dockerCertPath(Paths.get(environment.getProperty("shiny.proxy.docker.cert-path", ""))).build().orNull())
 				.uri(environment.getProperty("shiny.proxy.docker.url"))
 				.build();
 		} catch (DockerCertificateException e) {

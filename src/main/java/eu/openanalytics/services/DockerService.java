@@ -128,6 +128,7 @@ public class DockerService {
 		public String serviceId;
 		public String userName;
 		public String appName;
+		public String tagOverride;
 		public String sessionId;
 		public long startupTimestamp;
 		
@@ -188,11 +189,15 @@ public class DockerService {
 	}
 	
 	public String getMapping(String userName, String appName, boolean startNew) {
-		waitForLaunchingProxy(userName, appName);
-		Proxy proxy = findProxy(userName, appName);
+		return getMapping(userName, appName, null, startNew);
+	}
+
+	public String getMapping(String userName, String appName, String tagOverride, boolean startNew) {
+		waitForLaunchingProxy(userName, appName, tagOverride);
+		Proxy proxy = findProxy(userName, appName, tagOverride);
 		if (proxy == null && startNew) {
 			// The user has no proxy yet.
-			proxy = startProxy(userName, appName);
+			proxy = startProxy(userName, appName, tagOverride);
 		}
 		return (proxy == null) ? null : proxy.name;
 	}
@@ -230,8 +235,8 @@ public class DockerService {
 		}
 	}
 	
-	public void releaseProxy(String userName, String appName) {
-		Proxy proxy = findProxy(userName, appName);
+	public void releaseProxy(String userName, String appName, String tagOverride) {
+		Proxy proxy = findProxy(userName, appName, tagOverride);
 		if (proxy != null) {
 			releaseProxy(proxy, true);
 		}
@@ -280,23 +285,34 @@ public class DockerService {
 		}
 	}
 	
-	private Proxy startProxy(String userName, String appName) {
+	private Proxy startProxy(String userName, String appName, String tagOverride) {
 		ShinyApp app = appService.getApp(appName);
 		if (app == null) {
 			throw new ShinyProxyException("Cannot start container: unknown application: " + appName);
 		}
 		
-		if (findProxy(userName, appName) != null) {
+		if (findProxy(userName, appName, tagOverride) != null) {
 			throw new ShinyProxyException("Cannot start container: user " + userName + " already has a running proxy");
 		}
 		
 		Proxy proxy = new Proxy();
 		proxy.userName = userName;
 		proxy.appName = appName;
+		proxy.tagOverride = tagOverride;
 		proxy.port = getFreePort();
 		proxy.sessionId = getCurrentSessionId(null);
 		launchingProxies.add(proxy);
 		
+		String dockerImage = app.getDockerImage();
+		if (tagOverride != null) {
+			int idx = dockerImage.indexOf(':');
+			if (idx == -1) {
+				dockerImage += ':' + tagOverride;
+			} else {
+				dockerImage = dockerImage.substring(0, idx + 1) + tagOverride;
+			}
+		}
+
 		try {
 			URL hostURL = new URL(environment.getProperty("shiny.proxy.docker.url"));
 			proxy.protocol = environment.getProperty("shiny.proxy.docker.container-protocol", hostURL.getProtocol());
@@ -308,7 +324,7 @@ public class DockerService {
 						.toArray(i -> new Mount[i]);
 
 				ContainerSpec containerSpec = ContainerSpec.builder()
-						.image(app.getDockerImage())
+						.image(dockerImage)
 						.command(app.getDockerCmd())
 						.env(buildEnv(userName, app))
 						.dnsConfig(DnsConfig.builder().nameServers(app.getDockerDns()).build())
@@ -365,7 +381,7 @@ public class DockerService {
 				
 				ContainerConfig containerConfig = ContainerConfig.builder()
 					    .hostConfig(hostConfigBuilder.build())
-					    .image(app.getDockerImage())
+					    .image(dockerImage)
 					    .exposedPorts("3838")
 					    .cmd(app.getDockerCmd())
 					    .env(buildEnv(userName, app))
@@ -420,35 +436,37 @@ public class DockerService {
 		
 		activeProxies.add(proxy);
 		launchingProxies.remove(proxy);
-		log.info(String.format("Proxy activated [user: %s] [app: %s] [port: %d]", userName, appName, proxy.port));
+		log.info(String.format("Proxy activated [user: %s] [app: %s] [tagOverride: %s] [port: %d]", userName, appName, tagOverride, proxy.port));
+		// TODO add tagOverride
 		eventService.post(EventType.AppStart.toString(), userName, appName);
 		
 		return proxy;
 	}
 	
-	private Proxy findProxy(String userName, String appName) {
+	private Proxy findProxy(String userName, String appName, String tagOverride) {
+		return findProxy(userName, appName, tagOverride, activeProxies);
+	}
+	
+	private Proxy findProxy(String userName, String appName, String tagOverride, List<Proxy> proxyList) {
 		synchronized (activeProxies) {
-			for (Proxy proxy: activeProxies) {
-				if (userName.equals(proxy.userName) && appName.equals(proxy.appName)) return proxy;
+			for (Proxy proxy: proxyList) {
+				if (userName.equals(proxy.userName) && appName.equals(proxy.appName) &&
+					(tagOverride == null ? proxy.tagOverride == null : tagOverride.equals(proxy.tagOverride))
+				) {
+					return proxy;
+				}
 			}
 		}
 		return null;
 	}
 	
-	private void waitForLaunchingProxy(String userName, String appName) {
+	private void waitForLaunchingProxy(String userName, String appName, String tagOverride) {
 		int totalWaitMs = Integer.parseInt(environment.getProperty("shiny.proxy.container-wait-time", "20000"));
 		int waitMs = Math.min(2000, totalWaitMs);
 		int maxTries = totalWaitMs / waitMs;
 		
 		boolean mayProceed = retry(i -> {
-			synchronized (launchingProxies) {
-				for (Proxy proxy: launchingProxies) {
-					if (userName.equals(proxy.userName) && appName.equals(proxy.appName)) {
-						return false;
-					}
-				}
-			}
-			return true;
+			return findProxy(userName, appName, tagOverride, launchingProxies) == null;
 		}, maxTries, waitMs);
 		
 		if (!mayProceed) throw new ShinyProxyException("Cannot proceed: waiting for proxy to launch");

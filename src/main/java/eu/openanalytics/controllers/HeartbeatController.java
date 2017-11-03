@@ -36,7 +36,7 @@ public class HeartbeatController extends BaseController {
 	
 	@RequestMapping("/heartbeat/**")
 	void heartbeat(HttpServletRequest request, HttpServletResponse response) {
-		userService.heartbeatReceived(getUserName(request), getAppName(request));
+		userService.heartbeatReceived(getUserName(request), getAppName(request), getTagOverride(request));
 		try {
 			response.setStatus(200);
 			response.setContentType("text/html");

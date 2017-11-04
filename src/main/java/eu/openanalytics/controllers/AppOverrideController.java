@@ -176,10 +176,14 @@ public class AppOverrideController extends BaseController {
 		if (expiry == null) {
 			expiry = configExpiry;
 		} else if (configExpiry > 0) {
-			expiry = Math.min(expiry, configExpiry);
+			if (expiry > 0) {
+				expiry = Math.min(expiry, configExpiry);
+			} else {
+				expiry = configExpiry;
+			}
 		}
 		long expiresAt;
-		if (expiry == 0) {
+		if (expiry <= 0) {
 			expiresAt = 0;
 		} else {
 			expiresAt = new Date().getTime() + expiry;

@@ -74,10 +74,10 @@ public class TagOverrideService {
 			}
 		}
 		try {
-			SecureRandom rng = SecureRandom.getInstanceStrong();
-			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("DSA");
+			SecureRandom rng = SecureRandom.getInstance("SHA1PRNG");
+			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
 			log.info("Generating tag override key pair. This may take a while...");
-			keyGen.initialize(1024, rng);
+			keyGen.initialize(2048, rng);
 			keyPair = keyGen.generateKeyPair();
 		} catch (Exception e) {
 			log.error("Failed to generate override key pair", e);

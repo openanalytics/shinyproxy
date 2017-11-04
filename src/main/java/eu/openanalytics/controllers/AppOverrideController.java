@@ -39,12 +39,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
-import org.apache.log4j.Logger;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.util.Base64Utils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -115,8 +114,8 @@ public class AppOverrideController extends BaseController {
         }
         byte[] signature;
         try {
-            signature = Hex.decodeHex(request.getParameter("sig").toCharArray());
-        } catch (DecoderException e) {
+            signature = Base64Utils.decodeFromUrlSafeString(request.getParameter("sig"));
+        } catch (Exception e) {
             sendSimpleResponse(response, 400, "Bad Request: failed to decode signature as hex");
             return false;
         }
@@ -136,10 +135,10 @@ public class AppOverrideController extends BaseController {
             sendSimpleResponse(response, 501, "Not Implemented: tag overriding is either disabled or failed to intialize");
             return false;
         }
-        Signature dsa = Signature.getInstance("SHA256withDSA");
-        dsa.initVerify(keyPair.getPublic());
-        updateSignatureWithOverride(dsa, appName, tagOverride, expires);
-        if (!dsa.verify(signature)) {
+        Signature rsa = Signature.getInstance("SHA256withRSA");
+        rsa.initVerify(keyPair.getPublic());
+        updateSignatureWithOverride(rsa, appName, tagOverride, expires);
+        if (!rsa.verify(signature)) {
             sendSimpleResponse(response, 400, "Bad Request: signature verification failed");
             return false;
         }
@@ -185,11 +184,11 @@ public class AppOverrideController extends BaseController {
         } else {
             expiresAt = new Date().getTime() + expiry;
         }
-        Signature dsa = Signature.getInstance("SHA256withDSA");
-        dsa.initSign(keyPair.getPrivate());
-        updateSignatureWithOverride(dsa, getAppName(request), getTagOverride(request), expiresAt);
-        byte[] signatureBytes = dsa.sign();
-        String signature = Hex.encodeHexString(signatureBytes);
+        Signature rsa = Signature.getInstance("SHA256withRSA");
+        rsa.initSign(keyPair.getPrivate());
+        updateSignatureWithOverride(rsa, getAppName(request), getTagOverride(request), expiresAt);
+        byte[] signatureBytes = rsa.sign();
+        String signature = Base64Utils.encodeToUrlSafeString(signatureBytes);
         String overrideLocation = "?expires=" + expiresAt + "&sig=" + signature;
         String requestQS = request.getQueryString();
         if (requestQS != null) {

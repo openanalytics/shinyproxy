@@ -24,23 +24,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import eu.openanalytics.services.TagOverrideService;
 import eu.openanalytics.services.AppService.ShinyApp;
- 
+
 @Controller
 public class IndexController extends BaseController {
-	
+
+	@Inject
+	TagOverrideService tagOverrideService;
+
 	@RequestMapping("/")
     String index(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
-		
-		List<ShinyApp> apps = userService.getAccessibleApps(SecurityContextHolder.getContext().getAuthentication());
+
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		List<ShinyApp> apps = userService.getAccessibleApps(authentication);
 		map.put("apps", apps.toArray());
 
 		Map<ShinyApp, String> appLogos = new HashMap<>();
@@ -54,6 +60,14 @@ public class IndexController extends BaseController {
 			}
 		}
 		map.put("displayAppLogos", displayAppLogos);
+
+		boolean isAdmin = userService.isAdmin(authentication);
+		boolean canOverrideTags = isAdmin && tagOverrideService.getKeyPair() != null;
+		map.put("canOverrideTags", canOverrideTags);
+		if (canOverrideTags) {
+			map.put("maxTagOverrideExpirationDays", tagOverrideService.getMaxTagOverrideExpirationDays());
+			map.put("defaultTagOverrideExpirationDays", tagOverrideService.getMaxTagOverrideExpirationDays());
+		}
 
 		return "index";
     }

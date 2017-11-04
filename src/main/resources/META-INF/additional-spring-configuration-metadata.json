@@ -70,8 +70,13 @@
     "description": "The path to the serialized key pair for tag overriding (created if nonexistant)"
   },
   {
-    "name": "shiny.proxy.tag-overriding.expiration-days",
+    "name": "shiny.proxy.tag-overriding.max-expiration-days",
     "type": "int",
     "description": "The maximum amount of days before a tag override expires (or 0 for never)"
+  },
+  {
+    "name": "shiny.proxy.tag-overriding.default-expiration-days",
+    "type": "int",
+    "description": "The default amount of days before a tag override expires (or 0 for never)"
   }
 ]}

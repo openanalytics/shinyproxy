@@ -172,14 +172,14 @@ public class AppOverrideController extends BaseController {
 			response.setContentType("text/plain");
 			return "Not Implemented: tag overriding is either disabled or failed to intialize";
 		}
-		long configExpiry = ((long) tagOverrideService.getTagOverrideExpirationDays()) * 1000 * 60 * 60 * 24;
+		long maxExpiry = ((long) tagOverrideService.getMaxTagOverrideExpirationDays()) * 1000 * 60 * 60 * 24;
 		if (expiry == null) {
-			expiry = configExpiry;
-		} else if (configExpiry > 0) {
+			expiry = ((long) tagOverrideService.getDefaultTagOverrideExpirationDays()) * 1000 * 60 * 60 * 24;
+		} else if (maxExpiry > 0) {
 			if (expiry > 0) {
-				expiry = Math.min(expiry, configExpiry);
+				expiry = Math.min(expiry, maxExpiry);
 			} else {
-				expiry = configExpiry;
+				expiry = maxExpiry;
 			}
 		}
 		long expiresAt;

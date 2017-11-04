@@ -47,8 +47,18 @@ public class TagOverrideService {
 	@Inject
 	Environment environment;
 
-	public int getTagOverrideExpirationDays() {
-		return Integer.parseInt(environment.getProperty("shiny.proxy.tag-overriding.expiration-days", "7"));
+	public int getMaxTagOverrideExpirationDays() {
+		return Integer.parseInt(environment.getProperty("shiny.proxy.tag-overriding.max-expiration-days", "7"));
+	}
+
+	public int getDefaultTagOverrideExpirationDays() {
+		int defaultDays = Integer.parseInt(environment.getProperty("shiny.proxy.tag-overriding.default-expiration-days", "7"));
+		int maxDays = getMaxTagOverrideExpirationDays();
+		if (maxDays <= 0) {
+			return defaultDays;
+		} else {
+			return Math.min(maxDays, defaultDays);
+		}
 	}
 
 	public KeyPair getKeyPair() {

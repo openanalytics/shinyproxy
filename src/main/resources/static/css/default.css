@@ -64,3 +64,7 @@ body > div#navbar { padding-top: 0px; }
 	font-size: 24px;
 	margin-top: -50px;
 }
+
+.get-link-output {
+	margin-top: 10px;
+}

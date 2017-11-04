@@ -42,6 +42,30 @@
 				<a th:href="@{/app/}+${app.name}" th:text="${app.displayName == null} ? ${app.name} : ${app.displayName}"></a>
 				<br th:if="${app.description != null}" />
 				<span th:if="${app.description != null}" th:text="${app.description}"></span>
+				<details th:if="${canOverrideTags}">
+					<summary style="display: list-item"><b>Tag Overriding</b></summary>
+					<form class="form-inline tag-override-form">
+						<input type="hidden" class="app-name" th:value="${app.name}"></input>
+						<input type="hidden" class="max-expiration-days" th:value="${maxTagOverrideExpirationDays}"></input>
+						<input type="hidden" class="default-expiration-days" th:value="${defaultTagOverrideExpirationDays}"></input>
+						<div class="form-group">
+							<label>Tag</label>
+							<input type="text" class="form-control tag-input" placeholder="latest" required="required" pattern="[^/?#]+"></input>
+						</div>
+						<div class="form-group">
+							<label>Expiration Date</label>
+							<div class="input-group">
+								<span class="input-group-addon" th:if="${maxTagOverrideExpirationDays &lt;= 0}">
+									<input type="checkbox" class="should-expire"></input>
+								</span>
+								<input type="date" class="form-control expiration-date"></input>
+							</div>
+						</div>
+						<button type="submit" class="btn btn-primary go-btn">Go</button>
+						<button type="button" class="btn btn-default get-link-btn">Get Link</button>
+						<input type="text" class="form-input get-link-output" style="display: none" readonly="readonly"></input>
+					</form>
+				</details>
 			</li>
 		</ul>
 	</div>
@@ -62,5 +86,74 @@
 			</div>
 		</div>
 	</div>
+
+	<script type="text/javascript">
+		$(".tag-override-form").each(function (idx, form) {
+			form = $(form);
+			var appName = form.find("input.app-name").val();
+			var maxExpirationDays = parseInt(form.find("input.max-expiration-days").val());
+			var defaultExpirationDays = parseInt(form.find("input.default-expiration-days").val());
+			var tagInput = form.find("input.tag-input");
+			var expireCheckbox = form.find("input.should-expire");
+			var expirationInput = form.find("input.expiration-date");
+			var goBtn = form.find("button.go-btn");
+			var getLinkBtn = form.find("button.get-link-btn");
+			var getLinkOutput = form.find(".get-link-output");
+			if (expireCheckbox) {
+				expireCheckbox.on("change", function () {
+					expirationInput.prop("disabled", !this.checked);
+				});
+			}
+			function formatDateForInput(date) {
+				return date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate();
+			}
+			expirationInput.attr("min", formatDateForInput(new Date()));
+			if (maxExpirationDays > 0) {
+				var maxDate = new Date(new Date().getTime() + (maxExpirationDays * 1000 * 60 * 60 * 24));
+				expirationInput.attr("max", formatDateForInput(maxDate));
+			}
+			if (defaultExpirationDays > 0) {
+				expireCheckbox.prop("checked", true);
+				expirationInput.prop("disabled", false);
+				var defaultDate = new Date(new Date().getTime() + (defaultExpirationDays * 1000 * 60 * 60 * 24));
+				expirationInput.prop("value", formatDateForInput(defaultDate));
+			} else {
+				expireCheckbox.prop("checked", false);
+				expirationInput.prop("disabled", true);
+			}
+			function getBaseLink() {
+				var expiry;
+				if (!expireCheckbox.length || expireCheckbox.val()) {
+					if (expirationInput.val()) {
+						expiry = new Date(expirationInput.val()).getTime() + (new Date().getTimezoneOffset() * 1000 * 60) - new Date().getTime();
+					}
+				} else {
+					expiry = 0;
+				}
+				var tag = tagInput.val();
+				if (!tag) throw "Tag not specified";
+				var url = "/appOverride/" + tag + "/" + appName;
+				if (expiry !== undefined) url += "?expiry=" + expiry;
+				return url;
+			}
+			form.on("submit", function (evt) {
+				evt.preventDefault();
+				window.location.href = getBaseLink();
+				return false;
+			});
+			getLinkBtn.on("click", function () {
+				$.post(getBaseLink(), function (link) {
+					getLinkOutput.val(link);
+					getLinkOutput.css("display", "block");
+					try {
+						getLinkOutput.select();
+						document.execCommand("copy");
+					} catch (e) {
+						console.error("Failed to copy link to clipboard", e);
+					}
+				});
+			});
+		});
+	</script>
 </body>
 </html>

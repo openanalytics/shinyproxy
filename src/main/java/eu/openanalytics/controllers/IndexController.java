@@ -20,7 +20,9 @@
  */
 package eu.openanalytics.controllers;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -41,9 +43,15 @@ public class IndexController extends BaseController {
 		List<ShinyApp> apps = userService.getAccessibleApps(SecurityContextHolder.getContext().getAuthentication());
 		map.put("apps", apps.toArray());
 
+		Map<ShinyApp, String> appLogos = new HashMap<>();
+		map.put("appLogos", appLogos);
+		
 		boolean displayAppLogos = false;
 		for (ShinyApp app: apps) {
-			if (app.getLogoUrl() != null) displayAppLogos = true;
+			if (app.getLogoUrl() != null) {
+				displayAppLogos = true;
+				appLogos.put(app, resolveImageURI(app.getLogoUrl()));
+			}
 		}
 		map.put("displayAppLogos", displayAppLogos);
 

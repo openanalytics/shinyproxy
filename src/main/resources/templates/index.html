@@ -51,7 +51,7 @@
 			<div class="col-md-6 col-md-offset-3">
 				<div class="media">
 					<div class="media-left">
-						<img th:if="${app.logoUrl != null}" th:src="${app.logoUrl}"></img>
+						<img th:if="${appLogos.get(app) != null}" th:src="${appLogos.get(app)}"></img>
 					</div>
 					<div class="media-body">
 						<a th:href="@{/app/}+${app.name}" th:text="${app.displayName == null} ? ${app.name} : ${app.displayName}"></a>

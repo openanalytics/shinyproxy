@@ -26,6 +26,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.security.Principal;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,8 +43,8 @@ import org.springframework.ui.ModelMap;
 import org.springframework.util.StreamUtils;
 
 import eu.openanalytics.services.AppService;
-import eu.openanalytics.services.UserService;
 import eu.openanalytics.services.AppService.ShinyApp;
+import eu.openanalytics.services.UserService;
 
 public abstract class BaseController {
 
@@ -57,7 +59,7 @@ public abstract class BaseController {
 	
 	private static Logger logger = Logger.getLogger(BaseController.class);
 	private static Pattern appPattern = Pattern.compile(".*/app/(.*)");
-	private static String logoURI;
+	private static Map<String, String> imageCache = new HashMap<>();
 	
 	protected String getUserName(HttpServletRequest request) {
 		Principal principal = request.getUserPrincipal();
@@ -85,9 +87,7 @@ public abstract class BaseController {
 	
 	protected void prepareMap(ModelMap map, HttpServletRequest request) {
 		map.put("title", environment.getProperty("shiny.proxy.title"));
-		if (logoURI == null) logoURI = toAccessibleURI(environment.getProperty("shiny.proxy.logo-url"));
-		map.put("logo", logoURI);
-		
+		map.put("logo", resolveImageURI(environment.getProperty("shiny.proxy.logo-url")));
 		map.put("showNavbar", !Boolean.valueOf(environment.getProperty("shiny.proxy.hide-navbar")));
 		
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -95,25 +95,26 @@ public abstract class BaseController {
 		map.put("isAdmin", userService.isAdmin(authentication));
 	}
 	
-	protected String toAccessibleURI(String resourceURI) {
+	protected String resolveImageURI(String resourceURI) {
 		if (resourceURI == null || resourceURI.isEmpty()) return resourceURI;
-		if (!resourceURI.toLowerCase().startsWith("file://")) return resourceURI;
+		if (imageCache.containsKey(resourceURI)) return imageCache.get(resourceURI);
 		
-		String mimetype = URLConnection.guessContentTypeFromName(resourceURI);
-		if (mimetype == null) {
-			logger.warn("Cannot determine mimetype for resource: " + resourceURI);
-			return resourceURI;
+		String resolvedValue = resourceURI;
+		if (resourceURI.toLowerCase().startsWith("file://")) {
+			String mimetype = URLConnection.guessContentTypeFromName(resourceURI);
+			if (mimetype == null) {
+				logger.warn("Cannot determine mimetype for resource: " + resourceURI);
+			} else {
+				try (InputStream input = new URL(resourceURI).openConnection().getInputStream()) {
+					byte[] data = StreamUtils.copyToByteArray(input);
+					String encoded = Base64.getEncoder().encodeToString(data);
+					resolvedValue = String.format("data:%s;base64,%s", mimetype, encoded);
+				} catch (IOException e) {
+					logger.warn("Failed to convert file URI to data URI: " + resourceURI, e);
+				}
+			}
 		}
-
-		String encoded = null;
-		try (InputStream input = new URL(resourceURI).openConnection().getInputStream()) {
-			byte[] data = StreamUtils.copyToByteArray(input);
-			encoded = Base64.getEncoder().encodeToString(data);
-		} catch (IOException e) {
-			logger.warn("Failed to convert file URI to data URI: " + resourceURI, e);
-			return resourceURI;
-		}
-		
-		return String.format("data:%s;base64,%s", mimetype, encoded);
+		imageCache.put(resourceURI, resolvedValue);
+		return resolvedValue;
 	}
 }

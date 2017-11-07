@@ -387,11 +387,13 @@ public class DockerService {
 			proxy.startupTimestamp = System.currentTimeMillis();
 		} catch (Exception e) {
 			releasePort(proxy.port);
+			launchingProxies.remove(proxy);
 			throw new ShinyProxyException("Failed to start container: " + e.getMessage(), e);
 		}
 
 		if (!testProxy(proxy)) {
 			releaseProxy(proxy, true);
+			launchingProxies.remove(proxy);
 			throw new ShinyProxyException("Container did not respond in time");
 		}
 		

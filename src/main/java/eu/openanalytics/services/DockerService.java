@@ -507,8 +507,13 @@ public class DockerService {
 	
 	private int getFreePort() {
 		int startPort = Integer.valueOf(environment.getProperty("shiny.proxy.docker.port-range-start"));
+		int maxPort = Integer.valueOf(environment.getProperty("shiny.proxy.docker.port-range-max", "-1"));
 		int nextPort = startPort;
 		while (occupiedPorts.contains(nextPort)) nextPort++;
+		if (maxPort > 0 && nextPort > maxPort) {
+			throw new ShinyProxyException("Cannot start container: all allocated ports are currently in use."
+					+ " Please try again later or contact an administrator.");
+		}
 		occupiedPorts.add(nextPort);
 		return nextPort;
 	}

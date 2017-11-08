@@ -44,27 +44,39 @@
 				<span th:if="${app.description != null}" th:text="${app.description}"></span>
 				<details th:if="${canOverrideTags}">
 					<summary style="display: list-item"><b>Tag Overriding</b></summary>
-					<form class="form-inline tag-override-form">
-						<input type="hidden" class="app-name" th:value="${app.name}"></input>
-						<input type="hidden" class="max-expiration-days" th:value="${maxTagOverrideExpirationDays}"></input>
-						<input type="hidden" class="default-expiration-days" th:value="${defaultTagOverrideExpirationDays}"></input>
-						<div class="form-group">
-							<label>Tag</label>
-							<input type="text" class="form-control tag-input" placeholder="latest" required="required" pattern="[^/?#]+"></input>
-						</div>
-						<div class="form-group">
-							<label>Expiration Date</label>
-							<div class="input-group">
-								<span class="input-group-addon" th:if="${maxTagOverrideExpirationDays &lt;= 0}">
-									<input type="checkbox" class="should-expire"></input>
+					<div class="tag-override-form">
+						<form class="form-inline tag-override-form">
+							<input type="hidden" class="app-name" th:value="${app.name}"></input>
+							<input type="hidden" class="max-expiration-days" th:value="${maxTagOverrideExpirationDays}"></input>
+							<input type="hidden" class="default-expiration-days" th:value="${defaultTagOverrideExpirationDays}"></input>
+							<div class="form-group">
+								<label>Tag</label>
+								<input type="text" class="form-control tag-input" placeholder="latest" required="required" pattern="[^/?#]+"></input>
+							</div>
+							<div class="form-group">
+								<label>Expiration Date</label>
+								<div class="input-group">
+									<span class="input-group-addon" th:if="${maxTagOverrideExpirationDays &lt;= 0}">
+										<input type="checkbox" class="should-expire"></input>
+									</span>
+									<input type="date" class="form-control expiration-date"></input>
+								</div>
+							</div>
+							<button type="submit" class="btn btn-primary go-btn">Go</button>
+							<button type="button" class="btn btn-default get-link-btn">Get Link</button>
+							<br style="clear: both"></br>
+						</form>
+						<div class="col-lg-4">
+							<div class="input-group get-link-output-group" style="display: none">
+								<input type="text" class="form-control get-link-output" readonly="readonly"></input>
+								<span class="input-group-btn">
+									<button type="button" class="btn btn-default copy-link-btn">
+										<span class="glyphicon glyphicon-copy"></span>
+									</button>
 								</span>
-								<input type="date" class="form-control expiration-date"></input>
 							</div>
 						</div>
-						<button type="submit" class="btn btn-primary go-btn">Go</button>
-						<button type="button" class="btn btn-default get-link-btn">Get Link</button>
-						<input type="text" class="form-input get-link-output" style="display: none" readonly="readonly"></input>
-					</form>
+					</div>
 				</details>
 			</li>
 		</ul>
@@ -99,6 +111,8 @@
 			var goBtn = form.find("button.go-btn");
 			var getLinkBtn = form.find("button.get-link-btn");
 			var getLinkOutput = form.find(".get-link-output");
+			var getLinkOutputGroup = form.find(".get-link-output-group");
+			var copyLinkBtn = form.find("button.copy-link-btn");
 			if (expireCheckbox) {
 				expireCheckbox.on("change", function () {
 					expirationInput.prop("disabled", !this.checked);
@@ -127,11 +141,18 @@
 					if (expirationInput.val()) {
 						expiry = new Date(expirationInput.val()).getTime() + (new Date().getTimezoneOffset() * 1000 * 60) - new Date().getTime();
 					}
+					// Not valid XML with a less than or equal to
+					if (!(expiry > 0)) {
+						expiry = 1;
+					}
 				} else {
 					expiry = 0;
 				}
 				var tag = tagInput.val();
-				if (!tag) throw "Tag not specified";
+				if (!tag) {
+					goBtn.click(); // Should show a validation message
+					throw "Tag not specified";
+				}
 				var url = "/appOverride/" + tag + "/" + appName;
 				if (expiry !== undefined) url += "?expiry=" + expiry;
 				return url;
@@ -141,16 +162,15 @@
 				window.location.href = getBaseLink();
 				return false;
 			});
+			copyLinkBtn.on("click", function () {
+				getLinkOutput.select();
+				document.execCommand("copy");
+			});
 			getLinkBtn.on("click", function () {
-				$.post(getBaseLink(), function (link) {
-					getLinkOutput.val(link);
-					getLinkOutput.css("display", "block");
-					try {
-						getLinkOutput.select();
-						document.execCommand("copy");
-					} catch (e) {
-						console.error("Failed to copy link to clipboard", e);
-					}
+				$.post(getBaseLink(), function (url) {
+					getLinkOutput.val(window.location.origin + url);
+					getLinkOutputGroup.css("display", "");
+					getLinkOutput.select();
 				});
 			});
 		});

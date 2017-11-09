@@ -119,7 +119,7 @@ public class AppOverrideController extends BaseController {
 		try {
 			signature = Base64Utils.decodeFromUrlSafeString(request.getParameter("sig"));
 		} catch (Exception e) {
-			sendSimpleResponse(response, 400, "Bad Request: failed to decode signature as hex");
+			sendSimpleResponse(response, 400, "Bad Request: failed to decode signature as base64");
 			return false;
 		}
 		long expires;
@@ -164,7 +164,10 @@ public class AppOverrideController extends BaseController {
 		HttpServletRequest request, HttpServletResponse response,
 		// number of milliseconds before signature expires
 		// clamped by config
-		@RequestParam(value="expiry", required=false) Long expiry
+		@RequestParam(value="expiry", required=false) Long reqExpiry,
+		// Unix timestamp (milliseconds) when signature should exipire
+		// alternative to expiry, clamped by config
+		@RequestParam(value="expireAt", required=false) Long reqExpireAt
 	) throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		if (authentication == null || !authentication.isAuthenticated()) {
@@ -185,41 +188,41 @@ public class AppOverrideController extends BaseController {
 			response.setContentType("text/plain");
 			return "Not Implemented: tag overriding is either disabled or failed to intialize";
 		}
-		long maxExpiry = ((long) tagOverrideService.getMaxTagOverrideExpirationDays()) * 1000 * 60 * 60 * 24;
-		if (expiry == null) {
-			expiry = ((long) tagOverrideService.getDefaultTagOverrideExpirationDays()) * 1000 * 60 * 60 * 24;
-		} else if (maxExpiry > 0) {
-			if (expiry > 0) {
-				expiry = Math.min(expiry, maxExpiry);
-			} else {
-				expiry = maxExpiry;
-			}
-		}
 		long expiresAt;
-		if (expiry <= 0) {
-			expiresAt = 0;
+		long maxExpiry = ((long) tagOverrideService.getMaxTagOverrideExpirationDays()) * 1000 * 60 * 60 * 24;
+		long currentTime = new Date().getTime();
+		if (reqExpireAt == null) {
+			if (reqExpiry == null) {
+				reqExpiry = ((long) tagOverrideService.getDefaultTagOverrideExpirationDays()) * 1000 * 60 * 60 * 24;
+			} else if (maxExpiry > 0) {
+				if (reqExpiry > 0) {
+					reqExpiry = Math.min(reqExpiry, maxExpiry);
+				} else {
+					reqExpiry = maxExpiry;
+				}
+			}
+			if (reqExpiry <= 0) {
+				expiresAt = 0;
+			} else {
+				expiresAt = currentTime + reqExpiry;
+			}
 		} else {
-			expiresAt = new Date().getTime() + expiry;
+			if (maxExpiry > 0) {
+				long maxExpiresAt = currentTime + maxExpiry;
+				if (reqExpireAt > 0) {
+					expiresAt = Math.min(maxExpiresAt, reqExpireAt);
+				} else {
+					expiresAt = maxExpiresAt;
+				}
+			} else {
+				expiresAt = reqExpireAt;
+			}
 		}
 		byte[] hashBytes = hashOverride(secret, getAppName(request), getTagOverride(request), expiresAt);
 		byte[] shortHashBytes = Arrays.copyOfRange(hashBytes, 0, tagOverrideService.getURLSigLen());
 		// No longer an actual signature, just a hash including a secret
 		String signature = Base64Utils.encodeToUrlSafeString(shortHashBytes);
 		String overrideLocation = "?expires=" + expiresAt + "&sig=" + signature;
-		String requestQS = request.getQueryString();
-		if (requestQS != null) {
-			requestQS = "&" + requestQS;
-			int expiryIdx = requestQS.indexOf("&expiry=");
-			int nextParamIdx = requestQS.indexOf('&', expiryIdx + 1);
-			if (expiryIdx != -1) {
-				String otherQS = requestQS.substring(0, expiryIdx);
-				if (nextParamIdx != -1) {
-					otherQS += requestQS.substring(nextParamIdx);
-				}
-				requestQS = otherQS;
-			}
-			overrideLocation += requestQS;
-		}
 		if (request.getMethod() == "GET") {
 			response.setStatus(302);
 			response.setHeader("Location", overrideLocation);

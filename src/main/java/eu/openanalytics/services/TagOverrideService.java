@@ -23,20 +23,18 @@ package eu.openanalytics.services;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.nio.file.Files;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
+import java.nio.file.attribute.PosixFilePermission;
 import java.security.SecureRandom;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+
+import com.google.common.collect.Sets;
 
 @Service
 public class TagOverrideService {
@@ -81,10 +79,10 @@ public class TagOverrideService {
 			return;
 		}
 		log.info("Tag overriding enabled");
-		File keyFileFile = new File(environment.getProperty("shiny.proxy.tag-overriding.secret-file", "tagOverride.secret"));
-		if (keyFileFile.exists()) {
-			try (FileInputStream fileStream = new FileInputStream(keyFileFile)) {
-				secret = Files.readAllBytes(keyFileFile.toPath());
+		File secretFile = new File(environment.getProperty("shiny.proxy.tag-overriding.secret-file", "tagOverride.secret"));
+		if (secretFile.exists()) {
+			try (FileInputStream fileStream = new FileInputStream(secretFile)) {
+				secret = Files.readAllBytes(secretFile.toPath());
 				return;
 			} catch (Exception e) {
 				log.error("Failed to read override key file", e);
@@ -98,7 +96,8 @@ public class TagOverrideService {
 			log.error("Failed to generate override key pair", e);
 			return;
 		}
-		try (FileOutputStream fileStream = new FileOutputStream(keyFileFile)) {
+		try (FileOutputStream fileStream = new FileOutputStream(secretFile)) {
+			Files.setPosixFilePermissions(secretFile.toPath(), Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
 			fileStream.write(secret);
 		} catch (Exception e) {
 			log.error("Failed to write override key file", e);

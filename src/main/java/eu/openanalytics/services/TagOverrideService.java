@@ -54,8 +54,8 @@ public class TagOverrideService {
 		return Integer.parseInt(environment.getProperty("shiny.proxy.tag-overriding.minimum-signature-bytes", "16"));
 	}
 
-	public int getURLSigLen() {
-		return Integer.parseInt(environment.getProperty("shiny.proxy.tag-overriding.url-signature-bytes", "16"));
+	public int getDefaultSigLen() {
+		return Integer.parseInt(environment.getProperty("shiny.proxy.tag-overriding.default-signature-bytes", "16"));
 	}
 
 	public int getDefaultTagOverrideExpirationDays() {

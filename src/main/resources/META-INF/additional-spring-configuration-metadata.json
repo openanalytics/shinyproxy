@@ -85,7 +85,7 @@
     "description": "The minimum number of bytes to check in an override \"signature\" (really just a hash)"
   },
   {
-    "name": "shiny.proxy.tag-overriding.url-signature-bytes",
+    "name": "shiny.proxy.tag-overriding.default-signature-bytes",
     "type": "int",
     "description": "The default number of \"signature\" bytes to put in an override URL"
   }

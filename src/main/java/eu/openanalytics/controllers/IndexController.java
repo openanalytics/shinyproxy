@@ -62,7 +62,7 @@ public class IndexController extends BaseController {
 		map.put("displayAppLogos", displayAppLogos);
 
 		boolean isAdmin = userService.isAdmin(authentication);
-		boolean canOverrideTags = isAdmin && tagOverrideService.getKeyPair() != null;
+		boolean canOverrideTags = isAdmin && tagOverrideService.getSecret() != null;
 		map.put("canOverrideTags", canOverrideTags);
 		if (canOverrideTags) {
 			map.put("maxTagOverrideExpirationDays", tagOverrideService.getMaxTagOverrideExpirationDays());

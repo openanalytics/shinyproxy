@@ -25,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.file.Files;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.SecureRandom;
@@ -42,13 +43,21 @@ public class TagOverrideService {
 
 	private Logger log = Logger.getLogger(TagOverrideService.class);
 
-	private KeyPair keyPair;
+	private byte[] secret;
 
 	@Inject
 	Environment environment;
 
 	public int getMaxTagOverrideExpirationDays() {
 		return Integer.parseInt(environment.getProperty("shiny.proxy.tag-overriding.max-expiration-days", "7"));
+	}
+
+	public int getMinSigLen() {
+		return Integer.parseInt(environment.getProperty("shiny.proxy.tag-overriding.minimum-signature-bytes", "16"));
+	}
+
+	public int getURLSigLen() {
+		return Integer.parseInt(environment.getProperty("shiny.proxy.tag-overriding.url-signature-bytes", "16"));
 	}
 
 	public int getDefaultTagOverrideExpirationDays() {
@@ -61,42 +70,36 @@ public class TagOverrideService {
 		}
 	}
 
-	public KeyPair getKeyPair() {
-		return keyPair;
+	public byte[] getSecret() {
+		return secret;
 	}
 
 	@PostConstruct
-	private void initKeyPair() {
+	private void initSecret() {
 		if (environment.getProperty("shiny.proxy.tag-overriding.enabled", "").equals("")) {
 			log.info("Tag overriding disabled");
 			return;
 		}
 		log.info("Tag overriding enabled");
-		File keyFileFile = new File(environment.getProperty("shiny.proxy.tag-overriding.key-file", "tagOverrideKey.ser"));
+		File keyFileFile = new File(environment.getProperty("shiny.proxy.tag-overriding.secret-file", "tagOverride.secret"));
 		if (keyFileFile.exists()) {
 			try (FileInputStream fileStream = new FileInputStream(keyFileFile)) {
-				try (ObjectInputStream objectStream = new ObjectInputStream(fileStream)) {
-					keyPair = (KeyPair) objectStream.readObject();
-					return;
-				}
+				secret = Files.readAllBytes(keyFileFile.toPath());
+				return;
 			} catch (Exception e) {
 				log.error("Failed to read override key file", e);
 			}
 		}
 		try {
 			SecureRandom rng = SecureRandom.getInstance("SHA1PRNG");
-			KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-			log.info("Generating tag override key pair. This may take a while...");
-			keyGen.initialize(2048, rng);
-			keyPair = keyGen.generateKeyPair();
+			secret = new byte[2048];
+			rng.nextBytes(secret);
 		} catch (Exception e) {
 			log.error("Failed to generate override key pair", e);
 			return;
 		}
 		try (FileOutputStream fileStream = new FileOutputStream(keyFileFile)) {
-			try (ObjectOutputStream objectStream = new ObjectOutputStream(fileStream)) {
-				objectStream.writeObject(keyPair);
-			}
+			fileStream.write(secret);
 		} catch (Exception e) {
 			log.error("Failed to write override key file", e);
 		}

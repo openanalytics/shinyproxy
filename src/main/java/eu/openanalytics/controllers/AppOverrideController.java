@@ -27,10 +27,9 @@ import eu.openanalytics.services.TagOverrideService;
 
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
-import java.security.KeyPair;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
-import java.security.Signature;
 import java.security.SignatureException;
 import java.util.Date;
 
@@ -38,7 +37,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.codec.DecoderException;
+import org.bouncycastle.util.Arrays;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -63,7 +62,7 @@ public class AppOverrideController extends BaseController {
 	@Inject
 	TagOverrideService tagOverrideService;
 
-	private void updateSignatureWithOverride(Signature signature, String app, String tag, long expires) throws SignatureException {
+	private byte[] hashOverride(byte[] secret, String app, String tag, long expires) throws NoSuchAlgorithmException {
 		byte[] appBytes;
 		byte[] tagBytes;
 		try {
@@ -74,11 +73,15 @@ public class AppOverrideController extends BaseController {
 			tagBytes = tag.getBytes();
 		}
 		byte[] expiresBytes = Longs.toByteArray(expires);
-		signature.update(appBytes);
-		signature.update((byte) 0);
-		signature.update(tagBytes);
-		signature.update((byte) 0);
-		signature.update(expiresBytes);
+		MessageDigest digest = MessageDigest.getInstance("SHA-256");
+		digest.update(appBytes);
+		digest.update((byte) 0);
+		digest.update(tagBytes);
+		digest.update((byte) 0);
+		digest.update(expiresBytes);
+		digest.update((byte) 0);
+		digest.update(secret);
+		return digest.digest();
 	}
 
 	@RequestMapping(value="/appOverride/**", params={"sig", "expires"}, method=RequestMethod.GET)
@@ -130,16 +133,26 @@ public class AppOverrideController extends BaseController {
 			sendSimpleResponse(response, 400, "Bad Request: tag override has expired");
 			return false;
 		}
-		KeyPair keyPair = tagOverrideService.getKeyPair();
-		if (keyPair == null) {
+		byte[] secret = tagOverrideService.getSecret();
+		if (secret == null) {
 			sendSimpleResponse(response, 501, "Not Implemented: tag overriding is either disabled or failed to intialize");
 			return false;
 		}
-		Signature rsa = Signature.getInstance("SHA256withRSA");
-		rsa.initVerify(keyPair.getPublic());
-		updateSignatureWithOverride(rsa, appName, tagOverride, expires);
-		if (!rsa.verify(signature)) {
-			sendSimpleResponse(response, 400, "Bad Request: signature verification failed");
+		byte[] hashBytes = hashOverride(secret, getAppName(request), getTagOverride(request), expires);
+		int sigLen = tagOverrideService.getMinSigLen();
+		if (signature.length < sigLen) {
+			sendSimpleResponse(response, 400, "Bad Request: signature not long enough");
+			return false;
+		}
+		int xor = 0;
+		// CAUTION - THIS NEEDS TO BE TIMING ATTACK RESISTANT
+		// A simple == will lead to a timing attack
+		// Google "crypto timing attack" for more info
+		for (int i = 0; i < sigLen; i++) {
+			xor |= hashBytes[i] ^ signature[i];
+		}
+		if (xor != 0) {
+			sendSimpleResponse(response, 400, "Bad Request: signature does not match");
 			return false;
 		}
 		return true;
@@ -166,8 +179,8 @@ public class AppOverrideController extends BaseController {
 			response.setContentType("text/plain");
 			return "Forbidden: only admins may create app overrides";
 		}
-		KeyPair keyPair = tagOverrideService.getKeyPair();
-		if (keyPair == null) {
+		byte[] secret = tagOverrideService.getSecret();
+		if (secret == null) {
 			response.setStatus(501);
 			response.setContentType("text/plain");
 			return "Not Implemented: tag overriding is either disabled or failed to intialize";
@@ -188,11 +201,10 @@ public class AppOverrideController extends BaseController {
 		} else {
 			expiresAt = new Date().getTime() + expiry;
 		}
-		Signature rsa = Signature.getInstance("SHA256withRSA");
-		rsa.initSign(keyPair.getPrivate());
-		updateSignatureWithOverride(rsa, getAppName(request), getTagOverride(request), expiresAt);
-		byte[] signatureBytes = rsa.sign();
-		String signature = Base64Utils.encodeToUrlSafeString(signatureBytes);
+		byte[] hashBytes = hashOverride(secret, getAppName(request), getTagOverride(request), expiresAt);
+		byte[] shortHashBytes = Arrays.copyOfRange(hashBytes, 0, tagOverrideService.getURLSigLen());
+		// No longer an actual signature, just a hash including a secret
+		String signature = Base64Utils.encodeToUrlSafeString(shortHashBytes);
 		String overrideLocation = "?expires=" + expiresAt + "&sig=" + signature;
 		String requestQS = request.getQueryString();
 		if (requestQS != null) {

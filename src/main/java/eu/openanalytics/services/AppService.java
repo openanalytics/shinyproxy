@@ -21,7 +21,9 @@
 package eu.openanalytics.services;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -62,6 +64,7 @@ public class AppService {
 		private String[] dockerNetworkConnections;
 		private String dockerMemory;
 		private String dockerEnvFile;
+		private Map<String, String> dockerEnv = new HashMap<String, String>();
 		private String[] dockerVolumes;
 		private String[] groups;
 		
@@ -140,6 +143,13 @@ public class AppService {
 		}
 		public void setDockerEnvFile(String dockerEnvFile) {
 			this.dockerEnvFile = dockerEnvFile;
+		}
+
+		public Map<String, String> getDockerEnv() {
+			return dockerEnv;
+		}
+		public void setDockerEnv(Map<String, String> dockerEnv) {
+			this.dockerEnv = dockerEnv;
 		}
 
 		public String[] getDockerVolumes() {

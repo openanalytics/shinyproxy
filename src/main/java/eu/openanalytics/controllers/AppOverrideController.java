@@ -219,7 +219,7 @@ public class AppOverrideController extends BaseController {
 			}
 		}
 		byte[] hashBytes = hashOverride(secret, getAppName(request), getTagOverride(request), expiresAt);
-		byte[] shortHashBytes = Arrays.copyOfRange(hashBytes, 0, tagOverrideService.getURLSigLen());
+		byte[] shortHashBytes = Arrays.copyOfRange(hashBytes, 0, tagOverrideService.getDefaultSigLen());
 		// No longer an actual signature, just a hash including a secret
 		String signature = Base64Utils.encodeToUrlSafeString(shortHashBytes);
 		String overrideLocation = "?expires=" + expiresAt + "&sig=" + signature;

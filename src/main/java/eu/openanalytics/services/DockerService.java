@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -488,6 +489,10 @@ public class DockerService {
 			for (Object key: envProps.keySet()) {
 				env.add(String.format("%s=%s", key, envProps.get(key)));
 			}
+		}
+
+		for (Map.Entry<String, String> entry : app.getDockerEnv().entrySet()) {
+			env.add(String.format("%s=%s", entry.getKey(), entry.getValue()));
 		}
 		
 		return env;

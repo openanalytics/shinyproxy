@@ -20,13 +20,6 @@
  */
 package eu.openanalytics.services;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.nio.file.Files;
-import java.nio.file.attribute.PosixFilePermission;
-import java.security.SecureRandom;
-
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
@@ -34,14 +27,15 @@ import org.apache.log4j.Logger;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
-import com.google.common.collect.Sets;
-
 @Service
 public class TagOverrideService {
 
 	private Logger log = Logger.getLogger(TagOverrideService.class);
 
-	private byte[] secret;
+	private String secretFile;
+
+	@Inject
+	SecretService secretService;
 
 	@Inject
 	Environment environment;
@@ -69,7 +63,7 @@ public class TagOverrideService {
 	}
 
 	public byte[] getSecret() {
-		return secret;
+		return secretService.getSecret(secretFile);
 	}
 
 	@PostConstruct
@@ -79,29 +73,8 @@ public class TagOverrideService {
 			return;
 		}
 		log.info("Tag overriding enabled");
-		File secretFile = new File(environment.getProperty("shiny.proxy.tag-overriding.secret-file", "tagOverride.secret"));
-		if (secretFile.exists()) {
-			try (FileInputStream fileStream = new FileInputStream(secretFile)) {
-				secret = Files.readAllBytes(secretFile.toPath());
-				return;
-			} catch (Exception e) {
-				log.error("Failed to read override key file", e);
-			}
-		}
-		try {
-			SecureRandom rng = SecureRandom.getInstance("SHA1PRNG");
-			secret = new byte[2048];
-			rng.nextBytes(secret);
-		} catch (Exception e) {
-			log.error("Failed to generate override key pair", e);
-			return;
-		}
-		try (FileOutputStream fileStream = new FileOutputStream(secretFile)) {
-			Files.setPosixFilePermissions(secretFile.toPath(), Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE));
-			fileStream.write(secret);
-		} catch (Exception e) {
-			log.error("Failed to write override key file", e);
-		}
+		secretFile = environment.getProperty("shiny.proxy.tag-overriding.secret-file", "tagOverrideSecret.bin");
+		secretService.warmupCache(secretFile);
 	}
 
 }

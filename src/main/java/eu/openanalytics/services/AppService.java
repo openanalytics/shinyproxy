@@ -68,6 +68,7 @@ public class AppService {
 		private String[] dockerVolumes;
 		private String[] groups;
 		private Integer port;
+		private String kubernetesNamespace;
 		
 		public String getName() {
 			return name;
@@ -175,6 +176,13 @@ public class AppService {
 		}
 		public void setPort(Integer port) {
 			this.port = port;
+		}
+
+		public String getKubernetesNamespace() {
+			return kubernetesNamespace;
+		}
+		public void setKubernetesNamespace(String kubernetesNamespace) {
+			this.kubernetesNamespace = kubernetesNamespace;
 		}
 	}
 }

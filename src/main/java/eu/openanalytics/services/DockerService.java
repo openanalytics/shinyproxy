@@ -457,7 +457,9 @@ public class DockerService {
 
 			proxy.startupTimestamp = System.currentTimeMillis();
 		} catch (Exception e) {
-			releasePort(proxy.port);
+			if (!internalNetworking) {
+				releasePort(proxy.port);
+			}
 			launchingProxies.remove(proxy);
 			throw new ShinyProxyException("Failed to start container: " + e.getMessage(), e);
 		}

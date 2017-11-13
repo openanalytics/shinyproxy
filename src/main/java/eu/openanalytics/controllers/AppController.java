@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import eu.openanalytics.ShinyProxyApplication;
 import eu.openanalytics.services.AppService;
 import eu.openanalytics.services.DockerService;
+import eu.openanalytics.services.DockerService.AppInstanceDetails;
 
 @Controller
 public class AppController extends BaseController {
@@ -46,7 +47,8 @@ public class AppController extends BaseController {
 	String app(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
 		
-		String mapping = dockerService.getMapping(getUserName(request), getAppName(request), false);
+		AppInstanceDetails details = new AppInstanceDetails(getUserName(request), getAppName(request));
+		String mapping = dockerService.getMapping(details, false);
 		String contextPath = ShinyProxyApplication.getContextPath(environment);
 
 		map.put("appTitle", getAppTitle(request));
@@ -60,7 +62,8 @@ public class AppController extends BaseController {
 	@RequestMapping(value="/app/*", method=RequestMethod.POST)
 	@ResponseBody
 	String startApp(HttpServletRequest request) {
-		String mapping = dockerService.getMapping(getUserName(request), getAppName(request), true);
+		AppInstanceDetails details = new AppInstanceDetails(getUserName(request), getAppName(request));
+		String mapping = dockerService.getMapping(details, true);
 		return appService.buildContainerPath(mapping, request);
 	}
 }

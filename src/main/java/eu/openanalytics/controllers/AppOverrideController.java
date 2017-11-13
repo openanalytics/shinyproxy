@@ -23,6 +23,7 @@ package eu.openanalytics.controllers;
 import eu.openanalytics.ShinyProxyApplication;
 import eu.openanalytics.services.AppService;
 import eu.openanalytics.services.DockerService;
+import eu.openanalytics.services.DockerService.AppInstanceDetails;
 import eu.openanalytics.services.TagOverrideService;
 
 import java.io.UnsupportedEncodingException;
@@ -89,7 +90,8 @@ public class AppOverrideController extends BaseController {
 		if (!validateOverride(request, response)) return null;
 		prepareMap(map, request);
 		
-		String mapping = dockerService.getMapping(getUserName(request), getAppName(request), getTagOverride(request), false);
+		AppInstanceDetails details = new AppInstanceDetails(getUserName(request), getAppName(request), getTagOverride(request));
+		String mapping = dockerService.getMapping(details, false);
 		String contextPath = ShinyProxyApplication.getContextPath(environment);
 
 		map.put("appTitle", getAppTitle(request));
@@ -104,7 +106,8 @@ public class AppOverrideController extends BaseController {
 	@ResponseBody
 	String startAppOverride(HttpServletRequest request, HttpServletResponse response) throws InvalidKeyException, NoSuchAlgorithmException, SignatureException {
 		if (!validateOverride(request, response)) return null;
-		String mapping = dockerService.getMapping(getUserName(request), getAppName(request), getTagOverride(request), true);
+		AppInstanceDetails details = new AppInstanceDetails(getUserName(request), getAppName(request), getTagOverride(request));
+		String mapping = dockerService.getMapping(details, true);
 		return appService.buildContainerPath(mapping, request);
 	}
 

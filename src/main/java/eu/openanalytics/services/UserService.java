@@ -175,7 +175,7 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 						long proxySilence = currentTimestamp - lastHeartbeat;
 						if (proxySilence > heartbeatTimeout) {
 							log.info(String.format("Releasing inactive proxy [user: %s] [app: %s] [silence: %dms]", proxy.userName, proxy.appName, proxySilence));
-							dockerService.releaseProxy(proxy.userName, proxy.appName, proxy.tagOverride);
+							dockerService.releaseProxy(proxy, true);
 							heartbeatTimestamps.remove(key);
 						}
 					}

@@ -322,13 +322,13 @@ public class DockerService {
 			throw new ShinyProxyException("Cannot start container: user " + userName + " already has a running proxy");
 		}
 		
-		boolean nameNetworking = "true".equals(environment.getProperty("shiny.proxy.docker.name-networking"));
-		boolean generateName = swarmMode || "true".equals(environment.getProperty("shiny.proxy.docker.generate-name", String.valueOf(nameNetworking)));
+		boolean internalNetworking = "true".equals(environment.getProperty("shiny.proxy.docker.internal-networking"));
+		boolean generateName = swarmMode || "true".equals(environment.getProperty("shiny.proxy.docker.generate-name", String.valueOf(internalNetworking)));
 
 		Proxy proxy = new Proxy();
 		proxy.userName = userName;
 		proxy.appName = appName;
-		if (nameNetworking) {
+		if (internalNetworking) {
 			proxy.port = app.getPort();
 		} else {
 			proxy.port = getFreePort();
@@ -338,7 +338,7 @@ public class DockerService {
 		try {
 			URL hostURL = null;
 			String containerProtocolDefault = "http";
-			if (!nameNetworking) {
+			if (!internalNetworking) {
 				hostURL = new URL(environment.getProperty("shiny.proxy.docker.url"));
 				containerProtocolDefault = hostURL.getProtocol();
 			}
@@ -375,7 +375,7 @@ public class DockerService {
 						.taskTemplate(TaskSpec.builder()
 								.containerSpec(containerSpec)
 								.build());
-				if (!nameNetworking) {
+				if (!internalNetworking) {
 					serviceSpecBuilder.endpointSpec(EndpointSpec.builder()
 							.ports(PortConfig.builder().publishedPort(proxy.port).targetPort(app.getPort()).build())
 							.build());
@@ -397,7 +397,9 @@ public class DockerService {
 				}, 10, 2000);
 				if (!containerFound) throw new IllegalStateException("Swarm container did not start in time");
 				
-				if (!nameNetworking) {
+				if (internalNetworking) {
+					proxy.host = proxy.name;
+				} else {
 					Node node = dockerClient.listNodes().stream()
 							.filter(n -> n.id().equals(proxy.host)).findAny()
 							.orElseThrow(() -> new IllegalStateException(String.format("Swarm node not found [id: %s]", proxy.host)));
@@ -412,7 +414,7 @@ public class DockerService {
 				Optional.ofNullable(app.getDockerNetwork()).ifPresent(n -> hostConfigBuilder.networkMode(app.getDockerNetwork()));
 				
 				List<PortBinding> portBindings;
-				if (nameNetworking) {
+				if (internalNetworking) {
 					portBindings = Collections.emptyList();
 				} else {
 					portBindings = Collections.singletonList(PortBinding.of("0.0.0.0", proxy.port));
@@ -445,13 +447,12 @@ public class DockerService {
 				if (proxy.name == null) {
 					proxy.name = info.name().substring(1);
 				}
-				if (!nameNetworking) {
+				if (internalNetworking) {
+					proxy.host = proxy.name;
+				} else {
 					proxy.host = hostURL.getHost();
 				}
 				proxy.containerId = container.id();
-			}
-			if (nameNetworking) {
-				proxy.host = proxy.name;
 			}
 
 			proxy.startupTimestamp = System.currentTimeMillis();

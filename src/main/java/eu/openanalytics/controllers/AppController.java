@@ -46,7 +46,7 @@ public class AppController extends BaseController {
 	String app(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
 		
-		String mapping = dockerService.getMapping(getUserName(request), getAppName(request), false);
+		String mapping = dockerService.getMapping(request, getUserName(request), getAppName(request), false);
 		String contextPath = ShinyProxyApplication.getContextPath(environment);
 
 		map.put("appTitle", getAppTitle(request));
@@ -60,7 +60,7 @@ public class AppController extends BaseController {
 	@RequestMapping(value="/app/*", method=RequestMethod.POST)
 	@ResponseBody
 	String startApp(HttpServletRequest request) {
-		String mapping = dockerService.getMapping(getUserName(request), getAppName(request), true);
+		String mapping = dockerService.getMapping(request, getUserName(request), getAppName(request), true);
 		return buildContainerPath(mapping, request);
 	}
 	

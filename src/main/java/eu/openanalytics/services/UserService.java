@@ -155,8 +155,8 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 		eventService.post(EventType.Logout.toString(), userName, null);
 	}
 	
-	public void heartbeatReceived(String user, String app) {
-		heartbeatTimestamps.put(getKey(user, app), System.currentTimeMillis());
+	public void heartbeatReceived(String user, String app, String tagOverride) {
+		heartbeatTimestamps.put(getKey(user, app, tagOverride), System.currentTimeMillis());
 	}
 	
 	private class AppCleaner implements Runnable {
@@ -169,13 +169,13 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 				try {
 					long currentTimestamp = System.currentTimeMillis();
 					for (Proxy proxy: dockerService.listProxies()) {
-						HeartbeatKey key = getKey(proxy.userName, proxy.appName);
+						HeartbeatKey key = getKey(proxy.userName, proxy.appName, proxy.tagOverride);
 						Long lastHeartbeat = heartbeatTimestamps.get(key);
 						if (lastHeartbeat == null) lastHeartbeat = proxy.startupTimestamp;
 						long proxySilence = currentTimestamp - lastHeartbeat;
 						if (proxySilence > heartbeatTimeout) {
 							log.info(String.format("Releasing inactive proxy [user: %s] [app: %s] [silence: %dms]", proxy.userName, proxy.appName, proxySilence));
-							dockerService.releaseProxy(proxy.userName, proxy.appName);
+							dockerService.releaseProxy(proxy, true);
 							heartbeatTimestamps.remove(key);
 						}
 					}
@@ -189,8 +189,8 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 		}
 	}
 	
-	private HeartbeatKey getKey(String userName, String appName) {
-		return new HeartbeatKey(userName, appName);
+	private HeartbeatKey getKey(String userName, String appName, String tagOverride) {
+		return new HeartbeatKey(userName, appName, tagOverride);
 	}
 	
 	
@@ -198,10 +198,12 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 		
 		private String userName;
 		private String appName;
+		private String tagOverride;
 		
-		public HeartbeatKey(String userName, String appName) {
+		public HeartbeatKey(String userName, String appName, String tagOverride) {
 			this.userName = userName;
 			this.appName = appName;
+			this.tagOverride = tagOverride;
 		}
 
 		@Override
@@ -210,6 +212,7 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 			int result = 1;
 			result = prime * result + ((appName == null) ? 0 : appName.hashCode());
 			result = prime * result + ((userName == null) ? 0 : userName.hashCode());
+			result = prime * result + ((tagOverride == null) ? 0 : tagOverride.hashCode());
 			return result;
 		}
 

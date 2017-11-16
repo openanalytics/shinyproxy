@@ -82,7 +82,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			for (ShinyApp app: appService.getApps()) {
 				if (app.getGroups() == null || app.getGroups().length == 0) continue;
 				String[] appGroups = Arrays.stream(app.getGroups()).map(s -> s.toUpperCase()).toArray(i -> new String[i]);
-				http.authorizeRequests().antMatchers("/app/" + app.getName()).hasAnyRole(appGroups);
+				http.authorizeRequests().antMatchers("/app/" + app.getName(), "/appOverride/*/" + app.getName()).hasAnyRole(appGroups);
 			}
 
 			// Limit access to the admin pages

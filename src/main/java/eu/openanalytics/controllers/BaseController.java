@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.log4j.Logger;
 import org.springframework.core.env.Environment;
@@ -58,7 +59,8 @@ public abstract class BaseController {
 	Environment environment;
 	
 	private static Logger logger = Logger.getLogger(BaseController.class);
-	private static Pattern appPattern = Pattern.compile(".*/app/(.*)");
+	private static Pattern appPattern = Pattern.compile(".*/app(?:Override/[^/?#]*)?/(.*)");
+	private static Pattern tagOverridePattern = Pattern.compile(".*/appOverride/([^/?#]*).*");
 	private static Map<String, String> imageCache = new HashMap<>();
 	
 	protected String getUserName(HttpServletRequest request) {
@@ -73,6 +75,16 @@ public abstract class BaseController {
 	
 	protected String getAppName(String uri) {
 		Matcher matcher = appPattern.matcher(uri);
+		String appName = matcher.matches() ? matcher.group(1) : null;
+		return appName;
+	}
+	
+	protected String getTagOverride(HttpServletRequest request) {
+		return getTagOverride(request.getRequestURI());
+	}
+	
+	protected String getTagOverride(String uri) {
+		Matcher matcher = tagOverridePattern.matcher(uri);
 		String appName = matcher.matches() ? matcher.group(1) : null;
 		return appName;
 	}
@@ -116,5 +128,16 @@ public abstract class BaseController {
 		}
 		imageCache.put(resourceURI, resolvedValue);
 		return resolvedValue;
+	}
+
+	protected void sendSimpleResponse(HttpServletResponse response, int status, String message) {
+		try {
+			response.setStatus(status);
+			response.setContentType("text/plain");
+			response.getWriter().write(message);
+			response.getWriter().close();
+		} catch (IOException e) {
+			// Most likely the client closed the connection.
+		}
 	}
 }

@@ -58,5 +58,35 @@
     "name": "shiny.proxy.logo-url",
     "type": "java.lang.String",
     "description": "URL for the logo to use in the toolbar"
+  },
+  {
+    "name": "shiny.proxy.tag-overriding.enabled",
+    "type": "boolean",
+    "description": "If the tag overriding mechanism should be enabled"
+  },
+  {
+    "name": "shiny.proxy.tag-overriding.secret-file",
+    "type": "java.lang.String",
+    "description": "The path to the raw secret bytes for tag overriding (created if nonexistant)"
+  },
+  {
+    "name": "shiny.proxy.tag-overriding.max-expiration-days",
+    "type": "int",
+    "description": "The maximum amount of days before a tag override expires (or 0 for never)"
+  },
+  {
+    "name": "shiny.proxy.tag-overriding.default-expiration-days",
+    "type": "int",
+    "description": "The default amount of days before a tag override expires (or 0 for never)"
+  },
+  {
+    "name": "shiny.proxy.tag-overriding.minimum-signature-bytes",
+    "type": "int",
+    "description": "The minimum number of bytes to check in an override \"signature\" (really just a hash)"
+  },
+  {
+    "name": "shiny.proxy.tag-overriding.default-signature-bytes",
+    "type": "int",
+    "description": "The default number of \"signature\" bytes to put in an override URL"
   }
 ]}

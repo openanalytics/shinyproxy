@@ -10,6 +10,8 @@
 
 </pre>
 
+[![Build Status](https://travis-ci.org/openanalytics/shinyproxy.svg?branch=master)](https://travis-ci.org/openanalytics/shinyproxy)
+
 # ShinyProxy
 
 Middleware to Deploy Shiny Applications in an Enterprise Context

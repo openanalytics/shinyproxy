@@ -49,7 +49,7 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 
 	private Logger log = Logger.getLogger(UserService.class);
 
-	private Map<HeartbeatKey, Long> heartbeatTimestamps = new ConcurrentHashMap<>();
+	private Map<Proxy, Long> heartbeatTimestamps = new ConcurrentHashMap<>();
 	
 	@Inject
 	Environment environment;
@@ -143,20 +143,21 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 	}
 
 	public void logout(String userName) {
-		List<HeartbeatKey> keysToRemove = new ArrayList<>();
-		for (HeartbeatKey key: heartbeatTimestamps.keySet()) {
-			if (key.userName.equals(userName)) keysToRemove.add(key);
-		}
-		for (HeartbeatKey key: keysToRemove) {
-			heartbeatTimestamps.remove(key);
-		}
-		dockerService.releaseProxies(userName);
 		log.info(String.format("User logged out [user: %s]", userName));
 		eventService.post(EventType.Logout.toString(), userName, null);
+		if (!"false".equals(environment.getProperty("shiny.proxy.stop-on-logout"))) return;
+		for (Proxy proxy: dockerService.releaseProxies(userName)) {
+			heartbeatTimestamps.remove(proxy);
+		}
 	}
-	
+
 	public void heartbeatReceived(String user, String app) {
-		heartbeatTimestamps.put(getKey(user, app), System.currentTimeMillis());
+		for (Proxy proxy : heartbeatTimestamps.keySet()) {
+			if (proxy.userName == user && proxy.appName == app) {
+				heartbeatTimestamps.put(proxy, System.currentTimeMillis());
+				return;
+			}
+		}
 	}
 	
 	private class AppCleaner implements Runnable {
@@ -168,15 +169,14 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 			while (true) {
 				try {
 					long currentTimestamp = System.currentTimeMillis();
-					for (Proxy proxy: dockerService.listProxies()) {
-						HeartbeatKey key = getKey(proxy.userName, proxy.appName);
-						Long lastHeartbeat = heartbeatTimestamps.get(key);
+					for (Proxy proxy: heartbeatTimestamps.keySet()) {
+						Long lastHeartbeat = heartbeatTimestamps.get(proxy);
 						if (lastHeartbeat == null) lastHeartbeat = proxy.startupTimestamp;
 						long proxySilence = currentTimestamp - lastHeartbeat;
 						if (proxySilence > heartbeatTimeout) {
 							log.info(String.format("Releasing inactive proxy [user: %s] [app: %s] [silence: %dms]", proxy.userName, proxy.appName, proxySilence));
 							dockerService.releaseProxy(proxy.userName, proxy.appName);
-							heartbeatTimestamps.remove(key);
+							heartbeatTimestamps.remove(proxy);
 						}
 					}
 				} catch (Throwable t) {
@@ -189,50 +189,4 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 		}
 	}
 	
-	private HeartbeatKey getKey(String userName, String appName) {
-		return new HeartbeatKey(userName, appName);
-	}
-	
-	
-	private static class HeartbeatKey {
-		
-		private String userName;
-		private String appName;
-		
-		public HeartbeatKey(String userName, String appName) {
-			this.userName = userName;
-			this.appName = appName;
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ((appName == null) ? 0 : appName.hashCode());
-			result = prime * result + ((userName == null) ? 0 : userName.hashCode());
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			HeartbeatKey other = (HeartbeatKey) obj;
-			if (appName == null) {
-				if (other.appName != null)
-					return false;
-			} else if (!appName.equals(other.appName))
-				return false;
-			if (userName == null) {
-				if (other.userName != null)
-					return false;
-			} else if (!userName.equals(other.userName))
-				return false;
-			return true;
-		}
-	}
 }

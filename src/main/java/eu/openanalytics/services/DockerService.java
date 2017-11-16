@@ -225,7 +225,7 @@ public class DockerService {
 		return false;
 	}
 	
-	public void releaseProxies(String userName) {
+	public List<Proxy> releaseProxies(String userName) {
 		List<Proxy> proxiesToRelease = new ArrayList<>();
 		synchronized (activeProxies) {
 			for (Proxy proxy: activeProxies) {
@@ -235,6 +235,7 @@ public class DockerService {
 		for (Proxy proxy: proxiesToRelease) {
 			releaseProxy(proxy, true);
 		}
+		return proxiesToRelease;
 	}
 	
 	public void releaseProxy(String userName, String appName) {

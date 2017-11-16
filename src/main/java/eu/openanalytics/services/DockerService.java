@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -50,6 +51,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
@@ -135,6 +137,27 @@ public class DockerService {
 		public AppInstanceDetails(String userName, String appName) {
 			this.userName = userName;
 			this.appName = appName;
+		}
+
+		@Override
+		public int hashCode() {
+			return new HashCodeBuilder()
+				.append(userName)
+				.append(appName)
+				.append(tagOverride)
+				.toHashCode();
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) return true;
+			if (obj == null) return false;
+			if (this.getClass() != obj.getClass()) return false;
+			AppInstanceDetails other = (AppInstanceDetails) obj;
+			if (!Objects.equals(userName, other.userName)) return false;
+			if (!Objects.equals(appName, other.appName)) return false;
+			if (!Objects.equals(tagOverride, other.tagOverride)) return false;
+			return true;
 		}
 	}
 

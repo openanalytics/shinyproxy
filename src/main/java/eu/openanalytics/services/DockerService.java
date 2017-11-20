@@ -596,11 +596,9 @@ public class DockerService {
 	}
 
 	public void heartbeatReceived(String user, String app) {
-		for (Proxy proxy: activeProxies) {
-			if (proxy.userName == user && proxy.appName == app) {
-				proxy.lastHeartbeatTimestamp = System.currentTimeMillis();
-				return;
-			}
+		Proxy proxy = findProxy(user, app);
+		if (proxy != null) {
+			proxy.lastHeartbeatTimestamp = System.currentTimeMillis();
 		}
 	}
 

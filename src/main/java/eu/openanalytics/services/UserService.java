@@ -49,8 +49,6 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 
 	private Logger log = Logger.getLogger(UserService.class);
 
-	private Map<Proxy, Long> heartbeatTimestamps = new ConcurrentHashMap<>();
-	
 	@Inject
 	Environment environment;
 
@@ -62,13 +60,6 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 	
 	@Inject
 	AppService appService;
-	
-	@PostConstruct
-	public void init() {
-		Thread heartbeatThread = new Thread(new AppCleaner(), "HeartbeatThread");
-		heartbeatThread.setDaemon(true);
-		heartbeatThread.start();
-	}
 	
 	public Authentication getCurrentAuth() {
 		return SecurityContextHolder.getContext().getAuthentication();
@@ -146,47 +137,7 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 		log.info(String.format("User logged out [user: %s]", userName));
 		eventService.post(EventType.Logout.toString(), userName, null);
 		if (!"false".equals(environment.getProperty("shiny.proxy.stop-on-logout"))) return;
-		for (Proxy proxy: dockerService.releaseProxies(userName)) {
-			heartbeatTimestamps.remove(proxy);
-		}
+		dockerService.releaseProxies(userName);
 	}
 
-	public void heartbeatReceived(String user, String app) {
-		for (Proxy proxy : heartbeatTimestamps.keySet()) {
-			if (proxy.userName == user && proxy.appName == app) {
-				heartbeatTimestamps.put(proxy, System.currentTimeMillis());
-				return;
-			}
-		}
-	}
-	
-	private class AppCleaner implements Runnable {
-		@Override
-		public void run() {
-			long cleanupInterval = 2 * Long.parseLong(environment.getProperty("shiny.proxy.heartbeat-rate", "10000"));
-			long heartbeatTimeout = Long.parseLong(environment.getProperty("shiny.proxy.heartbeat-timeout", "60000"));
-			
-			while (true) {
-				try {
-					long currentTimestamp = System.currentTimeMillis();
-					for (Proxy proxy: heartbeatTimestamps.keySet()) {
-						Long lastHeartbeat = heartbeatTimestamps.get(proxy);
-						if (lastHeartbeat == null) lastHeartbeat = proxy.startupTimestamp;
-						long proxySilence = currentTimestamp - lastHeartbeat;
-						if (proxySilence > heartbeatTimeout) {
-							log.info(String.format("Releasing inactive proxy [user: %s] [app: %s] [silence: %dms]", proxy.userName, proxy.appName, proxySilence));
-							dockerService.releaseProxy(proxy.userName, proxy.appName);
-							heartbeatTimestamps.remove(proxy);
-						}
-					}
-				} catch (Throwable t) {
-					log.error("Error in HeartbeatThread", t);
-				}
-				try {
-					Thread.sleep(cleanupInterval);
-				} catch (InterruptedException e) {}
-			}
-		}
-	}
-	
 }

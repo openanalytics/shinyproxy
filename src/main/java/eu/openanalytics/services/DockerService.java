@@ -121,7 +121,7 @@ public class DockerService {
 	DockerClient dockerClient;
 
 	public static class Proxy {
-		
+
 		public String name;
 		public String protocol;
 		public String host;
@@ -132,6 +132,7 @@ public class DockerService {
 		public String appName;
 		public Set<String> sessionIds = new HashSet<>();
 		public long startupTimestamp;
+		public Long lastHeartbeatTimestamp;
 		
 		public String uptime() {
 			long uptimeSec = (System.currentTimeMillis() - startupTimestamp)/1000;
@@ -159,7 +160,12 @@ public class DockerService {
 			swarmMode = (dockerClient.inspectSwarm().id() != null);
 		} catch (DockerException | InterruptedException e) {}
 		log.info(String.format("Swarm mode is %s", (swarmMode ? "enabled" : "disabled")));
+
+		Thread heartbeatThread = new Thread(new AppCleaner(), "HeartbeatThread");
+		heartbeatThread.setDaemon(true);
+		heartbeatThread.start();
 	}
+	
 	
 	@PreDestroy
 	public void shutdown() {
@@ -587,5 +593,42 @@ public class DockerService {
 	public static interface MappingListener {
 		public void mappingAdded(String mapping, URI target);
 		public void mappingRemoved(String mapping);
+	}
+
+	public void heartbeatReceived(String user, String app) {
+		for (Proxy proxy: activeProxies) {
+			if (proxy.userName == user && proxy.appName == app) {
+				proxy.lastHeartbeatTimestamp = System.currentTimeMillis();
+				return;
+			}
+		}
+	}
+
+	private class AppCleaner implements Runnable {
+		@Override
+		public void run() {
+			long cleanupInterval = 2 * Long.parseLong(environment.getProperty("shiny.proxy.heartbeat-rate", "10000"));
+			long heartbeatTimeout = Long.parseLong(environment.getProperty("shiny.proxy.heartbeat-timeout", "60000"));
+			
+			while (true) {
+				try {
+					long currentTimestamp = System.currentTimeMillis();
+					for (Proxy proxy: activeProxies) {
+						Long lastHeartbeat = proxy.lastHeartbeatTimestamp;
+						if (lastHeartbeat == null) lastHeartbeat = proxy.startupTimestamp;
+						long proxySilence = currentTimestamp - lastHeartbeat;
+						if (proxySilence > heartbeatTimeout) {
+							log.info(String.format("Releasing inactive proxy [user: %s] [app: %s] [silence: %dms]", proxy.userName, proxy.appName, proxySilence));
+							releaseProxy(proxy, true);
+						}
+					}
+				} catch (Throwable t) {
+					log.error("Error in HeartbeatThread", t);
+				}
+				try {
+					Thread.sleep(cleanupInterval);
+				} catch (InterruptedException e) {}
+			}
+		}
 	}
 }

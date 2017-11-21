@@ -67,6 +67,7 @@ public class AppService {
 		private Map<String, String> dockerEnv = new HashMap<String, String>();
 		private String[] dockerVolumes;
 		private String[] groups;
+		private Integer port;
 		
 		public String getName() {
 			return name;
@@ -164,6 +165,16 @@ public class AppService {
 		}
 		public void setGroups(String[] groups) {
 			this.groups = groups;
+		}
+		
+		public Integer getPort() {
+			if (port == null) {
+				return 3838;
+			}
+			return port;
+		}
+		public void setPort(Integer port) {
+			this.port = port;
 		}
 	}
 }

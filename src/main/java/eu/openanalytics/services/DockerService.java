@@ -328,7 +328,7 @@ public class DockerService {
 								.containerSpec(containerSpec)
 								.build())
 						.endpointSpec(EndpointSpec.builder()
-								.ports(PortConfig.builder().publishedPort(proxy.port).targetPort(3838).build())
+								.ports(PortConfig.builder().publishedPort(proxy.port).targetPort(app.getPort()).build())
 								.build())
 						.build()).id();
 
@@ -359,14 +359,14 @@ public class DockerService {
 				Optional.ofNullable(app.getDockerNetwork()).ifPresent(n -> hostConfigBuilder.networkMode(app.getDockerNetwork()));
 				
 				hostConfigBuilder
-						.portBindings(Collections.singletonMap("3838", Collections.singletonList(PortBinding.of("0.0.0.0", proxy.port))))
+						.portBindings(Collections.singletonMap(app.getPort().toString(), Collections.singletonList(PortBinding.of("0.0.0.0", proxy.port))))
 						.dns(app.getDockerDns())
 						.binds(getBindVolumes(app));
 				
 				ContainerConfig containerConfig = ContainerConfig.builder()
 					    .hostConfig(hostConfigBuilder.build())
 					    .image(app.getDockerImage())
-					    .exposedPorts("3838")
+					    .exposedPorts(app.getPort().toString())
 					    .cmd(app.getDockerCmd())
 					    .env(buildEnv(userName, app))
 					    .build();

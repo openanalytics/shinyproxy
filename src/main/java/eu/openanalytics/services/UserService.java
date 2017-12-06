@@ -22,10 +22,7 @@ package eu.openanalytics.services;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
@@ -41,7 +38,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import eu.openanalytics.services.AppService.ShinyApp;
-import eu.openanalytics.services.DockerService.Proxy;
 import eu.openanalytics.services.EventService.EventType;
 
 @Service
@@ -136,7 +132,6 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 	public void logout(String userName) {
 		log.info(String.format("User logged out [user: %s]", userName));
 		eventService.post(EventType.Logout.toString(), userName, null);
-		if (!"false".equals(environment.getProperty("shiny.proxy.stop-on-logout"))) return;
 		dockerService.releaseProxies(userName);
 	}
 

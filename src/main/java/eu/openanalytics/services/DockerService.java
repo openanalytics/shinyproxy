@@ -610,15 +610,21 @@ public class DockerService {
 			
 			while (true) {
 				try {
+					List<Proxy> proxiesToRemove = new ArrayList<>();
 					long currentTimestamp = System.currentTimeMillis();
-					for (Proxy proxy: activeProxies) {
-						Long lastHeartbeat = proxy.lastHeartbeatTimestamp;
-						if (lastHeartbeat == null) lastHeartbeat = proxy.startupTimestamp;
-						long proxySilence = currentTimestamp - lastHeartbeat;
-						if (proxySilence > heartbeatTimeout) {
-							log.info(String.format("Releasing inactive proxy [user: %s] [app: %s] [silence: %dms]", proxy.userName, proxy.appName, proxySilence));
-							releaseProxy(proxy, true);
+					synchronized (activeProxies) {
+						for (Proxy proxy: activeProxies) {
+							Long lastHeartbeat = proxy.lastHeartbeatTimestamp;
+							if (lastHeartbeat == null) lastHeartbeat = proxy.startupTimestamp;
+							long proxySilence = currentTimestamp - lastHeartbeat;
+							if (proxySilence > heartbeatTimeout) {
+								log.info(String.format("Releasing inactive proxy [user: %s] [app: %s] [silence: %dms]", proxy.userName, proxy.appName, proxySilence));
+								proxiesToRemove.add(proxy);
+							}
 						}
+					}
+					for (Proxy proxy: proxiesToRemove) {
+						releaseProxy(proxy, true);
 					}
 				} catch (Throwable t) {
 					log.error("Error in HeartbeatThread", t);

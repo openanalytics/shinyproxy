@@ -47,11 +47,13 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.WebUtils;
 
 import com.spotify.docker.client.DefaultDockerClient;
 import com.spotify.docker.client.DockerCertificates;
@@ -119,7 +121,7 @@ public class DockerService {
 	DockerClient dockerClient;
 
 	public static class Proxy {
-		
+
 		public String name;
 		public String protocol;
 		public String host;
@@ -128,8 +130,9 @@ public class DockerService {
 		public String serviceId;
 		public String userName;
 		public String appName;
-		public String sessionId;
+		public Set<String> sessionIds = new HashSet<>();
 		public long startupTimestamp;
+		public Long lastHeartbeatTimestamp;
 		
 		public String uptime() {
 			long uptimeSec = (System.currentTimeMillis() - startupTimestamp)/1000;
@@ -145,7 +148,7 @@ public class DockerService {
 			target.serviceId = this.serviceId;
 			target.userName = this.userName;
 			target.appName = this.appName;
-			target.sessionId = this.sessionId;
+			target.sessionIds = this.sessionIds;
 			target.startupTimestamp = this.startupTimestamp;
 			return target;
 		}
@@ -157,7 +160,12 @@ public class DockerService {
 			swarmMode = (dockerClient.inspectSwarm().id() != null);
 		} catch (DockerException | InterruptedException e) {}
 		log.info(String.format("Swarm mode is %s", (swarmMode ? "enabled" : "disabled")));
+
+		Thread heartbeatThread = new Thread(new AppCleaner(), "HeartbeatThread");
+		heartbeatThread.setDaemon(true);
+		heartbeatThread.start();
 	}
+	
 	
 	@PreDestroy
 	public void shutdown() {
@@ -187,14 +195,19 @@ public class DockerService {
 		}
 	}
 	
-	public String getMapping(String userName, String appName, boolean startNew) {
+	public String getMapping(HttpServletRequest request, String userName, String appName, boolean startNew) {
 		waitForLaunchingProxy(userName, appName);
 		Proxy proxy = findProxy(userName, appName);
 		if (proxy == null && startNew) {
 			// The user has no proxy yet.
 			proxy = startProxy(userName, appName);
 		}
-		return (proxy == null) ? null : proxy.name;
+		if (proxy == null) {
+			return null;
+		} else {
+			proxy.sessionIds.add(getCurrentSessionId(request));
+			return proxy.name;
+		}
 	}
 	
 	public boolean sessionOwnsProxy(HttpServerExchange exchange) {
@@ -203,14 +216,14 @@ public class DockerService {
 		String proxyName = exchange.getRelativePath();
 		synchronized (activeProxies) {
 			for (Proxy p: activeProxies) {
-				if (p.sessionId.equals(sessionId) && proxyName.startsWith("/" + p.name)) {
+				if (p.sessionIds.contains(sessionId) && proxyName.startsWith("/" + p.name)) {
 					return true;
 				}
 			}
 		}
 		synchronized (launchingProxies) {
 			for (Proxy p: launchingProxies) {
-				if (p.sessionId.equals(sessionId) && proxyName.startsWith("/" + p.name)) {
+				if (p.sessionIds.contains(sessionId) && proxyName.startsWith("/" + p.name)) {
 					return true;
 				}
 			}
@@ -218,7 +231,7 @@ public class DockerService {
 		return false;
 	}
 	
-	public void releaseProxies(String userName) {
+	public List<Proxy> releaseProxies(String userName) {
 		List<Proxy> proxiesToRelease = new ArrayList<>();
 		synchronized (activeProxies) {
 			for (Proxy proxy: activeProxies) {
@@ -228,6 +241,7 @@ public class DockerService {
 		for (Proxy proxy: proxiesToRelease) {
 			releaseProxy(proxy, true);
 		}
+		return proxiesToRelease;
 	}
 	
 	public void releaseProxy(String userName, String appName) {
@@ -243,6 +257,15 @@ public class DockerService {
 		}
 		if (exchange == null) return null;
 		Cookie sessionCookie = exchange.getRequestCookies().get("JSESSIONID");
+		if (sessionCookie == null) return null;
+		return sessionCookie.getValue();
+	}
+
+	private String getCurrentSessionId(HttpServletRequest request) {
+		if (request == null) {
+			return getCurrentSessionId((HttpServerExchange) null);
+		}
+		javax.servlet.http.Cookie sessionCookie = WebUtils.getCookie(request, "JSESSIONID");
 		if (sessionCookie == null) return null;
 		return sessionCookie.getValue();
 	}
@@ -294,7 +317,6 @@ public class DockerService {
 		proxy.userName = userName;
 		proxy.appName = appName;
 		proxy.port = getFreePort();
-		proxy.sessionId = getCurrentSessionId(null);
 		launchingProxies.add(proxy);
 		
 		try {
@@ -571,5 +593,40 @@ public class DockerService {
 	public static interface MappingListener {
 		public void mappingAdded(String mapping, URI target);
 		public void mappingRemoved(String mapping);
+	}
+
+	public void heartbeatReceived(String user, String app) {
+		Proxy proxy = findProxy(user, app);
+		if (proxy != null) {
+			proxy.lastHeartbeatTimestamp = System.currentTimeMillis();
+		}
+	}
+
+	private class AppCleaner implements Runnable {
+		@Override
+		public void run() {
+			long cleanupInterval = 2 * Long.parseLong(environment.getProperty("shiny.proxy.heartbeat-rate", "10000"));
+			long heartbeatTimeout = Long.parseLong(environment.getProperty("shiny.proxy.heartbeat-timeout", "60000"));
+			
+			while (true) {
+				try {
+					long currentTimestamp = System.currentTimeMillis();
+					for (Proxy proxy: activeProxies) {
+						Long lastHeartbeat = proxy.lastHeartbeatTimestamp;
+						if (lastHeartbeat == null) lastHeartbeat = proxy.startupTimestamp;
+						long proxySilence = currentTimestamp - lastHeartbeat;
+						if (proxySilence > heartbeatTimeout) {
+							log.info(String.format("Releasing inactive proxy [user: %s] [app: %s] [silence: %dms]", proxy.userName, proxy.appName, proxySilence));
+							releaseProxy(proxy, true);
+						}
+					}
+				} catch (Throwable t) {
+					log.error("Error in HeartbeatThread", t);
+				}
+				try {
+					Thread.sleep(cleanupInterval);
+				} catch (InterruptedException e) {}
+			}
+		}
 	}
 }

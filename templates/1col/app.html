@@ -1,0 +1,74 @@
+<!--
+
+    ShinyProxy
+
+    Copyright (C) 2016-2017 Open Analytics
+
+    ===========================================================================
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the Apache License as published by
+    The Apache Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    Apache License for more details.
+
+    You should have received a copy of the Apache License
+    along with this program.  If not, see <http://www.apache.org/licenses/>
+
+-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head lang="en">
+	<title th:text="${title}"></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link rel="stylesheet" media="screen" th:href="@{/assets/css/bootstrap.min.css}"/>
+	<link rel="stylesheet" media="screen" th:href="@{/assets/css/default.css}"/>
+	<script th:src="@{/assets/js/jquery.min.js}"></script>
+	<script th:src="@{/assets/js/bootstrap.min.js}"></script>
+</head>
+<body>
+	<!-- navigation bar -->
+	<div th:replace="../fragments/navbar :: navbar"></div>
+	
+	<!-- content -->
+    <iframe id="shinyframe" th:src="${container}" width="100%"></iframe>
+    <div class="loading"><div class="loading-txt">Launching <span th:text="${appTitle}"></span>...</div></div>
+    
+	<script type="text/javascript" th:inline="javascript">
+		function setShinyframeHeight() {
+			$('#shinyframe').css('height', ($(window).height()-6)+'px');
+		}
+		window.addEventListener("load", setShinyframeHeight);
+		window.addEventListener("resize",  setShinyframeHeight);
+		
+		function heartbeat() {
+			setTimeout(function() {
+				$.ajax([[${heartbeatPath}]] + window.location.pathname).success(function(data) {
+					heartbeat();
+				});
+			}, [[${heartbeatRate}]]);
+		};
+		heartbeat();
+		
+		$(window).load(function() {
+			var source = $("#shinyframe").attr("src");
+			if (source == "") {
+				$(".loading").show();
+				$.post(window.location.pathname, function(containerPath) {
+					$("#shinyframe").attr("src", containerPath);
+					$(".loading").fadeOut("slow");
+				}).fail(function(request) {
+					var newDoc = document.open("text/html", "replace");
+					newDoc.write(request.responseText);
+					newDoc.close();
+				});
+			}
+		});
+	</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+/**
+ * ShinyProxy
+ *
+ * Copyright (C) 2016-2017 Open Analytics
+ *
+ * ===========================================================================
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Apache License as published by
+ * The Apache Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * Apache License for more details.
+ *
+ * You should have received a copy of the Apache License
+ * along with this program.  If not, see <http://www.apache.org/licenses/>
+ */
+body > div { padding-top: 10px; }
+body > div#navbar { padding-top: 0px; }
+
+#navbar + div { padding-top: 50px; }
+#navbar + iframe { padding-top: 50px; }
+
+@media screen and (max-width: 768px) {
+   #navbar + div { padding-top: 150px; }
+   #navbar + iframe { padding-top: 150px; }
+}
+
+@media screen and (max-width: 360px) {
+    #navbar + div { padding-top: 200px; }
+    #navbar + iframe { padding-top: 200px; }
+}
+
+#applist {
+	margin-top: 10px;
+}
+
+#admin {
+	margin-left: 10px;
+}
+
+#admin th, td {
+	padding: 5px;
+}
+
+#error {
+	padding-left: 15px;
+}
+
+.loading {
+	display: none;
+	position: fixed;
+	top: 150px;
+	width: 100%;
+	z-index: 9999;
+	background: url(../img/loading.gif) center no-repeat #fff;
+}
+
+.loading-txt {
+	text-align: center;
+	font-size: 24px;
+	margin-top: -50px;
+}

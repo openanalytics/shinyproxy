@@ -56,6 +56,7 @@ public class AppService {
 		private String name;
 		private String displayName;
 		private String description;
+		private String thumbImage;
 		private String logoUrl;
 		private String[] dockerCmd;
 		private String dockerImage;
@@ -81,6 +82,13 @@ public class AppService {
 		}
 		public void setDisplayName(String displayName) {
 			this.displayName = displayName;
+		}
+
+		public String getThumbImage() {
+			return thumbImage;
+		}
+		public void setThumbImage(String thumbImage) {
+			this.thumbImage = thumbImage;
 		}
 		
 		public String getDescription() {

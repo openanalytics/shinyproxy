@@ -22,6 +22,7 @@ package eu.openanalytics.controllers;
 
 import java.io.IOException;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -29,14 +30,19 @@ import org.apache.log4j.Logger;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import eu.openanalytics.services.DockerService;
+
 @Controller
 public class HeartbeatController extends BaseController {
 
 	private Logger log = Logger.getLogger(HeartbeatController.class);
+
+	@Inject
+	DockerService dockerService;
 	
 	@RequestMapping("/heartbeat/**")
 	void heartbeat(HttpServletRequest request, HttpServletResponse response) {
-		userService.heartbeatReceived(getUserName(request), getAppName(request));
+		dockerService.heartbeatReceived(getUserName(request), getAppName(request));
 		try {
 			response.setStatus(200);
 			response.setContentType("text/html");

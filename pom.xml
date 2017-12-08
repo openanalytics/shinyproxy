@@ -5,7 +5,7 @@
 
 	<groupId>eu.openanalytics</groupId>
 	<artifactId>shinyproxy</artifactId>
-	<version>1.0.2</version>
+	<version>1.0.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>shinyproxy</name>
@@ -42,6 +42,19 @@
 			</snapshots>
 		</repository>
 	</repositories>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>oa-nexus-snapshots</id>
+			<name>OpenAnalytics Snapshots Repository</name>
+			<url>http://nexus.openanalytics.eu/nexus/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>oa-nexus-releases</id>
+			<name>OpenAnalytics Release Repository</name>
+			<url>http://nexus.openanalytics.eu/nexus/content/repositories/releases</url>
+		</repository>
+	</distributionManagement>
 
 	<dependencies>
 		<dependency>
@@ -208,14 +221,16 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>rpm-maven-plugin</artifactId>
 				<version>2.1.5</version>
-<!-- 				<executions>
-        	<execution>
-		        <id>generate-rpm</id>
-		        <goals>
-			       <goal>attached-rpm</goal>
-		        </goals>
-	        </execution>
-        </executions> -->
+				<!--
+				<executions>
+		        	<execution>
+				        <id>generate-rpm</id>
+				        <goals>
+					       <goal>attached-rpm</goal>
+				        </goals>
+			        </execution>
+		        </executions>
+				-->
 				<configuration>
 					<license>(c) Copyright Open Analytics NV, 2016-2017 - Apache License 2.0</license>
 					<release>1.el7</release>
@@ -225,14 +240,12 @@
 						<defineStatement>_unpackaged_files_terminate_build 0</defineStatement>
 					</defineStatements>
 					<mappings>
-
 						<mapping>
 							<directory>/opt/shinyproxy</directory>
 							<filemode>755</filemode>
 							<username>shinyproxy</username>
 							<groupname>shinyproxy</groupname>
 						</mapping>
-
 						<mapping>
 							<directory>/opt/shinyproxy</directory>
 							<filemode>755</filemode>
@@ -240,7 +253,6 @@
 							<groupname>shinyproxy</groupname>
 							<artifact />
 						</mapping>
-
 						<mapping>
 							<directory>/opt/shinyproxy</directory>
 							<sources>
@@ -250,7 +262,6 @@
 								</softlinkSource>
 							</sources>
 						</mapping>
-
 						<mapping>
 							<directory>/opt/shinyproxy</directory>
 							<filemode>755</filemode>
@@ -268,22 +279,20 @@
 								</source>
 							</sources>
 						</mapping>
-					  
-					  <mapping>
-              <directory>/etc/shinyproxy</directory>
-              <filemode>755</filemode>
-              <username>shinyproxy</username>
-              <groupname>shinyproxy</groupname>
-            </mapping>
-
+						<mapping>
+							<directory>/etc/shinyproxy</directory>
+							<filemode>755</filemode>
+							<username>shinyproxy</username>
+							<groupname>shinyproxy</groupname>
+						</mapping>
 					</mappings>
 					<requires>
 						<require>java</require>
 					</requires>
 					<preinstallScriptlet>
-            <scriptFile>src/deb/control/preinst</scriptFile>
-            <fileEncoding>utf-8</fileEncoding>
-          </preinstallScriptlet>
+						<scriptFile>src/deb/control/preinst</scriptFile>
+						<fileEncoding>utf-8</fileEncoding>
+					</preinstallScriptlet>
 					<postinstallScriptlet>
 						<scriptFile>src/deb/control/postinst</scriptFile>
 						<fileEncoding>utf-8</fileEncoding>
@@ -303,14 +312,16 @@
 				<artifactId>jdeb</artifactId>
 				<groupId>org.vafer</groupId>
 				<version>1.5</version>
-<!--        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>jdeb</goal>
-            </goals>
-          </execution>
-        </executions>-->
+				<!--
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>jdeb</goal>
+						</goals>
+					</execution>
+				</executions>
+				-->
 				<configuration>
 					<verbose>true</verbose>
 					<controlDir>${basedir}/src/deb/control</controlDir>
@@ -338,7 +349,7 @@
 								<type>perm</type>
 								<prefix>/opt/${project.artifactId}</prefix>
 								<user>shinyproxy</user>
-                <group>shinyproxy</group>
+								<group>shinyproxy</group>
 							</mapper>
 						</data>
 						<data>
@@ -348,7 +359,7 @@
 								<type>perm</type>
 								<prefix>/opt/${project.artifactId}</prefix>
 								<user>shinyproxy</user>
-                <group>shinyproxy</group>
+								<group>shinyproxy</group>
 							</mapper>
 						</data>
 						<data>
@@ -358,7 +369,7 @@
 								<type>perm</type>
 								<prefix>/opt/${project.artifactId}</prefix>
 								<user>shinyproxy</user>
-                <group>shinyproxy</group>
+								<group>shinyproxy</group>
 							</mapper>
 						</data>
 						<data>
@@ -367,10 +378,10 @@
 								<path>etc/${project.artifactId}</path>
 							</paths>
 							<mapper>
-                <type>perm</type>
-                <user>shinyproxy</user>
-                <group>shinyproxy</group>
-              </mapper>
+								<type>perm</type>
+								<user>shinyproxy</user>
+								<group>shinyproxy</group>
+							</mapper>
 						</data>
 					</dataSet>
 				</configuration>
@@ -399,13 +410,15 @@
 					</excludes>
 				</configuration>
 				<executions>
-					<!--<execution>
+					<!--
+					<execution>
 						<id>generate-copyright-headers</id>
 						<phase>process-sources</phase>
 						<goals>
 							<goal>format</goal>
 						</goals>
-					</execution>-->
+					</execution>
+					-->
 					<execution>
 						<id>check-copyright-headers</id>
 						<phase>package</phase>

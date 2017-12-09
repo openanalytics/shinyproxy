@@ -69,6 +69,7 @@ public class AppService {
 		private String[] groups;
 		private Integer port;
 		private String kubernetesNamespace;
+		private String kubernetesImagePullPolicy;
 		
 		public String getName() {
 			return name;
@@ -183,6 +184,13 @@ public class AppService {
 		}
 		public void setKubernetesNamespace(String kubernetesNamespace) {
 			this.kubernetesNamespace = kubernetesNamespace;
+		}
+
+		public String getKubernetesImagePullPolicy() {
+			return kubernetesImagePullPolicy;
+		}
+		public void setKubernetesImagePullPolicy(String kubernetesImagePullPolicy) {
+			this.kubernetesImagePullPolicy = kubernetesImagePullPolicy;
 		}
 	}
 }

@@ -89,6 +89,7 @@ import eu.openanalytics.services.AppService.ShinyApp;
 import eu.openanalytics.services.EventService.EventType;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
+import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.Volume;
@@ -421,10 +422,19 @@ public class DockerService {
 					containerPortBuilder.withHostPort(proxy.port);
 				}
 
+				List<EnvVar> envVars = new ArrayList<>();
+				for (String envString : buildEnv(userName, app)) {
+					int idx = envString.indexOf('=');
+					if (idx == -1) {
+						log.warn("Invalid environment variable: " + envString);
+					}
+					envVars.add(new EnvVar(envString.substring(0, idx), envString.substring(idx + 1), null));
+				}
 				ContainerBuilder containerBuilder = new ContainerBuilder()
 						.withImage(app.getDockerImage())
 						.withName("shiny-container")
-						.withPorts(containerPortBuilder.build());
+						.withPorts(containerPortBuilder.build())
+						.withEnv(envVars);
 
 				if (app.getDockerCmd() != null) {
 					containerBuilder.withCommand(app.getDockerCmd());

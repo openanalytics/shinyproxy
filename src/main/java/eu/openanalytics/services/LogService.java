@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -34,6 +35,8 @@ import javax.inject.Inject;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.log4j.Logger;
+import org.bouncycastle.util.encoders.Hex;
+import org.h2.util.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -43,6 +46,7 @@ import org.springframework.stereotype.Service;
 import com.spotify.docker.client.LogStream;
 
 import eu.openanalytics.services.DockerService.Proxy;
+import io.fabric8.kubernetes.client.dsl.LogWatch;
 
 @Service
 public class LogService {
@@ -52,6 +56,8 @@ public class LogService {
 	private ExecutorService executor;
 	
 	private Logger log = Logger.getLogger(LogService.class);
+
+	private Random rng = new Random();
 	
 	@Autowired(required=false)
     JavaMailSender mailSender;
@@ -98,6 +104,22 @@ public class LogService {
 				Path[] paths = getLogFilePaths(proxy.containerId);
 				// Note that this call will block until the container is stopped.
 				logStream.attach(new FileOutputStream(paths[0].toFile()), new FileOutputStream(paths[1].toFile()));
+			} catch (IOException e) {
+				log.error("Failed to attach logging of container " + proxy.containerId, e);
+			}
+		});
+	}
+	
+	public void attachLogWatcher(Proxy proxy, LogWatch watcher) {
+		if (!isContainerLoggingEnabled()) return;
+		executor.submit(() -> {
+			try {
+				byte[] logIdBytes = new byte[20];
+				rng.nextBytes(logIdBytes);
+				String logId = Hex.toHexString(logIdBytes);
+				log.info(String.format("Assigning container %s log file id %s", proxy.name, logId));
+				// Note that this call will block until the container is stopped.
+				IOUtils.copy(watcher.getOutput(), new FileOutputStream(Paths.get(containerPath, logId + ".log").toFile()));
 			} catch (IOException e) {
 				log.error("Failed to attach logging of container " + proxy.containerId, e);
 			}

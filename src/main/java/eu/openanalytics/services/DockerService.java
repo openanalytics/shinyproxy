@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -49,6 +50,7 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
@@ -91,6 +93,7 @@ import io.undertow.servlet.handlers.ServletRequestContext;
 public class DockerService {
 		
 	private Logger log = Logger.getLogger(DockerService.class);
+	private Random rng = new Random();
 
 	private List<Proxy> launchingProxies = Collections.synchronizedList(new ArrayList<>());
 	private List<Proxy> activeProxies = Collections.synchronizedList(new ArrayList<>());
@@ -180,10 +183,16 @@ public class DockerService {
 	@Bean
 	public DockerClient getDockerClient() {
 		try {
-			return DefaultDockerClient.builder()
-				.dockerCertificates(DockerCertificates.builder().dockerCertPath(Paths.get(environment.getProperty("shiny.proxy.docker.cert-path", ""))).build().orNull())
-				.uri(environment.getProperty("shiny.proxy.docker.url"))
-				.build();
+			DefaultDockerClient.Builder builder = DefaultDockerClient.fromEnv();
+			String confCertPath = environment.getProperty("shiny.proxy.docker.cert-path");
+			if (confCertPath != null) {
+				builder.dockerCertificates(DockerCertificates.builder().dockerCertPath(Paths.get(confCertPath)).build().orNull());
+			}
+			String confUrl = environment.getProperty("shiny.proxy.docker.url");
+			if (confUrl != null) {
+				builder.uri(confUrl);
+			}
+			return builder.build();
 		} catch (DockerCertificateException e) {
 			throw new ShinyProxyException("Failed to initialize docker client", e);
 		}
@@ -313,16 +322,34 @@ public class DockerService {
 			throw new ShinyProxyException("Cannot start container: user " + userName + " already has a running proxy");
 		}
 		
+		boolean internalNetworking = "true".equals(environment.getProperty("shiny.proxy.docker.internal-networking"));
+		boolean generateName = swarmMode || "true".equals(environment.getProperty("shiny.proxy.docker.generate-name", String.valueOf(internalNetworking)));
+
 		Proxy proxy = new Proxy();
 		proxy.userName = userName;
 		proxy.appName = appName;
-		proxy.port = getFreePort();
+		if (internalNetworking) {
+			proxy.port = app.getPort();
+		} else {
+			proxy.port = getFreePort();
+		}
 		launchingProxies.add(proxy);
 		
 		try {
-			URL hostURL = new URL(environment.getProperty("shiny.proxy.docker.url"));
-			proxy.protocol = environment.getProperty("shiny.proxy.docker.container-protocol", hostURL.getProtocol());
-			
+			URL hostURL = null;
+			String containerProtocolDefault = "http";
+			if (!internalNetworking) {
+				hostURL = new URL(environment.getProperty("shiny.proxy.docker.url"));
+				containerProtocolDefault = hostURL.getProtocol();
+			}
+			proxy.protocol = environment.getProperty("shiny.proxy.docker.container-protocol", containerProtocolDefault);
+
+			if (generateName) {
+				byte[] nameBytes = new byte[20];
+				rng.nextBytes(nameBytes);
+				proxy.name = Hex.encodeHexString(nameBytes);
+			}
+
 			if (swarmMode) {
 				Mount[] mounts = getBindVolumes(app).stream()
 						.map(b -> b.split(":"))
@@ -341,18 +368,20 @@ public class DockerService {
 						.stream(Optional.ofNullable(app.getDockerNetworkConnections()).orElse(new String[0]))
 						.map(n -> NetworkAttachmentConfig.builder().target(n).build())
 						.toArray(i -> new NetworkAttachmentConfig[i]);
-				
-				proxy.name = proxy.appName + "_" + proxy.port;
-				proxy.serviceId = dockerClient.createService(ServiceSpec.builder()
-						.name(proxy.name)
+
+				ServiceSpec.Builder serviceSpecBuilder = ServiceSpec.builder()
 						.networks(networks)
+						.name(proxy.name)
 						.taskTemplate(TaskSpec.builder()
 								.containerSpec(containerSpec)
-								.build())
-						.endpointSpec(EndpointSpec.builder()
-								.ports(PortConfig.builder().publishedPort(proxy.port).targetPort(app.getPort()).build())
-								.build())
-						.build()).id();
+								.build());
+				if (!internalNetworking) {
+					serviceSpecBuilder.endpointSpec(EndpointSpec.builder()
+							.ports(PortConfig.builder().publishedPort(proxy.port).targetPort(app.getPort()).build())
+							.build());
+				}
+
+				proxy.serviceId = dockerClient.createService(serviceSpecBuilder.build()).id();
 
 				boolean containerFound = retry(i -> {
 					try {
@@ -368,10 +397,14 @@ public class DockerService {
 				}, 10, 2000);
 				if (!containerFound) throw new IllegalStateException("Swarm container did not start in time");
 				
-				Node node = dockerClient.listNodes().stream()
-						.filter(n -> n.id().equals(proxy.host)).findAny()
-						.orElseThrow(() -> new IllegalStateException(String.format("Swarm node not found [id: %s]", proxy.host)));
-				proxy.host = node.description().hostname();
+				if (internalNetworking) {
+					proxy.host = proxy.name;
+				} else {
+					Node node = dockerClient.listNodes().stream()
+							.filter(n -> n.id().equals(proxy.host)).findAny()
+							.orElseThrow(() -> new IllegalStateException(String.format("Swarm node not found [id: %s]", proxy.host)));
+					proxy.host = node.description().hostname();
+				}
 				
 				log.info(String.format("Container running in swarm [service: %s] [node: %s]", proxy.name, proxy.host));
 			} else {
@@ -380,8 +413,14 @@ public class DockerService {
 				Optional.ofNullable(memoryToBytes(app.getDockerMemory())).ifPresent(l -> hostConfigBuilder.memory(l));
 				Optional.ofNullable(app.getDockerNetwork()).ifPresent(n -> hostConfigBuilder.networkMode(app.getDockerNetwork()));
 				
+				List<PortBinding> portBindings;
+				if (internalNetworking) {
+					portBindings = Collections.emptyList();
+				} else {
+					portBindings = Collections.singletonList(PortBinding.of("0.0.0.0", proxy.port));
+				}
 				hostConfigBuilder
-						.portBindings(Collections.singletonMap(app.getPort().toString(), Collections.singletonList(PortBinding.of("0.0.0.0", proxy.port))))
+						.portBindings(Collections.singletonMap(app.getPort().toString(), portBindings))
 						.dns(app.getDockerDns())
 						.binds(getBindVolumes(app));
 				
@@ -399,17 +438,28 @@ public class DockerService {
 						dockerClient.connectToNetwork(container.id(), networkConnection);
 					}
 				}
+				if (proxy.name != null) {
+					dockerClient.renameContainer(container.id(), proxy.name);
+				}
 				dockerClient.startContainer(container.id());
 				
 				ContainerInfo info = dockerClient.inspectContainer(container.id());
-				proxy.host = hostURL.getHost();
-				proxy.name = info.name().substring(1);
+				if (proxy.name == null) {
+					proxy.name = info.name().substring(1);
+				}
+				if (internalNetworking) {
+					proxy.host = proxy.name;
+				} else {
+					proxy.host = hostURL.getHost();
+				}
 				proxy.containerId = container.id();
 			}
 
 			proxy.startupTimestamp = System.currentTimeMillis();
 		} catch (Exception e) {
-			releasePort(proxy.port);
+			if (!internalNetworking) {
+				releasePort(proxy.port);
+			}
 			launchingProxies.remove(proxy);
 			throw new ShinyProxyException("Failed to start container: " + e.getMessage(), e);
 		}

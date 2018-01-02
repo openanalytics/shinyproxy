@@ -80,8 +80,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 			// Limit access to the app pages
 			http.authorizeRequests().antMatchers("/login", "/signin/**", "/signup").permitAll();
 			for (ShinyApp app: appService.getApps()) {
-				if (app.getGroups() == null || app.getGroups().length == 0) continue;
-				String[] appGroups = Arrays.stream(app.getGroups()).map(s -> s.toUpperCase()).toArray(i -> new String[i]);
+				String[] groups = app.getGroups();
+				if (groups == null || groups.length == 0) continue;
+				String[] appGroups = Arrays.stream(groups).map(s -> s.toUpperCase()).toArray(i -> new String[i]);
 				http.authorizeRequests().antMatchers("/app/" + app.getName()).hasAnyRole(appGroups);
 			}
 

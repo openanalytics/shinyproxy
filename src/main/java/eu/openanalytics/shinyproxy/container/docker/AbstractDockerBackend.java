@@ -208,11 +208,17 @@ public abstract class AbstractDockerBackend extends AbstractContainerBackend {
 		
 		if (useInternalDockerNetwork) {
 			hostName = proxy.getName();
-			port = proxy.getApp().getPort();
+			port = getAppPort(proxy);
 		}
 		
 		String target = String.format("%s://%s:%d", protocol, hostName, port);
 		proxy.setTarget(target);
+	}
+	
+	protected int getAppPort(DockerContainerProxy proxy) {
+		String port = proxy.getApp().getPort();
+		if (port == null || port.isEmpty()) return 3838;
+		return Integer.parseInt(port);
 	}
 	
 	protected boolean testProxy(DockerContainerProxy proxy) {

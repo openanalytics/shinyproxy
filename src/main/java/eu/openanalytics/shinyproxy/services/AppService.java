@@ -24,12 +24,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @ConfigurationProperties(prefix = "shiny")
 @Service
@@ -51,130 +53,86 @@ public class AppService {
 		return apps;
 	}
 	
-	public static class ShinyApp {
+	public static class ShinyApp extends HashMap<String, String> {
 		
-		private String name;
-		private String displayName;
-		private String description;
-		private String logoUrl;
-		private String[] dockerCmd;
-		private String dockerImage;
-		private String[] dockerDns;
-		private String dockerNetwork;
-		private String[] dockerNetworkConnections;
-		private String dockerMemory;
-		private String dockerEnvFile;
-		private Map<String, String> dockerEnv = new HashMap<String, String>();
-		private String[] dockerVolumes;
-		private String[] groups;
-		private Integer port;
-		
+		private static final long serialVersionUID = 8943311295945978160L;
+
 		public String getName() {
-			return name;
-		}
-		public void setName(String name) {
-			this.name = name;
+			return get("name");
 		}
 		
 		public String getDisplayName() {
-			return displayName;
-		}
-		public void setDisplayName(String displayName) {
-			this.displayName = displayName;
+			return get("display-name");
 		}
 		
 		public String getDescription() {
-			return description;
-		}
-		public void setDescription(String description) {
-			this.description = description;
+			return get("description");
 		}
 		
 		public String getLogoUrl() {
-			return logoUrl;
-		}
-		public void setLogoUrl(String logoUrl) {
-			this.logoUrl = logoUrl;
+			return get("logo-url");
 		}
 		
 		public String[] getDockerCmd() {
-			return dockerCmd;
+			return getArray("docker-cmd");
 		}
-		public void setDockerCmd(String[] dockerCmd) {
-			this.dockerCmd = dockerCmd;
-		}
-
+		
 		public String getDockerImage() {
-			return dockerImage;
-		}
-		public void setDockerImage(String dockerImage) {
-			this.dockerImage = dockerImage;
+			return get("docker-image");
 		}
 		
 		public String[] getDockerDns() {
-			return dockerDns;
-		}
-		public void setDockerDns(String[] dockerDns) {
-			this.dockerDns = dockerDns;
+			return getArray("docker-dns");
 		}
 		
 		public String getDockerNetwork() {
-			return dockerNetwork;
-		}
-		public void setDockerNetwork(String dockerNetwork) {
-			this.dockerNetwork = dockerNetwork;
+			return get("docker-network");
 		}
 		
 		public String[] getDockerNetworkConnections() {
-			return dockerNetworkConnections;
-		}
-		public void setDockerNetworkConnections(String[] dockerNetworkConnections) {
-			this.dockerNetworkConnections = dockerNetworkConnections;
+			return getArray("docker-network-connections");
 		}
 		
 		public String getDockerMemory() {
-			return dockerMemory;
-		}
-		public void setDockerMemory(String dockerMemory) {
-			this.dockerMemory = dockerMemory;
+			return get("docker-memory");
 		}
 		
 		public String getDockerEnvFile() {
-			return dockerEnvFile;
-		}
-		public void setDockerEnvFile(String dockerEnvFile) {
-			this.dockerEnvFile = dockerEnvFile;
+			return get("docker-env-file");
 		}
 
 		public Map<String, String> getDockerEnv() {
-			return dockerEnv;
-		}
-		public void setDockerEnv(Map<String, String> dockerEnv) {
-			this.dockerEnv = dockerEnv;
+			return getMap("docker-env");
 		}
 
 		public String[] getDockerVolumes() {
-			return dockerVolumes;
-		}
-		public void setDockerVolumes(String[] dockerVolumes) {
-			this.dockerVolumes = dockerVolumes;
+			return getArray("docker-volumes");
 		}
 		
 		public String[] getGroups() {
-			return groups;
-		}
-		public void setGroups(String[] groups) {
-			this.groups = groups;
+			return getArray("groups");
 		}
 		
-		public Integer getPort() {
-			if (port == null) {
-				return 3838;
-			}
-			return port;
+		public String getPort() {
+			return get("port");
 		}
-		public void setPort(Integer port) {
-			this.port = port;
+		
+		public String[] getArray(String key) {
+			List<String> values = new ArrayList<>();
+			keySet().stream()
+				.filter(k -> k.startsWith(key))
+				.map(k -> get(k))
+				.forEach(v -> {
+					String[] fields = StringUtils.commaDelimitedListToStringArray(v);
+					for (String f: fields) values.add(f);
+				});
+			return values.toArray(new String[values.size()]);
+		}
+		
+		public Map<String,String> getMap(String key) {
+			return keySet().stream()
+					.filter(k -> k.startsWith(key))
+					.collect(Collectors.toMap(k -> k.substring(1 + key.length()), k -> get(k)));
 		}
 	}
 }

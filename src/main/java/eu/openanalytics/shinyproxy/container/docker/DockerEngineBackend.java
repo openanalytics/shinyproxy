@@ -23,7 +23,7 @@ public class DockerEngineBackend extends AbstractDockerBackend {
 		
 		List<PortBinding> portBindings = Collections.emptyList();
 		if (proxy.getPort() > 0) portBindings = Collections.singletonList(PortBinding.of("0.0.0.0", proxy.getPort()));
-		hostConfigBuilder.portBindings(Collections.singletonMap(request.app.getPort().toString(), portBindings));
+		hostConfigBuilder.portBindings(Collections.singletonMap(String.valueOf(getAppPort(proxy)), portBindings));
 		
 		Optional.ofNullable(Utils.memoryToBytes(request.app.getDockerMemory())).ifPresent(l -> hostConfigBuilder.memory(l));
 		Optional.ofNullable(request.app.getDockerNetwork()).ifPresent(n -> hostConfigBuilder.networkMode(request.app.getDockerNetwork()));
@@ -34,7 +34,7 @@ public class DockerEngineBackend extends AbstractDockerBackend {
 		ContainerConfig containerConfig = ContainerConfig.builder()
 			    .hostConfig(hostConfigBuilder.build())
 			    .image(request.app.getDockerImage())
-			    .exposedPorts(request.app.getPort().toString())
+			    .exposedPorts(String.valueOf(getAppPort(proxy)))
 			    .cmd(request.app.getDockerCmd())
 			    .env(buildEnv(request.userId, request.app))
 			    .build();

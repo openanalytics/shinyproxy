@@ -71,7 +71,7 @@ public class DockerSwarmBackend extends AbstractDockerBackend {
 		
 		if (proxy.getPort() > 0) {
 			serviceSpecBuilder.endpointSpec(EndpointSpec.builder()
-					.ports(PortConfig.builder().publishedPort(proxy.getPort()).targetPort(proxy.getApp().getPort()).build())
+					.ports(PortConfig.builder().publishedPort(proxy.getPort()).targetPort(getAppPort(proxy)).build())
 					.build());
 		}
 		

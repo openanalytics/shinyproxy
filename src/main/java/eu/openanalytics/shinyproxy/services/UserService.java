@@ -108,9 +108,10 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 	private boolean canAccess(Authentication principalAuth, String appName) {
 		ShinyApp app = appService.getApp(appName);
 		if (app == null) return false;
-		if (app.getGroups() == null || app.getGroups().length == 0) return true;
+		String[] groups = app.getGroups();
+		if (groups == null || groups.length == 0) return true;
 		if (principalAuth == null || principalAuth instanceof AnonymousAuthenticationToken) return true;
-		for (String group: app.getGroups()) {
+		for (String group: groups) {
 			if (isMember(principalAuth, group)) return true;
 		}
 		return false;

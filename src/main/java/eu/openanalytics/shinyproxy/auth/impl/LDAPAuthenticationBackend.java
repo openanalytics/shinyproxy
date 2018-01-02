@@ -46,7 +46,7 @@ import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopul
 
 import eu.openanalytics.shinyproxy.auth.IAuthenticationBackend;
 
-public class LDAPAuthenticationType implements IAuthenticationBackend {
+public class LDAPAuthenticationBackend implements IAuthenticationBackend {
 
 	public static final String NAME = "ldap";
 	

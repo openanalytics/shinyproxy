@@ -65,7 +65,7 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 
 import eu.openanalytics.shinyproxy.auth.IAuthenticationBackend;
 
-public class KeycloakAuthenticationType implements IAuthenticationBackend {
+public class KeycloakAuthenticationBackend implements IAuthenticationBackend {
 
 	public static final String NAME = "keycloak";
 	

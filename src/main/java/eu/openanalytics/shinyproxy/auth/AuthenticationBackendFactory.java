@@ -9,11 +9,11 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
-import eu.openanalytics.shinyproxy.auth.impl.KeycloakAuthenticationType;
-import eu.openanalytics.shinyproxy.auth.impl.LDAPAuthenticationType;
-import eu.openanalytics.shinyproxy.auth.impl.NoneAuthenticationType;
-import eu.openanalytics.shinyproxy.auth.impl.SimpleAuthenticationType;
-import eu.openanalytics.shinyproxy.auth.impl.SocialAuthenticationType;
+import eu.openanalytics.shinyproxy.auth.impl.KeycloakAuthenticationBackend;
+import eu.openanalytics.shinyproxy.auth.impl.LDAPAuthenticationBackend;
+import eu.openanalytics.shinyproxy.auth.impl.NoAuthenticationBackend;
+import eu.openanalytics.shinyproxy.auth.impl.SimpleAuthenticationBackend;
+import eu.openanalytics.shinyproxy.auth.impl.SocialAuthenticationBackend;
 
 @Service(value="authenticationBackend")
 public class AuthenticationBackendFactory extends AbstractFactoryBean<IAuthenticationBackend> implements ApplicationContextAware {
@@ -39,20 +39,20 @@ public class AuthenticationBackendFactory extends AbstractFactoryBean<IAuthentic
 
 		String type = environment.getProperty("shiny.proxy.authentication", "none");
 		switch (type) {
-		case LDAPAuthenticationType.NAME:
-			backend = new LDAPAuthenticationType();
+		case LDAPAuthenticationBackend.NAME:
+			backend = new LDAPAuthenticationBackend();
 			break;
-		case SimpleAuthenticationType.NAME:
-			backend = new SimpleAuthenticationType();
+		case SimpleAuthenticationBackend.NAME:
+			backend = new SimpleAuthenticationBackend();
 			break;
-		case SocialAuthenticationType.NAME:
-			backend = new SocialAuthenticationType();
+		case SocialAuthenticationBackend.NAME:
+			backend = new SocialAuthenticationBackend();
 			break;
-		case KeycloakAuthenticationType.NAME:
-			backend = new KeycloakAuthenticationType();
+		case KeycloakAuthenticationBackend.NAME:
+			backend = new KeycloakAuthenticationBackend();
 			break;
-		case NoneAuthenticationType.NAME:
-			backend = new NoneAuthenticationType();
+		case NoAuthenticationBackend.NAME:
+			backend = new NoAuthenticationBackend();
 		}
 		if (backend == null) throw new RuntimeException("Unknown authentication type:" + type);
 		

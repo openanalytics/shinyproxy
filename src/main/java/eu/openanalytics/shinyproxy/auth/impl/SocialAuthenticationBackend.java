@@ -29,7 +29,7 @@ import eu.openanalytics.shinyproxy.auth.IAuthenticationBackend;
  * This authentication type does nothing by itself. All social configuration is handled in
  * {@link eu.openanalytics.shinyproxy.SocialConfiguration}
  */
-public class SocialAuthenticationType implements IAuthenticationBackend {
+public class SocialAuthenticationBackend implements IAuthenticationBackend {
 
 	public static final String NAME = "social";
 	

@@ -208,6 +208,7 @@ public abstract class AbstractDockerBackend extends AbstractContainerBackend {
 		int port = proxy.getPort();
 		
 		if (useInternalDockerNetwork) {
+			protocol = environment.getProperty(PROPERTY_PREFIX + "container-protocol", "http");
 			hostName = proxy.getName();
 			port = getAppPort(proxy);
 		}

@@ -50,7 +50,8 @@ public class SocialAuthenticationBackend implements IAuthenticationBackend {
 
 	@Override
 	public void configureAuthenticationManagerBuilder(AuthenticationManagerBuilder auth) throws Exception {
-		// Nothing to do.
+		// Configure a no-op authentication.
+		auth.inMemoryAuthentication();
 	}
 
 }

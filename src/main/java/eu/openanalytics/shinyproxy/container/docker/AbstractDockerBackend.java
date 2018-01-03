@@ -96,6 +96,7 @@ public abstract class AbstractDockerBackend extends AbstractContainerBackend {
 			doCreateProxy(proxy, request);
 		} catch (Exception e) {
 			releasePort(proxy);
+			if (e instanceof ShinyProxyException) throw (ShinyProxyException) e;
 			throw new ShinyProxyException("Failed to create container", e);
 		}
 

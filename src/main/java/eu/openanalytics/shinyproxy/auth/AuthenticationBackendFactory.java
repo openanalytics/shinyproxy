@@ -2,10 +2,9 @@ package eu.openanalytics.shinyproxy.auth;
 
 import javax.inject.Inject;
 
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
@@ -15,19 +14,25 @@ import eu.openanalytics.shinyproxy.auth.impl.NoAuthenticationBackend;
 import eu.openanalytics.shinyproxy.auth.impl.SimpleAuthenticationBackend;
 import eu.openanalytics.shinyproxy.auth.impl.SocialAuthenticationBackend;
 
+/**
+ * Instantiates an appropriate authentication backend depending on the application configuration.
+ * 
+ * The keycloak backend is a special case because it defines a set of beans by itself, and cannot be instantiated manually by us.
+ * That's also why the authenticationBackend bean is Primary, to avoid conflict with the keycloakBackend bean.
+ */
 @Service(value="authenticationBackend")
-public class AuthenticationBackendFactory extends AbstractFactoryBean<IAuthenticationBackend> implements ApplicationContextAware {
+@Primary
+public class AuthenticationBackendFactory extends AbstractFactoryBean<IAuthenticationBackend> {
 
 	@Inject
 	private Environment environment;
 	
+	@Inject
 	private ApplicationContext applicationContext;
 	
-	@Override
-	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-		this.applicationContext = applicationContext;
-	}
-
+	@Inject
+	private KeycloakAuthenticationBackend keycloakBackend;
+	
 	@Override
 	public Class<?> getObjectType() {
 		return IAuthenticationBackend.class;
@@ -39,6 +44,9 @@ public class AuthenticationBackendFactory extends AbstractFactoryBean<IAuthentic
 
 		String type = environment.getProperty("shiny.proxy.authentication", "none");
 		switch (type) {
+		case NoAuthenticationBackend.NAME:
+			backend = new NoAuthenticationBackend();
+			break;
 		case LDAPAuthenticationBackend.NAME:
 			backend = new LDAPAuthenticationBackend();
 			break;
@@ -49,10 +57,7 @@ public class AuthenticationBackendFactory extends AbstractFactoryBean<IAuthentic
 			backend = new SocialAuthenticationBackend();
 			break;
 		case KeycloakAuthenticationBackend.NAME:
-			backend = new KeycloakAuthenticationBackend();
-			break;
-		case NoAuthenticationBackend.NAME:
-			backend = new NoAuthenticationBackend();
+			return keycloakBackend;
 		}
 		if (backend == null) throw new RuntimeException("Unknown authentication type:" + type);
 		

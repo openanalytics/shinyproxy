@@ -20,9 +20,6 @@
  */
 package eu.openanalytics.shinyproxy.auth.impl;
 
-import javax.inject.Inject;
-
-import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 
@@ -34,9 +31,6 @@ import eu.openanalytics.shinyproxy.auth.IAuthenticationBackend;
 public class NoAuthenticationBackend implements IAuthenticationBackend {
 
 	public static final String NAME = "none";
-	
-	@Inject
-	Environment environment;
 	
 	@Override
 	public String getName() {
@@ -55,7 +49,8 @@ public class NoAuthenticationBackend implements IAuthenticationBackend {
 
 	@Override
 	public void configureAuthenticationManagerBuilder(AuthenticationManagerBuilder auth) throws Exception {
-		// Nothing to do.
+		// Configure a no-op authentication.
+		auth.inMemoryAuthentication();
 	}
 
 }

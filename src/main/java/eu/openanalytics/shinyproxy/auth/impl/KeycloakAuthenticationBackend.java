@@ -62,9 +62,11 @@ import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.stereotype.Component;
 
 import eu.openanalytics.shinyproxy.auth.IAuthenticationBackend;
 
+@Component
 public class KeycloakAuthenticationBackend implements IAuthenticationBackend {
 
 	public static final String NAME = "keycloak";

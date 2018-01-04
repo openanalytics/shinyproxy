@@ -124,7 +124,7 @@ public class AppService {
 				.map(k -> get(k))
 				.forEach(v -> {
 					String[] fields = StringUtils.commaDelimitedListToStringArray(v);
-					for (String f: fields) values.add(f);
+					for (String f: fields) values.add(f.trim());
 				});
 			return values.toArray(new String[values.size()]);
 		}

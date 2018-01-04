@@ -25,7 +25,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -221,7 +220,7 @@ public abstract class AbstractDockerBackend extends AbstractContainerBackend {
 		occupiedPorts.remove(proxy.getPort());
 	}
 	
-	protected void calculateTargetURL(DockerContainerProxy proxy) throws MalformedURLException {
+	protected void calculateTargetURL(DockerContainerProxy proxy) throws Exception {
 		URL hostURL = new URL(environment.getProperty(PROPERTY_PREFIX + "url", "http://localhost"));
 		String protocol = environment.getProperty(PROPERTY_PREFIX + "container-protocol", hostURL.getProtocol());
 		String hostName = hostURL.getHost();

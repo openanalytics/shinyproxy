@@ -20,6 +20,7 @@
  */
 package eu.openanalytics.shinyproxy.container.docker;
 
+import java.net.MalformedURLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -87,4 +88,12 @@ public class DockerEngineBackend extends AbstractDockerBackend {
 		dockerClient.removeContainer(proxy.getContainerId(), RemoveContainerParam.forceKill());
 	}
 
+	@Override
+	protected void calculateTargetURL(DockerContainerProxy proxy) throws MalformedURLException {
+		super.calculateTargetURL(proxy);
+		// For internal networks, DNS resolution by name only works with custom names.
+		// See comments on https://github.com/docker/for-win/issues/1009
+		// Use container ID instead.
+		proxy.setTarget(proxy.getTarget().replace(proxy.getName(), proxy.getContainerId()));
+	}
 }

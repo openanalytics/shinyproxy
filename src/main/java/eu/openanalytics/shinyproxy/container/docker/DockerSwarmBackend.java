@@ -104,10 +104,10 @@ public class DockerSwarmBackend extends AbstractDockerBackend {
 						.stream().findAny().orElseThrow(() -> new IllegalStateException("Swarm service has no tasks"));
 				proxy.setContainerId(serviceTask.status().containerStatus().containerId());
 			} catch (Exception e) {
-				throw new RuntimeException("Failed to inspect swarm service tasks");
+				throw new RuntimeException("Failed to inspect swarm service tasks", e);
 			}
 			return (proxy.getContainerId() != null);
-		}, 10, 2000);
+		}, 10, 2000, true);
 		if (!containerFound) {
 			dockerClient.removeService(proxy.getServiceId());
 			throw new IllegalStateException("Swarm container did not start in time");

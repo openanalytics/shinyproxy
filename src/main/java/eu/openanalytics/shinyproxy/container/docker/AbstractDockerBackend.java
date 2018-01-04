@@ -222,7 +222,7 @@ public abstract class AbstractDockerBackend extends AbstractContainerBackend {
 	}
 	
 	protected void calculateTargetURL(DockerContainerProxy proxy) throws MalformedURLException {
-		URL hostURL = new URL(environment.getProperty(PROPERTY_PREFIX + "url"));
+		URL hostURL = new URL(environment.getProperty(PROPERTY_PREFIX + "url", "http://localhost"));
 		String protocol = environment.getProperty(PROPERTY_PREFIX + "container-protocol", hostURL.getProtocol());
 		String hostName = hostURL.getHost();
 		int port = proxy.getPort();

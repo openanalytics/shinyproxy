@@ -108,7 +108,10 @@ public class DockerSwarmBackend extends AbstractDockerBackend {
 			}
 			return (proxy.getContainerId() != null);
 		}, 10, 2000);
-		if (!containerFound) throw new IllegalStateException("Swarm container did not start in time");
+		if (!containerFound) {
+			dockerClient.removeService(proxy.getServiceId());
+			throw new IllegalStateException("Swarm container did not start in time");
+		}
 	}
 
 	@Override

@@ -7,6 +7,8 @@ shiny:
     heartbeat-timeout: 60000
     port: 8080
     authentication: ldap
+    # Custom template setting: if you want enable a custom template please uncomment this field
+    #template_path: ../templates/1col
     admin-groups: scientists
     # Example: 'simple' authentication configuration
     users:
@@ -36,10 +38,14 @@ shiny:
     docker-cmd: ["R", "-e", "shinyproxy::run_01_hello()"]
     docker-image: openanalytics/shinyproxy-demo
     groups: scientists, mathematicians
+    # when you want add a thumbnail please add inside /thumbnail/ directory
+    thumb-image: 01_hello.png
   - name: 06_tabsets
     docker-cmd: ["R", "-e", "shinyproxy::run_06_tabsets()"]
     docker-image: openanalytics/shinyproxy-demo
     groups: scientists
+    # when you want add a thumbnail please add inside /thumbnail/ directory
+    thumb-image: 06_tabsets.png
 
 logging:
   file:

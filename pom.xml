@@ -407,6 +407,7 @@
 						<exclude>**/*.json</exclude>
 						<exclude>.gitignore</exclude>
 						<exclude>src/deb/**</exclude>
+						<exclude>templates/**</exclude>
 					</excludes>
 				</configuration>
 				<executions>

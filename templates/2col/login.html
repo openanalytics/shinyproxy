@@ -1,0 +1,70 @@
+<!--
+
+    ShinyProxy
+
+    Copyright (C) 2016-2017 Open Analytics
+
+    ===========================================================================
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the Apache License as published by
+    The Apache Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    Apache License for more details.
+
+    You should have received a copy of the Apache License
+    along with this program.  If not, see <http://www.apache.org/licenses/>
+
+-->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head lang="en">
+	<title th:text="${title}"></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link rel="stylesheet" media="screen" type="text/css"
+		href="https://cdn.jsdelivr.net/bootstrap-social/5.1.1/bootstrap-social.css"/>
+	<link rel="stylesheet" media="screen" type="text/css"
+		href="https://cdn.jsdelivr.net/fontawesome/4.7.0/css/font-awesome.min.css"/>
+	<link rel="stylesheet" media="screen" type="text/css" th:href="@{/assets/css/bootstrap.min.css}"/>
+	<link rel="stylesheet" media="screen" type="text/css" th:href="@{/assets/css/default.css}"/>
+	<link rel="stylesheet" media="screen" type="text/css" th:href="@{/assets/css/signin.css}"/>
+	<script th:src="@{/assets/js/jquery.min.js}"></script>
+	<script th:src="@{/assets/js/bootstrap.min.js}"></script>
+</head>
+<body>
+	<!-- navigation bar -->
+	<div th:replace="../fragments/navbar :: navbar"></div>
+
+	<!-- content -->
+	<div class="container">
+		<div th:if="${@authenticationTypeProxy.name() != 'social'}">
+			<form class="form-signin" action="login" method="POST">
+				<h2 class="form-signin-heading">Please sign in:</h2>
+				<div class="alert alert-danger" th:if="${error}">
+	  				<strong>Could not sign in!</strong><br/><span th:text="${error}"></span>.
+				</div>
+				<label for="username" class="sr-only">Email address</label> 
+				<input name="username" id="username" class="form-control" placeholder="User name" required="required" autofocus="autofocus"></input> 
+				<label for="password" class="sr-only">Password</label>
+				<input name="password" type="password" id="password" class="form-control" placeholder="Password" required="required"></input>
+				<button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+			</form>
+		</div>
+
+		<div th:if="${@authenticationTypeProxy.name() == 'social'}">
+			<br/><h2 class="form-signin form-signin-heading">Please sign in:</h2>
+			<form th:each="provider : ${@socialProviders}" class="form-signin" method="POST" th:action="@{/signin/__${provider}__}">
+				<button th:class="@{btn btn-block btn-social btn-__${provider}__}" type="submit">
+					<span th:class="@{fa fa-__${provider}__}"></span> Sign in with <span th:text="${provider.label()}"></span>
+				</button>
+			</form>
+		</div>
+	</div>
+
+</body>
+</html>

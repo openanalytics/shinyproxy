@@ -167,6 +167,7 @@ public class LDAPAuthenticationBackend implements IAuthenticationBackend {
 
 		public CNLdapAuthoritiesPopulator(ContextSource contextSource, String groupSearchBase) {
 			super(contextSource, groupSearchBase);
+			setSearchSubtree(true);
 		}
 
 		@Override

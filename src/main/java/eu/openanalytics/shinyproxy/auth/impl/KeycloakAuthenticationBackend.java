@@ -37,6 +37,7 @@ import org.keycloak.adapters.KeycloakDeploymentBuilder;
 import org.keycloak.adapters.spi.HttpFacade.Request;
 import org.keycloak.adapters.spi.KeycloakAccount;
 import org.keycloak.adapters.springsecurity.AdapterDeploymentContextFactoryBean;
+import org.keycloak.adapters.springsecurity.KeycloakAuthenticationException;
 import org.keycloak.adapters.springsecurity.account.KeycloakRole;
 import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationEntryPoint;
 import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticationProvider;
@@ -192,6 +193,7 @@ public class KeycloakAuthenticationBackend implements IAuthenticationBackend {
 
 		public KeycloakAuthenticationToken2(KeycloakAccount account, Collection<? extends GrantedAuthority> authorities) {
 			super(account, authorities);
+			if (getName() == null || getName().isEmpty()) throw new KeycloakAuthenticationException("User name cannot be empty");
 		}
 		
 		@Override

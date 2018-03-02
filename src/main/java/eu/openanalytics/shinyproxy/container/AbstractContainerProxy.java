@@ -28,7 +28,10 @@ public abstract class AbstractContainerProxy implements IContainerProxy {
 	private String containerId;
 	private String userId;
 	private ShinyApp app;
+	
 	private String target;
+	private int port;
+	
 	private long startupTimestamp;
 
 	private ContainerProxyStatus status;
@@ -78,6 +81,14 @@ public abstract class AbstractContainerProxy implements IContainerProxy {
 		this.target = target;
 	}
 
+	public int getPort() {
+		return port;
+	}
+	
+	public void setPort(int port) {
+		this.port = port;
+	}
+	
 	@Override
 	public long getStartupTimestamp() {
 		return startupTimestamp;

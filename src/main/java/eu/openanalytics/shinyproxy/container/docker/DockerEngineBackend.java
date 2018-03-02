@@ -38,7 +38,7 @@ import eu.openanalytics.shinyproxy.util.Utils;
 public class DockerEngineBackend extends AbstractDockerBackend {
 
 	@Override
-	protected void doCreateProxy(DockerContainerProxy proxy, ContainerProxyRequest request) throws Exception {
+	protected void prepareProxy(DockerContainerProxy proxy, ContainerProxyRequest request) throws Exception {
 		Builder hostConfigBuilder = HostConfig.builder();
 		
 		List<PortBinding> portBindings = Collections.emptyList();

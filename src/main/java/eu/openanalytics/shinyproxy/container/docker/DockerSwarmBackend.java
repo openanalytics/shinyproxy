@@ -55,7 +55,7 @@ public class DockerSwarmBackend extends AbstractDockerBackend {
 	}
 	
 	@Override
-	protected void doCreateProxy(DockerContainerProxy proxy, ContainerProxyRequest request) throws Exception {
+	protected void prepareProxy(DockerContainerProxy proxy, ContainerProxyRequest request) throws Exception {
 		// Generate a unique random name for the service.
 		byte[] nameBytes = new byte[20];
 		rng.nextBytes(nameBytes);

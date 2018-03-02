@@ -73,6 +73,12 @@ public class AppService {
 			return get("logo-url");
 		}
 		
+		public String[] getGroups() {
+			return getArray("groups");
+		}
+		
+		//TODO Move docker-related settings out of here
+		
 		public String[] getDockerCmd() {
 			return getArray("docker-cmd");
 		}
@@ -107,14 +113,6 @@ public class AppService {
 
 		public String[] getDockerVolumes() {
 			return getArray("docker-volumes");
-		}
-		
-		public String[] getGroups() {
-			return getArray("groups");
-		}
-		
-		public String getPort() {
-			return get("port");
 		}
 		
 		public String[] getArray(String key) {

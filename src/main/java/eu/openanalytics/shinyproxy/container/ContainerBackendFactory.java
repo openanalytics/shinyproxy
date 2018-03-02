@@ -20,19 +20,50 @@
  */
 package eu.openanalytics.shinyproxy.container;
 
+import javax.inject.Inject;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import eu.openanalytics.shinyproxy.container.docker.DockerEngineBackend;
 import eu.openanalytics.shinyproxy.container.docker.DockerSwarmBackend;
+import eu.openanalytics.shinyproxy.container.kubernetes.KubernetesBackend;
 
 @Service
 public class ContainerBackendFactory extends AbstractFactoryBean<IContainerBackend> implements ApplicationContextAware {
 	
+	private static final String PROPERTY_CONTAINER_BACKEND = "shiny.proxy.container-backend";
+	
+	private enum ContainerBackend {
+		
+		DockerEngine("docker", DockerEngineBackend.class),
+		DockerSwarm("docker-swarm", DockerSwarmBackend.class),
+		Kubernetes("kubernetes", KubernetesBackend.class);
+		
+		private String name;
+		private Class<? extends IContainerBackend> type;
+		
+		private ContainerBackend(String name, Class<? extends IContainerBackend> type) {
+			this.name = name;
+			this.type = type;
+		}
+		
+		public static IContainerBackend createFor(String name) throws Exception {
+			for (ContainerBackend cb: values()) {
+				if (cb.name.equalsIgnoreCase(name)) return cb.type.newInstance();
+			}
+			return DockerEngine.type.newInstance();
+		}
+	}
+	
 	private ApplicationContext applicationContext;
+	
+	@Inject
+	protected Environment environment;
 	
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -46,16 +77,8 @@ public class ContainerBackendFactory extends AbstractFactoryBean<IContainerBacke
 
 	@Override
 	protected IContainerBackend createInstance() throws Exception {
-		try {
-			return tryCreate(DockerSwarmBackend.class);
-		} catch (Exception e) {
-			// Fall back to next backend type.
-		}
-		return tryCreate(DockerEngineBackend.class);
-	}
-
-	private IContainerBackend tryCreate(Class<? extends IContainerBackend> backendClass) throws Exception {
-		IContainerBackend backend = backendClass.newInstance();
+		String backendName = environment.getProperty(PROPERTY_CONTAINER_BACKEND);
+		IContainerBackend backend = ContainerBackend.createFor(backendName);
 		applicationContext.getAutowireCapableBeanFactory().autowireBean(backend);
 		backend.initialize();
 		return backend;

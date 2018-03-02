@@ -1,6 +1,8 @@
 package eu.openanalytics.shinyproxy.container.kubernetes;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 
 import eu.openanalytics.shinyproxy.ShinyProxyException;
@@ -29,6 +32,7 @@ import io.fabric8.kubernetes.api.model.VolumeMountBuilder;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.fabric8.kubernetes.client.dsl.LogWatch;
 
 public class KubernetesBackend extends AbstractContainerBackend<KubernetesContainerProxy> {
 
@@ -156,9 +160,15 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 	
 	@Override
 	public BiConsumer<File, File> getOutputAttacher(IContainerProxy proxy) {
-		//TODO
-//		LogWatch watcher = kubeClient.pods().inNamespace(kubeNamespace).withName(proxy.name).watchLog();
-		return super.getOutputAttacher(proxy);
+		return (stdOut, stdErr) -> {
+			try {
+				String namespace = getProperty(PROPERTY_NAMESPACE, proxy.getApp(), DEFAULT_NAMESPACE);
+				LogWatch watcher = kubeClient.pods().inNamespace(namespace).withName(proxy.getName()).watchLog();
+				IOUtils.copy(watcher.getOutput(), new FileOutputStream(stdOut));
+			} catch (IOException e) {
+				log.error("Error while attaching to container output", e);
+			}
+		};
 	}
 
 	@Override

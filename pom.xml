@@ -408,6 +408,7 @@
 						<exclude>**/*.yml</exclude>
 						<exclude>LICENSE</exclude>
 						<exclude>LICENSE_HEADER</exclude>
+						<exclude>Dockerfile</exclude>
 						<exclude>README.md</exclude>
 						<exclude>**/*.json</exclude>
 						<exclude>.gitignore</exclude>

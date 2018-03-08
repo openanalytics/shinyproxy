@@ -218,7 +218,7 @@ public abstract class AbstractContainerBackend<T extends AbstractContainerProxy>
 	}
 	
 	protected int allocatePort() {
-		int startPort = Integer.valueOf(getProperty(PROPERTY_PORT_RANGE_START));
+		int startPort = Integer.valueOf(getProperty(PROPERTY_PORT_RANGE_START, null, "20000"));
 		int maxPort = Integer.valueOf(getProperty(PROPERTY_PORT_RANGE_MAX, null, "-1"));
 		int nextPort = startPort;
 		while (occupiedPorts.contains(nextPort)) nextPort++;

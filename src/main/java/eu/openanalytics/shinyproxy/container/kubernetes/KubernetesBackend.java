@@ -157,7 +157,7 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 				.done();
 
 		proxy.setContainerId(proxy.getName());
-		proxy.setPod(kubeClient.resource(pod).waitUntilReady(20, TimeUnit.SECONDS));
+		proxy.setPod(kubeClient.resource(pod).waitUntilReady(60, TimeUnit.SECONDS));
 	}
 
 	@Override

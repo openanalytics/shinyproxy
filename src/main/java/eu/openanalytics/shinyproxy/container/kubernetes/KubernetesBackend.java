@@ -45,6 +45,8 @@ import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.SecurityContext;
+import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
@@ -121,11 +123,16 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 			envVars.add(new EnvVar(envString.substring(0, idx), envString.substring(idx + 1), null));
 		}
 		
+		SecurityContext security = new SecurityContextBuilder()
+				.withPrivileged(Boolean.valueOf(getProperty(PROPERTY_PRIVILEGED, proxy.getApp(), DEFAULT_PRIVILEGED)))
+				.build();
+				
 		ContainerBuilder containerBuilder = new ContainerBuilder()
 				.withImage(proxy.getApp().getDockerImage())
 				.withName("shiny-container")
 				.withPorts(containerPortBuilder.build())
 				.withVolumeMounts(volumeMounts)
+				.withSecurityContext(security)
 				.withEnv(envVars);
 
 		String imagePullPolicy = getProperty(PROPERTY_IMG_PULL_POLICY, proxy.getApp(), null);

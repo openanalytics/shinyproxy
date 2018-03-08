@@ -125,6 +125,7 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 				.withImage(proxy.getApp().getDockerImage())
 				.withName("shiny-container")
 				.withPorts(containerPortBuilder.build())
+				.withVolumeMounts(volumeMounts)
 				.withEnv(envVars);
 
 		String imagePullPolicy = getProperty(PROPERTY_IMG_PULL_POLICY, proxy.getApp(), null);
@@ -150,7 +151,7 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 				.endMetadata()
 				.withNewSpec()
 				.withContainers(Collections.singletonList(containerBuilder.build()))
-				.withVolumes(Arrays.asList(volumes))
+				.withVolumes(volumes)
 				.withImagePullSecrets(Arrays.asList(imagePullSecrets).stream()
 						.map(LocalObjectReference::new).collect(Collectors.toList()))
 				.endSpec()

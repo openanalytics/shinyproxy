@@ -50,6 +50,7 @@ public class DockerEngineBackend extends AbstractDockerBackend {
 		
 		hostConfigBuilder.dns(request.app.getDockerDns());
 		hostConfigBuilder.binds(getBindVolumes(request.app));
+		hostConfigBuilder.privileged(Boolean.valueOf(getProperty(PROPERTY_PRIVILEGED, request.app, DEFAULT_PRIVILEGED)));
 		
 		ContainerConfig containerConfig = ContainerConfig.builder()
 			    .hostConfig(hostConfigBuilder.build())

@@ -47,8 +47,6 @@ public abstract class AbstractDockerBackend extends AbstractContainerBackend<Doc
 	
 	private static final String PROPERTY_PREFIX = "shiny.proxy.docker.";
 
-	private static final String PROPERTY_CERT_PATH = "cert-path";
-	
 	private Logger log = Logger.getLogger(AbstractDockerBackend.class);
 	
 	protected DockerClient dockerClient;

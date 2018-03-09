@@ -56,9 +56,12 @@ public abstract class AbstractContainerBackend<T extends AbstractContainerProxy>
 	protected static final String PROPERTY_APP_PORT = "port";
 	protected static final String PROPERTY_PORT_RANGE_START = "port-range-start";
 	protected static final String PROPERTY_PORT_RANGE_MAX = "port-range-max";
+	protected static final String PROPERTY_PRIVILEGED = "privileged";
+	protected static final String PROPERTY_CERT_PATH = "cert-path";
 	
 	protected static final String DEFAULT_TARGET_PROTOCOL = "http";
 	protected static final String DEFAULT_TARGET_URL = DEFAULT_TARGET_PROTOCOL + "://localhost";
+	protected static final String DEFAULT_PRIVILEGED = "false";
 	
 	protected static final String ENV_VAR_SP_USER_NAME = "SHINYPROXY_USERNAME";
 	protected static final String ENV_VAR_SP_USER_GROUPS = "SHINYPROXY_USERGROUPS";
@@ -218,7 +221,7 @@ public abstract class AbstractContainerBackend<T extends AbstractContainerProxy>
 	}
 	
 	protected int allocatePort() {
-		int startPort = Integer.valueOf(getProperty(PROPERTY_PORT_RANGE_START));
+		int startPort = Integer.valueOf(getProperty(PROPERTY_PORT_RANGE_START, null, "20000"));
 		int maxPort = Integer.valueOf(getProperty(PROPERTY_PORT_RANGE_MAX, null, "-1"));
 		int nextPort = startPort;
 		while (occupiedPorts.contains(nextPort)) nextPort++;
@@ -243,23 +246,23 @@ public abstract class AbstractContainerBackend<T extends AbstractContainerProxy>
 	}
 	
 	protected String getProperty(String name, ShinyApp app, String defaultValue) {
-		return getProperty(name, null, String.class, defaultValue);
+		return getProperty(name, app, String.class, defaultValue);
 	}
 	
 	@SuppressWarnings("unchecked")
 	protected <E> E getProperty(String name, ShinyApp app, Class<E> type, E defaultValue) {
-		String key = getPropertyPrefix() + name;
 		E value = null;
 		if (app != null) {
 			if (type.equals(String[].class)) {
-				value = (E) app.getArray(key);
+				value = (E) app.getArray(name);
 			} else if (type.equals(Map.class)) {
-				value = (E) app.getMap(key);
+				value = (E) app.getMap(name);
 			} else {
-				value = (E) app.get(key);
+				value = (E) app.get(name);
 			}
 		}
 		if (value == null) {
+			String key = getPropertyPrefix() + name;
 			value = environment.getProperty(key, type, defaultValue);
 		}
 		return value;

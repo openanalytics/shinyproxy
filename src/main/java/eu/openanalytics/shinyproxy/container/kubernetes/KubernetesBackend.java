@@ -103,7 +103,7 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 	
 	@Override
 	protected void prepareProxy(KubernetesContainerProxy proxy, ContainerProxyRequest request) throws Exception {
-		proxy.setName(UUID.randomUUID().toString().replace("-", ""));
+		proxy.setName("sp" + UUID.randomUUID().toString().replace("-", ""));
 		proxy.setContainerId(proxy.getName());
 	}
 	

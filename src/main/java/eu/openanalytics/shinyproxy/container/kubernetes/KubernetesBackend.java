@@ -50,6 +50,8 @@ import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.SecurityContext;
 import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
@@ -101,7 +103,8 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 	
 	@Override
 	protected void prepareProxy(KubernetesContainerProxy proxy, ContainerProxyRequest request) throws Exception {
-		proxy.setName(UUID.randomUUID().toString());
+		proxy.setName(UUID.randomUUID().toString().replace("-", ""));
+		proxy.setContainerId(proxy.getName());
 	}
 	
 	@Override
@@ -126,11 +129,6 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 					.build();
 		}
 
-		ContainerPortBuilder containerPortBuilder = new ContainerPortBuilder().withContainerPort(getAppPort(proxy));
-		if (!isUseInternalNetwork()) {
-			containerPortBuilder.withHostPort(proxy.getPort());
-		}
-
 		List<EnvVar> envVars = new ArrayList<>();
 		for (String envString : buildEnv(proxy.getUserId(), proxy.getApp())) {
 			int idx = envString.indexOf('=');
@@ -145,7 +143,7 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 		ContainerBuilder containerBuilder = new ContainerBuilder()
 				.withImage(proxy.getApp().getDockerImage())
 				.withName("shiny-container")
-				.withPorts(containerPortBuilder.build())
+				.withPorts(new ContainerPortBuilder().withContainerPort(getAppPort(proxy)).build())
 				.withVolumeMounts(volumeMounts)
 				.withSecurityContext(security)
 				.withEnv(envVars);
@@ -169,18 +167,39 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 				.withApiVersion("v1")
 				.withKind("Pod")
 				.withNewMetadata()
-				.withName(proxy.getName())
-				.endMetadata()
+					.withName(proxy.getName())
+					.addToLabels("app", proxy.getName())
+					.endMetadata()
 				.withNewSpec()
-				.withContainers(Collections.singletonList(containerBuilder.build()))
-				.withVolumes(volumes)
-				.withImagePullSecrets(Arrays.asList(imagePullSecrets).stream()
+					.withContainers(Collections.singletonList(containerBuilder.build()))
+					.withVolumes(volumes)
+					.withImagePullSecrets(Arrays.asList(imagePullSecrets).stream()
 						.map(LocalObjectReference::new).collect(Collectors.toList()))
-				.endSpec()
+					.endSpec()
 				.done();
+		proxy.setPod(kubeClient.resource(pod).waitUntilReady(600, TimeUnit.SECONDS));
 
-		proxy.setContainerId(proxy.getName());
-		proxy.setPod(kubeClient.resource(pod).waitUntilReady(60, TimeUnit.SECONDS));
+		if (!isUseInternalNetwork()) {
+			// If SP runs outside the cluster, a NodePort service is needed to access the pod externally.
+			Service service = kubeClient.services().inNamespace(kubeNamespace).createNew()
+					.withApiVersion("v1")
+					.withKind("Service")
+					.withNewMetadata()
+						.withName(proxy.getName() + "service")
+						.endMetadata()
+					.withNewSpec()
+						.addToSelector("app", proxy.getName())
+						.withType("NodePort")
+						.withPorts(new ServicePortBuilder()
+								.withPort(getAppPort(proxy))
+								.build())
+						.endSpec()
+					.done();
+			proxy.setService(kubeClient.resource(service).waitUntilReady(600, TimeUnit.SECONDS));
+			
+			releasePort(proxy.getPort());
+			proxy.setPort(proxy.getService().getSpec().getPorts().get(0).getNodePort());
+		}
 	}
 
 	@Override
@@ -199,6 +218,7 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 	@Override
 	protected void doStopProxy(KubernetesContainerProxy proxy) throws Exception {
 		kubeClient.pods().delete(getProxy(proxy).getPod());
+		kubeClient.services().delete(getProxy(proxy).getService());
 	}
 	
 	@Override

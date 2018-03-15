@@ -22,10 +22,12 @@ package eu.openanalytics.shinyproxy.container.kubernetes;
 
 import eu.openanalytics.shinyproxy.container.AbstractContainerProxy;
 import io.fabric8.kubernetes.api.model.Pod;
+import io.fabric8.kubernetes.api.model.Service;
 
 public class KubernetesContainerProxy extends AbstractContainerProxy {
 
 	private Pod pod;
+	private Service service;
 	
 	public Pod getPod() {
 		return pod;
@@ -33,5 +35,13 @@ public class KubernetesContainerProxy extends AbstractContainerProxy {
 	
 	public void setPod(Pod pod) {
 		this.pod = pod;
+	}
+	
+	public Service getService() {
+		return service;
+	}
+	
+	public void setService(Service service) {
+		this.service = service;
 	}
 }

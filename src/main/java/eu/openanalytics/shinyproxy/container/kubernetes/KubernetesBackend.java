@@ -43,6 +43,7 @@ import eu.openanalytics.shinyproxy.ShinyProxyException;
 import eu.openanalytics.shinyproxy.container.AbstractContainerBackend;
 import eu.openanalytics.shinyproxy.container.ContainerProxyRequest;
 import eu.openanalytics.shinyproxy.container.IContainerProxy;
+import eu.openanalytics.shinyproxy.util.Utils;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
 import io.fabric8.kubernetes.api.model.ContainerPortBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
@@ -66,11 +67,13 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 	private static final String PROPERTY_PREFIX = "shiny.proxy.kubernetes.";
 	
 	private static final String PROPERTY_NAMESPACE = "namespace";
+	private static final String PROPERTY_API_VERSION = "api-version";
 	private static final String PROPERTY_IMG_PULL_POLICY = "image-pull-policy";
 	private static final String PROPERTY_IMG_PULL_SECRETS = "image-pull-secrets";
 	private static final String PROPERTY_IMG_PULL_SECRET = "image-pull-secret";
 	
 	private static final String DEFAULT_NAMESPACE = "default";
+	private static final String DEFAULT_API_VERSION = "v1";
 	
 	private static Logger log = Logger.getLogger(KubernetesBackend.class);
 	
@@ -110,6 +113,7 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 	@Override
 	protected void doStartProxy(KubernetesContainerProxy proxy) throws Exception {
 		String kubeNamespace = getProperty(PROPERTY_NAMESPACE, proxy.getApp(), DEFAULT_NAMESPACE);
+		String apiVersion = getProperty(PROPERTY_API_VERSION, proxy.getApp(), DEFAULT_API_VERSION);
 		
 		String[] volumeStrings = Optional.ofNullable(proxy.getApp().getDockerVolumes()).orElse(new String[] {});
 		Volume[] volumes = new Volume[volumeStrings.length];
@@ -164,7 +168,7 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 		}
 		
 		Pod pod = kubeClient.pods().inNamespace(kubeNamespace).createNew()
-				.withApiVersion("v1")
+				.withApiVersion(apiVersion)
 				.withKind("Pod")
 				.withNewMetadata()
 					.withName(proxy.getName())
@@ -182,7 +186,7 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 		if (!isUseInternalNetwork()) {
 			// If SP runs outside the cluster, a NodePort service is needed to access the pod externally.
 			Service service = kubeClient.services().inNamespace(kubeNamespace).createNew()
-					.withApiVersion("v1")
+					.withApiVersion(apiVersion)
 					.withKind("Service")
 					.withNewMetadata()
 						.withName(proxy.getName() + "service")
@@ -195,7 +199,16 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 								.build())
 						.endSpec()
 					.done();
-			proxy.setService(kubeClient.resource(service).waitUntilReady(600, TimeUnit.SECONDS));
+			
+			// Retry, because if this is done too fast, an 'endpoint not found' exception will be thrown.
+			Utils.retry(i -> {
+				try {
+					proxy.setService(kubeClient.resource(service).waitUntilReady(600, TimeUnit.SECONDS));
+				} catch (Exception e) {
+					return false;
+				}
+				return true;
+			}, 5, 1000);
 			
 			releasePort(proxy.getPort());
 			proxy.setPort(proxy.getService().getSpec().getPorts().get(0).getNodePort());
@@ -206,10 +219,12 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 	protected void calculateTargetURL(KubernetesContainerProxy proxy) throws Exception {
 		String protocol = getProperty(PROPERTY_CONTAINER_PROTOCOL, null, DEFAULT_TARGET_PROTOCOL);
 		String hostName = proxy.getPod().getStatus().getHostIP();
+		int port = proxy.getPort();
+		
 		if (isUseInternalNetwork()) {
 			hostName = proxy.getPod().getStatus().getPodIP();
+			port = getAppPort(proxy);
 		}
-		int port = proxy.getPort();
 		
 		String target = String.format("%s://%s:%d", protocol, hostName, port);
 		proxy.setTarget(target);

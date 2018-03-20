@@ -73,7 +73,11 @@ public class SimpleAuthenticationBackend implements IAuthenticationBackend {
 		if (userName == null) return null;
 		String password = environment.getProperty(String.format("shiny.proxy.users[%d].password", index));
 		String[] roles = environment.getProperty(String.format("shiny.proxy.users[%d].groups", index), String[].class);
-		roles = Arrays.stream(roles).map(s -> s.toUpperCase()).toArray(i -> new String[i]);
+		if (roles == null) {
+			roles = new String[0];
+		} else {
+			roles = Arrays.stream(roles).map(s -> s.toUpperCase()).toArray(i -> new String[i]);
+		}
 		return new SimpleUser(userName, password, roles);
 	}
 	

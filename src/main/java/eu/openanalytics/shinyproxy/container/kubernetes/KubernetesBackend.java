@@ -81,6 +81,8 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 	
 	@Override
 	public void initialize() throws ShinyProxyException {
+		super.initialize();
+		
 		ConfigBuilder configBuilder = new ConfigBuilder();
 		
 		String masterUrl = getProperty(PROPERTY_URL);

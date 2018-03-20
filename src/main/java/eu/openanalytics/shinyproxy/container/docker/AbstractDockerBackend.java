@@ -53,6 +53,8 @@ public abstract class AbstractDockerBackend extends AbstractContainerBackend<Doc
 	
 	@Override
 	public void initialize() throws ShinyProxyException {
+		super.initialize();
+		
 		DefaultDockerClient.Builder builder = null;
 		
 		try {

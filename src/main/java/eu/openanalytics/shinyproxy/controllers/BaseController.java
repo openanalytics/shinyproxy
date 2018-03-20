@@ -86,7 +86,7 @@ public abstract class BaseController {
 	}
 	
 	protected void prepareMap(ModelMap map, HttpServletRequest request) {
-		map.put("title", environment.getProperty("shiny.proxy.title"));
+		map.put("title", environment.getProperty("shiny.proxy.title", "ShinyProxy"));
 		map.put("logo", resolveImageURI(environment.getProperty("shiny.proxy.logo-url")));
 		map.put("showNavbar", !Boolean.valueOf(environment.getProperty("shiny.proxy.hide-navbar")));
 		

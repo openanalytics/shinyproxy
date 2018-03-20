@@ -71,7 +71,7 @@ public class AppController extends BaseController {
 		queryString = (queryString == null) ? "" : "?" + queryString;
 		
 		String contextPath = ShinyProxyApplication.getContextPath(environment);
-		String containerPath = contextPath + "/" + mapping + environment.getProperty("shiny.proxy.landing-page") + queryString;
+		String containerPath = contextPath + "/" + mapping + environment.getProperty("shiny.proxy.landing-page", "/") + queryString;
 		return containerPath;
 	}
 }

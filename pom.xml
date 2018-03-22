@@ -450,6 +450,7 @@
             	       <algorithm>SHA-256</algorithm>	   
                        <algorithm>MD5</algorithm>
                    </algorithms>
+                   <attachChecksums>true</attachChecksums>
         		</configuration>
 			</plugin>
 		</plugins>

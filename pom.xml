@@ -100,6 +100,11 @@
     		<artifactId>docker-client</artifactId>
     		<version>8.6.2</version>
     	</dependency>
+		<dependency>
+			<groupId>io.fabric8</groupId>
+			<artifactId>kubernetes-client</artifactId>
+			<version>3.1.8</version>
+		</dependency>
     	<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>bootstrap</artifactId>
@@ -403,6 +408,7 @@
 						<exclude>**/*.yml</exclude>
 						<exclude>LICENSE</exclude>
 						<exclude>LICENSE_HEADER</exclude>
+						<exclude>Dockerfile</exclude>
 						<exclude>README.md</exclude>
 						<exclude>**/*.json</exclude>
 						<exclude>.gitignore</exclude>

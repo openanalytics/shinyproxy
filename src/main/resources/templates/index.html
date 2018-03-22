@@ -2,7 +2,7 @@
 
     ShinyProxy
 
-    Copyright (C) 2016-2017 Open Analytics
+    Copyright (C) 2016-2018 Open Analytics
 
     ===========================================================================
 
@@ -41,7 +41,7 @@
 			<li th:each="app: ${apps}">
 				<a th:href="@{/app/}+${app.name}" th:text="${app.displayName == null} ? ${app.name} : ${app.displayName}"></a>
 				<br th:if="${app.description != null}" />
-				<span th:if="${app.description != null}" th:text="${app.description}"></span>
+				<span th:if="${app.description != null}" th:utext="${app.description}"></span>
 			</li>
 		</ul>
 	</div>
@@ -56,7 +56,7 @@
 					<div class="media-body">
 						<a th:href="@{/app/}+${app.name}" th:text="${app.displayName == null} ? ${app.name} : ${app.displayName}"></a>
 						<br th:if="${app.description != null}" />
-						<span th:if="${app.description != null}" th:text="${app.description}"></span>
+						<span th:if="${app.description != null}" th:utext="${app.description}"></span>
 					</div>
 				</div>
 			</div>

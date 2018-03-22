@@ -18,49 +18,27 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
-body > div { padding-top: 10px; }
-body > div#navbar { padding-top: 0px; }
+package eu.openanalytics.shinyproxy.controllers;
 
-#navbar + div { padding-top: 50px; }
-#navbar + iframe { padding-top: 50px; }
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
 
-@media screen and (max-width: 768px) {
-   #navbar + div { padding-top: 150px; }
-   #navbar + iframe { padding-top: 150px; }
-}
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestMapping;
 
-@media screen and (max-width: 360px) {
-    #navbar + div { padding-top: 200px; }
-    #navbar + iframe { padding-top: 200px; }
-}
+import eu.openanalytics.shinyproxy.services.ProxyService;
 
-#applist {
-	margin-top: 10px;
-}
+@Controller
+public class AdminController extends BaseController {
 
-#admin {
-	margin-left: 10px;
-}
+	@Inject
+	ProxyService proxyService;
 
-#admin th, td {
-	padding: 5px;
-}
-
-#error {
-	padding-left: 15px;
-}
-
-.loading {
-	display: none;
-	position: fixed;
-	top: 150px;
-	width: 100%;
-	z-index: 9999;
-	background: url(../img/loading.gif) center no-repeat #fff;
-}
-
-.loading-txt {
-	text-align: center;
-	font-size: 24px;
-	margin-top: -50px;
+	@RequestMapping("/admin")
+	String admin(ModelMap map, HttpServletRequest request) {
+		prepareMap(map, request);
+		map.put("proxies", proxyService.listProxies());
+		return "admin";
+	}
 }

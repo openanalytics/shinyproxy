@@ -44,15 +44,15 @@
 	<div class="container">
 		<div th:if="${@authenticationBackend.name != 'social'}">
 			<form class="form-signin" action="login" method="POST">
-				<h2 class="form-signin-heading">sourcewerk Analytics Server</h2>
+				<h2 class="form-signin-heading">Please sign in:</h2>
 				<div class="alert alert-danger" th:if="${error}">
-	  				<strong>Anmeldung fehlgeschlagen!</strong><br/><span th:text="${error}"></span>.
+	  				<strong>Could not sign in!</strong><br/><span th:text="${error}"></span>.
 				</div>
 				<label for="username" class="sr-only">Email address</label> 
-				<input name="username" id="username" class="form-control" placeholder="Benutzername" required="required" autofocus="autofocus"></input> 
+				<input name="username" id="username" class="form-control" placeholder="User name" required="required" autofocus="autofocus"></input> 
 				<label for="password" class="sr-only">Password</label>
-				<input name="password" type="password" id="password" class="form-control" placeholder="Passwort" required="required"></input>
-				<button class="btn btn-lg btn-primary btn-block" type="submit">Anmelden</button>
+				<input name="password" type="password" id="password" class="form-control" placeholder="Password" required="required"></input>
+				<button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
 			</form>
 		</div>
 
@@ -60,7 +60,7 @@
 			<br/><h2 class="form-signin form-signin-heading">Please sign in:</h2>
 			<form th:each="provider : ${@socialProviders}" class="form-signin" method="POST" th:action="@{/signin/__${provider}__}">
 				<button th:class="@{btn btn-block btn-social btn-__${provider}__}" type="submit">
-					<span th:class="@{fa fa-__${provider}__}"></span> Anmelden mit <span th:text="${provider.label()}"></span>
+					<span th:class="@{fa fa-__${provider}__}"></span> Sign in with <span th:text="${provider.label()}"></span>
 				</button>
 			</form>
 		</div>

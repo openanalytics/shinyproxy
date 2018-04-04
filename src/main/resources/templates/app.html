@@ -59,7 +59,7 @@
 			var source = $("#shinyframe").attr("src");
 			if (source == "") {
 				$(".loading").show();
-				$.post(window.location.pathname, function(containerPath) {
+				$.post(window.location.pathname + window.location.search, function(containerPath) {
 					$("#shinyframe").attr("src", containerPath);
 					$(".loading").fadeOut("slow");
 				}).fail(function(request) {

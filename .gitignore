@@ -1,3 +1,6 @@
 /target/
 /shinyproxy.log
 /application.yml
+
+/build/*.jar
+/build/Dockerfile

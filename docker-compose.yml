@@ -1,0 +1,13 @@
+version: '2'
+services:
+  backend:
+    network_mode: "bridge"
+    container_name: shinyproxy
+    image: shinyproxy_image
+    ports:
+      - "8080:8080"
+    volumes:
+      - ${WINDIR}.:/app
+    stdin_open: true
+    command: /opt/entry.sh
+    

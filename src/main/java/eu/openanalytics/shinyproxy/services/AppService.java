@@ -121,8 +121,7 @@ public class AppService {
 				.filter(k -> k.startsWith(key))
 				.map(k -> get(k))
 				.forEach(v -> {
-					String[] fields = StringUtils.commaDelimitedListToStringArray(v);
-					for (String f: fields) values.add(f.trim());
+					values.add(v.trim());
 				});
 			return values.toArray(new String[values.size()]);
 		}

@@ -72,10 +72,6 @@ public class AppService {
 			return get("logo-url");
 		}
 		
-		public String getThumbImage() {
-			return get("thumb-image");
-		}
-		
 		public String[] getGroups() {
 			return getArray("groups");
 		}

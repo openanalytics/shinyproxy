@@ -18,36 +18,36 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
-
 package eu.openanalytics.shinyproxy;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
-import org.thymeleaf.spring4.SpringTemplateEngine;
-import org.thymeleaf.templateresolver.FileTemplateResolver;
-
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.thymeleaf.templateresolver.FileTemplateResolver;
+
 @Configuration
-public class TemplateResolverConfig {
+public class TemplateResolverConfig extends WebMvcConfigurerAdapter {
 
     @Inject
-    Environment environment;
+    private Environment environment;
 
-    @Autowired
-    private SpringTemplateEngine templateEngine;
-
-    @PostConstruct
-    public void extension() {
-        FileTemplateResolver resolver = new FileTemplateResolver();
-        resolver.setPrefix(environment.getProperty("shiny.proxy.template_path")+"/");
-        resolver.setSuffix(".html");
-        resolver.setTemplateMode("HTML5");
-        resolver.setOrder(templateEngine.getTemplateResolvers().size());
-        resolver.setCacheable(false);
-        templateEngine.addTemplateResolver(resolver);
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/assets/**")
+                .addResourceLocations("file:" + environment.getProperty("shiny.proxy.template-path") + "/assets/");
     }
 
+    @Bean
+    public FileTemplateResolver templateResolver() {
+        FileTemplateResolver resolver = new FileTemplateResolver();
+        resolver.setPrefix(environment.getProperty("shiny.proxy.template-path") + "/");
+        resolver.setSuffix(".html");
+        resolver.setTemplateMode("HTML5");
+        resolver.setCacheable(false);
+        return resolver;
+    }
 }

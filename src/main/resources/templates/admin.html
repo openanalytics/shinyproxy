@@ -2,7 +2,7 @@
 
     ShinyProxy
 
-    Copyright (C) 2016-2017 Open Analytics
+    Copyright (C) 2016-2018 Open Analytics
 
     ===========================================================================
 
@@ -41,19 +41,17 @@
     	<table border="1">
     		<tr>
     			<th>Name</th>
-    			<th>Port</th>
-    			<th>Username</th>
+    			<th>User</th>
     			<th>Appname</th>
-    			<th>Container Id</th>
+    			<th>Target URL</th>
     			<th>Uptime</th>
     		</tr>
     		<tr th:each="proxy: ${proxies}">
     			<td th:text="${proxy.name}"></td>
-    			<td th:text="${proxy.port}"></td>
-    			<td th:text="${proxy.userName}"></td>
-    			<td th:text="${proxy.appName}"></td>
-    			<td th:text="${proxy.containerId}"></td>
-    			<td th:text="${proxy.uptime()}"></td>
+    			<td th:text="${proxy.userId}"></td>
+    			<td th:text="${proxy.app.name}"></td>
+    			<td th:text="${proxy.target}"></td>
+    			<td th:text="${proxy.uptime}"></td>
     		</tr>
     	</table>
     </div>

@@ -37,7 +37,7 @@ shiny:
     description: Application which demonstrates the basics of a Shiny app
     docker-cmd: ["R", "-e", "shinyproxy::run_01_hello()"]
     docker-image: openanalytics/shinyproxy-demo
-    groups: scientists, mathematicians
+    groups: [scientists, mathematicians]
     # when you want add a thumbnail please add inside /thumbnail/ directory
     thumb-image: 01_hello.png
   - name: 06_tabsets

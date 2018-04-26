@@ -2,7 +2,7 @@
 
     ShinyProxy
 
-    Copyright (C) 2016-2017 Open Analytics
+    Copyright (C) 2016-2018 Open Analytics
 
     ===========================================================================
 
@@ -36,7 +36,7 @@
 	<div th:replace="../fragments/navbar :: navbar"></div>
 	
 	<!-- content -->
-    <iframe id="shinyframe" th:src="${container}" width="100%"></iframe>
+    <iframe id="shinyframe" th:src="${container}" width="100%" frameBorder="0"></iframe>
     <div class="loading"><div class="loading-txt">Launching <span th:text="${appTitle}"></span>...</div></div>
     
 	<script type="text/javascript" th:inline="javascript">
@@ -59,7 +59,7 @@
 			var source = $("#shinyframe").attr("src");
 			if (source == "") {
 				$(".loading").show();
-				$.post(window.location.pathname, function(containerPath) {
+				$.post(window.location.pathname + window.location.search, function(containerPath) {
 					$("#shinyframe").attr("src", containerPath);
 					$(".loading").fadeOut("slow");
 				}).fail(function(request) {

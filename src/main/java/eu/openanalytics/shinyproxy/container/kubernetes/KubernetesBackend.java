@@ -234,8 +234,8 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 	
 	@Override
 	protected void doStopProxy(KubernetesContainerProxy proxy) throws Exception {
-		kubeClient.pods().delete(getProxy(proxy).getPod());
-		kubeClient.services().delete(getProxy(proxy).getService());
+		kubeClient.pods().delete(proxy.getPod());
+		if (proxy.getService() != null) kubeClient.services().delete(proxy.getService());
 	}
 	
 	@Override
@@ -259,10 +259,5 @@ public class KubernetesBackend extends AbstractContainerBackend<KubernetesContai
 	@Override
 	protected Logger getLog() {
 		return log;
-	}
-	
-	protected KubernetesContainerProxy getProxy(IContainerProxy proxy) {
-		if (proxy instanceof KubernetesContainerProxy) return (KubernetesContainerProxy) proxy;
-		else throw new IllegalArgumentException("Not a valid Kubernetes proxy: " + proxy);
 	}
 }

@@ -31,7 +31,6 @@ import javax.inject.Inject;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 @ConfigurationProperties(prefix = "shiny")
 @Service
@@ -121,8 +120,7 @@ public class AppService {
 				.filter(k -> k.startsWith(key))
 				.map(k -> get(k))
 				.forEach(v -> {
-					String[] fields = StringUtils.commaDelimitedListToStringArray(v);
-					for (String f: fields) values.add(f.trim());
+					values.add(v.trim());
 				});
 			return values.toArray(new String[values.size()]);
 		}

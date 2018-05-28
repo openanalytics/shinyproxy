@@ -38,6 +38,10 @@ body > div#navbar { padding-top: 0px; }
 	margin-top: 10px;
 }
 
+#shinyframe {
+  border: none;
+}
+
 #admin {
 	margin-left: 10px;
 }

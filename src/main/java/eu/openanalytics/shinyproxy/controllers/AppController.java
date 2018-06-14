@@ -20,7 +20,6 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Controller;
@@ -29,30 +28,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import eu.openanalytics.shinyproxy.ShinyProxyApplication;
-import eu.openanalytics.shinyproxy.services.AppService;
-import eu.openanalytics.shinyproxy.services.ProxyService;
+import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 
 @Controller
 public class AppController extends BaseController {
-
-	@Inject
-	ProxyService proxyService;
-	
-	@Inject
-	AppService appService;
 
 	@RequestMapping(value="/app/*", method=RequestMethod.GET)
 	String app(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
 		
-		String mapping = proxyService.getMapping(request, getUserName(request), getAppName(request), false);
-		String contextPath = ShinyProxyApplication.getContextPath(environment);
+		Proxy proxy = findUserProxy(request);
+		String mapping = getProxyEndpoint(proxy);
 
 		map.put("appTitle", getAppTitle(request));
 		map.put("container", buildContainerPath(mapping, request));
 		map.put("heartbeatRate", environment.getProperty("shiny.proxy.heartbeat-rate", "10000"));
-		map.put("heartbeatPath", contextPath + "/heartbeat");
+		map.put("heartbeatPath", getContextPath() + "heartbeat");
 		
 		return "app";
 	}
@@ -60,7 +52,13 @@ public class AppController extends BaseController {
 	@RequestMapping(value="/app/*", method=RequestMethod.POST)
 	@ResponseBody
 	String startApp(HttpServletRequest request) {
-		String mapping = proxyService.getMapping(request, getUserName(request), getAppName(request), true);
+		Proxy proxy = findUserProxy(request);
+		if (proxy == null) {
+			String specId = getAppName(request);
+			ProxySpec spec = proxySpecService.getSpec(specId);
+			proxy = proxyService.startProxy(spec);
+		}
+		String mapping = getProxyEndpoint(proxy);
 		return buildContainerPath(mapping, request);
 	}
 	
@@ -70,8 +68,7 @@ public class AppController extends BaseController {
 		String queryString = request.getQueryString();
 		queryString = (queryString == null) ? "" : "?" + queryString;
 		
-		String contextPath = ShinyProxyApplication.getContextPath(environment);
-		String containerPath = contextPath + "/" + mapping + environment.getProperty("shiny.proxy.landing-page", "/") + queryString;
+		String containerPath = getContextPath() + mapping + environment.getProperty("shiny.proxy.landing-page", "/") + queryString;
 		return containerPath;
 	}
 }

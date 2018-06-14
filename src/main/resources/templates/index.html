@@ -26,10 +26,10 @@
 <head lang="en">
 	<title th:text="${title}"></title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link rel="stylesheet" media="screen" th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"/>
+	<link rel="stylesheet" media="screen" th:href="@{${bootstrapCss}}" />
 	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
-	<script th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
-	<script th:src="@{/webjars/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
+	<script th:src="@{${jqueryJs}}"></script>
+	<script th:src="@{${bootstrapJs}}"></script>
 </head>
 <body>
 	<!-- navigation bar -->
@@ -39,7 +39,7 @@
 	<div th:if="${!displayAppLogos}" id="applist">
 		<ul>
 			<li th:each="app: ${apps}">
-				<a th:href="@{/app/}+${app.name}" th:text="${app.displayName == null} ? ${app.name} : ${app.displayName}"></a>
+				<a th:href="@{/app/}+${app.id}" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
 				<br th:if="${app.description != null}" />
 				<span th:if="${app.description != null}" th:utext="${app.description}"></span>
 			</li>

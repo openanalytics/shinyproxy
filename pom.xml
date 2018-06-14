@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>eu.openanalytics</groupId>
 	<artifactId>shinyproxy</artifactId>
-	<version>1.1.1</version>
+	<version>1.2.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>shinyproxy</name>
@@ -19,30 +19,15 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.5.2.RELEASE</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<version>2.0.0.RELEASE</version>
+		<relativePath />
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
 	</properties>
-
-	<repositories>
-		<repository>
-			<id>clojars</id>
-			<url>http://clojars.org/repo/</url>
-		</repository>
-		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/libs-milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-
+	
 	<distributionManagement>
 		<snapshotRepository>
 			<id>oa-nexus-snapshots</id>
@@ -55,161 +40,21 @@
 			<url>http://nexus.openanalytics.eu/nexus/content/repositories/releases</url>
 		</repository>
 	</distributionManagement>
-
+	
+	<repositories>
+		<repository>
+			<id>oa-nexus-snapshots</id>
+			<name>OpenAnalytics Snapshots Repository</name>
+			<url>http://nexus.openanalytics.eu/nexus/content/repositories/snapshots</url>
+		</repository>
+	</repositories>
+	
 	<dependencies>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+			<groupId>eu.openanalytics</groupId>
+			<artifactId>containerproxy</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>org.thymeleaf.extras</groupId>
-			<artifactId>thymeleaf-extras-springsecurity4</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-			<exclusions>
-        		<exclusion>
-            		<groupId>org.springframework.boot</groupId>
-            		<artifactId>spring-boot-starter-tomcat</artifactId>
-        		</exclusion>
-    		</exclusions>
-    	</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-websocket</artifactId>
-		</dependency>
-    	<dependency>
-    		<groupId>org.springframework.boot</groupId>
-    		<artifactId>spring-boot-starter-mail</artifactId>
-    	</dependency>
- 		<dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-messaging</artifactId>
-        </dependency>
-       	<dependency>
-	        <groupId>org.springframework.ldap</groupId>
-	        <artifactId>spring-ldap-core</artifactId>
-	    </dependency>
-    	<dependency>
-    		<groupId>com.spotify</groupId>
-    		<artifactId>docker-client</artifactId>
-    		<version>8.6.2</version>
-    	</dependency>
-		<dependency>
-			<groupId>io.fabric8</groupId>
-			<artifactId>kubernetes-client</artifactId>
-			<version>3.1.8</version>
-		</dependency>
-    	<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>bootstrap</artifactId>
-			<version>3.3.6</version>
-		</dependency>
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>jquery</artifactId>
-			<version>2.2.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-jdbc</artifactId>
-		</dependency>
-    	<dependency>
-        	<groupId>org.springframework.boot</groupId>
-        	<artifactId>spring-boot-starter-security</artifactId>
-    	</dependency>
-    	<dependency>
-        	<groupId>org.springframework.security</groupId>
-        	<artifactId>spring-security-ldap</artifactId>
-    	</dependency>
-    	<dependency>
-        	<groupId>org.springframework.security.oauth</groupId>
-        	<artifactId>spring-security-oauth2</artifactId>
-    	</dependency>
-    	<dependency>
-		    <groupId>org.springframework.social</groupId>
-		    <artifactId>spring-social-core</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>org.springframework.social</groupId>
-		    <artifactId>spring-social-security</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>org.springframework.social</groupId>
-		    <artifactId>spring-social-web</artifactId>
-		</dependency>
-        <dependency>
-            <groupId>org.springframework.social</groupId>
-            <artifactId>spring-social-twitter</artifactId>
-        </dependency>
-		<dependency>
-		  <groupId>org.springframework.social</groupId>
-		  <artifactId>spring-social-facebook</artifactId>
-		</dependency>
-		<dependency>
-		  <groupId>org.springframework.social</groupId>
-		  <artifactId>spring-social-linkedin</artifactId>
-		</dependency>
-		<dependency>
-		  <groupId>org.springframework.social</groupId>
-		  <artifactId>spring-social-github</artifactId>
-		  <version>1.0.0.M4</version>
-		</dependency>
-		<dependency>
-		  <groupId>org.springframework.social</groupId>
-		  <artifactId>spring-social-google</artifactId>
-		  <version>1.0.0.RELEASE</version>
-		</dependency>
-		<dependency>
-            <groupId>org.keycloak</groupId>
-            <artifactId>keycloak-undertow-adapter</artifactId>
-            <version>3.0.0.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.keycloak</groupId>
-            <artifactId>keycloak-spring-security-adapter</artifactId>
-            <version>3.0.0.Final</version>
-        </dependency>
-    	<dependency>
-        	<groupId>org.apache.directory.server</groupId>
-        	<artifactId>apacheds-server-jndi</artifactId>
-        	<version>1.5.5</version>
-    	</dependency>				 		
-    	<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-    	<dependency>
-    		<groupId>org.springframework.boot</groupId>
-    		<artifactId>spring-boot-starter-undertow</artifactId>
-    	</dependency>
-    	<dependency>
-    		<groupId>io.undertow</groupId>
-    		<artifactId>undertow-core</artifactId>
-    	</dependency>
-    	<dependency>
-    		<groupId>io.undertow</groupId>
-    		<artifactId>undertow-servlet</artifactId>
-    	</dependency>
-    	<dependency>
-    		<groupId>io.undertow</groupId>
-    		<artifactId>undertow-websockets-jsr</artifactId>
-    	</dependency>
-    	<dependency>
-    		<groupId>monetdb</groupId>
-    		<artifactId>monetdb-jdbc</artifactId>
-    		<version>2.24</version>
-    	</dependency>
-    	<dependency>
-    		<groupId>com.h2database</groupId>
-    		<artifactId>h2</artifactId>
-    	</dependency>
 	</dependencies>
 
 	<build>
@@ -217,11 +62,18 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<executable>true</executable>
-				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+						<configuration>
+							<mainClass>eu.openanalytics.containerproxy.ContainerProxyApplication</mainClass>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
-
+			
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>rpm-maven-plugin</artifactId>
@@ -237,7 +89,7 @@
 		        </executions>
 				-->
 				<configuration>
-					<license>(c) Copyright Open Analytics NV, 2016-2018 - Apache License 2.0</license>
+					<license>(c) Copyright Open Analytics NV, 2016-2017 - Apache License 2.0</license>
 					<release>1.el7</release>
 					<group>Development/Tools</group>
 					<packager>Open Analytics</packager>

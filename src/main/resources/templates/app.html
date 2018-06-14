@@ -26,10 +26,10 @@
 <head lang="en">
 	<title th:text="${title}"></title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link rel="stylesheet" media="screen" th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"/>
+	<link rel="stylesheet" media="screen" th:href="@{${bootstrapCss}}" />
 	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
-	<script th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
-	<script th:src="@{/webjars/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
+	<script th:src="@{${jqueryJs}}"></script>
+	<script th:src="@{${bootstrapJs}}"></script>
 </head>
 <body>
 	<!-- navigation bar -->
@@ -55,7 +55,7 @@
 		};
 		heartbeat();
 		
-		$(window).load(function() {
+		$(window).on('load', function() {
 			var source = $("#shinyframe").attr("src");
 			if (source == "") {
 				$(".loading").show();

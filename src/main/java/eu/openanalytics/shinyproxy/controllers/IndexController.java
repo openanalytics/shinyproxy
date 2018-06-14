@@ -21,17 +21,15 @@
 package eu.openanalytics.shinyproxy.controllers;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import eu.openanalytics.shinyproxy.services.AppService.ShinyApp;
+import eu.openanalytics.containerproxy.model.spec.ProxySpec;
  
 @Controller
 public class IndexController extends BaseController {
@@ -40,17 +38,17 @@ public class IndexController extends BaseController {
     String index(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
 		
-		List<ShinyApp> apps = userService.getAccessibleApps(SecurityContextHolder.getContext().getAuthentication());
-		map.put("apps", apps.toArray());
+		ProxySpec[] apps = proxySpecService.getSpecs().stream().filter(s -> userService.canAccess(s)).toArray(i -> new ProxySpec[i]);
+		map.put("apps", apps);
 
-		Map<ShinyApp, String> appLogos = new HashMap<>();
+		Map<ProxySpec, String> appLogos = new HashMap<>();
 		map.put("appLogos", appLogos);
 		
 		boolean displayAppLogos = false;
-		for (ShinyApp app: apps) {
-			if (app.getLogoUrl() != null) {
+		for (ProxySpec app: apps) {
+			if (app.getLogoURL() != null) {
 				displayAppLogos = true;
-				appLogos.put(app, resolveImageURI(app.getLogoUrl()));
+				appLogos.put(app, resolveImageURI(app.getLogoURL()));
 			}
 		}
 		map.put("displayAppLogos", displayAppLogos);

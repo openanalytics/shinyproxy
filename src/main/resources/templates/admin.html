@@ -26,32 +26,30 @@
 <head lang="en">
 	<title th:text="${title}"></title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link rel="stylesheet" media="screen" th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"/>
+	<link rel="stylesheet" media="screen" th:href="@{${bootstrapCss}}" />
 	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
-	<script th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
-	<script th:src="@{/webjars/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
+	<script th:src="@{${jqueryJs}}"></script>
+	<script th:src="@{${bootstrapJs}}"></script>
 </head>
 <body>
-	<!-- navigation bar -->
 	<div th:replace="../fragments/navbar :: navbar"></div>
 	
-	<!-- content -->
     <div id="admin">
-    	<h3>Container Activity</h3>
+    	<h3>Active Proxies</h3>
     	<table border="1">
     		<tr>
-    			<th>Name</th>
+    			<th>ID</th>
     			<th>User</th>
     			<th>Appname</th>
-    			<th>Target URL</th>
+    			<th>Endpoint</th>
     			<th>Uptime</th>
     		</tr>
     		<tr th:each="proxy: ${proxies}">
-    			<td th:text="${proxy.name}"></td>
+    			<td th:text="${proxy.id}"></td>
     			<td th:text="${proxy.userId}"></td>
-    			<td th:text="${proxy.app.name}"></td>
-    			<td th:text="${proxy.target}"></td>
-    			<td th:text="${proxy.uptime}"></td>
+    			<td th:text="${proxy.spec.id}"></td>
+    			<td th:text="${proxy.targets}"></td>
+    			<td th:text="${proxyUptimes[proxy.id]}"></td>
     		</tr>
     	</table>
     </div>

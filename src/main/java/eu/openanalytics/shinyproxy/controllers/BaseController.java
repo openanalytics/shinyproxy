@@ -34,7 +34,8 @@ import java.util.regex.Pattern;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -42,14 +43,19 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.ModelMap;
 import org.springframework.util.StreamUtils;
 
-import eu.openanalytics.shinyproxy.services.AppService;
-import eu.openanalytics.shinyproxy.services.UserService;
-import eu.openanalytics.shinyproxy.services.AppService.ShinyApp;
+import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.service.ProxyService;
+import eu.openanalytics.containerproxy.service.ProxySpecService;
+import eu.openanalytics.containerproxy.service.UserService;
 
 public abstract class BaseController {
 
 	@Inject
-	AppService appService;
+	ProxyService proxyService;
+	
+	@Inject
+	ProxySpecService proxySpecService;
 	
 	@Inject
 	UserService userService;
@@ -57,7 +63,7 @@ public abstract class BaseController {
 	@Inject
 	Environment environment;
 	
-	private static Logger logger = Logger.getLogger(BaseController.class);
+	private static Logger logger = LogManager.getLogger(BaseController.class);
 	private static Pattern appPattern = Pattern.compile(".*/app/(.*)");
 	private static Map<String, String> imageCache = new HashMap<>();
 	
@@ -80,15 +86,35 @@ public abstract class BaseController {
 	protected String getAppTitle(HttpServletRequest request) {
 		String appName = getAppName(request);
 		if (appName == null || appName.isEmpty()) return "";
-		ShinyApp app = appService.getApp(appName);
-		if (app == null || app.getDisplayName() == null || app.getDisplayName().isEmpty()) return appName;
-		else return app.getDisplayName();
+		ProxySpec spec = proxySpecService.getSpec(appName);
+		if (spec == null || spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) return appName;
+		else return spec.getDisplayName();
+	}
+	
+	protected String getContextPath() {
+		//TODO
+		return "/";
+	}
+	
+	protected Proxy findUserProxy(HttpServletRequest request) {
+		String appName = getAppName(request);
+		if (appName == null) return null;
+		return proxyService.listActiveProxies().stream().filter(p -> appName.equals(p.getSpec().getId())).findAny().orElse(null);
+	}
+	
+	protected String getProxyEndpoint(Proxy proxy) {
+		if (proxy == null || proxy.getTargets().isEmpty()) return null;
+		return proxy.getTargets().keySet().iterator().next();
 	}
 	
 	protected void prepareMap(ModelMap map, HttpServletRequest request) {
 		map.put("title", environment.getProperty("shiny.proxy.title", "ShinyProxy"));
 		map.put("logo", resolveImageURI(environment.getProperty("shiny.proxy.logo-url")));
 		map.put("showNavbar", !Boolean.valueOf(environment.getProperty("shiny.proxy.hide-navbar")));
+		
+		map.put("bootstrapCss", "/webjars/bootstrap/3.3.7/css/bootstrap.min.css");
+		map.put("bootstrapJs", "/webjars/bootstrap/3.3.7/js/bootstrap.min.js");
+		map.put("jqueryJs", "/webjars/jquery/3.3.1/jquery.min.js");
 		
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		map.put("isLoggedIn", authentication != null && !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated());

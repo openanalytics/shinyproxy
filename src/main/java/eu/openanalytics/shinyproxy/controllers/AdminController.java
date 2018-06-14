@@ -20,6 +20,10 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
@@ -27,7 +31,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import eu.openanalytics.shinyproxy.services.ProxyService;
+import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.service.ProxyService;
 
 @Controller
 public class AdminController extends BaseController {
@@ -38,7 +43,18 @@ public class AdminController extends BaseController {
 	@RequestMapping("/admin")
 	String admin(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
-		map.put("proxies", proxyService.listProxies());
+		
+		List<Proxy> proxies = proxyService.listActiveProxies();
+		Map<String, String> proxyUptimes = new HashMap<>();
+		for (Proxy proxy: proxies) {
+			long uptimeSec = (System.currentTimeMillis() - proxy.getStartupTimestamp())/1000;
+			String uptime = String.format("%d:%02d:%02d", uptimeSec/3600, (uptimeSec%3600)/60, uptimeSec%60);
+			proxyUptimes.put(proxy.getId(), uptime);
+		}
+		
+		map.put("proxies", proxies);
+		map.put("proxyUptimes", proxyUptimes);
+		
 		return "admin";
 	}
 }

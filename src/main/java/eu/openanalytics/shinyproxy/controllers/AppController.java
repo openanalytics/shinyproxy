@@ -63,7 +63,7 @@ public class AppController extends BaseController {
 			String specId = getAppName(request);
 			ProxySpec spec = proxyService.getProxySpec(specId);
 			if (spec == null) throw new IllegalArgumentException("Unknown proxy spec: " + specId);
-			proxy = proxyService.startProxy(spec);
+			proxy = proxyService.startProxy(spec, false);
 		}
 		String mapping = getProxyEndpoint(proxy);
 		String containerPath = buildContainerPath(mapping, request);

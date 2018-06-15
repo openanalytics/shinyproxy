@@ -30,12 +30,11 @@
 	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
 	<script th:src="@{${jqueryJs}}"></script>
 	<script th:src="@{${bootstrapJs}}"></script>
+	<script th:src="@{/js/heartbeat.js}"></script>
 </head>
 <body>
-	<!-- navigation bar -->
 	<div th:replace="../fragments/navbar :: navbar"></div>
 	
-	<!-- content -->
     <iframe id="shinyframe" th:src="${container}" width="100%" frameBorder="0"></iframe>
     <div class="loading"><div class="loading-txt">Launching <span th:text="${appTitle}"></span>...</div></div>
     
@@ -46,22 +45,14 @@
 		window.addEventListener("load", setShinyframeHeight);
 		window.addEventListener("resize",  setShinyframeHeight);
 		
-		function heartbeat() {
-			setTimeout(function() {
-				$.ajax([[${heartbeatPath}]] + window.location.pathname).success(function(data) {
-					heartbeat();
-				});
-			}, [[${heartbeatRate}]]);
-		};
-		heartbeat();
-		
 		$(window).on('load', function() {
 			var source = $("#shinyframe").attr("src");
 			if (source == "") {
 				$(".loading").show();
-				$.post(window.location.pathname + window.location.search, function(containerPath) {
-					$("#shinyframe").attr("src", containerPath);
+				$.post(window.location.pathname + window.location.search, function(response) {
+					$("#shinyframe").attr("src", response.containerPath);
 					$(".loading").fadeOut("slow");
+					heartbeat(response.proxyId, response.heartbeatRate);
 				}).fail(function(request) {
 					var newDoc = document.open("text/html", "replace");
 					newDoc.write(request.responseText);

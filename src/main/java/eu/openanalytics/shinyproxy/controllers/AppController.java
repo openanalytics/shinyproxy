@@ -20,6 +20,10 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Controller;
@@ -30,12 +34,16 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.service.HeartbeatService;
 
 @Controller
 public class AppController extends BaseController {
 
+	@Inject
+	private HeartbeatService heartbeatService;
+	
 	@RequestMapping(value="/app/*", method=RequestMethod.GET)
-	String app(ModelMap map, HttpServletRequest request) {
+	public String app(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
 		
 		Proxy proxy = findUserProxy(request);
@@ -43,15 +51,13 @@ public class AppController extends BaseController {
 
 		map.put("appTitle", getAppTitle(request));
 		map.put("container", buildContainerPath(mapping, request));
-		map.put("heartbeatRate", environment.getProperty("shiny.proxy.heartbeat-rate", "10000"));
-		map.put("heartbeatPath", getContextPath() + "heartbeat");
 		
 		return "app";
 	}
 	
 	@RequestMapping(value="/app/*", method=RequestMethod.POST)
 	@ResponseBody
-	String startApp(HttpServletRequest request) {
+	public Map<String,String> startApp(HttpServletRequest request) {
 		Proxy proxy = findUserProxy(request);
 		if (proxy == null) {
 			String specId = getAppName(request);
@@ -59,7 +65,13 @@ public class AppController extends BaseController {
 			proxy = proxyService.startProxy(spec);
 		}
 		String mapping = getProxyEndpoint(proxy);
-		return buildContainerPath(mapping, request);
+		String containerPath = buildContainerPath(mapping, request);
+		
+		Map<String,String> response = new HashMap<>();
+		response.put("containerPath", containerPath);
+		response.put("proxyId", proxy.getId());
+		response.put("heartbeatRate", String.valueOf(heartbeatService.getHeartbeatRate()));
+		return response;
 	}
 	
 	private String buildContainerPath(String mapping, HttpServletRequest request) {

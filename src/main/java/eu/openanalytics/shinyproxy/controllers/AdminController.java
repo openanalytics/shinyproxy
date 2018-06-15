@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Controller;
@@ -32,16 +31,12 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
-import eu.openanalytics.containerproxy.service.ProxyService;
 
 @Controller
 public class AdminController extends BaseController {
 
-	@Inject
-	ProxyService proxyService;
-
 	@RequestMapping("/admin")
-	String admin(ModelMap map, HttpServletRequest request) {
+	private String admin(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
 		
 		List<Proxy> proxies = proxyService.listActiveProxies();

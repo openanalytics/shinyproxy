@@ -35,7 +35,7 @@ import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 public class IndexController extends BaseController {
 	
 	@RequestMapping("/")
-    String index(ModelMap map, HttpServletRequest request) {
+    private String index(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
 		
 		ProxySpec[] apps = proxySpecService.getSpecs().stream().filter(s -> userService.canAccess(s)).toArray(i -> new ProxySpec[i]);

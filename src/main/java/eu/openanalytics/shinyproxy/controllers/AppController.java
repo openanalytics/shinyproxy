@@ -62,6 +62,7 @@ public class AppController extends BaseController {
 		if (proxy == null) {
 			String specId = getAppName(request);
 			ProxySpec spec = proxySpecService.getSpec(specId);
+			if (spec == null) throw new IllegalArgumentException("Unknown proxy spec: " + specId);
 			proxy = proxyService.startProxy(spec);
 		}
 		String mapping = getProxyEndpoint(proxy);

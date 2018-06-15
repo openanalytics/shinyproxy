@@ -39,7 +39,7 @@ public class AdminController extends BaseController {
 	private String admin(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
 		
-		List<Proxy> proxies = proxyService.listActiveProxies();
+		List<Proxy> proxies = proxyService.getProxies(null, false);
 		Map<String, String> proxyUptimes = new HashMap<>();
 		for (Proxy proxy: proxies) {
 			long uptimeSec = (System.currentTimeMillis() - proxy.getStartupTimestamp())/1000;

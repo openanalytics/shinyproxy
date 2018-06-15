@@ -50,7 +50,7 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 		if (auth.hasAuthorization()) {
 			
 			// Limit access to the app pages according to spec permissions
-			for (ProxySpec spec: proxyService.getProxySpecs()) {
+			for (ProxySpec spec: proxyService.getProxySpecs(null, true)) {
 				if (spec.getAccessControl() == null) continue;
 				
 				String[] groups = spec.getAccessControl().getGroups();

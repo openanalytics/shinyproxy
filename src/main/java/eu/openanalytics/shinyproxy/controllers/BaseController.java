@@ -46,16 +46,12 @@ import org.springframework.util.StreamUtils;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.ProxyService;
-import eu.openanalytics.containerproxy.service.ProxySpecService;
 import eu.openanalytics.containerproxy.service.UserService;
 
 public abstract class BaseController {
 
 	@Inject
 	ProxyService proxyService;
-	
-	@Inject
-	ProxySpecService proxySpecService;
 	
 	@Inject
 	UserService userService;
@@ -86,7 +82,7 @@ public abstract class BaseController {
 	protected String getAppTitle(HttpServletRequest request) {
 		String appName = getAppName(request);
 		if (appName == null || appName.isEmpty()) return "";
-		ProxySpec spec = proxySpecService.getSpec(appName);
+		ProxySpec spec = proxyService.getProxySpec(appName);
 		if (spec == null || spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) return appName;
 		else return spec.getDisplayName();
 	}

@@ -38,7 +38,7 @@ public class IndexController extends BaseController {
     private String index(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
 		
-		ProxySpec[] apps = proxySpecService.getSpecs().stream().filter(s -> userService.canAccess(s)).toArray(i -> new ProxySpec[i]);
+		ProxySpec[] apps = proxyService.getProxySpecs().stream().filter(s -> userService.canAccess(s)).toArray(i -> new ProxySpec[i]);
 		map.put("apps", apps);
 
 		Map<ProxySpec, String> appLogos = new HashMap<>();

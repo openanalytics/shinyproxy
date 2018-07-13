@@ -30,7 +30,6 @@
 	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
 	<script th:src="@{${jqueryJs}}"></script>
 	<script th:src="@{${bootstrapJs}}"></script>
-	<script th:src="@{/js/heartbeat.js}"></script>
 </head>
 <body>
 	<div th:replace="../fragments/navbar :: navbar"></div>
@@ -52,7 +51,6 @@
 				$.post(window.location.pathname + window.location.search, function(response) {
 					$("#shinyframe").attr("src", response.containerPath);
 					$(".loading").fadeOut("slow");
-					heartbeat(response.proxyId, response.heartbeatRate);
 				}).fail(function(request) {
 					var newDoc = document.open("text/html", "replace");
 					newDoc.write(request.responseText);

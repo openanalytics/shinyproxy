@@ -23,7 +23,6 @@ package eu.openanalytics.shinyproxy.controllers;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.stereotype.Controller;
@@ -34,14 +33,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
-import eu.openanalytics.containerproxy.service.HeartbeatService;
 
 @Controller
 public class AppController extends BaseController {
 
-	@Inject
-	private HeartbeatService heartbeatService;
-	
 	@RequestMapping(value="/app/*", method=RequestMethod.GET)
 	public String app(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
@@ -71,7 +66,6 @@ public class AppController extends BaseController {
 		Map<String,String> response = new HashMap<>();
 		response.put("containerPath", containerPath);
 		response.put("proxyId", proxy.getId());
-		response.put("heartbeatRate", String.valueOf(heartbeatService.getHeartbeatRate()));
 		return response;
 	}
 	

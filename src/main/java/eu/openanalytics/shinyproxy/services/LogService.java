@@ -28,6 +28,8 @@ import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
+import java.text.SimpleDateFormat;  
+import java.util.Date;  
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -94,7 +96,9 @@ public class LogService {
 		if (!isContainerLoggingEnabled()) return;
 		executor.submit(() -> {
 			try {	
+				Date now = new Date();
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+				String timestamp = sdf.format(now);
 				String logFileName = proxy.getName() + "_" + timestamp + "_" + proxy.getContainerId();
 				Path[] paths = getLogFilePaths(logFileName);
 				// Note that this call will block until the container is stopped.

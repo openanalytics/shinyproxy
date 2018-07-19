@@ -93,8 +93,10 @@ public class LogService {
 	public void attachToOutput(IContainerProxy proxy, BiConsumer<File, File> outputAttacher) {
 		if (!isContainerLoggingEnabled()) return;
 		executor.submit(() -> {
-			try {
-				Path[] paths = getLogFilePaths(proxy.getContainerId());
+			try {	
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+				String logFileName = proxy.getName() + "_" + timestamp + "_" + proxy.getContainerId();
+				Path[] paths = getLogFilePaths(logFileName);
 				// Note that this call will block until the container is stopped.
 				outputAttacher.accept(paths[0].toFile(), paths[1].toFile());
 			} catch (Exception e) {

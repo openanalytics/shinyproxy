@@ -20,14 +20,12 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import java.util.HashMap;
 import java.util.Set;
 
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import eu.openanalytics.containerproxy.model.runtime.RuntimeSetting;
-import eu.openanalytics.containerproxy.model.spec.ContainerSpec;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.spec.IProxySpecMergeStrategy;
 import eu.openanalytics.containerproxy.spec.ProxySpecException;
@@ -44,11 +42,6 @@ public class ShinyProxySpecMergeStrategy implements IProxySpecMergeStrategy {
 		
 		ProxySpec finalSpec = new ProxySpec();
 		baseSpec.copy(finalSpec);
-		
-		ContainerSpec cSpec = finalSpec.getContainerSpecs().get(0);
-		if (cSpec.getPortMapping() == null) cSpec.setPortMapping(new HashMap<>());
-		cSpec.getPortMapping().put("default", 3838);
-		
 		return finalSpec;
 	}
 

@@ -28,6 +28,8 @@ import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.BiConsumer;
+import java.text.SimpleDateFormat;  
+import java.util.Date;  
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -93,8 +95,12 @@ public class LogService {
 	public void attachToOutput(IContainerProxy proxy, BiConsumer<File, File> outputAttacher) {
 		if (!isContainerLoggingEnabled()) return;
 		executor.submit(() -> {
-			try {
-				Path[] paths = getLogFilePaths(proxy.getContainerId());
+			try {	
+				Date now = new Date();
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmm");
+				String timestamp = sdf.format(now);
+				String logFileName = proxy.getName() + "_" + timestamp + "_" + proxy.getContainerId();
+				Path[] paths = getLogFilePaths(logFileName);
 				// Note that this call will block until the container is stopped.
 				outputAttacher.accept(paths[0].toFile(), paths[1].toFile());
 			} catch (Exception e) {

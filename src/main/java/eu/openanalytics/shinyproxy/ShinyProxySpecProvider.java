@@ -23,10 +23,8 @@ package eu.openanalytics.shinyproxy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -52,8 +50,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 	private List<ProxySpec> specs = new ArrayList<>();
 	
-	public Set<ProxySpec> getSpecs() {
-		return new HashSet<>(specs);
+	public List<ProxySpec> getSpecs() {
+		return new ArrayList<>(specs);
 	}
 	
 	public ProxySpec getSpec(String id) {

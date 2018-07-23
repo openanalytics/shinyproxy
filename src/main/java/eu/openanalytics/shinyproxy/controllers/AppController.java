@@ -30,6 +30,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.view.RedirectView;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
@@ -50,9 +51,28 @@ public class AppController extends BaseController {
 		return "app";
 	}
 	
+	@RequestMapping(value="/app_direct/*", method=RequestMethod.GET)
+	public Object appDirect(ModelMap map, HttpServletRequest request) {
+		Proxy proxy = getOrStart(request);
+		String mapping = getProxyEndpoint(proxy);
+		String containerPath = buildContainerPath(mapping, request);
+		return new RedirectView(containerPath);		
+	}
+	
 	@RequestMapping(value="/app/*", method=RequestMethod.POST)
 	@ResponseBody
 	public Map<String,String> startApp(HttpServletRequest request) {
+		Proxy proxy = getOrStart(request);
+		String mapping = getProxyEndpoint(proxy);
+		String containerPath = buildContainerPath(mapping, request);
+		
+		Map<String,String> response = new HashMap<>();
+		response.put("containerPath", containerPath);
+		response.put("proxyId", proxy.getId());
+		return response;
+	}
+	
+	private Proxy getOrStart(HttpServletRequest request) {
 		Proxy proxy = findUserProxy(request);
 		if (proxy == null) {
 			String specId = getAppName(request);
@@ -61,13 +81,7 @@ public class AppController extends BaseController {
 			ProxySpec resolvedSpec = proxyService.resolveProxySpec(spec, null, null);
 			proxy = proxyService.startProxy(resolvedSpec, false);
 		}
-		String mapping = getProxyEndpoint(proxy);
-		String containerPath = buildContainerPath(mapping, request);
-		
-		Map<String,String> response = new HashMap<>();
-		response.put("containerPath", containerPath);
-		response.put("proxyId", proxy.getId());
-		return response;
+		return proxy;
 	}
 	
 	private String buildContainerPath(String mapping, HttpServletRequest request) {

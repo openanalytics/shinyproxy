@@ -88,8 +88,11 @@ public abstract class BaseController {
 	}
 	
 	protected String getContextPath() {
-		//TODO
-		return "/";
+		String contextPath = environment.getProperty("server.contextPath");
+		if (contextPath == null) contextPath = "";
+		if (!contextPath.startsWith("/")) contextPath = "/" + contextPath;
+		if (!contextPath.endsWith("/")) contextPath += "/";
+		return contextPath;
 	}
 	
 	protected Proxy findUserProxy(HttpServletRequest request) {
@@ -113,8 +116,14 @@ public abstract class BaseController {
 		map.put("jqueryJs", "/webjars/jquery/3.3.1/jquery.min.js");
 		
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		map.put("isLoggedIn", authentication != null && !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated());
+		boolean isLoggedIn = authentication != null && !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated();
+		map.put("isLoggedIn", isLoggedIn);
 		map.put("isAdmin", userService.isAdmin(authentication));
+		map.put("isSupportEnabled", isLoggedIn && getSupportAddress() != null);
+	}
+	
+	protected String getSupportAddress() {
+		return environment.getProperty("proxy.support.mail-to-address");
 	}
 	
 	protected String resolveImageURI(String resourceURI) {

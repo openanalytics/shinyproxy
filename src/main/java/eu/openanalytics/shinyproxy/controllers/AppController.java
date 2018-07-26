@@ -44,27 +44,36 @@ public class AppController extends BaseController {
 
 	@RequestMapping(value="/app/*", method=RequestMethod.GET)
 	String app(ModelMap map, HttpServletRequest request) {
+		logger.info("app started: " + request.getRequestURI());
 		prepareMap(map, request);
 		
 		String mapping = proxyService.getMapping(request, getUserName(request), getAppName(request), false);
 		String contextPath = ShinyProxyApplication.getContextPath(environment);
+		logger.info("app contextPath=" + contextPath);		
 
 		map.put("appTitle", getAppTitle(request));
 		map.put("container", buildContainerPath(mapping, request));
 		map.put("heartbeatRate", environment.getProperty("shiny.proxy.heartbeat-rate", "10000"));
 		map.put("heartbeatPath", contextPath + "/heartbeat");
 		
+		logger.info("app finished: ");
+		
 		return "app";
 	}
 	
 	@RequestMapping(value="/app/*", method=RequestMethod.POST)
 	@ResponseBody
-	String startApp(HttpServletRequest request) {
+	String startApp(HttpServletRequest request) {		
+		logger.info("startApp started: " + request.getRequestURI());
+		
 		String mapping = proxyService.getMapping(request, getUserName(request), getAppName(request), true);
+		
+		logger.info("startApp finished: mapping="+ mapping);
 		return buildContainerPath(mapping, request);
 	}
 	
 	private String buildContainerPath(String mapping, HttpServletRequest request) {
+		logger.info("buildContainerPath started: request=" + request.getRequestURI() + ", mapping="+ mapping);
 		if (mapping == null) return "";
 		
 		String queryString = request.getQueryString();
@@ -72,6 +81,8 @@ public class AppController extends BaseController {
 		
 		String contextPath = ShinyProxyApplication.getContextPath(environment);
 		String containerPath = contextPath + "/" + mapping + environment.getProperty("shiny.proxy.landing-page", "/") + queryString;
+		
+		logger.info("buildContainerPath finished: containerPath="+ containerPath);
 		return containerPath;
 	}
 }

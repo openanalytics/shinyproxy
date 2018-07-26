@@ -60,7 +60,7 @@ public abstract class AbstractContainerBackend<T extends AbstractContainerProxy>
 	protected static final String PROPERTY_CERT_PATH = "cert-path";
 	
 	protected static final String DEFAULT_TARGET_PROTOCOL = "http";
-	protected static final String DEFAULT_TARGET_URL = DEFAULT_TARGET_PROTOCOL + "://localhost";
+	protected static final String DEFAULT_TARGET_URL = DEFAULT_TARGET_PROTOCOL + "://192.168.233.128";
 	protected static final String DEFAULT_PRIVILEGED = "false";
 	
 	protected static final String ENV_VAR_SP_USER_NAME = "SHINYPROXY_USERNAME";
@@ -221,7 +221,7 @@ public abstract class AbstractContainerBackend<T extends AbstractContainerProxy>
 	}
 	
 	protected int allocatePort() {
-		int startPort = Integer.valueOf(getProperty(PROPERTY_PORT_RANGE_START, null, "20000"));
+		int startPort = Integer.valueOf(getProperty(PROPERTY_PORT_RANGE_START, null, "3838"));
 		int maxPort = Integer.valueOf(getProperty(PROPERTY_PORT_RANGE_MAX, null, "-1"));
 		int nextPort = startPort;
 		while (occupiedPorts.contains(nextPort)) nextPort++;
@@ -231,12 +231,12 @@ public abstract class AbstractContainerBackend<T extends AbstractContainerProxy>
 					+ " Please try again later or contact an administrator.");
 		}
 		
-		occupiedPorts.add(nextPort);
+		//occupiedPorts.add(nextPort);
 		return nextPort;
 	}
 	
 	protected void releasePort(int port) {
-		occupiedPorts.remove(port);
+		//occupiedPorts.remove(port);
 	}
 	
 	protected abstract Logger getLog();

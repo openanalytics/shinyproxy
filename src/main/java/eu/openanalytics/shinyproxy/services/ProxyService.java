@@ -111,6 +111,7 @@ public class ProxyService {
 			proxy = startProxy(userName, appName);
 		}
 		if (proxy == null) {
+			log.info("getMapping : proxy=null");
 			return null;
 		} else {
 			Set<String> sessionIds = proxySessionIds.get(proxy);
@@ -124,10 +125,15 @@ public class ProxyService {
 	}
 	
 	public boolean sessionOwnsProxy(HttpServerExchange exchange) {
+		
+		log.info("sessionOwnsProxy started: getRelativePath=" + exchange.getRelativePath());
 		String sessionId = getCurrentSessionId(exchange);
+		log.info("sessionOwnsProxy : sessionId=" + sessionId);
 		if (sessionId == null) return false;
 		
 		String proxyName = exchange.getRelativePath();
+		
+		log.info("sessionOwnsProxy finished: proxyName=" + proxyName);
 		return !getProxies(p -> matchesSessionId(p, sessionId) && proxyName.startsWith("/" + p.getName())).isEmpty();
 	}
 	
@@ -184,6 +190,7 @@ public class ProxyService {
 	}
 	
 	private IContainerProxy startProxy(String userName, String appName) {
+		log.info("startProxy started");
 		ShinyApp app = appService.getApp(appName);
 		if (app == null) {
 			throw new ShinyProxyException("Cannot start container: unknown application: " + appName);
@@ -210,6 +217,7 @@ public class ProxyService {
 			synchronized (mappingListeners) {
 				for (MappingListener listener: mappingListeners) {
 					listener.mappingAdded(proxy.getName(), target);
+					log.info("startProxy(): proxy name:" + proxy.getName() + " target:" + target.toString());
 				}
 			}
 		} catch (URISyntaxException ignore) {}
@@ -225,7 +233,7 @@ public class ProxyService {
 		
 		log.info(String.format("Proxy activated [user: %s] [app: %s]", userName, appName));
 		eventService.post(EventType.AppStart.toString(), userName, appName);
-		
+		log.info("startProxy finished");
 		return proxy;
 	}
 	

@@ -24,6 +24,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.log4j.Logger;
+
 import com.spotify.docker.client.DockerClient.RemoveContainerParam;
 import com.spotify.docker.client.messages.ContainerConfig;
 import com.spotify.docker.client.messages.ContainerCreation;
@@ -33,9 +35,12 @@ import com.spotify.docker.client.messages.HostConfig.Builder;
 import com.spotify.docker.client.messages.PortBinding;
 
 import eu.openanalytics.shinyproxy.container.ContainerProxyRequest;
+import eu.openanalytics.shinyproxy.controllers.BaseController;
 import eu.openanalytics.shinyproxy.util.Utils;
 
 public class DockerEngineBackend extends AbstractDockerBackend {
+	
+	public static Logger logger = Logger.getLogger(DockerEngineBackend.class);
 
 	@Override
 	protected void prepareProxy(DockerContainerProxy proxy, ContainerProxyRequest request) throws Exception {
@@ -60,36 +65,44 @@ public class DockerEngineBackend extends AbstractDockerBackend {
 			    .env(buildEnv(request.userId, request.app))
 			    .build();
 		
-		ContainerCreation container = dockerClient.createContainer(containerConfig);
-		proxy.setContainerId(container.id());
+		//ContainerCreation container = dockerClient.createContainer(containerConfig);
+		proxy.setContainerId("123123123"/*container.id()*/);
 	}
 	
 	@Override
 	protected void doStartProxy(DockerContainerProxy proxy) throws Exception {
+		logger.info("doStartProxy started");
 		if (proxy.getApp().getDockerNetworkConnections() != null) {
 			for (String networkConnection: proxy.getApp().getDockerNetworkConnections()) {
+				logger.info("doStartProxy : networkConnection=" + networkConnection);
+				
 				dockerClient.connectToNetwork(proxy.getContainerId(), networkConnection);
 			}
 		}
 		
-		dockerClient.startContainer(proxy.getContainerId());
+		//dockerClient.startContainer(proxy.getContainerId());
 		
-		ContainerInfo info = dockerClient.inspectContainer(proxy.getContainerId());
-		proxy.setName(info.name().substring(1));
+		//ContainerInfo info = dockerClient.inspectContainer(proxy.getContainerId());
+		proxy.setName("app"/*info.name().substring(1)*/);
+		
+		logger.info("doStartProxy finished");
 	}
 	
 	@Override
 	protected void doStopProxy(DockerContainerProxy proxy) throws Exception {
+		logger.info("doStopProxy started");
 		if (proxy.getApp() != null && proxy.getApp().getDockerNetworkConnections() != null) {
 			for (String networkConnection: proxy.getApp().getDockerNetworkConnections()) {
 				dockerClient.disconnectFromNetwork(proxy.getContainerId(), networkConnection);
 			}
 		}
-		dockerClient.removeContainer(proxy.getContainerId(), RemoveContainerParam.forceKill());
+		logger.info("doStopProxy finished");
+		//dockerClient.removeContainer(proxy.getContainerId(), RemoveContainerParam.forceKill());
 	}
 
 	@Override
 	protected void calculateTargetURL(DockerContainerProxy proxy) throws Exception {
+		logger.info("calculateTargetURL started");
 		super.calculateTargetURL(proxy);
 		
 		// For internal networks, DNS resolution by name only works with custom names.
@@ -98,5 +111,6 @@ public class DockerEngineBackend extends AbstractDockerBackend {
 			ContainerInfo info = dockerClient.inspectContainer(proxy.getContainerId());
 			proxy.setTarget(proxy.getTarget().replace(proxy.getName(), info.config().hostname()));
 		}
+		logger.info("calculateTargetURL finished");
 	}
 }

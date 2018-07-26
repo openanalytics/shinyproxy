@@ -57,7 +57,7 @@ public abstract class BaseController {
 	@Inject
 	Environment environment;
 	
-	private static Logger logger = Logger.getLogger(BaseController.class);
+	public static Logger logger = Logger.getLogger(BaseController.class);
 	private static Pattern appPattern = Pattern.compile(".*/app/(.*)");
 	private static Map<String, String> imageCache = new HashMap<>();
 	

@@ -24,6 +24,8 @@ import java.util.function.IntPredicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
+
 public class Utils {
 
 	public static boolean retry(IntPredicate job, int tries, int waitTime) {
@@ -70,5 +72,12 @@ public class Utils {
 		default:
 		}
 		return mem;
+	}
+	
+	public static Logger loggerForThisClass() {
+	    // We use the third stack element; second is this method, first is .getStackTrace()
+	    StackTraceElement myCaller = Thread.currentThread().getStackTrace()[2];
+	    //Assert.equal("<clinit>", myCaller.getMethodName());
+	    return Logger.getLogger(myCaller.getClassName());
 	}
 }

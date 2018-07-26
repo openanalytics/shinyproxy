@@ -28,6 +28,7 @@ import java.nio.file.Paths;
 
 import javax.inject.Inject;
 
+import org.apache.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
@@ -41,6 +42,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 import eu.openanalytics.shinyproxy.services.ProxyService;
 import eu.openanalytics.shinyproxy.services.ProxyService.MappingListener;
+import eu.openanalytics.shinyproxy.util.Utils;
 import io.undertow.server.HandlerWrapper;
 import io.undertow.server.HttpHandler;
 import io.undertow.server.HttpServerExchange;
@@ -56,6 +58,8 @@ import io.undertow.util.PathMatcher;
 @Configuration
 public class ShinyProxyApplication {
 
+	private static final Logger log = Utils.loggerForThisClass();
+	
 	@Inject
 	ProxyService proxyService;
 
@@ -63,6 +67,7 @@ public class ShinyProxyApplication {
 	Environment environment;
 
 	public static void main(String[] args) {
+		log.info("Started");
 		SpringApplication app = new SpringApplication(ShinyProxyApplication.class);
 
 		boolean hasExternalConfig = Files.exists(Paths.get("application.yml"));
@@ -76,6 +81,7 @@ public class ShinyProxyApplication {
 			// Undertow's (non-daemon) XNIO worker threads will then prevent the JVM from exiting.
 			if (e instanceof PortInUseException) System.exit(-1);
 		}
+		log.info("Finished");
 	}
 
 	public static String getContextPath(Environment env) {
@@ -138,5 +144,5 @@ public class ShinyProxyApplication {
 			});
 			return pathHandler;
 		}
-	}
+	}	
 }

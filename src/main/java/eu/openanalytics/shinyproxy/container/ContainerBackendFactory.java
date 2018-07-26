@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import eu.openanalytics.shinyproxy.container.docker.DockerEngineBackend;
 import eu.openanalytics.shinyproxy.container.docker.DockerSwarmBackend;
 import eu.openanalytics.shinyproxy.container.kubernetes.KubernetesBackend;
+import eu.openanalytics.shinyproxy.container.docker.ShinyServerCustomBackend;
 
 @Service
 public class ContainerBackendFactory extends AbstractFactoryBean<IContainerBackend> implements ApplicationContextAware {
@@ -42,7 +43,8 @@ public class ContainerBackendFactory extends AbstractFactoryBean<IContainerBacke
 		
 		DockerEngine("docker", DockerEngineBackend.class),
 		DockerSwarm("docker-swarm", DockerSwarmBackend.class),
-		Kubernetes("kubernetes", KubernetesBackend.class);
+		Kubernetes("kubernetes", KubernetesBackend.class),
+		ShinyServerCustom("shinyserver", ShinyServerCustomBackend.class);
 		
 		private String name;
 		private Class<? extends IContainerBackend> type;

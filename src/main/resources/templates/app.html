@@ -35,8 +35,11 @@
 	<!-- navigation bar -->
 	<div th:replace="../fragments/navbar :: navbar"></div>
 	
-	<!-- content -->
+	<!-- content -->	
     <iframe id="shinyframe" th:src="${container}" width="100%" frameBorder="0"></iframe>
+    <script type="text/javascript" th:inline="javascript">
+    alert('iframe src=' + $("#shinyframe").attr("src"));
+    </script>
     <div class="loading"><div class="loading-txt">Launching <span th:text="${appTitle}"></span>...</div></div>
     
 	<script type="text/javascript" th:inline="javascript">
@@ -53,13 +56,16 @@
 				});
 			}, [[${heartbeatRate}]]);
 		};
-		heartbeat();
+		//heartbeat();
 		
 		$(window).load(function() {
 			var source = $("#shinyframe").attr("src");
 			if (source == "") {
 				$(".loading").show();
+				alert('window.location.pathname='+ window.location.pathname);
+				alert('window.location.search='+ window.location.search);				
 				$.post(window.location.pathname + window.location.search, function(containerPath) {
+					alert('containerPath='+ containerPath)
 					$("#shinyframe").attr("src", containerPath);
 					$(".loading").fadeOut("slow");
 				}).fail(function(request) {

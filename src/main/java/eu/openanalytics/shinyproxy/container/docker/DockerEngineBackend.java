@@ -83,7 +83,7 @@ public class DockerEngineBackend extends AbstractDockerBackend {
 		//dockerClient.startContainer(proxy.getContainerId());
 		
 		//ContainerInfo info = dockerClient.inspectContainer(proxy.getContainerId());
-		proxy.setName("app"/*info.name().substring(1)*/);
+		proxy.setName(proxy.getApp().getName()/*info.name().substring(1)*/);
 		
 		logger.info("doStartProxy finished");
 	}
@@ -107,10 +107,10 @@ public class DockerEngineBackend extends AbstractDockerBackend {
 		
 		// For internal networks, DNS resolution by name only works with custom names.
 		// See comments on https://github.com/docker/for-win/issues/1009
-		if (proxy.getTarget().contains(proxy.getName())) {
+		/*if (proxy.getTarget().contains(proxy.getName())) {
 			ContainerInfo info = dockerClient.inspectContainer(proxy.getContainerId());
 			proxy.setTarget(proxy.getTarget().replace(proxy.getName(), info.config().hostname()));
-		}
+		}*/
 		logger.info("calculateTargetURL finished");
 	}
 }

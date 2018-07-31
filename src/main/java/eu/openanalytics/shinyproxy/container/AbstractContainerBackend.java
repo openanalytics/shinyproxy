@@ -50,6 +50,8 @@ import eu.openanalytics.shinyproxy.util.Utils;
 
 public abstract class AbstractContainerBackend<T extends AbstractContainerProxy> implements IContainerBackend {
 
+	private static final Logger log = Utils.loggerForThisClass();
+	
 	protected static final String PROPERTY_URL = "url";
 	protected static final String PROPERTY_CONTAINER_PROTOCOL = "container-protocol";
 	protected static final String PROPERTY_INTERNAL_NETWORKING = "internal-networking";
@@ -79,7 +81,7 @@ public abstract class AbstractContainerBackend<T extends AbstractContainerProxy>
 	@Override
 	public void initialize() throws ShinyProxyException {
 		// If ShinyProxy runs as a container itself, some things like port publishing can be omitted.
-		useInternalNetwork = Boolean.valueOf(getProperty(PROPERTY_INTERNAL_NETWORKING));
+		useInternalNetwork = false;// Boolean.valueOf(getProperty(PROPERTY_INTERNAL_NETWORKING));
 	}
 	
 	@Override
@@ -143,6 +145,7 @@ public abstract class AbstractContainerBackend<T extends AbstractContainerProxy>
 		}
 		
 		String target = String.format("%s://%s:%d", protocol, hostName, port);
+		log.info("calculateTargetURL : target="+ target);
 		proxy.setTarget(target);
 	}
 	
@@ -192,8 +195,10 @@ public abstract class AbstractContainerBackend<T extends AbstractContainerProxy>
 	}
 	
 	protected int getAppPort(T proxy) {
+		log.info("getAppPort started: Class name=" + proxy.getClass().getName());
 		String port = proxy.getApp().get(PROPERTY_APP_PORT);
 		if (port == null || port.isEmpty()) return 3838;
+		log.info("getAppPort started: PROPERTY_APP_PORT=" + PROPERTY_APP_PORT+ ", port=" + port);
 		return Integer.parseInt(port);
 	}
 	

@@ -45,6 +45,8 @@ import org.springframework.util.StreamUtils;
 import eu.openanalytics.shinyproxy.services.AppService;
 import eu.openanalytics.shinyproxy.services.UserService;
 import eu.openanalytics.shinyproxy.services.AppService.ShinyApp;
+import eu.openanalytics.shinyproxy.services.GroupServiceImpl;
+import eu.openanalytics.shinyproxy.services.ShinyAppServiceImpl;
 
 public abstract class BaseController {
 
@@ -56,6 +58,12 @@ public abstract class BaseController {
 	
 	@Inject
 	Environment environment;
+	
+	@Inject
+	ShinyAppServiceImpl appServiceImpl;
+	
+	@Inject
+	GroupServiceImpl groupServiceImpl;
 	
 	public static Logger logger = Logger.getLogger(BaseController.class);
 	private static Pattern appPattern = Pattern.compile(".*/app/(.*)");

@@ -31,6 +31,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import eu.openanalytics.shinyproxy.entity.App;
 import eu.openanalytics.shinyproxy.services.AppService.ShinyApp;
  
 @Controller
@@ -40,7 +41,7 @@ public class IndexController extends BaseController {
     String index(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
 		
-		List<ShinyApp> apps = userService.getAccessibleApps(SecurityContextHolder.getContext().getAuthentication());
+		/*List<ShinyApp> apps = userService.getAccessibleApps(SecurityContextHolder.getContext().getAuthentication());
 		map.put("apps", apps.toArray());
 
 		Map<ShinyApp, String> appLogos = new HashMap<>();
@@ -53,7 +54,23 @@ public class IndexController extends BaseController {
 				appLogos.put(app, resolveImageURI(app.getLogoUrl()));
 			}
 		}
-		map.put("displayAppLogos", displayAppLogos);
+		map.put("displayAppLogos", displayAppLogos);*/
+		
+		List<App> apps = appServiceImpl.getApps();
+	    
+	    map.put("apps", apps.toArray());
+	    
+	    Map<App, String> appLogos = new HashMap();
+	    map.put("appLogos", appLogos);
+	    
+	    boolean displayAppLogos = false;
+	    for (App app : apps) {
+	      if (app.getLogoUrl() != null) {
+	        displayAppLogos = true;
+	        appLogos.put(app, resolveImageURI(app.getLogoUrl()));
+	      }
+	    }
+	    map.put("displayAppLogos", Boolean.valueOf(displayAppLogos));
 
 		return "index";
     }

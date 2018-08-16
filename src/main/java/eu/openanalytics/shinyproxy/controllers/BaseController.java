@@ -88,7 +88,7 @@ public abstract class BaseController {
 	}
 	
 	protected String getContextPath() {
-		String contextPath = environment.getProperty("server.contextPath");
+		String contextPath = environment.getProperty("server.servlet.context-path");
 		if (contextPath == null) contextPath = "";
 		if (!contextPath.startsWith("/")) contextPath = "/" + contextPath;
 		if (!contextPath.endsWith("/")) contextPath += "/";

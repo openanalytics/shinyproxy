@@ -1,0 +1,44 @@
+proxy:
+  title: Open Analytics Shiny Proxy
+  logo-url: http://www.openanalytics.eu/sites/www.openanalytics.eu/themes/oa/logo.png
+  landing-page: /
+  heartbeat-rate: 10000
+  heartbeat-timeout: 60000
+  port: 8080
+  authentication: ldap
+  admin-groups: scientists
+  # Example: 'simple' authentication configuration
+  users:
+  - name: jack
+    password: password
+    groups: scientists
+  - name: jeff
+    password: password
+    groups: mathematicians
+  # Example: 'ldap' authentication configuration
+  ldap:
+    url: ldap://ldap.forumsys.com:389/dc=example,dc=com
+    user-dn-pattern: uid={0}
+    group-search-base:
+    group-search-filter: (uniqueMember={0})
+    manager-dn: cn=read-only-admin,dc=example,dc=com
+    manager-password: password
+    # Docker configuration
+  docker:
+    url: http://localhost:2375
+    port-range-start: 20000
+  specs:
+  - id: 01_hello
+    display-name: Hello Application
+    description: Application which demonstrates the basics of a Shiny app
+    container-cmd: ["R", "-e", "shinyproxy::run_01_hello()"]
+    container-image: openanalytics/shinyproxy-demo
+    access-groups: [scientists, mathematicians]
+  - id: 06_tabsets
+    container-cmd: ["R", "-e", "shinyproxy::run_06_tabsets()"]
+    container-image: openanalytics/shinyproxy-demo
+    access-groups: scientists
+
+logging:
+  file:
+    shinyproxy.log

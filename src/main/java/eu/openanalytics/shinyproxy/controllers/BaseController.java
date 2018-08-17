@@ -47,6 +47,7 @@ import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.ProxyService;
 import eu.openanalytics.containerproxy.service.UserService;
+import eu.openanalytics.containerproxy.util.SessionHelper;
 
 public abstract class BaseController {
 
@@ -88,11 +89,7 @@ public abstract class BaseController {
 	}
 	
 	protected String getContextPath() {
-		String contextPath = environment.getProperty("server.servlet.context-path");
-		if (contextPath == null) contextPath = "";
-		if (!contextPath.startsWith("/")) contextPath = "/" + contextPath;
-		if (!contextPath.endsWith("/")) contextPath += "/";
-		return contextPath;
+		return SessionHelper.getContextPath(environment, true);
 	}
 	
 	protected Proxy findUserProxy(HttpServletRequest request) {

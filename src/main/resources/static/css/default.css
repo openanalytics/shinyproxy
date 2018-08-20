@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2018 Open Analytics
+ * Copyright (C) 2016-2017 Open Analytics
  *
  * ===========================================================================
  *
@@ -36,10 +36,6 @@ body > div#navbar { padding-top: 0px; }
 
 #applist {
 	margin-top: 10px;
-}
-
-#shinyframe {
-  border: none;
 }
 
 #admin {

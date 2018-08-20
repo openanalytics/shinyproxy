@@ -9,16 +9,15 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
 @Entity
-public class Group implements Serializable {
+public class AppUser implements Serializable {
 	@Id
 	private String id;
 	@Column
-	private String name;
-	@ManyToMany(mappedBy = "apps", cascade = { javax.persistence.CascadeType.ALL })
-	@JsonBackReference
-	private List<App> apps;
+	private String appId;
+	@Column
+	private String userName;
 
-	public Group() {
+	public AppUser() {
 	}
 
 	public String getId() {
@@ -28,20 +27,20 @@ public class Group implements Serializable {
 	public void setId(String id) {
 		this.id = id;
 	}
-
-	public String getName() {
-		return name;
+	
+	public String getAppId() {
+		return appId;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setAppId(String appId) {
+		this.appId = appId;
 	}
 
-	public List<App> getApps() {
-		return apps;
+	public String getUserName() {
+		return userName;
 	}
 
-	public void setApps(List<App> apps) {
-		this.apps = apps;
+	public void setUserName(String userName) {
+		this.userName = userName;
 	}
 }

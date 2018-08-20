@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head lang="en">
+	<title th:text="${title}"></title>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link rel="stylesheet" media="screen" th:href="@{/css/nav.css}"/>	
+	<link rel="stylesheet" media="screen" th:href="@{/css/app.css}"/>	
+	<link rel="stylesheet" media="screen" th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"/>
+	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
+	<script th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
+	<script th:src="@{/webjars/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
+</head>
+<body>
+	<!-- navigation bar -->
+	<div th:replace="../fragments/navbar :: navbar"></div>
+	
+	<!-- content -->
+    <div id="shinyapp">
+    	<h3>Add ShinyApp</h3>
+    	<div class="container">
+    		<div class="row">Add new shiny application</div>
+    		<div class="row">
+    			<form action="#" th:action="@{/shinyapp/adduser}" th:object="${appUser}" method="post">
+    			<input class="form-control" placeholder="Id" type="text" th:field="*{id}" />
+    			<select class="form-control" placeholder="Application" th:field="*{appId}">                         
+                         <option th:each="app : ${apps}"
+                            th:value="${app.id}"
+                            th:utext="${app.name}"/>
+                </select>
+        		<input class="form-control" placeholder="Domain user name" type="text" th:field="*{userName}" />
+        		<input class="btn" type="submit" value="Submit" /> <input class="btn" type="reset" value="Reset" />
+    			</form>
+    		</div>
+    	</div>    	
+    </div>
+</body>
+</html>

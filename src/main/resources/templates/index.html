@@ -2,7 +2,7 @@
 
     ShinyProxy
 
-    Copyright (C) 2016-2018 Open Analytics
+    Copyright (C) 2016-2017 Open Analytics
 
     ===========================================================================
 
@@ -26,41 +26,95 @@
 <head lang="en">
 	<title th:text="${title}"></title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link rel="stylesheet" media="screen" th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"/>
-	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
+	<link rel="stylesheet" media="screen" th:href="@{/css/nav.css}"/> 
+	<link rel="stylesheet" media="screen" th:href="@{/css/list.css}"/>
 	<script th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
 	<script th:src="@{/webjars/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
-</head>
-<body>
-	<!-- navigation bar -->
-	<div th:replace="../fragments/navbar :: navbar"></div>
-	
-	<!-- content -->
-	<div th:if="${!displayAppLogos}" id="applist">
-		<ul>
-			<li th:each="app: ${apps}">
-				<a th:href="@{/app/}+${app.name}" th:text="${app.displayName == null} ? ${app.name} : ${app.displayName}"></a>
-				<br th:if="${app.descr != null}" />
-				<span th:if="${app.descr != null}" th:utext="${app.descr}"></span>
-			</li>
-		</ul>
-	</div>
+        <script>
+
+$(document).ready(function(){
+  var zindex = 10;
+
+  $(".btn-link").click(function(e) {
+   e.stopPropagation();
+  });
+
+  $("div.card").click(function(e){
+    e.preventDefault();
+
+    var isShowing = false;
+
+    if ($(this).hasClass("show")) {
+      isShowing = true
+    }
+
+    if ($("div.cards").hasClass("showing")) {
+      // a card is already in view
+      $("div.card.show")
+        .removeClass("show");
+
+      if (isShowing) {
+        // this card was showing - reset the grid
+        $("div.cards")
+          .removeClass("showing");
+      } else {
+        // this card isn't showing - get in with it
+        $(this)
+          .css({zIndex: zindex})
+          .addClass("show");
+
+      }
+
+      zindex++;
+
+    } else {
+      // no cards in view
+      $("div.cards")
+        .addClass("showing");
+      $(this)
+        .css({zIndex:zindex})
+        .addClass("show");
+
+      zindex++;
+    }
     
-    <div th:if="${displayAppLogos}" class="container" id="applist">
-		<div class="row" style="margin-top:20px;" th:each="app: ${apps}">
-			<div class="col-md-6 col-md-offset-3">
-				<div class="media">
-					<div class="media-left">
-						<img th:if="${appLogos.get(app) != null}" th:src="${appLogos.get(app)}" width="100px" height="100px"></img>
-					</div>
-					<div class="media-body">
-						<a th:href="@{/app/}+${app.name}" th:text="${app.displayName == null} ? ${app.name} : ${app.displayName}"></a>
-						<br th:if="${app.descr != null}" />
-						<span th:if="${app.descr != null}" th:utext="${app.descr}"></span>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+  });
+});
+        </script>
+</head>
+
+
+<body>
+
+ <div th:replace="../fragments/navbar :: navbar"></div>
+
+	
+	<!-- content  -->
+
+
+<div class="cards">
+
+  <div class="card" th:each="app: ${apps}">
+    <img th:if="${appLogos.get(app) != null}" th:src="${appLogos.get(app)}"></img>
+    <div class="card-title">
+      <a th:href="@{/app/}+${app.name}" class="toggle-info btn">
+        <span class="left"></span>
+        <span class="right"></span>
+      </a>
+      <h2 th:text="${app.displayName == null} ? ${app.name} : ${app.displayName}">
+      </h2>
+    </div>
+    <div class="card-flap flap1">
+      <div class="card-description" th:if="${app.descr != null}" th:text="${app.descr}">
+      </div>
+      <div class="card-flap flap2">
+        <div class="card-actions">
+          <a th:href="@{/app/}+${app.name}" class="btn btn-link">Open</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

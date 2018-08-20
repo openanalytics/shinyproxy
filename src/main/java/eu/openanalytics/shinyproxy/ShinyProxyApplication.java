@@ -26,6 +26,7 @@ import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -40,11 +41,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.xnio.OptionMap;
 import org.xnio.Options;
 
+import eu.openanalytics.shinyproxy.entity.App;
 import eu.openanalytics.shinyproxy.services.ProxyService;
 import eu.openanalytics.shinyproxy.services.ProxyService.MappingListener;
+import eu.openanalytics.shinyproxy.services.ShinyAppServiceImpl;
+import eu.openanalytics.shinyproxy.services.UserService;
 import eu.openanalytics.shinyproxy.util.Utils;
 import io.undertow.server.HandlerWrapper;
 import io.undertow.server.HttpHandler;
@@ -65,8 +72,14 @@ public class ShinyProxyApplication {
 	private static final Logger log = Utils.loggerForThisClass();
 	private static final OptionMap DEFAULT_OPTIONS;
 	
-	@Inject
+	@Inject	
 	ProxyService proxyService;
+	
+	@Inject
+	UserService userService;
+	
+	@Inject
+	ShinyAppServiceImpl shinyAppServiceImpl;
 
 	@Inject
 	Environment environment;
@@ -135,13 +148,24 @@ public class ShinyProxyApplication {
 
 					// Proxy URLs bypass the Spring security filters, so the session ID must be checked here instead.
 					boolean sessionMatch = true;
+					
 					if (match.getValue() instanceof ProxyHandler) {
-						//sessionMatch = proxyService.sessionOwnsProxy(exchange);
+						log.info("handleRequest: ProxyHandler=yes");
+						sessionMatch = true; //proxyService.sessionOwnsProxy(exchange);						
+						log.info("handleRequest: exchange.getRelativePath()=" + exchange.getRelativePath());
+						String proxyName = exchange.getRelativePath().replace("/app/", "");
+						if (proxyName.indexOf("/")> 0)
+							proxyName = proxyName.substring(0, proxyName.indexOf("/"));
+						log.info("handleRequest: proxyName=" + proxyName);
+						App app = shinyAppServiceImpl.getApp(proxyName);
+						log.info("handleRequest: app.getId()=" + ((app!=null)?app.getId():"null"));
+						Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+						UserDetails userDetails = auth==null?null:(UserDetails) auth.getPrincipal();
+						log.info(userDetails!=null?userDetails.getUsername():"No username");												
 					}
 					log.info("handleRequest sessionMatch: " +  ((Boolean)sessionMatch).toString());
 
-					if (sessionMatch) {
-						
+					if (sessionMatch) {						
 						super.handleRequest(exchange);
 					} else {
 						exchange.setStatusCode(401);
@@ -151,24 +175,21 @@ public class ShinyProxyApplication {
 				}
 			};
 			
-			LoadBalancingProxyClient proxyClient1 = new LoadBalancingProxyClient();
-			LoadBalancingProxyClient proxyClient2 = new LoadBalancingProxyClient();
+			List<App> apps = shinyAppServiceImpl.getApps();
 			
-			try {
-				proxyClient1.addHost(new URI("http://192.168.233.128:3838/app/hello"));
-				proxyClient2.addHost(new URI("http://192.168.233.128:3838/app/rmd"));
-			} catch (URISyntaxException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			for (App app: apps) {
+				try {
+					LoadBalancingProxyClient proxyClient = new LoadBalancingProxyClient();
+					proxyClient.addHost(new URI(app.getMapping()));
+					ProxyHandler proxyHandler = new ProxyHandler(proxyClient, ResponseCodeHandler.HANDLE_404);
+					pathHandler.addPrefixPath("/"+ app.getName(), proxyHandler);
+				} catch (URISyntaxException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 			
-			ProxyHandler proxyHandler1 = new ProxyHandler(proxyClient1, ResponseCodeHandler.HANDLE_404);
-			ProxyHandler proxyHandler2 = new ProxyHandler(proxyClient2, ResponseCodeHandler.HANDLE_404);
-			
-			pathHandler.addPrefixPath("/hello", proxyHandler1);
-			pathHandler.addPrefixPath("/rmd", proxyHandler2);
-			
-			RequestDumpingHandler debugHandler = new RequestDumpingHandler(pathHandler);
+			//RequestDumpingHandler debugHandler = new RequestDumpingHandler(pathHandler);
 			
 			proxyService.addMappingListener(new MappingListener() {
 				@Override
@@ -189,7 +210,7 @@ public class ShinyProxyApplication {
 				}
 			});
 						
-			return debugHandler;
+			return pathHandler;// debugHandler;
 		}
 	}	
 }

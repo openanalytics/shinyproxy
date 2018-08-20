@@ -2,7 +2,7 @@
 
     ShinyProxy
 
-    Copyright (C) 2016-2018 Open Analytics
+    Copyright (C) 2016-2017 Open Analytics
 
     ===========================================================================
 
@@ -26,45 +26,49 @@
 <head lang="en">
 	<title th:text="${title}"></title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link rel="stylesheet" media="screen" type="text/css"
-		href="https://cdn.jsdelivr.net/bootstrap-social/5.1.1/bootstrap-social.css"/>
-	<link rel="stylesheet" media="screen" type="text/css"
-		href="https://cdn.jsdelivr.net/fontawesome/4.7.0/css/font-awesome.min.css"/>
-	<link rel="stylesheet" media="screen" type="text/css" th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"/>
-	<link rel="stylesheet" media="screen" type="text/css" th:href="@{/css/default.css}"/>
-	<link rel="stylesheet" media="screen" type="text/css" th:href="@{/css/signin.css}"/>
-	<script th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
+	<link rel="stylesheet" media="screen" type="text/css" th:href="@{/css/login.css}"/>
+	<script th:src="@{/webjars/jquery/2.2.4/jquery.min.js}"></script>
 	<script th:src="@{/webjars/bootstrap/3.3.6/js/bootstrap.min.js}"></script>
+
 </head>
 <body>
-	<!-- navigation bar -->
-	<div th:replace="../fragments/navbar :: navbar"></div>
-
-	<!-- content -->
 	<div class="container">
-		<div th:if="${@authenticationBackend.name != 'social'}">
-			<form class="form-signin" action="login" method="POST">
-				<h2 class="form-signin-heading">Please sign in:</h2>
-				<div class="alert alert-danger" th:if="${error}">
-	  				<strong>Could not sign in!</strong><br/><span th:text="${error}"></span>.
-				</div>
-				<label for="username" class="sr-only">Email address</label> 
-				<input name="username" id="username" class="form-control" placeholder="User name" required="required" autofocus="autofocus"></input> 
-				<label for="password" class="sr-only">Password</label>
-				<input name="password" type="password" id="password" class="form-control" placeholder="Password" required="required"></input>
-				<button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-			</form>
-		</div>
-
-		<div th:if="${@authenticationBackend.name == 'social'}">
-			<br/><h2 class="form-signin form-signin-heading">Please sign in:</h2>
-			<form th:each="provider : ${@socialProviders}" class="form-signin" method="POST" th:action="@{/signin/__${provider}__}">
-				<button th:class="@{btn btn-block btn-social btn-__${provider}__}" type="submit">
-					<span th:class="@{fa fa-__${provider}__}"></span> Sign in with <span th:text="${provider.label()}"></span>
-				</button>
-			</form>
-		</div>
+<section class="user">
+  <div class="user_options-container">
+    <div class="user_options-text">
+      <div class="user_options-unregistered">
+        <h2 class="user_unregistered-title">Дата Анализийн Алба</h2>
+        <p class="user_unregistered-text">Дата анализийн албаны судалгаа, шинжилгээ</p>
+      </div>
+    </div>
+    
+    <div class="user_options-forms" id="user_options-forms">
+      <div class="user_forms-login">
+        <h2 class="forms_title">Нэвтрэх хэсэг</h2>
+	<div class="error-msg " th:if="${error}">
+		<strong>Нэврэх нэр эсвэл нууц үгээ дахин шалгана уу!</strong>
 	</div>
+        <form class="form-sign" action="login" method="POST">
+          <fieldset class="forms_fieldset">
+            <div class="forms_field">
+              <input name="username" id="username" class="form-control" placeholder="Домайн нэр" required="required" autofocus="autofocus"></input>
+            </div>
+            <div class="forms_field">
+	<input name="password" type="password" id="password" class="form-control" placeholder="Нууц үг" required="required"></input>
+            </div>
+          </fieldset>
+      	
+          <div class="forms_buttons">
+          <button class="forms_buttons-action" type="submit" id="login-button">Нэвтрэх</button>
+	</div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+
 
 </body>
 </html>

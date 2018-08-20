@@ -26,6 +26,8 @@
 <head lang="en">
 	<title th:text="${title}"></title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link rel="stylesheet" media="screen" th:href="@{/css/nav.css}"/>	
+	<link rel="stylesheet" media="screen" th:href="@{/css/app.css}"/>
 	<link rel="stylesheet" media="screen" th:href="@{/webjars/bootstrap/3.3.6/css/bootstrap.min.css}"/>
 	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
 	<script th:src="@{/webjars/jquery/2.2.2/jquery.min.js}"></script>
@@ -36,19 +38,27 @@
 	<div th:replace="../fragments/navbar :: navbar"></div>
 	
 	<!-- content -->
-    <div id="group">
-    	<h3>Group Controller</h3>
-    	<table border="1">
-    		<tr>
-    			<th>Id</th>
-    			<th>Name</th>
-    		</tr>
-    		<tr th:each="group: ${groups}">
-    			<td th:text="${group.id}"></td>
-    			<td th:text="${group.name}"></td>
-    			<td><a th:href="@{'/group/' + ${group.name} + '/add'}">Add user</a></td>
-    		</tr>
-    	</table>
+	<div class="container-fluid">
+    <div id="shinyapp">
+    	<h3>Shiny Applications Users</h3>    	
+    		<div class="row">    			
+    			<div class="col-sm-8 border border-primary"><a href="/shinyapp/adduser">Add User</a></div>    			    			
+    		</div>
+    		<div class="row">    			
+    			<div class="col-sm-8 border border-primary">Application name</div>
+    			<div class="col-sm-16 border border-primary">Granted user name</div>    			
+    		</div>
+    		<div class="row" th:each="appUser: ${appUsers}">    			
+    			<div class="col-sm-8">
+    			<select class="form-control readonly" placeholder="Application">                         
+                         <option th:each="app : ${apps}"
+                            th:value="${app.id}"
+                            th:utext="${app.name}" th:selected="${app.id}==appUser.appId"/>
+                </select>
+    			</div>
+    			<div class="col-sm-16" th:text="${appUser.userName}"></div>
+    		</div>    	
+    </div>
     </div>
 </body>
 </html>

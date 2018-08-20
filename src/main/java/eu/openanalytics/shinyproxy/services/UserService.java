@@ -22,6 +22,7 @@ package eu.openanalytics.shinyproxy.services;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -37,6 +38,8 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import eu.openanalytics.shinyproxy.entity.App;
+import eu.openanalytics.shinyproxy.entity.User;
 import eu.openanalytics.shinyproxy.services.AppService.ShinyApp;
 import eu.openanalytics.shinyproxy.services.EventService.EventType;
 
@@ -44,6 +47,9 @@ import eu.openanalytics.shinyproxy.services.EventService.EventType;
 public class UserService implements ApplicationListener<AbstractAuthenticationEvent> {
 
 	private Logger log = Logger.getLogger(UserService.class);
+	
+	@Inject
+	ShinyAppServiceImpl shinyAppService;
 
 	@Inject
 	Environment environment;
@@ -86,7 +92,17 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 				if (authName.startsWith("ROLE_")) authName = authName.substring(5);
 				groups.add(authName);
 			}
+
+			/// The code commented below was for adding groups named like appname to users.
+			/// But didn't work on SimpleAuthentication mode. Need to check it with LDAPAuthentication mode
+			/*for (App app: shinyAppService.getApps()) {
+				List<String> usernames = app.getUsers().stream().map(User::getUserName).collect(Collectors.toList());
+				if (usernames.contains(principalAuth.getName())) {
+					groups.add(app.getName());					
+				}
+			}*/
 		}
+				
 		return groups.toArray(new String[groups.size()]);
 	}
 	

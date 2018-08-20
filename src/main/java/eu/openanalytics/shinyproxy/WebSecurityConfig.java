@@ -21,6 +21,8 @@
 package eu.openanalytics.shinyproxy;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -38,8 +40,12 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import eu.openanalytics.shinyproxy.auth.IAuthenticationBackend;
 import eu.openanalytics.shinyproxy.auth.LogoutHandler;
+import eu.openanalytics.shinyproxy.entity.App;
+import eu.openanalytics.shinyproxy.entity.AppGroup;
+import eu.openanalytics.shinyproxy.entity.Group;
 import eu.openanalytics.shinyproxy.services.AppService;
 import eu.openanalytics.shinyproxy.services.AppService.ShinyApp;
+import eu.openanalytics.shinyproxy.services.ShinyAppService;
 import eu.openanalytics.shinyproxy.services.UserService;
 
 @Configuration
@@ -49,8 +55,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 	@Inject
 	LogoutHandler logoutHandler;
 
+	//@Inject
+	//AppService appService;
+
 	@Inject
-	AppService appService;
+	ShinyAppService appService;
 
 	@Inject
 	UserService userService;
@@ -80,11 +89,21 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 		if (auth.hasAuthorization()) {
 			// Limit access to the app pages
 			http.authorizeRequests().antMatchers("/login", "/signin/**", "/signup").permitAll();
-			for (ShinyApp app: appService.getApps()) {
+			/*for (ShinyApp app: appService.getApps()) {
 				String[] groups = app.getGroups();
 				if (groups == null || groups.length == 0) continue;
 				String[] appGroups = Arrays.stream(groups).map(s -> s.toUpperCase()).toArray(i -> new String[i]);
 				http.authorizeRequests().antMatchers("/app/" + app.getName()).hasAnyRole(appGroups);
+			}*/
+			
+			for (App app: appService.getApps()) {
+				AppGroup g = new AppGroup(app.getId(), app.getName());
+				
+				List<AppGroup> groupList = app.getGroups();
+				groupList.add(g); // Create a new group named as Application name. We will use this group grant access users to application without using groups
+				String[] groups = groupList.stream().map(AppGroup::getGroupName).map(p-> p.toUpperCase()).toArray(String[]::new);
+				if (groups == null || groups.length == 0) continue;
+				http.authorizeRequests().antMatchers("/app/" + app.getName()).hasAnyRole(groups);
 			}
 
 			// Limit access to the admin pages

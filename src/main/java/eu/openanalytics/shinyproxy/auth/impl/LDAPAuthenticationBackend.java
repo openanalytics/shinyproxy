@@ -20,6 +20,7 @@
  */
 package eu.openanalytics.shinyproxy.auth.impl;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -30,10 +31,14 @@ import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
 
+import org.apache.commons.dbutils.DbUtils;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.ldap.core.ContextSource;
+import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.support.DefaultTlsDirContextAuthenticationStrategy;
 import org.springframework.ldap.core.support.ExternalTlsDirContextAuthenticationStrategy;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -45,6 +50,12 @@ import org.springframework.security.ldap.DefaultSpringSecurityContextSource;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
 
 import eu.openanalytics.shinyproxy.auth.IAuthenticationBackend;
+import eu.openanalytics.shinyproxy.entity.App;
+import eu.openanalytics.shinyproxy.entity.AppUser;
+import eu.openanalytics.shinyproxy.services.ShinyAppHandler;
+import eu.openanalytics.shinyproxy.services.ShinyAppServiceImpl;
+import eu.openanalytics.shinyproxy.services.ShinyAppUserServiceImpl;
+import eu.openanalytics.shinyproxy.util.Utils;
 
 public class LDAPAuthenticationBackend implements IAuthenticationBackend {
 
@@ -52,6 +63,12 @@ public class LDAPAuthenticationBackend implements IAuthenticationBackend {
 	
 	private static final String STARTTLS_SIMPLE = "simple";
 	private static final String STARTTLS_EXTERNAL = "external";
+	
+	@Inject
+	static ShinyAppUserServiceImpl shinyAppUserServiceImpl;
+	
+	@Inject
+	static ShinyAppServiceImpl shinyAppServiceImpl;
 	
 	@Inject
 	Environment environment;
@@ -203,6 +220,74 @@ public class LDAPAuthenticationBackend implements IAuthenticationBackend {
 			}
 
 			return authorities;
+		}
+		
+		@Override
+		public Set<GrantedAuthority> getAdditionalRoles(DirContextOperations user,	String username) {
+			Set<GrantedAuthority> authorities = new HashSet<GrantedAuthority>();
+			
+			logger.debug(username);
+			List<AppUser> appUsers = getAppUsersByUserName(username);
+			String appId, appName;
+			App app;
+			
+			for (AppUser appUser : appUsers) {
+				
+				appId = appUser.getAppId();
+				
+				app = getApp(appId);
+				appName = app.getName().toUpperCase();
+
+				authorities.add(new SimpleGrantedAuthority(getRolePrefix() + appName));
+			}
+			
+			//authorities.add(new SimpleGrantedAuthority(getRolePrefix() + "HELLO"));
+			
+			return authorities;
+		}
+		
+		public List<AppUser> getAppUsersByUserName(String username) {
+			QueryRunner run = new QueryRunner();
+			Connection connection = null;
+
+			try {
+				connection = Utils.connect();
+				BeanListHandler<AppUser> h = new BeanListHandler<AppUser>(AppUser.class);
+
+				return run.query(connection, "SELECT ID, APPID, USERNAME FROM APPUSERS WHERE USERNAME = ?", h, username);
+			} catch (Exception ex) {
+				System.out.println(ex.toString());
+			} finally {
+				try {
+					DbUtils.close(connection);
+				} catch (Exception localException3) {
+				}
+			}
+			return null;
+		}
+		
+		private App getApp(String id) {
+			QueryRunner run = new QueryRunner();
+			Connection connection = null;
+			
+			try {
+				connection = Utils.connect();
+
+				ShinyAppHandler h = new ShinyAppHandler(connection);
+			
+				List<App> apps = run.query(connection,
+						"SELECT ID, NAME, DESCR, DISPLAYNAME, LOGOURL, MAPPING FROM APPS WHERE ID = ?", h, id);
+				if (apps.size() > 0)
+					return apps.get(0);
+			} catch (Exception ex) {
+				System.out.println(ex.toString());
+			} finally {
+				try {
+					DbUtils.close(connection);
+				} catch (Exception localException3) {
+				}
+			}
+			return null;
 		}
 
 		private String getCn(String dn) {

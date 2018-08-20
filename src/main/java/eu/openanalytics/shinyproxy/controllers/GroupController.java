@@ -36,6 +36,19 @@ public class GroupController extends BaseController
     return groupServiceImpl.getGroups();
   }
   
+  @RequestMapping(value={"/group/{name}/adduser"}, method={org.springframework.web.bind.annotation.RequestMethod.GET})
+  @ResponseBody
+  public List<Group> groupAddUser(@PathVariable("name") String name) {    
+    return groupServiceImpl.getGroups();
+  }
+  
+  @RequestMapping(value={"/group/{name}/adduser"}, method={org.springframework.web.bind.annotation.RequestMethod.POST})
+  @ResponseBody
+  public List<Group> groupSaveUser(@PathVariable("name") String name) {    
+    return groupServiceImpl.getGroups();
+  }
+
+  
   @RequestMapping(value={"/"}, method={org.springframework.web.bind.annotation.RequestMethod.POST})
   @ResponseBody
   public Group groupsCreate(@RequestBody Group group)
@@ -44,7 +57,6 @@ public class GroupController extends BaseController
   }
   
   @RequestMapping(value={"/group"}, method={org.springframework.web.bind.annotation.RequestMethod.GET})
-  @ResponseBody
   String groupAll(ModelMap map, HttpServletRequest request) {
 	  prepareMap(map, request);
 	  map.put("groups", groupServiceImpl.getGroups());

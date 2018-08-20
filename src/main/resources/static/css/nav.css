@@ -1,0 +1,165 @@
+/**
+ * ShinyProxy
+ *
+ * Copyright (C) 2016-2017 Open Analytics
+ *
+ * ===========================================================================
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Apache License as published by
+ * The Apache Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * Apache License for more details.
+ *
+ * You should have received a copy of the Apache License
+ * along with this program.  If not, see <http://www.apache.org/licenses/>
+ */
+
+
+@font-face {
+  font-family: 'MAK Avante';
+  src: url('MAK Avante.woff') format('woff');
+}
+
+
+.js-nav {
+  color: white;
+  text-decoration: none;
+  position: absolute;
+  left: 25px;
+  top: 16px;
+  height: 50px;
+  width: auto;
+}
+
+
+.StreamsHero-image {
+  /* Wave Color */
+  /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#59adeb+0,42c2b5+52,34ce93+100 */
+  background: #59adeb;
+  /* Old browsers */
+  background: -moz-linear-gradient(-45deg, #59adeb 0%, #42c2b5 52%, #34ce93 100%);
+  /* FF3.6-15 */
+  background: -webkit-linear-gradient(-45deg, #59adeb 0%, #42c2b5 52%, #34ce93 100%);
+  /* Chrome10-25,Safari5.1-6 */
+  background: linear-gradient(135deg, #59adeb 0%, #42c2b5 52%, #34ce93 100%);
+  /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+  filter: progid: DXImageTransform.Microsoft.gradient( startColorstr='#59adeb', endColorstr='#34ce93', GradientType=1);
+  /* IE6-9 fallback on horizontal gradient */
+  background-size: 350% 350%;
+  animation: waveColors 8s ease infinite;
+  /* End Wave Color */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  margin: 0 auto;
+}
+
+.StreamsHero-header {
+  color: #fff;
+  font-weight: 200;
+  line-height: 48px;
+  margin-bottom: -5px;
+  font-size: 32px;
+}
+
+.StreamsHero-blurb {
+  color: #fff;
+  font-size: 21px;
+  font-weight: 200;
+  line-height: 28px;
+  opacity: .7;
+  -ms-filter: "alpha(opacity=70)";
+  transition: opacity 300ms linear;
+  padding-bottom: 2em;
+}
+
+
+/* Buttons */
+
+.Button {
+  -webkit-appearance: none;
+  background: transparent;
+  border-color: currentcolor;
+  border-style: solid;
+  border-width: 1px;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  color: inherit;
+  cursor: pointer;
+  display: inline-block;
+  font: inherit;
+  line-height: normal;
+  margin: 0;
+  padding: .4em .75em;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  white-space: normal;
+  font-family: 'MAK Avante';
+}
+
+.StreamsHero-buttonContainer {
+  color: #fff;
+  margin: 0 auto;
+  padding-top: 1.5em;
+  padding-bottom: 1em;
+  text-align: right;
+  width: 95%;
+}
+
+.StreamsHero-buttonContainer .Button {
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 16px;
+  font-weight: 200;
+  padding: 10px 35px;
+}
+
+.StreamsHero-buttonContainer .Button.StreamsLogin {
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid transparent;
+}
+
+.StreamsHero-buttonContainer .Button:hover,
+.StreamsHero-buttonContainer .Button:focus {
+  background: #fff;
+  color: #1da1f2;
+}
+
+
+/* Animation Wave Color */
+
+@-webkit-keyframes waveColors {
+  0% {
+	background-position: 0% 7%;
+  }
+  50% {
+	background-position: 100% 94%;
+  }
+  100% {
+	background-position: 0% 7%;
+  }
+}
+
+@keyframes waveColors {
+  0% {
+	background-position: 0% 7%;
+  }
+  50% {
+	background-position: 100% 94%;
+  }
+  100% {
+	background-position: 0% 7%;
+  }
+}

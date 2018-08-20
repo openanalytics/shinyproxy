@@ -39,5 +39,4 @@ public class LoginController extends BaseController {
 		if (error.isPresent()) map.put("error", "Invalid user name or password");
         return "login";
     }
-
 }

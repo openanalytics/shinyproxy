@@ -95,7 +95,7 @@ public abstract class BaseController {
 	protected Proxy findUserProxy(HttpServletRequest request) {
 		String appName = getAppName(request);
 		if (appName == null) return null;
-		return proxyService.findProxy(p -> appName.equals(p.getSpec().getId()), false);
+		return proxyService.findProxy(p -> appName.equals(p.getSpec().getId()) && userService.isOwner(p), false);
 	}
 	
 	protected String getProxyEndpoint(Proxy proxy) {

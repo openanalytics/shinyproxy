@@ -33,7 +33,7 @@ The build will result in a single `.jar` file that is made available in the `tar
 ## Running the application
 
 ```
-java -jar shinyproxy-2.0.2.jar 
+java -jar shinyproxy-2.0.3.jar 
 ```
 
 Navigate to http://localhost:8080 to access the application.  If the default configuration is used, authentication will be done against the LDAP server at *ldap.forumsys.com*; to log in one can use the user name "tesla" and password "password".

@@ -33,7 +33,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.view.RedirectView;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.util.Retrying;
 
 @Controller
 public class AppController extends BaseController {
@@ -43,6 +45,11 @@ public class AppController extends BaseController {
 		prepareMap(map, request);
 		
 		Proxy proxy = findUserProxy(request);
+		if (proxy != null && proxy.getStatus() == ProxyStatus.Starting) {
+			// If a request comes in for a proxy that is currently starting up,
+			// block the request until the proxy is ready (or errored).
+			Retrying.retry(i -> proxy.getStatus() != ProxyStatus.Starting, 40, 500);
+		}
 		String mapping = getProxyEndpoint(proxy);
 
 		map.put("appTitle", getAppTitle(request));

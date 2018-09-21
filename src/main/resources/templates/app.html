@@ -39,7 +39,7 @@
     
 	<script type="text/javascript" th:inline="javascript">
 		function setShinyframeHeight() {
-			$('#shinyframe').css('height', ($(window).height()-6)+'px');
+			$('#shinyframe').css('height', ($(window).height())+'px');
 		}
 		window.addEventListener("load", setShinyframeHeight);
 		window.addEventListener("resize",  setShinyframeHeight);

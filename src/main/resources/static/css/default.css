@@ -40,6 +40,7 @@ body > div#navbar { padding-top: 0px; }
 
 #shinyframe {
   border: none;
+  display: block;
 }
 
 #admin {

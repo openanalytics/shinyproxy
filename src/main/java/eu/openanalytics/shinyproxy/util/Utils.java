@@ -32,8 +32,11 @@ import org.apache.log4j.Logger;
 public class Utils {
 
 	public static String JDBC_DRIVER_NAME = "oracle.jdbc.driver.OracleDriver";
-	public static String JDBC_CONNECTION = "jdbc:oracle:thin:@localhost:1521:xe";
+	//public static String JDBC_CONNECTION = "jdbc:oracle:thin:@192.168.203.10:1521/analytic";
+	public static String JDBC_CONNECTION = "jdbc:oracle:thin:@localhost:1521/xe";
+	//public static String DB_USERNAME = "shinyproxy";
 	public static String DB_USERNAME = "shiny";
+	//public static String DB_PASSWORD = "shavarmaA1";
 	public static String DB_PASSWORD = "shavar";
 
 	public static boolean retry(IntPredicate job, int tries, int waitTime) {

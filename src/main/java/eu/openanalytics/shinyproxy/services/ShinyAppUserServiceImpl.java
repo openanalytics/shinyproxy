@@ -94,7 +94,6 @@ public class ShinyAppUserServiceImpl implements ShinyAppUserService {
 	@Override
 	public List<AppUser> getAppUsersByUserName(String username) {
 		QueryRunner run = new QueryRunner();
-		Connection connection = null;
 
 		try {
 			connection = Utils.connect();

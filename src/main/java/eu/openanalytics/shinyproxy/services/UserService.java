@@ -108,7 +108,7 @@ public class UserService implements ApplicationListener<AbstractAuthenticationEv
 	
 	public boolean isAdmin(Authentication principalAuth) {
 		for (String adminGroups: getAdminGroups()) {
-			if (isMember(principalAuth, adminGroups)) return true;
+			if (isMember(principalAuth, "DAA-SHINYPROXY" /*adminGroups*/)) return true;
 		}
 		return false;
 	}

@@ -41,23 +41,26 @@
 	<div class="container-fluid">
     <div id="shinyapp">
     	<h3>Shiny Applications Users</h3>    	
+    	<table class="table">
+    		<thead>
+    			<tr>
+    				<th scope="col">Id</th>
+    				<th scope="col">Application name</th>
+    				<th scope="col">Granted user name</th>
+    			</tr>
+    		</thead>
+    		<tbody>
+    			<tr th:each="appUser: ${appUsers}">
+    				<td scope="row" th:text="${appUser.id}"></td>
+    				<td th:text="${apps[appUser.appId].name}">    				
+    				</td>
+    				<td th:text="${appUser.userName}"></td>
+    			</tr>
+    		</tbody>
+    	</table>
     		<div class="row">    			
     			<div class="col-sm-8 border border-primary"><a href="/shinyapp/adduser">Add User</a></div>    			    			
-    		</div>
-    		<div class="row">    			
-    			<div class="col-sm-8 border border-primary">Application name</div>
-    			<div class="col-sm-16 border border-primary">Granted user name</div>    			
-    		</div>
-    		<div class="row" th:each="appUser: ${appUsers}">    			
-    			<div class="col-sm-8">
-    			<select class="form-control readonly" placeholder="Application">                         
-                         <option th:each="app : ${apps}"
-                            th:value="${app.id}"
-                            th:utext="${app.name}" th:selected="${app.id}==appUser.appId"/>
-                </select>
-    			</div>
-    			<div class="col-sm-16" th:text="${appUser.userName}"></div>
-    		</div>    	
+    		</div>    		
     </div>
     </div>
 </body>

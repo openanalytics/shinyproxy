@@ -98,10 +98,6 @@ public class ShinyProxySpecMainProvider {
 
 		to.setContainerSpecs(Collections.singletonList(cSpec));
 
-		// Add some custom fields used in our template
-		to.setContact(from.getContact());
-		to.setVersion(from.getVersion());
-		// End customization
 		return to;
 	}
 
@@ -254,25 +250,5 @@ public class ShinyProxySpecMainProvider {
 			this.accessGroups = accessGroups;
 		}
 
-		// Add some custom fields used in our template
-		private String contact;
-		private String version;
-
-		public String getContact() {
-			return contact;
-		}
-
-		public void setContact(String contact) {
-			this.contact = contact;
-		}
-
-		public String getVersion() {
-			return version;
-		}
-
-		public void setVersion(String version) {
-			this.version = version;
-		}
-		// End customization
 	}
 }

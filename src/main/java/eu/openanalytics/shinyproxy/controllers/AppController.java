@@ -97,7 +97,7 @@ public class AppController extends BaseController {
 		String queryString = request.getQueryString();
 		queryString = (queryString == null) ? "" : "?" + queryString;
 		
-		String containerPath = getContextPath() + mapping + environment.getProperty("proxy.landing-page", "/") + queryString;
+		String containerPath = getContextPath() + "api/route/" + mapping + environment.getProperty("proxy.landing-page", "/") + queryString;
 		return containerPath;
 	}
 }

@@ -42,7 +42,11 @@ public class AdminController extends BaseController {
 		List<Proxy> proxies = proxyService.getProxies(null, false);
 		Map<String, String> proxyUptimes = new HashMap<>();
 		for (Proxy proxy: proxies) {
-			long uptimeSec = (System.currentTimeMillis() - proxy.getStartupTimestamp())/1000;
+			long uptimeSec = 0;
+			// if the proxy hasn't started up yet, the uptime should be zero
+			if (proxy.getStartupTimestamp() > 0) {
+				uptimeSec = (System.currentTimeMillis() - proxy.getStartupTimestamp())/1000;
+			}
 			String uptime = String.format("%d:%02d:%02d", uptimeSec/3600, (uptimeSec%3600)/60, uptimeSec%60);
 			proxyUptimes.put(proxy.getId(), uptime);
 		}

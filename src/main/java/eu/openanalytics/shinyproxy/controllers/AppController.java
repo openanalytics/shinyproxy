@@ -23,23 +23,28 @@ package eu.openanalytics.shinyproxy.controllers;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.view.RedirectView;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.containerproxy.util.Retrying;
 
 @Controller
 public class AppController extends BaseController {
 
+	@Inject
+	private ProxyMappingManager mappingManager;
+	
 	@RequestMapping(value="/app/*", method=RequestMethod.GET)
 	public String app(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
@@ -50,33 +55,39 @@ public class AppController extends BaseController {
 			// block the request until the proxy is ready (or errored).
 			Retrying.retry(i -> proxy.getStatus() != ProxyStatus.Starting, 40, 500);
 		}
-		String mapping = getProxyEndpoint(proxy);
 
 		map.put("appTitle", getAppTitle(request));
-		map.put("container", buildContainerPath(mapping, request));
+		map.put("container", (proxy == null) ? "" : buildContainerPath(request));
 		
 		return "app";
-	}
-	
-	@RequestMapping(value="/app_direct/*", method=RequestMethod.GET)
-	public Object appDirect(ModelMap map, HttpServletRequest request) {
-		Proxy proxy = getOrStart(request);
-		String mapping = getProxyEndpoint(proxy);
-		String containerPath = buildContainerPath(mapping, request);
-		return new RedirectView(containerPath);		
 	}
 	
 	@RequestMapping(value="/app/*", method=RequestMethod.POST)
 	@ResponseBody
 	public Map<String,String> startApp(HttpServletRequest request) {
 		Proxy proxy = getOrStart(request);
-		String mapping = getProxyEndpoint(proxy);
-		String containerPath = buildContainerPath(mapping, request);
+		String containerPath = buildContainerPath(request);
 		
 		Map<String,String> response = new HashMap<>();
 		response.put("containerPath", containerPath);
 		response.put("proxyId", proxy.getId());
 		return response;
+	}
+	
+	@RequestMapping(value="/app_direct/**", method=RequestMethod.GET)
+	public void appDirect(HttpServletRequest request, HttpServletResponse response) {
+		Proxy proxy = getOrStart(request);
+		String mapping = getProxyEndpoint(proxy);
+		
+		String subPath = request.getRequestURI();
+		subPath = subPath.substring(subPath.indexOf("/app_direct/") + 12);
+		subPath = subPath.substring(getAppName(request).length());
+		
+		try {
+			mappingManager.dispatchAsync(mapping + subPath, request, response);
+		} catch (Exception e) {
+			throw new RuntimeException("Error routing proxy request", e);
+		}
 	}
 	
 	private Proxy getOrStart(HttpServletRequest request) {
@@ -91,13 +102,14 @@ public class AppController extends BaseController {
 		return proxy;
 	}
 	
-	private String buildContainerPath(String mapping, HttpServletRequest request) {
-		if (mapping == null) return "";
+	private String buildContainerPath(HttpServletRequest request) {
+		String appName = getAppName(request);
+		if (appName == null) return "";
 		
 		String queryString = request.getQueryString();
 		queryString = (queryString == null) ? "" : "?" + queryString;
 		
-		String containerPath = getContextPath() + "api/route/" + mapping + environment.getProperty("proxy.landing-page", "/") + queryString;
+		String containerPath = getContextPath() + "app_direct/" + appName + environment.getProperty("proxy.landing-page", "/") + queryString;
 		return containerPath;
 	}
 }

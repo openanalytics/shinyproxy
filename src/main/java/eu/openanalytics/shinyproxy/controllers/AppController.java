@@ -55,6 +55,9 @@ public class AppController extends BaseController {
 		map.put("appTitle", getAppTitle(request));
 		map.put("container", buildContainerPath(mapping, request));
 		
+		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
+		map.put("apps", apps);
+
 		return "app";
 	}
 	

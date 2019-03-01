@@ -31,6 +31,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 
 @Controller
 public class AdminController extends BaseController {
@@ -50,6 +51,9 @@ public class AdminController extends BaseController {
 		map.put("proxies", proxies);
 		map.put("proxyUptimes", proxyUptimes);
 		
+		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
+		map.put("apps", apps);
+
 		return "admin";
 	}
 }

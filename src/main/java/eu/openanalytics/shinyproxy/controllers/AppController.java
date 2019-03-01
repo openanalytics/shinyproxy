@@ -21,7 +21,9 @@
 package eu.openanalytics.shinyproxy.controllers;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -58,6 +60,12 @@ public class AppController extends BaseController {
 		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
 		map.put("apps", apps);
 
+		Set<String> displayGroups = new HashSet<>();
+		for (ProxySpec app: apps) {
+			displayGroups.add(app.getDisplayGroup());
+		}
+		map.put("displayGroups", displayGroups.toArray(new String[0]));
+				
 		return "app";
 	}
 	

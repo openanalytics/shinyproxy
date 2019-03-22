@@ -18,7 +18,7 @@ Open Source Enterprise Deployment for Shiny Apps
 
 Learn more at https://shinyproxy.io
 
-#### (c) Copyright Open Analytics NV, 2016-2018 - Apache License 2.0
+#### (c) Copyright Open Analytics NV, 2016-2019 - Apache License 2.0
 
 ## Building from source
 

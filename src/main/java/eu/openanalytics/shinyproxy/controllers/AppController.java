@@ -109,7 +109,7 @@ public class AppController extends BaseController {
 		String queryString = request.getQueryString();
 		queryString = (queryString == null) ? "" : "?" + queryString;
 		
-		String containerPath = getContextPath() + "app_direct/" + appName + environment.getProperty("proxy.landing-page", "/") + queryString;
+		String containerPath = getContextPath() + "app_direct/" + appName + "/" + queryString;
 		return containerPath;
 	}
 }

@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.view.RedirectView;
 
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
  
@@ -35,7 +36,10 @@ import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 public class IndexController extends BaseController {
 	
 	@RequestMapping("/")
-    private String index(ModelMap map, HttpServletRequest request) {
+    private Object index(ModelMap map, HttpServletRequest request) {
+		String landingPage = environment.getProperty("proxy.landing-page", "/");
+		if (!landingPage.equals("/")) return new RedirectView(landingPage);	
+		
 		prepareMap(map, request);
 		
 		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);

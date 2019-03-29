@@ -74,7 +74,7 @@ public class AppController extends BaseController {
 		return response;
 	}
 	
-	@RequestMapping(value="/app_direct/**", method=RequestMethod.GET)
+	@RequestMapping(value="/app_direct/**")
 	public void appDirect(HttpServletRequest request, HttpServletResponse response) {
 		Proxy proxy = getOrStart(request);
 		String mapping = getProxyEndpoint(proxy);

@@ -22,7 +22,7 @@ body > div { padding-top: 10px; }
 body > div#navbar { padding-top: 0px; }
 
 #navbar + div { padding-top: 50px; }
-#navbar + iframe { padding-top: 50px; }
+#navbar + iframe { margin-top: 50px; }
 
 @media screen and (max-width: 768px) {
    #navbar + div { padding-top: 150px; }

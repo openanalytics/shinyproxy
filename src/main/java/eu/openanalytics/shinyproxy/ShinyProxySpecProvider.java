@@ -94,7 +94,10 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		cSpec.setNetworkConnections(from.getContainerNetworkConnections());
 		cSpec.setDns(from.getContainerDns());
 		cSpec.setVolumes(from.getContainerVolumes());
-		cSpec.setMemory(from.getContainerMemory());
+		cSpec.setMemoryRequest(from.getContainerMemoryRequest());
+		cSpec.setMemoryLimit(from.getContainerMemoryLimit());
+		cSpec.setCpuRequest(from.getContainerCpuRequest());
+		cSpec.setCpuLimit(from.getContainerCpuLimit());
 		cSpec.setPrivileged(from.isContainerPrivileged());
 		
 		Map<String, Integer> portMapping = new HashMap<>();
@@ -125,7 +128,10 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private String[] containerNetworkConnections;
 		private String[] containerDns;
 		private String[] containerVolumes;
-		private String containerMemory;
+		private String containerMemoryRequest;
+		private String containerMemoryLimit;
+		private String containerCpuRequest;
+		private String containerCpuLimit;
 		private boolean containerPrivileged;
 		
 		private int port;
@@ -227,12 +233,36 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			this.containerVolumes = containerVolumes;
 		}
 
-		public String getContainerMemory() {
-			return containerMemory;
+		public String getContainerMemoryRequest() {
+			return containerMemoryRequest;
 		}
 
-		public void setContainerMemory(String containerMemory) {
-			this.containerMemory = containerMemory;
+		public void setContainerMemoryRequest(String containerMemoryRequest) {
+			this.containerMemoryRequest = containerMemoryRequest;
+		}
+
+		public String getContainerMemoryLimit() {
+			return containerMemoryLimit;
+		}
+
+		public void setContainerMemoryLimit(String containerMemoryLimit) {
+			this.containerMemoryLimit = containerMemoryLimit;
+		}
+
+		public String getContainerCpuRequest() {
+			return containerCpuRequest;
+		}
+
+		public void setContainerCpuRequest(String containerCpuRequest) {
+			this.containerCpuRequest = containerCpuRequest;
+		}
+
+		public String getContainerCpuLimit() {
+			return containerCpuLimit;
+		}
+
+		public void setContainerCpuLimit(String containerCpuLimit) {
+			this.containerCpuLimit = containerCpuLimit;
 		}
 
 		public boolean isContainerPrivileged() {

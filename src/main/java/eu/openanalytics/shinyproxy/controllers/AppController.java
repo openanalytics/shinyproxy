@@ -20,10 +20,12 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Inject;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -82,6 +84,15 @@ public class AppController extends BaseController {
 		String subPath = request.getRequestURI();
 		subPath = subPath.substring(subPath.indexOf("/app_direct/") + 12);
 		subPath = subPath.substring(getAppName(request).length());
+		
+		if (subPath.trim().isEmpty()) {
+			try {
+				response.sendRedirect(request.getRequestURI() + "/");
+			} catch (Exception e) {
+				throw new RuntimeException("Error redirecting proxy request", e);
+			}
+			return;
+		}
 		
 		try {
 			mappingManager.dispatchAsync(mapping + subPath, request, response);

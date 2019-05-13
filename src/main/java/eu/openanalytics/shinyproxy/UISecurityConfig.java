@@ -62,6 +62,9 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 
 			// Limit access to the admin pages
 			http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminGroups());
+
+			// Allow public access to health endpoint
+			http.authorizeRequests().antMatchers("/actuator/health").permitAll();
 		}
 	}
 }

@@ -20,8 +20,7 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.File;
 
 import javax.inject.Inject;
 import javax.mail.internet.MimeMessage;
@@ -90,16 +89,25 @@ public class IssueController extends BaseController {
 			if (form.appName != null) body.append(String.format("App: %s%s", form.appName, lineSep));
 			if (form.currentLocation != null) body.append(String.format("Location: %s%s", form.currentLocation, lineSep));
 			if (form.customMessage != null) body.append(String.format("Message: %s%s", form.customMessage, lineSep));
-			helper.setText(body.toString());
 
 			// Attachments (only if container-logging is enabled)
-			if (logService.isLoggingEnabled() && proxy != null) {
-				Path[] filePaths = logService.getLogFiles(proxy);
-				for (Path p: filePaths) {
-					if (Files.exists(p)) helper.addAttachment(p.toFile().getName(), p.toFile());
+			if (proxy != null) {
+				String[] filePaths = logService.getLogs(proxy);
+				
+				if (filePaths != null && filePaths.length > 1) {
+					if (new File(filePaths[0]).exists()) {
+						for (String p: filePaths) {
+							File f = new File(p);
+							helper.addAttachment(f.getName(), f);
+						}
+					} else {
+						body.append(String.format("Log (stdout): %s%s", filePaths[0], lineSep));
+						body.append(String.format("Log (stderr): %s%s", filePaths[1], lineSep));
+					}
 				}
 			}
 			
+			helper.setText(body.toString());
 			mailSender.send(message);
 		} catch (Exception e) {
 			throw new RuntimeException("Failed to send email", e);

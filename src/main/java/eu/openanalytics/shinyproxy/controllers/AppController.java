@@ -50,11 +50,7 @@ public class AppController extends BaseController {
 		prepareMap(map, request);
 		
 		Proxy proxy = findUserProxy(request);
-		if (proxy != null && proxy.getStatus() == ProxyStatus.Starting) {
-			// If a request comes in for a proxy that is currently starting up,
-			// block the request until the proxy is ready (or errored).
-			Retrying.retry(i -> proxy.getStatus() != ProxyStatus.Starting, 40, 500);
-		}
+		awaitReady(proxy);
 
 		map.put("appTitle", getAppTitle(request));
 		map.put("container", (proxy == null) ? "" : buildContainerPath(request));
@@ -77,6 +73,8 @@ public class AppController extends BaseController {
 	@RequestMapping(value="/app_direct/**")
 	public void appDirect(HttpServletRequest request, HttpServletResponse response) {
 		Proxy proxy = getOrStart(request);
+		awaitReady(proxy);
+		
 		String mapping = getProxyEndpoint(proxy);
 		
 		String subPath = request.getRequestURI();
@@ -109,6 +107,19 @@ public class AppController extends BaseController {
 			proxy = proxyService.startProxy(resolvedSpec, false);
 		}
 		return proxy;
+	}
+	
+	private boolean awaitReady(Proxy proxy) {
+		if (proxy == null) return false;
+		if (proxy.getStatus() == ProxyStatus.Up) return true;
+		if (proxy.getStatus() == ProxyStatus.Stopping || proxy.getStatus() == ProxyStatus.Stopped) return false;
+		
+		int totalWaitMs = Integer.parseInt(environment.getProperty("proxy.container-wait-time", "20000"));
+		int waitMs = Math.min(500, totalWaitMs);
+		int maxTries = totalWaitMs / waitMs;
+		Retrying.retry(i -> proxy.getStatus() != ProxyStatus.Starting, maxTries, waitMs);
+		
+		return (proxy.getStatus() == ProxyStatus.Up);
 	}
 	
 	private String buildContainerPath(HttpServletRequest request) {

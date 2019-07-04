@@ -61,7 +61,7 @@ public abstract class BaseController {
 	Environment environment;
 	
 	private static Logger logger = LogManager.getLogger(BaseController.class);
-	private static Pattern appPattern = Pattern.compile(".*/app[^/]*/([^/]*)/?.*");
+	private static Pattern appPattern = Pattern.compile(".*?/app[^/]*/([^/]*)/?.*");
 	private static Map<String, String> imageCache = new HashMap<>();
 	
 	protected String getUserName(HttpServletRequest request) {

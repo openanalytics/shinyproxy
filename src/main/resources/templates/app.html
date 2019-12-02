@@ -25,7 +25,8 @@
 	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head lang="en">
 	<title th:text="${appTitle} + ' - ' + ${appInstanceDisplayName}"></title>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<link rel="stylesheet" media="screen" th:href="@{${resourcePrefix} + ${bootstrapCss}}"/>
 	<link rel="stylesheet" media="screen" th:href="@{${resourcePrefix} + '/css/default.css'}"/>
 	<script th:src="@{${resourcePrefix} + ${jqueryJs}}"></script>

@@ -99,6 +99,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		cSpec.setCpuRequest(from.getContainerCpuRequest());
 		cSpec.setCpuLimit(from.getContainerCpuLimit());
 		cSpec.setPrivileged(from.isContainerPrivileged());
+		cSpec.setLabels(from.getLabels());
 		
 		Map<String, Integer> portMapping = new HashMap<>();
 		if (from.getPort() > 0) {
@@ -133,6 +134,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private String containerCpuRequest;
 		private String containerCpuLimit;
 		private boolean containerPrivileged;
+		
+		private Map<String,String> labels;
 		
 		private int port;
 		private String[] accessGroups;
@@ -273,6 +276,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			this.containerPrivileged = containerPrivileged;
 		}
 
+		public Map<String, String> getLabels() {
+			return labels;
+		}
+		
+		public void setLabels(Map<String, String> labels) {
+			this.labels = labels;
+		}
+		
 		public int getPort() {
 			return port;
 		}

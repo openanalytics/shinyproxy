@@ -1,3 +1,4 @@
 /target/
 /shinyproxy.log
 /application.yml
+/.project

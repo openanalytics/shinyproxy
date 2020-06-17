@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2019 Open Analytics
+ * Copyright (C) 2016-2020 Open Analytics
  *
  * ===========================================================================
  *
@@ -61,7 +61,7 @@ public abstract class BaseController {
 	Environment environment;
 	
 	private static Logger logger = LogManager.getLogger(BaseController.class);
-	private static Pattern appPattern = Pattern.compile(".*/app[^/]*/([^/]*)/?.*");
+	private static Pattern appPattern = Pattern.compile(".*?/app[^/]*/([^/]*)/?.*");
 	private static Map<String, String> imageCache = new HashMap<>();
 	
 	protected String getUserName(HttpServletRequest request) {

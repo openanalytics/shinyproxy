@@ -8,7 +8,7 @@
 	<version>2.3.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>shinyproxy</name>
+	<name>ShinyProxy</name>
 	<description>deploy Shiny apps in an enterprise context</description>
 
 	<organization>
@@ -26,6 +26,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
+		<containerproxy.version>0.8.5-SNAPSHOT</containerproxy.version>
+		<resource.delimiter>&amp;</resource.delimiter>
 	</properties>
 	
 	<distributionManagement>
@@ -62,7 +64,7 @@
 		<dependency>
 			<groupId>eu.openanalytics</groupId>
 			<artifactId>containerproxy</artifactId>
-			<version>0.8.4</version>
+			<version>${containerproxy.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -82,6 +84,17 @@
 						</goals>
 						<configuration>
 							<mainClass>eu.openanalytics.containerproxy.ContainerProxyApplication</mainClass>
+						</configuration>
+					</execution>
+					<execution>
+						<id>build-info</id>
+						<goals>
+							<goal>build-info</goal>
+						</goals>
+						<configuration>
+							<additionalProperties>
+								<containerProxyVersion>${containerproxy.version}</containerProxyVersion>
+							</additionalProperties>
 						</configuration>
 					</execution>
 				</executions>
@@ -271,6 +284,7 @@
 						<exclude>mvnw</exclude>
 						<exclude>**/*.properties</exclude>
 						<exclude>**/*.yml</exclude>
+						<exclude>**/*.xml</exclude>
 						<exclude>LICENSE</exclude>
 						<exclude>LICENSE_HEADER</exclude>
 						<exclude>Dockerfile</exclude>

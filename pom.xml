@@ -34,12 +34,12 @@
 		<snapshotRepository>
 			<id>oa-nexus-snapshots</id>
 			<name>OpenAnalytics Snapshots Repository</name>
-			<url>http://nexus.openanalytics.eu/nexus/content/repositories/snapshots</url>
+			<url>https://nexus.openanalytics.eu/repository/snapshots</url>
 		</snapshotRepository>
 		<repository>
 			<id>oa-nexus-releases</id>
 			<name>OpenAnalytics Release Repository</name>
-			<url>http://nexus.openanalytics.eu/nexus/content/repositories/releases</url>
+			<url>https://nexus.openanalytics.eu/repository/releases</url>
 		</repository>
 	</distributionManagement>
 	

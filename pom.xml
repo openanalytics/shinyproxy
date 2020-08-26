@@ -123,7 +123,7 @@
 		        </executions>
 				-->
 				<configuration>
-					<license>(c) Copyright Open Analytics NV, 2016-2017 - Apache License 2.0</license>
+					<license>(c) Copyright Open Analytics NV, 2016-2020 - Apache License 2.0</license>
 					<release>1.el7</release>
 					<group>Development/Tools</group>
 					<packager>Open Analytics</packager>
@@ -325,7 +325,7 @@
 			<plugin>
 				<groupId>net.nicoulaj.maven.plugins</groupId>
 				<artifactId>checksum-maven-plugin</artifactId>
-				<version>1.5</version>
+				<version>1.9</version>
 				<executions>
 					<execution>
 						<goals>
@@ -340,6 +340,13 @@
                    </algorithms>
                    <attachChecksums>true</attachChecksums>
         		</configuration>
+			</plugin>
+			<plugin>
+    			<artifactId>maven-deploy-plugin</artifactId>
+    			<version>3.0.0-M1</version>
+    			<configuration>
+        			<updateReleaseInfo>true</updateReleaseInfo>
+    			</configuration>
 			</plugin>
 		</plugins>
 	</build>

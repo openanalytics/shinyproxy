@@ -69,6 +69,12 @@
 			<version>${containerproxy.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr353</artifactId>
+			<version>2.11.2</version>
+			<!-- We need a higher version than shipped by Spring to have all functionality (namely JsonPatch support) -->
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>

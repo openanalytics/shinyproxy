@@ -89,6 +89,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 				throw new IllegalArgumentException(String.format("Configuration error: spec with id '%s' has invalid kubernetes-pod-patches", from.getId()));
 			}
 		}
+		to.setKubernetesAdditionalManifests(from.getKubernetesAdditionalManifests());
 		
 		if (from.getAccessGroups() != null && from.getAccessGroups().length > 0) {
 			ProxyAccessControl acl = new ProxyAccessControl();
@@ -146,6 +147,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private String containerCpuLimit;
 		private boolean containerPrivileged;
 		private String kubernetesPodPatches;
+		private List<String> kubernetesAdditionalManifests = new ArrayList<>();
 		
 		private Map<String,String> labels;
 		
@@ -318,6 +320,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public void setKubernetesPodPatches(String kubernetesPodPatches) {
 			this.kubernetesPodPatches = kubernetesPodPatches;
+		}
+		
+		public void setKubernetesAdditionalManifests(List<String> manifests) {
+			this.kubernetesAdditionalManifests = manifests;
+		}
+
+		public List<String> getKubernetesAdditionalManifests() {
+			return kubernetesAdditionalManifests;
 		}
 	}
 }

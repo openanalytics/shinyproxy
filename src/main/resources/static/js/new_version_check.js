@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	document.getElementById('new-version-btn').addEventListener("click", function() {
 		 $.get("api/proxy", function(data, status){
 		 	if (data.length > 0) {
-		 		if (confirm("Warning: you have " + data.length + " apps running, you will be unable to access these once you switch to the new version.")) {
+		 		if (confirm("Warning: you have " + data.length + " apps running, your existing session(s) will be closed once you switch to the new version.")) {
 		 			update();
 				} 
 		 	} else {

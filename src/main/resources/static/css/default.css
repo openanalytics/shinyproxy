@@ -24,18 +24,41 @@ body > div#navbar { padding-top: 0px; }
 #navbar + div { padding-top: 50px; }
 #navbar + iframe { padding-top: 50px; }
 
+#applist {
+	margin-top: 10px;
+	padding-top: 50px;
+}
+
+#new-version-banner {
+	margin: 70px 20px 20px 20px;
+	padding-top: 15px !important;
+}
+
+#new-version-banner[style*='display: block'] + #applist {
+	margin-top: 10px;
+	padding-top: 0px;
+}
+
 @media screen and (max-width: 768px) {
-   #navbar + div { padding-top: 150px; }
-   #navbar + iframe { padding-top: 150px; }
+	#navbar + div { padding-top: 150px; }
+	#navbar + iframe { padding-top: 150px; }
+	#applist {
+		padding-top: 150px;
+	}
+ 	#new-version-banner {
+		margin-top: 150px;
+ 	}
 }
 
 @media screen and (max-width: 360px) {
     #navbar + div { padding-top: 200px; }
     #navbar + iframe { padding-top: 200px; }
-}
-
-#applist {
-	margin-top: 10px;
+	#applist {
+		padding-top: 200px;
+	}
+ 	#new-version-banner {
+		margin-top: 200px;
+ 	}
 }
 
 #shinyframe {
@@ -68,4 +91,8 @@ body > div#navbar { padding-top: 0px; }
 	text-align: center;
 	font-size: 24px;
 	margin-top: -50px;
+}
+
+#new-version-btn {
+	margin-left: 20px;
 }

@@ -302,6 +302,7 @@
 						<exclude>.gitignore</exclude>
 						<exclude>src/deb/**</exclude>
 						<exclude>templates/**</exclude>
+						<exclude>src/main/resources/static/js/js.cookie-2.2.1.min.js</exclude>
 					</excludes>
 				</configuration>
 				<executions>

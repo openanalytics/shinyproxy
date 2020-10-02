@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
 	function update() {
 		// skipper sets cookie on the domain without any subdomain
 		// we have to do this too
-		var domain = location.hostname.split('.').slice(-2).join('.');
+		var domain = location.hostname.split('.').slice(1).join('.');
 		Cookies.set('sp-instance', Cookies.get('sp-latest-instance'),  { domain: domain});
 		location.reload();
 	}

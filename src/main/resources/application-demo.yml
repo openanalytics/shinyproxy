@@ -1,6 +1,6 @@
 proxy:
   title: Open Analytics Shiny Proxy
-  logo-url: https://www.openanalytics.eu/img/logo.png
+  logo-url: https://www.openanalytics.eu/shinyproxy/logo.png
   landing-page: /
   heartbeat-rate: 10000
   heartbeat-timeout: 60000

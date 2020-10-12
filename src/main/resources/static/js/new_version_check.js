@@ -42,16 +42,9 @@ document.addEventListener('DOMContentLoaded', function() {
 	}
 	
 	function update() {
-		// skipper sets cookie on the domain without any subdomain
-		// we have to do this too
-		var parts = location.hostname.split('.');
-		if (parts.length <= 2) {
-			var domain = location.hostname;
-		} else { 
-			var domain = parts.slice(1).join('.');
-		}
+		var path = location.pathname;
 		
-		Cookies.set('sp-instance', Cookies.get('sp-latest-instance'),  { domain: domain});
+		Cookies.set('sp-instance', Cookies.get('sp-latest-instance'),  {path: path});
 		location.reload();
 	}
 

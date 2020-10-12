@@ -26,7 +26,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
-		<containerproxy.version>0.8.5</containerproxy.version>
+		<containerproxy.version>0.8.6-SNAPSHOT</containerproxy.version>
 		<resource.delimiter>&amp;</resource.delimiter>
 	</properties>
 

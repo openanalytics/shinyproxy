@@ -20,6 +20,7 @@
  */
 package eu.openanalytics.shinyproxy;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,6 +33,9 @@ import javax.annotation.PostConstruct;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 import eu.openanalytics.containerproxy.model.spec.ContainerSpec;
 import eu.openanalytics.containerproxy.model.spec.ProxyAccessControl;
@@ -78,6 +82,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		to.setDisplayName(from.getDisplayName());
 		to.setDescription(from.getDescription());
 		to.setLogoURL(from.getLogoURL());
+		if (from.getKubernetesPodPatches() != null) {
+			try {
+				to.setKubernetesPodPatches(from.getKubernetesPodPatches());
+			} catch (Exception e) {
+				throw new IllegalArgumentException(String.format("Configuration error: spec with id '%s' has invalid kubernetes-pod-patches", from.getId()));
+			}
+		}
+		to.setKubernetesAdditionalManifests(from.getKubernetesAdditionalManifests());
 		
 		if (from.getAccessGroups() != null && from.getAccessGroups().length > 0) {
 			ProxyAccessControl acl = new ProxyAccessControl();
@@ -134,6 +146,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private String containerCpuRequest;
 		private String containerCpuLimit;
 		private boolean containerPrivileged;
+		private String kubernetesPodPatches;
+		private List<String> kubernetesAdditionalManifests = new ArrayList<>();
 		
 		private Map<String,String> labels;
 		
@@ -298,6 +312,22 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public void setAccessGroups(String[] accessGroups) {
 			this.accessGroups = accessGroups;
+		}
+
+		public String getKubernetesPodPatches() {
+			return kubernetesPodPatches;
+		}
+
+		public void setKubernetesPodPatches(String kubernetesPodPatches) {
+			this.kubernetesPodPatches = kubernetesPodPatches;
+		}
+		
+		public void setKubernetesAdditionalManifests(List<String> manifests) {
+			this.kubernetesAdditionalManifests = manifests;
+		}
+
+		public List<String> getKubernetesAdditionalManifests() {
+			return kubernetesAdditionalManifests;
 		}
 	}
 }

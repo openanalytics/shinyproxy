@@ -30,10 +30,16 @@
 	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
 	<script th:src="@{${jqueryJs}}"></script>
 	<script th:src="@{${bootstrapJs}}"></script>
+	<script th:src="@{/webjars/js-cookie/2.2.1/js.cookie.min.js}"></script>
+	<script th:src="@{/js/new_version_check.js}"></script>
 </head>
 <body>
 	<!-- navigation bar -->
 	<div th:replace="../fragments/navbar :: navbar"></div>
+	
+	<div id="new-version-banner" class="alert alert-info" role="alert" style="display:none;">
+		A new version of ShinyProxy is available <button id="new-version-btn" class="btn btn-default btn-sm" >Switch to new version!</button>
+	</div>
 	
 	<!-- content -->
 	<div th:if="${!displayAppLogos}" id="applist">

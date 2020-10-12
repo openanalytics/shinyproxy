@@ -5,10 +5,10 @@
 
 	<groupId>eu.openanalytics</groupId>
 	<artifactId>shinyproxy</artifactId>
-	<version>2.3.1</version>
+	<version>2.4.0</version>
 	<packaging>jar</packaging>
 
-	<name>shinyproxy</name>
+	<name>ShinyProxy</name>
 	<description>deploy Shiny apps in an enterprise context</description>
 
 	<organization>
@@ -19,15 +19,17 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.0.0.RELEASE</version>
+		<version>2.3.3.RELEASE</version>
 		<relativePath />
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
+		<containerproxy.version>0.8.5-SNAPSHOT</containerproxy.version>
+		<resource.delimiter>&amp;</resource.delimiter>
 	</properties>
-	
+
 	<distributionManagement>
 		<snapshotRepository>
 			<id>oa-nexus-snapshots</id>
@@ -40,7 +42,7 @@
 			<url>https://nexus.openanalytics.eu/repository/releases</url>
 		</repository>
 	</distributionManagement>
-	
+
 	<repositories>
 		<repository>
 			<id>oa-nexus-snapshots</id>
@@ -59,16 +61,27 @@
 			<releases><enabled>true</enabled></releases>
 		</repository>
 	</repositories>
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>eu.openanalytics</groupId>
 			<artifactId>containerproxy</artifactId>
-			<version>0.8.4</version>
+			<version>${containerproxy.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr353</artifactId>
+			<version>2.11.2</version>
+			<!-- We need a higher version than shipped by Spring to have all functionality (namely JsonPatch support) -->
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>js-cookie</artifactId>
+			<version>2.2.1</version>
 		</dependency>
 	</dependencies>
 
@@ -79,6 +92,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<executions>
 					<execution>
+                                                <id>repackage</id>
 						<goals>
 							<goal>repackage</goal>
 						</goals>
@@ -86,9 +100,20 @@
 							<mainClass>eu.openanalytics.containerproxy.ContainerProxyApplication</mainClass>
 						</configuration>
 					</execution>
+					<execution>
+						<id>build-info</id>
+						<goals>
+							<goal>build-info</goal>
+						</goals>
+						<configuration>
+							<additionalProperties>
+								<containerProxyVersion>${containerproxy.version}</containerProxyVersion>
+							</additionalProperties>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
-			
+
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>rpm-maven-plugin</artifactId>
@@ -104,7 +129,7 @@
 		        </executions>
 				-->
 				<configuration>
-					<license>(c) Copyright Open Analytics NV, 2016-2017 - Apache License 2.0</license>
+					<license>(c) Copyright Open Analytics NV, 2016-2020 - Apache License 2.0</license>
 					<release>1.el7</release>
 					<group>Development/Tools</group>
 					<packager>Open Analytics</packager>
@@ -273,6 +298,7 @@
 						<exclude>mvnw</exclude>
 						<exclude>**/*.properties</exclude>
 						<exclude>**/*.yml</exclude>
+						<exclude>**/*.xml</exclude>
 						<exclude>LICENSE</exclude>
 						<exclude>LICENSE_HEADER</exclude>
 						<exclude>Dockerfile</exclude>
@@ -281,6 +307,7 @@
 						<exclude>.gitignore</exclude>
 						<exclude>src/deb/**</exclude>
 						<exclude>templates/**</exclude>
+						<exclude>src/main/resources/static/js/js.cookie-2.2.1.min.js</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -305,23 +332,66 @@
 			<plugin>
 				<groupId>net.nicoulaj.maven.plugins</groupId>
 				<artifactId>checksum-maven-plugin</artifactId>
-				<version>1.5</version>
+				<version>1.9</version>
 				<executions>
 					<execution>
 						<goals>
-							<goal>artifacts</goal>
+							<goal>files</goal>
 						</goals>
 					</execution>
 				</executions>
 				<configuration>
-          		   <algorithms>
-            	       <algorithm>SHA-256</algorithm>	   
-                       <algorithm>MD5</algorithm>
-                   </algorithms>
-                   <attachChecksums>true</attachChecksums>
-        		</configuration>
+                                    <fileSets>
+                                        <fileSet>
+                                            <directory>${project.build.directory}</directory>
+                                            <includes>
+                                                <include>*.jar</include>
+                                                <include>*.pom</include>
+                                            </includes>
+                                            <excludes>
+                                                <exclude>*.sha256</exclude>
+                                                <exclude>*.md5</exclude>
+                                            </excludes>
+                                        </fileSet>
+                                    </fileSets>
+                                    <algorithms>
+                                       <algorithm>SHA-256</algorithm>
+                                       <algorithm>MD5</algorithm>
+                                   </algorithms>
+                                   <attachChecksums>true</attachChecksums>
+                                   <csvSummary>false</csvSummary>
+                                </configuration>
+			</plugin>
+			<plugin>
+    			<artifactId>maven-deploy-plugin</artifactId>
+    			<version>3.0.0-M1</version>
+    			<configuration>
+        			<updateReleaseInfo>true</updateReleaseInfo>
+    			</configuration>
 			</plugin>
 		</plugins>
 	</build>
-	
+
+        <profiles>
+          <profile>
+            <id>owasp-dependency-check</id>
+            <build>
+              <plugins>
+                <plugin>
+                  <groupId>org.owasp</groupId>
+                  <artifactId>dependency-check-maven</artifactId>
+                  <version>5.3.0</version>
+                  <executions>
+                    <execution>
+                      <goals>
+                        <goal>check</goal>
+                      </goals>
+                    </execution>
+                  </executions>
+                </plugin>
+              </plugins>
+            </build>
+          </profile>
+        </profiles>
+
 </project>

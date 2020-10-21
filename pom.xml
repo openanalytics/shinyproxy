@@ -5,7 +5,7 @@
 
 	<groupId>eu.openanalytics</groupId>
 	<artifactId>shinyproxy</artifactId>
-	<version>2.4.0</version>
+	<version>2.4.1</version>
 	<packaging>jar</packaging>
 
 	<name>ShinyProxy</name>
@@ -19,7 +19,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.3.3.RELEASE</version>
+		<version>2.3.4.RELEASE</version>
 		<relativePath />
 	</parent>
 
@@ -381,6 +381,11 @@
                   <groupId>org.owasp</groupId>
                   <artifactId>dependency-check-maven</artifactId>
                   <version>5.3.0</version>
+                  <configuration>
+                    <suppressionFiles>
+                        <suppressionFile>owasp-suppression.xml</suppressionFile>
+                    </suppressionFiles>
+                    </configuration>
                   <executions>
                     <execution>
                       <goals>

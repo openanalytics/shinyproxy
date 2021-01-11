@@ -1,0 +1,41 @@
+name: Tests
+
+on: [push]
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [ 8, 11 ]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Cache Maven packages
+        uses: actions/cache@v2
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+      - name: Build with Maven
+        run: mvn -U clean install -DskipTests
+      - name: Run Tests
+        run: mvn test
+
+  dependency:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run Dependency Check
+        run: mvn -Powasp-dependency-check verify -DskipTests
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v2
+        with:
+          name: dependency-check-report
+          path: target/dependency-check-report.html
+

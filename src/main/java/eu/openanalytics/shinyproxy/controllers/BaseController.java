@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.core.env.Environment;
@@ -59,7 +60,10 @@ public abstract class BaseController {
 	
 	@Inject
 	Environment environment;
-	
+
+	@Inject
+	IAuthenticationBackend authenticationBackend;
+
 	private static Logger logger = LogManager.getLogger(BaseController.class);
 	private static Pattern appPattern = Pattern.compile(".*?/app[^/]*/([^/]*)/?.*");
 	private static Map<String, String> imageCache = new HashMap<>();
@@ -117,6 +121,7 @@ public abstract class BaseController {
 		map.put("isLoggedIn", isLoggedIn);
 		map.put("isAdmin", userService.isAdmin(authentication));
 		map.put("isSupportEnabled", isLoggedIn && getSupportAddress() != null);
+		map.put("logoutUrl", authenticationBackend.getLogoutURL());
 	}
 	
 	protected String getSupportAddress() {

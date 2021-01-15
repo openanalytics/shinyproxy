@@ -37,7 +37,7 @@
 					<a role="button" class="btn btn-primary btn-sm" th:if="${isSupportEnabled}"
 						data-toggle="modal" data-target="#reportIssueModal">Report Issue</a>
 					<a role="button" class="btn btn-primary btn-sm" th:href="@{/admin}" th:if="${isAdmin}">Admin</a>
-					<a role="button" class="btn btn-primary btn-sm" th:href="@{/logout}" th:if="${isLoggedIn}">Sign Out</a>
+					<a role="button" class="btn btn-primary btn-sm" th:href="@{${logoutUrl}}" th:if="${isLoggedIn}">Sign Out</a>
 				</div>
 				<div class="navbar-right" sec:authorize="isAuthenticated()">
 					<span class="navbar-text">

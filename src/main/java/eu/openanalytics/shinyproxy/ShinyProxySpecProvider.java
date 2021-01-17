@@ -80,6 +80,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		ProxySpec to = new ProxySpec();
 		to.setId(from.getId());
 		to.setDisplayName(from.getDisplayName());
+		to.setDisplayGroup(from.getDisplayGroup());
 		to.setDescription(from.getDescription());
 		to.setLogoURL(from.getLogoURL());
 		if (from.getKubernetesPodPatches() != null) {
@@ -130,6 +131,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		
 		private String id;
 		private String displayName;
+		private String displayGroup;
 		private String description;
 		private String logoURL;
 		
@@ -170,6 +172,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			this.displayName = displayName;
 		}
 
+		public String getDisplayGroup() {
+			return displayGroup;
+		}
+
+		public void setDisplayGroup(String displayGroup) {
+			this.displayGroup = displayGroup;
+		}
+		
 		public String getDescription() {
 			return description;
 		}

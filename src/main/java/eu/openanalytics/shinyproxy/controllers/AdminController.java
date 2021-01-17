@@ -23,6 +23,8 @@ package eu.openanalytics.shinyproxy.controllers;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -31,6 +33,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 
 @Controller
 public class AdminController extends BaseController {
@@ -53,6 +56,15 @@ public class AdminController extends BaseController {
 		
 		map.put("proxies", proxies);
 		map.put("proxyUptimes", proxyUptimes);
+		
+		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
+		map.put("apps", apps);
+
+		Set<String> displayGroups = new LinkedHashSet<>();
+		for (ProxySpec app: apps) {
+			displayGroups.add(app.getDisplayGroup());
+		}
+		map.put("displayGroups", displayGroups.toArray(new String[0]));
 		
 		return "admin";
 	}

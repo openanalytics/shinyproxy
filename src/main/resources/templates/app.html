@@ -30,64 +30,21 @@
 	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
 	<script th:src="@{${jqueryJs}}"></script>
 	<script th:src="@{${bootstrapJs}}"></script>
-	<script th:src="@{/js/websocket.js}"></script>
+	<script th:src="@{/js/shiny.js}"></script>
 </head>
 <body>
 	<div th:replace="../fragments/navbar :: navbar"></div>
 
-    <span id="containerpath" style="display:none;" th:text="${container}"></span>
-    <div  class="loading"><div class="loading-txt">Launching <span th:text="${appTitle}"></span>...</div></div>
-    
+    <div id="loading" class="loading"><div class="loading-txt">Launching <span th:text="${appTitle}"></span>...</div></div>
+	<div id="reconnecting" class="loading"><div class="loading-txt">Reconnecting to <span th:text="${appTitle}"></span>...</div></div>
+
 	<script type="text/javascript" th:inline="javascript">
-		function setShinyframeHeight() {
-			$('#shinyframe').css('height', ($(window).height())+'px');
-		}
-		window.addEventListener("load", setShinyframeHeight);
-		window.addEventListener("resize",  setShinyframeHeight);
-
-		/** Websocket Hacking **/
-		function replace(text) {
-			console.log(text, "<=before=>", document.getElementById('shinyframe').contentWindow.WebSocket);
-			document.getElementById('shinyframe').contentWindow.WebSocket = ErrorHandlingWebSocket;
-			document.getElementById('shinyframe').contentWindow.document.querySelectorAll("iframe").forEach(d => d.contentWindow.document.WebSocket = ErrorHandlingWebSocket);
-			console.log(text, "<=after=>", document.getElementById('shinyframe').contentWindow.WebSocket);
-		}
-
-		function setupIframe(src) {
-			var $iframe = $('<iframe id="shinyframe" width="100%" frameBorder="0"></iframe>')
-			var ti = setInterval(function() {
-				var state = document.getElementById('shinyframe').contentWindow.document.readyState
-				console.log(state);
-				if (state === "complete") {
-					// ok
-					clearInterval(ti);
-				} else {
-					replace("setInterval");
-				}
-			}, 50);
-			$iframe.attr("src", src);
-			$('#containerpath').after($iframe);
-		}
-
 		$(window).on('load', function() {
-            var containerPath = $("#containerpath").text();
-            if (containerPath === "") {
-				$(".loading").show();
-				$.post(window.location.pathname + window.location.search, function(response) {
-					setupIframe(response.containerPath);
-					$(".loading").fadeOut("slow");
-				}).fail(function(request) {
-					var newDoc = document.open("text/html", "replace");
-					newDoc.write(request.responseText);
-					newDoc.close();
-				});
-			} else {
-				setupIframe(containerPath);
-			}
+			window.Shiny.containerPath = $("#containerpath").text();
+			window.Shiny.start();
 		});
-
-
-
 	</script>
+
+	<span id="containerpath" style="display:none;" th:text="${container}"></span>
 </body>
 </html>

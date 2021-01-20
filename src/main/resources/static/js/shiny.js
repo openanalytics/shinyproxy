@@ -52,7 +52,7 @@ window.Shiny = {
     appWasLoaded: false,
     tryingToReconnect: false,
     reloadAttempts: 0,
-    maxReloadAttempts: 5,
+    maxReloadAttempts: 10,
 
     isShiny: function () {
         try {

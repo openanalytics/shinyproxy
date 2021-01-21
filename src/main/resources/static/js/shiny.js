@@ -309,9 +309,11 @@ window.Shiny = {
                 Shiny.hideLoading();
                 Shiny.appWasLoaded = true;
             }).fail(function (request) {
-                var newDoc = document.open("text/html", "replace");
-                newDoc.write(request.responseText);
-                newDoc.close();
+                if (!Shiny.navigatingAway) {
+                    var newDoc = document.open("text/html", "replace");
+                    newDoc.write(request.responseText);
+                    newDoc.close();
+                }
             });
         } else {
             Shiny.containerPath = containerPath;

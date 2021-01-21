@@ -48,9 +48,10 @@ ErrorHandlingWebSocket.prototype = WebSocket.prototype;
 window.Shiny = {
 
     navigatingAway: false,
+    proxyId: null,
+    reloaded: false,
     containerPath: null,
     webSocketReconnectionMode: null,
-    proxyId: null,
     injectorIntervalId: null,
     appWasLoaded: false,
     tryingToReconnect: false,
@@ -171,8 +172,8 @@ window.Shiny = {
 
     /**
      * Checks whether the reload of the application was a success.
-     * This is checked 4 times with 250ms between each check.
-     * If after 5 checks the app isn't loaded yet, the application is reloaded using Shiny.reloadPageBackOff().
+     * This is checked 10 times with 250ms between each check.
+     * If after 10 checks the app isn't loaded yet, the application is reloaded using Shiny.reloadPageBackOff().
      */
     checkReloadSucceeded: function (checks = 0) {
         var completed = document.getElementById('shinyframe').contentDocument !== null
@@ -199,8 +200,8 @@ window.Shiny = {
 
     /**
      * Checks whether the reload of the application was a success in case this is a Shiny app.
-     * This is checked 4 times with 250ms between each check.
-     * If after 4 checks the app isn't loaded yet, the application is reloaded using Shiny.reloadPageBackOff().
+     * This is checked 19 times with 250ms between each check.
+     * If after 10 checks the app isn't loaded yet, the application is reloaded using Shiny.reloadPageBackOff().
      */
     checkShinyReloadSucceeded: function (checks = 0) {
         var _shinyFrame = document.getElementById('shinyframe');

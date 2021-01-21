@@ -45,7 +45,6 @@ ErrorHandlingWebSocket.prototype = WebSocket.prototype;
 window.Shiny = {
 
     navigatingAway: false,
-    reloaded: false,
     containerPath: null,
     webSocketReconnectionMode: null,
     injectorIntervalId: null,
@@ -108,19 +107,13 @@ window.Shiny = {
                 if (!_shinyFrame.contentWindow.Shiny.shinyapp.isConnected()) {
                     _shinyFrame.contentWindow.Shiny.shinyapp.reconnect();
                 }
-                setTimeout(Shiny.checkShinyReloadSucceeded, 250);
+                Shiny.checkShinyReloadSucceeded();
             }, 50);
         } else {
-            try {
-                Shiny.startInjector();
-                _shinyFrame.contentWindow.location.reload();
-                Shiny.setShinyFrameHeight();
-            } catch (error) {
-                // page loaded failed very hard -> replace iframe
-                $("#shinyframe").remove();
-                Shiny.setupIframe();
-            }
-            setTimeout(Shiny.checkReloadSucceeded, 250);
+            $("#shinyframe").remove();
+            Shiny.setupIframe();
+            Shiny.setShinyFrameHeight();
+            Shiny.checkReloadSucceeded();
         }
     },
 
@@ -130,7 +123,7 @@ window.Shiny = {
      * If the Shiny.maxReloadAttempts is reached, the user will be asked whether they want to perform a full reload.
      */
     reloadPageBackOff: function () {
-        console.log("[Reload attempt " + Shiny.reloadAttempts + "/" + Shiny.maxReloadAttempts + "] Reload not succeeded, trying to reload again");
+        console.log("[Reload attempt " + Shiny.reloadAttempts + "/" + Shiny.maxReloadAttempts + "] Reload not succeeded, trying to reload again in " + Shiny.reloadAttempts + " seconds.");
         if (Shiny.reloadAttempts === Shiny.maxReloadAttempts) {
             // reload full page
             if (confirm("Cannot restore connection server, reload full page?")) {
@@ -147,13 +140,11 @@ window.Shiny = {
      * If this the case, the iframe looks like it has properly loaded, however, the iframe just contains a message
      * and not the appropriate app.
      */
-    checkIfIframeHasStartupMessage() {
+    checkIfIframeHasStartupMessage: function() {
         try {
             var _shinyFrame = document.getElementById('shinyframe');
             return (_shinyFrame.contentDocument.documentElement.textContent || _shinyFrame.contentDocument.documentElement.innerText).indexOf('ShinyProxy is starting up') > -1;
-
-        } catch (error) {
-
+        } catch {
         }
         return false;
     },
@@ -161,7 +152,7 @@ window.Shiny = {
     /**
      * Checks whether the reload of the application was a success.
      * This is checked 4 times with 250ms between each check.
-     * If after 4 checks the app isn't loaded yet, the application is reloaded using Shiny.reloadPageBackOff().
+     * If after 5 checks the app isn't loaded yet, the application is reloaded using Shiny.reloadPageBackOff().
      */
     checkReloadSucceeded: function (checks = 0) {
         var completed = document.getElementById('shinyframe').contentDocument !== null
@@ -169,27 +160,21 @@ window.Shiny = {
             && document.getElementById('shinyframe').contentDocument.baseURI !== "about:blank"
             && !Shiny.checkIfIframeHasStartupMessage();
 
-        if (Shiny.reloaded && completed) {
+        if (completed) {
             // we're ok
-            Shiny.reloaded = false;
             Shiny.hideLoading();
             Shiny.tryingToReconnect = false;
             Shiny.reloadAttempts = 0;
             return;
         }
 
-        if (!completed) {
-            Shiny.reloaded = true;
-        }
-
         if (checks === 4) {
-            Shiny.reloaded = false;
             Shiny.reloadPageBackOff();
             return;
         }
 
         // re-check in 50 ms
-        setTimeout(() => Shiny.checkReloadSucceeded(checks + 1), 250);
+        setTimeout(() => Shiny.checkReloadSucceeded(checks + 1), 200);
     },
 
     /**

@@ -52,6 +52,7 @@ window.Shiny = {
     tryingToReconnect: false,
     reloadAttempts: 0,
     maxReloadAttempts: 10,
+    reloadDismissed: false,
 
     /**
      * Determines whether this is a Shiny app.
@@ -85,12 +86,18 @@ window.Shiny = {
             // ignore error
             return;
         }
+        if (Shiny.reloadDismissed) {
+            // user already dismissed confirmation -> do not ask again
+            return;
+        }
 
         if (Shiny.webSocketReconnectionMode === "Auto"
             || (Shiny.webSocketReconnectionMode === "Confirm"
                 && confirm("Connection to server lost, try to reconnect to the application?"))
                 ) {
             Shiny.reloadPage();
+        } else {
+            Shiny.reloadDismissed = true;
         }
     },
 

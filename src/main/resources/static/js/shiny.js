@@ -1,7 +1,7 @@
 /*
  * ShinyProxy
  *
- * Copyright (C) 2016-2020 Open Analytics
+ * Copyright (C) 2016-2021 Open Analytics
  *
  * ===========================================================================
  *
@@ -18,14 +18,13 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
-
 function ErrorHandlingWebSocket(url, protocols) {
     console.log("Called ErrorHandlingWebSocket");
     var res = new WebSocket(url, protocols);
 
     function handler() {
         console.log("Handling error of websocket connection.")
-        setTimeout(Shiny.webSocketErrorHandler, 1); // execute async to not block other error handling code
+        setTimeout(Shiny.handleWebSocketError, 1); // execute async to not block other error handling code
     }
 
     res.addEventListener("error", function (event) {
@@ -47,13 +46,17 @@ window.Shiny = {
 
     navigatingAway: false,
     reloaded: false,
-    containerPath: "",
+    containerPath: null,
+    webSocketReconnectionMode: null,
     injectorIntervalId: null,
     appWasLoaded: false,
     tryingToReconnect: false,
     reloadAttempts: 0,
     maxReloadAttempts: 10,
 
+    /**
+     * Determines whether this is a Shiny app.
+     */
     isShiny: function () {
         try {
             var _shinyFrame = document.getElementById('shinyframe');
@@ -68,8 +71,10 @@ window.Shiny = {
         return false;
     },
 
-
-    webSocketErrorHandler: function () {
+    /**
+     * Handles a WebSocket error (i.e. close).
+     */
+    handleWebSocketError: function () {
         if (Shiny.navigatingAway) {
             return;
         }
@@ -77,11 +82,22 @@ window.Shiny = {
             // ignore error
             return;
         }
-        if (confirm("Connection to server lost, do you want to reload the application?")) {
+        if (Shiny.webSocketReconnectionMode === "None") {
+            // ignore error
+            return;
+        }
+
+        if (Shiny.webSocketReconnectionMode === "Auto"
+            || (Shiny.webSocketReconnectionMode === "Confirm"
+                && confirm("Connection to server lost, try to reconnect to the application?"))
+                ) {
             Shiny.reloadPage();
         }
     },
 
+    /**
+     * Effectively reloads the application.
+     */
     reloadPage: function () {
         var _shinyFrame = document.getElementById('shinyframe');
         Shiny.tryingToReconnect = true;
@@ -108,16 +124,29 @@ window.Shiny = {
         }
     },
 
+    /**
+     * Reloads the page, after X seconds. X is the current amount of reload attempts.
+     * Therefore, there will be more time between each attempt to reload the page, creating a backoff mechanism.
+     * If the Shiny.maxReloadAttempts is reached, the user will be asked whether they want to perform a full reload.
+     */
     reloadPageBackOff: function () {
         console.log("[Reload attempt " + Shiny.reloadAttempts + "/" + Shiny.maxReloadAttempts + "] Reload not succeeded, trying to reload again");
         if (Shiny.reloadAttempts === Shiny.maxReloadAttempts) {
             // reload full page
-            window.location.reload();
-            return;
+            if (confirm("Cannot restore connection server, reload full page?")) {
+                window.location.reload();
+                return;
+            }
+            return;  // give up
         }
         setTimeout(Shiny.reloadPage, 1000 * Shiny.reloadAttempts);
     },
 
+    /**
+     * Check whether the iframe contains the message that ShinyProxy is starting up.
+     * If this the case, the iframe looks like it has properly loaded, however, the iframe just contains a message
+     * and not the appropriate app.
+     */
     checkIfIframeHasStartupMessage() {
         try {
             var _shinyFrame = document.getElementById('shinyframe');
@@ -129,6 +158,11 @@ window.Shiny = {
         return false;
     },
 
+    /**
+     * Checks whether the reload of the application was a success.
+     * This is checked 4 times with 250ms between each check.
+     * If after 4 checks the app isn't loaded yet, the application is reloaded using Shiny.reloadPageBackOff().
+     */
     checkReloadSucceeded: function (checks = 0) {
         var completed = document.getElementById('shinyframe').contentDocument !== null
             && document.getElementById('shinyframe').contentDocument.readyState === "complete"
@@ -158,6 +192,11 @@ window.Shiny = {
         setTimeout(() => Shiny.checkReloadSucceeded(checks + 1), 250);
     },
 
+    /**
+     * Checks whether the reload of the application was a success in case this is a Shiny app.
+     * This is checked 4 times with 250ms between each check.
+     * If after 4 checks the app isn't loaded yet, the application is reloaded using Shiny.reloadPageBackOff().
+     */
     checkShinyReloadSucceeded: function (checks = 0) {
         var _shinyFrame = document.getElementById('shinyframe');
         if (_shinyFrame.contentWindow.Shiny.shinyapp.$socket !== null && _shinyFrame.contentWindow.Shiny.shinyapp.$socket.readyState === WebSocket.OPEN) {
@@ -175,11 +214,26 @@ window.Shiny = {
         setTimeout(() => Shiny.checkShinyReloadSucceeded(checks + 1), 250);
     },
 
-    replace: function (text) {
+    /**
+     * Injects the ErrorHandlingWebSocket into the iframe.
+     */
+    injectWebSocket: function () {
         document.getElementById('shinyframe').contentWindow.WebSocket = ErrorHandlingWebSocket;
         document.getElementById('shinyframe').contentWindow.document.querySelectorAll("iframe").forEach(d => d.contentWindow.document.WebSocket = ErrorHandlingWebSocket);
     },
 
+    /**
+     * Starts the injection of the ErrorHandlingWebSocket into the iframe.
+     * The idea is to poll the iframe every 50ms for its readyState. If the readyState has changed from something
+     * different than `complete` to `complete` we know that the injection was successful.
+     *
+     * The goal is to inject between the `interactive` and `DOMContentLoaded` states.
+     * Unfortunately, there is no event generated by the browser which we could use. Therefore we have to fallback to
+     * a polling approach.
+     *
+     * See: https://developer.mozilla.org/en-US/docs/Web/API/Document/readystatechange_event
+     * See: https://developer.mozilla.org/en-US/docs/Web/API/Document/readyState
+     */
     startInjector: function () {
         if (Shiny.injectorIntervalId !== null) {
             Shiny.stopInjector();
@@ -196,24 +250,36 @@ window.Shiny = {
                 // ok
                 Shiny.stopInjector();
             } else if (state !== "complete") {
-                Shiny.replace("setInterval");
+                Shiny.injectWebSocket("setInterval");
                 replaced = true;
             }
         }, 50);
     },
 
+    /**
+     * Stops the Injector.
+     */
     stopInjector: function () {
         clearInterval(Shiny.injectorIntervalId);
     },
 
+    /***
+     * Setups the iframe of the application.
+     */
     setupIframe: function () {
         var $iframe = $('<iframe id="shinyframe" width="100%" style="display:none;" frameBorder="0"></iframe>')
+        // IMPORTANT: start the injector before setting the `src` property of the iframe
+        // This is required to ensure that the polling catches all events and therefore the injector works properly.
         Shiny.startInjector();
         $iframe.attr("src", Shiny.containerPath);
-        $('#loading').before($iframe);
+        $('#iframeinsert').before($iframe); // insert the iframe into the HTML.
         Shiny.setShinyFrameHeight();
     },
 
+    /**
+     * Shows the loading page.
+     * If the application already has loaded, the message will contains `Reconnecting` instead of `Launching`.
+     */
     showLoading: function () {
         $('#shinyframe').hide();
         if (!Shiny.appWasLoaded) {
@@ -223,6 +289,9 @@ window.Shiny = {
         }
     },
 
+    /**
+     *  Hides the loading page.
+     */
     hideLoading: function () {
         $('#shinyframe').show();
         if (!Shiny.appWasLoaded) {
@@ -232,11 +301,18 @@ window.Shiny = {
         }
     },
 
-    start: function () {
-        if (Shiny.containerPath === "") {
+    /**
+     * Start the Shiny Application.
+     * @param containerPath
+     * @param webSocketReconnectionMode
+     */
+    start: function (containerPath, webSocketReconnectionMode) {
+        if (containerPath === "") {
+            Shiny.setShinyFrameHeight();
             Shiny.showLoading();
             $.post(window.location.pathname + window.location.search, function (response) {
                 Shiny.containerPath = response.containerPath;
+                Shiny.webSocketReconnectionMode = response.webSocketReconnectionMode;
                 Shiny.setupIframe();
                 Shiny.hideLoading();
                 Shiny.appWasLoaded = true;
@@ -246,12 +322,17 @@ window.Shiny = {
                 newDoc.close();
             });
         } else {
+            Shiny.containerPath = containerPath;
+            Shiny.webSocketReconnectionMode = webSocketReconnectionMode;
             Shiny.setupIframe();
             Shiny.hideLoading();
             Shiny.appWasLoaded = true;
         }
     },
 
+    /**
+     * Update the frame height.
+     */
     setShinyFrameHeight: function () {
         $('#shinyframe').css('height', ($(window).height()) + 'px');
     }

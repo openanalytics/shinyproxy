@@ -20,7 +20,6 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,18 +28,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 
 import eu.openanalytics.containerproxy.util.SessionHelper;
 import org.opensaml.xml.signature.G;
 import org.springframework.beans.factory.annotation.Autowired;
+import eu.openanalytics.containerproxy.model.spec.WebSocketReconnectionMode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 
 import eu.openanalytics.containerproxy.model.spec.ContainerSpec;
 import eu.openanalytics.containerproxy.model.spec.ProxyAccessControl;
@@ -108,6 +105,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		}
 		to.setKubernetesAdditionalManifests(from.getKubernetesAdditionalManifests());
 		to.setKubernetesAdditionalPersistentManifests(from.getKubernetesAdditionalPersistentManifests());
+		to.setWebSocketReconnectionMode(from.getWebSocketReconnectionMode());
 
 		if (from.getAccessGroups() != null && from.getAccessGroups().length > 0) {
 			ProxyAccessControl acl = new ProxyAccessControl();
@@ -178,6 +176,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private List<String> kubernetesAdditionalPersistentManifests = new ArrayList<>();
 
 		private String targetPath;
+		private WebSocketReconnectionMode webSocketReconnectionMode;
 
 		private Map<String,String> labels;
 
@@ -375,5 +374,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		public void setTargetPath(String targetPath) {
 			this.targetPath = targetPath;
 		}
+
+		public WebSocketReconnectionMode getWebSocketReconnectionMode() {
+			return webSocketReconnectionMode;
+		}
+
+		public void setWebSocketReconnectionMode(WebSocketReconnectionMode webSocketReconnectionMode) {
+			this.webSocketReconnectionMode = webSocketReconnectionMode;
+		}
+
 	}
 }

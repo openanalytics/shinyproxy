@@ -35,16 +35,14 @@
 <body>
 	<div th:replace="../fragments/navbar :: navbar"></div>
 
+    <div id="iframeinsert"></div>
     <div id="loading" class="loading"><div class="loading-txt">Launching <span th:text="${appTitle}"></span>...</div></div>
 	<div id="reconnecting" class="loading"><div class="loading-txt">Reconnecting to <span th:text="${appTitle}"></span>...</div></div>
 
 	<script type="text/javascript" th:inline="javascript">
 		$(window).on('load', function() {
-			window.Shiny.containerPath = $("#containerpath").text();
-			window.Shiny.start();
+			window.Shiny.start([[${containerPath}]], [[${webSocketReconnectionMode}]]);
 		});
 	</script>
-
-	<span id="containerpath" style="display:none;" th:text="${container}"></span>
 </body>
 </html>

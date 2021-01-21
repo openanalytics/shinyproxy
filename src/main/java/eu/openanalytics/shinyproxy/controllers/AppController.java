@@ -25,18 +25,19 @@ import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.containerproxy.util.Retrying;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.HashMap;
-import java.util.Map;
 
 @Controller
 public class AppController extends BaseController {
@@ -52,8 +53,9 @@ public class AppController extends BaseController {
 		awaitReady(proxy);
 
 		map.put("appTitle", getAppTitle(request));
-		map.put("container", (proxy == null) ? "" : buildContainerPath(request));
-		
+		map.put("containerPath", (proxy == null) ? "" : buildContainerPath(request));
+		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getWebSocketReconnectionMode());
+
 		return "app";
 	}
 	
@@ -66,6 +68,7 @@ public class AppController extends BaseController {
 		Map<String,String> response = new HashMap<>();
 		response.put("containerPath", containerPath);
 		response.put("proxyId", proxy.getId());
+		response.put("webSocketReconnectionMode", proxy.getWebSocketReconnectionMode().name());
 		return response;
 	}
 	

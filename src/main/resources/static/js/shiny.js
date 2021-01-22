@@ -53,6 +53,7 @@ window.Shiny = {
     reloadAttempts: 0,
     maxReloadAttempts: 10,
     reloadDismissed: false,
+    updateSecondsIntervalId: null,
 
     /**
      * Determines whether this is a Shiny app.
@@ -105,10 +106,22 @@ window.Shiny = {
      * Effectively reloads the application.
      */
     reloadPage: function () {
+
+        if (Shiny.reloadAttempts === Shiny.maxReloadAttempts) {
+            // reload full page
+            if (confirm("Cannot restore connection server, reload full page?")) {
+                window.location.reload();
+                return;
+            }
+            Shiny.showFailedToReloadPage(); // show app again
+            return;  // give up
+        }
+
         var _shinyFrame = document.getElementById('shinyframe');
         Shiny.tryingToReconnect = true;
         Shiny.showLoading();
         Shiny.reloadAttempts++;
+        Shiny.updateLoadingTxt();
         if (Shiny.isShiny()) {
             setTimeout(() => {
                 if (!_shinyFrame.contentWindow.Shiny.shinyapp.isConnected()) {
@@ -131,14 +144,6 @@ window.Shiny = {
      */
     reloadPageBackOff: function () {
         console.log("[Reload attempt " + Shiny.reloadAttempts + "/" + Shiny.maxReloadAttempts + "] Reload not succeeded, trying to reload again in " + Shiny.reloadAttempts + " seconds.");
-        if (Shiny.reloadAttempts === Shiny.maxReloadAttempts) {
-            // reload full page
-            if (confirm("Cannot restore connection server, reload full page?")) {
-                window.location.reload();
-                return;
-            }
-            return;  // give up
-        }
         setTimeout(Shiny.reloadPage, 1000 * Shiny.reloadAttempts);
     },
 
@@ -329,6 +334,44 @@ window.Shiny = {
      */
     setShinyFrameHeight: function () {
         $('#shinyframe').css('height', ($(window).height()) + 'px');
+    },
+
+    updateLoadingTxt: function() {
+        if (Shiny.updateSecondsIntervalId !== null) {
+            clearInterval(Shiny.updateSecondsIntervalId);
+        }
+
+        function updateSeconds(seconds) {
+            if (seconds < 0) {
+                clearInterval(Shiny.updateSecondsIntervalId);
+                return;
+            }
+            if (seconds === 0) {
+                $('#retryInXSeconds').hide();
+                $('#retryNow').show();
+            } else {
+                $('#retryNow').hide();
+                $('#retryInXSeconds').show();
+                $('.retrySeconds').text(seconds);
+            }
+        }
+
+        $('.reloadAttempts').text(Shiny.reloadAttempts);
+        $('.maxReloadAttempts').text(Shiny.maxReloadAttempts);
+        updateSeconds(Shiny.reloadAttempts);
+
+        var currentSeconds = Shiny.reloadAttempts;
+        Shiny.updateSecondsIntervalId = setInterval(() => {
+            currentSeconds--;
+            updateSeconds(currentSeconds);
+        }, 1000);
+    },
+
+    showFailedToReloadPage: function() {
+        $('#shinyframe').hide();
+        $("#loading").hide();
+        $("#reconnecting").hide();
+        $("#reloadFailed").show();
     }
 
 };

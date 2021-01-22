@@ -37,7 +37,25 @@
 
     <div id="iframeinsert"></div>
     <div id="loading" class="loading"><div class="loading-txt">Launching <span th:text="${appTitle}"></span>...</div></div>
-	<div id="reconnecting" class="loading"><div class="loading-txt">Reconnecting to <span th:text="${appTitle}"></span>...</div></div>
+	<div id="reconnecting" class="loading">
+		<div class="loading-txt">
+			Reconnecting to <span th:text="${appTitle}"></span>...
+			<span class="retryingDetails">
+				<br>
+				Attempt <span class="reloadAttempts"></span>/<span class="maxReloadAttempts"></span>
+				<br>
+				Retrying <span id="retryInXSeconds">in <span class="retrySeconds"></span></span><span id="retryNow">now</span>
+			</span>
+		</div>
+	</div>
+	<div id="reloadFailed" class="loading">
+		<div class="loading-txt">
+			Failed to reload <span th:text="${appTitle}"></span><br><br>
+			<span class="refreshButton">
+				<button onClick="window.location.reload()">Refresh page</button>
+			</span>
+		</div>
+	</div>
 
 	<script type="text/javascript" th:inline="javascript">
 		$(window).on('load', function() {

@@ -28,6 +28,7 @@ import java.security.Principal;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -110,8 +111,14 @@ public abstract class BaseController {
 	protected void prepareMap(ModelMap map, HttpServletRequest request) {
 		map.put("title", environment.getProperty("proxy.title", "ShinyProxy"));
 		map.put("logo", resolveImageURI(environment.getProperty("proxy.logo-url")));
-		map.put("showNavbar", !Boolean.valueOf(environment.getProperty("proxy.hide-navbar")));
-		
+
+		String hideNavBarParam = request.getParameter("sp_hide_navbar");
+		if (Objects.equals(hideNavBarParam, "true")) {
+			map.put("showNavbar", false);
+		} else {
+			map.put("showNavbar", !Boolean.parseBoolean(environment.getProperty("proxy.hide-navbar")));
+		}
+
 		map.put("bootstrapCss", "/webjars/bootstrap/3.4.1/css/bootstrap.min.css");
 		map.put("bootstrapJs", "/webjars/bootstrap/3.4.1/js/bootstrap.min.js");
 		map.put("jqueryJs", "/webjars/jquery/3.5.0/jquery.min.js");

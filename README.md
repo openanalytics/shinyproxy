@@ -1,12 +1,12 @@
 <pre>
-               _____ _     _             _____                     
-              / ____| |   (_)           |  __ \                    
-             | (___ | |__  _ _ __  _   _| |__) | __ _____  ___   _ 
+               _____ _     _             _____
+              / ____| |   (_)           |  __ \
+             | (___ | |__  _ _ __  _   _| |__) | __ _____  ___   _
               \___ \| '_ \| | '_ \| | | |  ___/ '__/ _ \ \/ / | | |
               ____) | | | | | | | | |_| | |   | | | (_) >  <| |_| |
              |_____/|_| |_|_|_| |_|\__, |_|   |_|  \___/_/\_\\__, |
                                     __/ |                     __/ |
-                                   |___/                     |___/ 
+                                   |___/                     |___/
 
 </pre>
 
@@ -18,7 +18,7 @@ Open Source Enterprise Deployment for Shiny Apps
 
 Learn more at https://shinyproxy.io
 
-#### (c) Copyright Open Analytics NV, 2016-2020 - Apache License 2.0
+#### (c) Copyright Open Analytics NV, 2016-2021 - Apache License 2.0
 
 ## Building from source
 
@@ -33,7 +33,7 @@ The build will result in a single `.jar` file that is made available in the `tar
 ## Running the application
 
 ```
-java -jar shinyproxy-2.3.0.jar 
+java -jar shinyproxy-2.3.0.jar
 ```
 
 Navigate to http://localhost:8080 to access the application.  If the default configuration is used, authentication will be done against the LDAP server at *ldap.forumsys.com*; to log in one can use the user name "tesla" and password "password".

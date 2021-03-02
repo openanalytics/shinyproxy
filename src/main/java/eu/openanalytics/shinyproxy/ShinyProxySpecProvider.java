@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2020 Open Analytics
+ * Copyright (C) 2016-2021 Open Analytics
  *
  * ===========================================================================
  *
@@ -29,9 +29,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 
+import eu.openanalytics.containerproxy.util.SessionHelper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -56,6 +60,13 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 	private List<ProxySpec> specs = new ArrayList<>();
 	
+	private static Environment environment;
+
+	@Autowired
+	public void setEnvironment(Environment env){
+		ShinyProxySpecProvider.environment = env;
+	}
+	
 	@PostConstruct
 	public void afterPropertiesSet() {
 		this.specs.stream().collect(Collectors.groupingBy(ProxySpec::getId)).forEach((id, duplicateSpecs) -> {
@@ -74,6 +85,11 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 	
 	public void setSpecs(List<ShinyProxySpec> specs) {
 		this.specs = specs.stream().map(ShinyProxySpecProvider::convert).collect(Collectors.toList());
+	}
+
+	private static String getPublicPath(String appName) {
+		String contextPath = SessionHelper.getContextPath(environment, true);
+		return contextPath + "app_direct/" + appName + "/";
 	}
 	
 	private static ProxySpec convert(ShinyProxySpec from) {
@@ -100,7 +116,15 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		ContainerSpec cSpec = new ContainerSpec();
 		cSpec.setImage(from.getContainerImage());
 		cSpec.setCmd(from.getContainerCmd());
-		cSpec.setEnv(from.getContainerEnv());
+
+		Map<String, String> env = from.getContainerEnv();
+		if (env == null) {
+			env = new HashMap<>();
+		}
+
+		env.put("SHINYPROXY_PUBLIC_PATH", getPublicPath(from.getId()));
+		cSpec.setEnv(env);
+
 		cSpec.setEnvFile(from.getContainerEnvFile());
 		cSpec.setNetwork(from.getContainerNetwork());
 		cSpec.setNetworkConnections(from.getContainerNetworkConnections());

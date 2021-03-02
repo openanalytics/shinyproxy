@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2020 Open Analytics
+ * Copyright (C) 2016-2021 Open Analytics
  *
  * ===========================================================================
  *
@@ -23,6 +23,7 @@ package eu.openanalytics.shinyproxy;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.function.IntPredicate;
 
 import javax.inject.Inject;
@@ -65,8 +66,9 @@ public class ShinyProxyTestStrategy implements IProxyTestStrategy {
 				URL testURL = new URL(targetURI.toString());
 				HttpURLConnection connection = ((HttpURLConnection) testURL.openConnection());
 				connection.setConnectTimeout(timeoutMs);
+				connection.setInstanceFollowRedirects(false);
 				int responseCode = connection.getResponseCode();
-				if (responseCode == 200) return true;
+				if (Arrays.asList(200, 301, 302, 303, 307, 308).contains(responseCode)) return true;
 			} catch (Exception e) {
 				if (i > 1 && log != null) log.warn(String.format("Container unresponsive, trying again (%d/%d): %s", i, maxTries, targetURI));
 			}

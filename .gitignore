@@ -2,3 +2,5 @@
 /shinyproxy.log
 /application.yml
 /.project
+.vscode
+build.sh

@@ -136,6 +136,9 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		cSpec.setCpuLimit(from.getContainerCpuLimit());
 		cSpec.setPrivileged(from.isContainerPrivileged());
 		cSpec.setLabels(from.getLabels());
+		cSpec.setAuthDomain(from.getContainerAuthDomain());
+		cSpec.setAuthUser(from.getContainerAuthUser());
+		cSpec.setAuthPassword(from.getContainerAuthPassword());
 		
 		Map<String, Integer> portMapping = new HashMap<>();
 		if (from.getPort() > 0) {
@@ -169,8 +172,11 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private String containerMemoryLimit;
 		private String containerCpuRequest;
 		private String containerCpuLimit;
-		private boolean containerPrivileged;
+		private boolean containerPrivileged;		
 		private String kubernetesPodPatches;
+		private String containerAuthDomain;
+		private String containerAuthUser;
+		private String containerAuthPassword;
 		private List<String> kubernetesAdditionalManifests = new ArrayList<>();
 		
 		private Map<String,String> labels;
@@ -304,6 +310,30 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public void setContainerCpuLimit(String containerCpuLimit) {
 			this.containerCpuLimit = containerCpuLimit;
+		}
+		
+		public String getContainerAuthDomain(){
+			return containerAuthDomain;
+		}
+
+		public void setContainerAuthDomain(String authDoamin){
+			containerAuthDomain = authDoamin;
+		}
+
+		public String getContainerAuthUser(){
+			return containerAuthUser;
+		}
+
+		public void setContainerAuthUser(String authUser){
+			containerAuthUser = authUser;
+		}		
+
+		public String getContainerAuthPassword(){
+			return containerAuthPassword;
+		}
+
+		public void setContainerAuthPassword(String authPassword){
+			containerAuthPassword = authPassword;
 		}
 
 		public boolean isContainerPrivileged() {

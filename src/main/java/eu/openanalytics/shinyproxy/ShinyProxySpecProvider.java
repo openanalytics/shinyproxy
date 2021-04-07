@@ -106,6 +106,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			}
 		}
 		to.setKubernetesAdditionalManifests(from.getKubernetesAdditionalManifests());
+		to.setKubernetesAdditionalPersistentManifests(from.getKubernetesAdditionalPersistentManifests());
 		
 		if (from.getAccessGroups() != null && from.getAccessGroups().length > 0) {
 			ProxyAccessControl acl = new ProxyAccessControl();
@@ -172,7 +173,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private boolean containerPrivileged;
 		private String kubernetesPodPatches;
 		private List<String> kubernetesAdditionalManifests = new ArrayList<>();
-		
+		private List<String> kubernetesAdditionalPersistentManifests = new ArrayList<>();
+
 		private Map<String,String> labels;
 		
 		private int port;
@@ -352,6 +354,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public List<String> getKubernetesAdditionalManifests() {
 			return kubernetesAdditionalManifests;
+		}
+
+		public void setKubernetesAdditionalPersistentManifests(List<String> manifests) {
+			this.kubernetesAdditionalPersistentManifests = manifests;
+		}
+
+		public List<String> getKubernetesAdditionalPersistentManifests() {
+			return kubernetesAdditionalPersistentManifests;
 		}
 	}
 }

@@ -32,6 +32,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import eu.openanalytics.containerproxy.util.SessionHelper;
+import org.opensaml.xml.signature.G;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Primary;
@@ -50,7 +51,7 @@ import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
  * This component converts proxy specs from the 'ShinyProxy notation' into the 'ContainerProxy' notation.
  * ShinyProxy notation is slightly more compact, and omits several things that Shiny apps do not need,
  * such as definition of multiple containers.
- * 
+ *
  * Also, if no port is specified, a port mapping is automatically created for Shiny port 3838.
  */
 @Component
@@ -59,30 +60,30 @@ import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
 public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 	private List<ProxySpec> specs = new ArrayList<>();
-	
+
 	private static Environment environment;
 
 	@Autowired
 	public void setEnvironment(Environment env){
 		ShinyProxySpecProvider.environment = env;
 	}
-	
+
 	@PostConstruct
 	public void afterPropertiesSet() {
 		this.specs.stream().collect(Collectors.groupingBy(ProxySpec::getId)).forEach((id, duplicateSpecs) -> {
 			if (duplicateSpecs.size() > 1) throw new IllegalArgumentException(String.format("Configuration error: spec with id '%s' is defined multiple times", id));
 		});
 	}
-	
+
 	public List<ProxySpec> getSpecs() {
 		return new ArrayList<>(specs);
 	}
-	
+
 	public ProxySpec getSpec(String id) {
 		if (id == null || id.isEmpty()) return null;
 		return specs.stream().filter(s -> id.equals(s.getId())).findAny().orElse(null);
 	}
-	
+
 	public void setSpecs(List<ShinyProxySpec> specs) {
 		this.specs = specs.stream().map(ShinyProxySpecProvider::convert).collect(Collectors.toList());
 	}
@@ -91,7 +92,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		String contextPath = SessionHelper.getContextPath(environment, true);
 		return contextPath + "app_direct/" + appName + "/";
 	}
-	
+
 	private static ProxySpec convert(ShinyProxySpec from) {
 		ProxySpec to = new ProxySpec();
 		to.setId(from.getId());
@@ -107,13 +108,13 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		}
 		to.setKubernetesAdditionalManifests(from.getKubernetesAdditionalManifests());
 		to.setKubernetesAdditionalPersistentManifests(from.getKubernetesAdditionalPersistentManifests());
-		
+
 		if (from.getAccessGroups() != null && from.getAccessGroups().length > 0) {
 			ProxyAccessControl acl = new ProxyAccessControl();
 			acl.setGroups(from.getAccessGroups());
 			to.setAccessControl(acl);
 		}
-		
+
 		ContainerSpec cSpec = new ContainerSpec();
 		cSpec.setImage(from.getContainerImage());
 		cSpec.setCmd(from.getContainerCmd());
@@ -137,7 +138,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		cSpec.setCpuLimit(from.getContainerCpuLimit());
 		cSpec.setPrivileged(from.isContainerPrivileged());
 		cSpec.setLabels(from.getLabels());
-		
+		cSpec.setTargetPath(from.getTargetPath());
+
 		Map<String, Integer> portMapping = new HashMap<>();
 		if (from.getPort() > 0) {
 			portMapping.put("default", from.getPort());
@@ -145,19 +147,19 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			portMapping.put("default", 3838);
 		}
 		cSpec.setPortMapping(portMapping);
-		
+
 		to.setContainerSpecs(Collections.singletonList(cSpec));
-		
+
 		return to;
 	}
-	
+
 	public static class ShinyProxySpec {
-		
+
 		private String id;
 		private String displayName;
 		private String description;
 		private String logoURL;
-		
+
 		private String containerImage;
 		private String[] containerCmd;
 		private Map<String,String> containerEnv;
@@ -175,8 +177,10 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private List<String> kubernetesAdditionalManifests = new ArrayList<>();
 		private List<String> kubernetesAdditionalPersistentManifests = new ArrayList<>();
 
+		private String targetPath;
+
 		private Map<String,String> labels;
-		
+
 		private int port;
 		private String[] accessGroups;
 
@@ -319,19 +323,19 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		public Map<String, String> getLabels() {
 			return labels;
 		}
-		
+
 		public void setLabels(Map<String, String> labels) {
 			this.labels = labels;
 		}
-		
+
 		public int getPort() {
 			return port;
 		}
-		
+
 		public void setPort(int port) {
 			this.port = port;
 		}
-		
+
 		public String[] getAccessGroups() {
 			return accessGroups;
 		}
@@ -347,7 +351,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		public void setKubernetesPodPatches(String kubernetesPodPatches) {
 			this.kubernetesPodPatches = kubernetesPodPatches;
 		}
-		
+
 		public void setKubernetesAdditionalManifests(List<String> manifests) {
 			this.kubernetesAdditionalManifests = manifests;
 		}
@@ -362,6 +366,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public List<String> getKubernetesAdditionalPersistentManifests() {
 			return kubernetesAdditionalPersistentManifests;
+                }
+
+		public String getTargetPath() {
+			return targetPath;
+		}
+
+		public void setTargetPath(String targetPath) {
+			this.targetPath = targetPath;
 		}
 	}
 }

@@ -52,6 +52,7 @@ window.Shiny = {
     reloaded: false,
     containerPath: null,
     webSocketReconnectionMode: null,
+    proxyId: null,
     injectorIntervalId: null,
     appWasLoaded: false,
     tryingToReconnect: false,

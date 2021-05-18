@@ -374,6 +374,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		public void setTargetPath(String targetPath) {
 			this.targetPath = targetPath;
 		}
+
 		public WebSocketReconnectionMode getWebSocketReconnectionMode() {
 			return webSocketReconnectionMode;
 		}

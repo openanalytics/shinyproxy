@@ -54,7 +54,10 @@ public class AppController extends BaseController {
 
 		map.put("appTitle", getAppTitle(request));
 		map.put("containerPath", (proxy == null) ? "" : buildContainerPath(request));
+		map.put("proxyId", (proxy == null) ? "" : proxy.getId());
 		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getWebSocketReconnectionMode());
+		map.put("contextPath", getContextPath());
+		map.put("heartbeatRate", getHeartbeatRate());
 
 		return "app";
 	}

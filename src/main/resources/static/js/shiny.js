@@ -37,16 +37,20 @@ function ErrorHandlingWebSocket(url, protocols) {
         }
     });
 
+    Shiny.websocketConnections.push(res);
+
     return res;
 }
 
 ErrorHandlingWebSocket.prototype = WebSocket.prototype;
+
 
 window.Shiny = {
 
     navigatingAway: false,
     containerPath: null,
     webSocketReconnectionMode: null,
+    proxyId: null,
     injectorIntervalId: null,
     appWasLoaded: false,
     tryingToReconnect: false,
@@ -54,6 +58,10 @@ window.Shiny = {
     maxReloadAttempts: 10,
     reloadDismissed: false,
     updateSecondsIntervalId: null,
+    heartBeatRate: null,
+    websocketConnections: [],
+    lastHeartbeatTime: null,
+    contextPath: null,
 
     /**
      * Determines whether this is a Shiny app.
@@ -95,7 +103,7 @@ window.Shiny = {
         if (Shiny.webSocketReconnectionMode === "Auto"
             || (Shiny.webSocketReconnectionMode === "Confirm"
                 && confirm("Connection to server lost, try to reconnect to the application?"))
-                ) {
+        ) {
             Shiny.reloadPage();
         } else {
             Shiny.reloadDismissed = true;
@@ -152,7 +160,7 @@ window.Shiny = {
      * If this the case, the iframe looks like it has properly loaded, however, the iframe just contains a message
      * and not the appropriate app.
      */
-    checkIfIframeHasStartupMessage: function() {
+    checkIfIframeHasStartupMessage: function () {
         try {
             var _shinyFrame = document.getElementById('shinyframe');
             return (_shinyFrame.contentDocument.documentElement.textContent || _shinyFrame.contentDocument.documentElement.innerText).indexOf('ShinyProxy is starting up') > -1;
@@ -180,13 +188,13 @@ window.Shiny = {
             return;
         }
 
-        if (checks === 4) {
+        if (checks === 10) {
             Shiny.reloadPageBackOff();
             return;
         }
 
-        // re-check in 50 ms
-        setTimeout(() => Shiny.checkReloadSucceeded(checks + 1), 200);
+        // re-check in 250 ms, in total the page has 2.5 seconds to complete reloading
+        setTimeout(() => Shiny.checkReloadSucceeded(checks + 1), 250);
     },
 
     /**
@@ -203,7 +211,7 @@ window.Shiny = {
             return;
         }
 
-        if (checks === 4) {
+        if (checks === 10) {
             Shiny.reloadPageBackOff();
             return;
         }
@@ -215,8 +223,17 @@ window.Shiny = {
      * Injects the ErrorHandlingWebSocket into the iframe.
      */
     injectWebSocket: function () {
-        document.getElementById('shinyframe').contentWindow.WebSocket = ErrorHandlingWebSocket;
-        document.getElementById('shinyframe').contentWindow.document.querySelectorAll("iframe").forEach(d => d.contentWindow.document.WebSocket = ErrorHandlingWebSocket);
+        var shinyWindow = document.getElementById('shinyframe').contentWindow;
+        var shinySubFrames = shinyWindow.document.querySelectorAll("iframe");
+
+        shinyWindow.WebSocket = ErrorHandlingWebSocket;
+        shinySubFrames.forEach(d => d.contentWindow.document.WebSocket = ErrorHandlingWebSocket);
+
+        Shiny.replaceOpen(shinyWindow.XMLHttpRequest.prototype);
+        shinySubFrames.forEach(d => Shiny.replaceOpen(d.contentWindow.XMLHttpRequest.prototype));
+
+        Shiny.replaceFetch(shinyWindow);
+        shinySubFrames.forEach(d => Shiny.replaceFetch(d.contentWindow));
     },
 
     /**
@@ -247,7 +264,7 @@ window.Shiny = {
                 // ok
                 Shiny.stopInjector();
             } else if (state !== "complete") {
-                Shiny.injectWebSocket("setInterval");
+                Shiny.injectWebSocket();
                 replaced = true;
             }
         }, 50);
@@ -302,17 +319,24 @@ window.Shiny = {
      * Start the Shiny Application.
      * @param containerPath
      * @param webSocketReconnectionMode
+     * @param proxyId
+     * @param heartBeatRate
+     * @param contextPath
      */
-    start: function (containerPath, webSocketReconnectionMode) {
+    start: function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, contextPath) {
+        Shiny.heartBeatRate = heartBeatRate;
+        Shiny.contextPath = contextPath;
         if (containerPath === "") {
             Shiny.setShinyFrameHeight();
             Shiny.showLoading();
             $.post(window.location.pathname + window.location.search, function (response) {
                 Shiny.containerPath = response.containerPath;
                 Shiny.webSocketReconnectionMode = response.webSocketReconnectionMode;
+                Shiny.proxyId = response.proxyId;
                 Shiny.setupIframe();
                 Shiny.hideLoading();
                 Shiny.appWasLoaded = true;
+                Shiny.startHeartBeats();
             }).fail(function (request) {
                 if (!Shiny.navigatingAway) {
                     var newDoc = document.open("text/html", "replace");
@@ -323,9 +347,11 @@ window.Shiny = {
         } else {
             Shiny.containerPath = containerPath;
             Shiny.webSocketReconnectionMode = webSocketReconnectionMode;
+            Shiny.proxyId = proxyId;
             Shiny.setupIframe();
             Shiny.hideLoading();
             Shiny.appWasLoaded = true;
+            Shiny.startHeartBeats();
         }
     },
 
@@ -336,7 +362,7 @@ window.Shiny = {
         $('#shinyframe').css('height', ($(window).height()) + 'px');
     },
 
-    updateLoadingTxt: function() {
+    updateLoadingTxt: function () {
         if (Shiny.updateSecondsIntervalId !== null) {
             clearInterval(Shiny.updateSecondsIntervalId);
         }
@@ -367,14 +393,84 @@ window.Shiny = {
         }, 1000);
     },
 
-    showFailedToReloadPage: function() {
+    showFailedToReloadPage: function () {
         $('#shinyframe').hide();
         $("#loading").hide();
         $("#reconnecting").hide();
         $("#reloadFailed").show();
-    }
+    },
 
-};
+    /**
+     * Starts the process of sending heartbeats. This method is only used as fallback when we cannot piggy-back
+     * heartbeats on either a websocket connection or AJAX requests of the Shiny app itself.
+     * Therefore heartbeats are only sent when no WebSocket connection is open and when there were no AJAX requests
+     * in the last `Shiny.heartBeatRate` milliseconds.
+     */
+    startHeartBeats: function () {
+        setInterval(function () {
+            if (!Shiny.webSocketConnectionIsOpen()) {
+                const lastHeartbeat = Date.now() - Shiny.lastHeartbeatTime;
+                if (lastHeartbeat > Shiny.heartBeatRate && Shiny.proxyId !== null) {
+
+                    // contextPath is guaranteed to end with a slash
+                    $.post(Shiny.contextPath + "heartbeat/" + Shiny.proxyId);
+                }
+            }
+        }, Shiny.heartBeatRate);
+    },
+
+    /**
+     * @returns {boolean} whether at least one WebSocket connection is open
+     */
+    webSocketConnectionIsOpen: function () {
+        for (var idx = 0; idx < Shiny.websocketConnections.length; idx++) {
+            if (Shiny.websocketConnections[idx].readyState === WebSocket.OPEN) {
+                return true;
+            }
+        }
+
+        return false;
+    },
+
+    /**
+     * Replaces the `open` function on the `parent` object by a wrapper function that keeps tracks of the
+     * Shiny.lastHeartbeatTime.
+     * This can be called on window.XMLHttpRequest.prototype to update the Shiny.lastHeartbeatTime everytime an AJAX
+     * request is sent.
+     * Note: the only side-effect when a Shiny app would circumvents this function is that more heartbeats than
+     * strictly needed are sent.
+     * @param parent
+     */
+    replaceOpen: function (parent) {
+        var originalOpen = parent.open;
+
+        parent.open = function () {
+            Shiny.lastHeartbeatTime = Date.now();
+
+            return originalOpen.apply(this, arguments);
+        }
+    },
+
+    /**
+     * Replaces the `fetch` function on the `parent` object by a wrapper function that keeps tracks of the
+     * Shiny.lastHeartbeatTime.
+     * This can be called on window.fetch to update the Shiny.lastHeartbeatTime everytime a fetch
+     * request is sent.
+     * Note: the only side-effect when a Shiny app would circumvents this function is that more heartbeats than
+     * strictly needed are sent.
+     * @param parent
+     */
+    replaceFetch: function (parent) {
+        var originalFetch = parent.fetch;
+
+        parent.fetch = function () {
+            Shiny.lastHeartbeatTime = Date.now();
+
+            return originalFetch.apply(this, arguments);
+        }
+    }
+}
+
 
 window.onbeforeunload = function (e) {
     window.Shiny.navigatingAway = true;

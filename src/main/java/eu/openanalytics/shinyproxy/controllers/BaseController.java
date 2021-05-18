@@ -36,6 +36,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
+import eu.openanalytics.containerproxy.service.HeartbeatService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.core.env.Environment;
@@ -64,6 +65,9 @@ public abstract class BaseController {
 
 	@Inject
 	IAuthenticationBackend authenticationBackend;
+
+	@Inject
+	HeartbeatService heartbeatService;
 
 	private static Logger logger = LogManager.getLogger(BaseController.class);
 	private static Pattern appPattern = Pattern.compile(".*?/app[^/]*/([^/]*)/?.*");
@@ -95,6 +99,10 @@ public abstract class BaseController {
 	
 	protected String getContextPath() {
 		return SessionHelper.getContextPath(environment, true);
+	}
+
+	protected long getHeartbeatRate() {
+		return heartbeatService.getHeartbeatRate();
 	}
 	
 	protected Proxy findUserProxy(HttpServletRequest request) {

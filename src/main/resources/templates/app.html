@@ -59,7 +59,12 @@
 
 	<script type="text/javascript" th:inline="javascript">
 		$(window).on('load', function() {
-			window.Shiny.start([[${containerPath}]], [[${webSocketReconnectionMode}]]);
+			window.Shiny.start(
+					[[${containerPath}]],
+					[[${webSocketReconnectionMode}]],
+					[[${proxyId}]],
+					[[${heartbeatRate}]],
+					[[${contextPath}]]);
 		});
 	</script>
 </body>

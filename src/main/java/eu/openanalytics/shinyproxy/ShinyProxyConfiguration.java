@@ -23,6 +23,8 @@ package eu.openanalytics.shinyproxy;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKeyRegistry;
+import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
@@ -42,5 +44,9 @@ public class ShinyProxyConfiguration {
 		// Enable heartbeat unless explicitly disabled.
 		boolean enabled = Boolean.valueOf(environment.getProperty("proxy.heartbeat-enabled", "true"));
 		heartbeatService.setEnabled(enabled);
+	}
+
+	static {
+		RuntimeValueKeyRegistry.addRuntimeValueKey(PublicPathKey.inst);
 	}
 }

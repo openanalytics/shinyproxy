@@ -85,10 +85,6 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		this.specs = specs.stream().map(ShinyProxySpecProvider::convert).collect(Collectors.toList());
 	}
 
-	private static String getPublicPath(String appName) {
-		String contextPath = SessionHelper.getContextPath(environment, true);
-		return contextPath + "app_direct/" + appName + "/";
-	}
 
 	private static ProxySpec convert(ShinyProxySpec from) {
 		ProxySpec to = new ProxySpec();
@@ -116,15 +112,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		ContainerSpec cSpec = new ContainerSpec();
 		cSpec.setImage(from.getContainerImage());
 		cSpec.setCmd(from.getContainerCmd());
-
-		Map<String, String> env = from.getContainerEnv();
-		if (env == null) {
-			env = new HashMap<>();
-		}
-
-		env.put("SHINYPROXY_PUBLIC_PATH", getPublicPath(from.getId()));
-		cSpec.setEnv(env);
-
+		cSpec.setEnv(from.getContainerEnv());
 		cSpec.setEnvFile(from.getContainerEnvFile());
 		cSpec.setNetwork(from.getContainerNetwork());
 		cSpec.setNetworkConnections(from.getContainerNetworkConnections());

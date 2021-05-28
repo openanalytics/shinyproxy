@@ -22,9 +22,14 @@ package eu.openanalytics.shinyproxy.controllers;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.containerproxy.util.Retrying;
+
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,6 +37,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -101,15 +107,18 @@ public class AppController extends BaseController {
 			throw new RuntimeException("Error routing proxy request", e);
 		}
 	}
-	
+
 	private Proxy getOrStart(HttpServletRequest request) {
 		Proxy proxy = findUserProxy(request);
 		if (proxy == null) {
 			String specId = getAppName(request);
 			ProxySpec spec = proxyService.getProxySpec(specId);
+
 			if (spec == null) throw new IllegalArgumentException("Unknown proxy spec: " + specId);
 			ProxySpec resolvedSpec = proxyService.resolveProxySpec(spec, null, null);
-			proxy = proxyService.startProxy(resolvedSpec, false);
+
+			proxy = proxyService.startProxy(resolvedSpec, false,
+					Collections.singletonList(new RuntimeValue(PublicPathKey.inst, getPublicPath(specId))));
 		}
 		return proxy;
 	}
@@ -136,5 +145,9 @@ public class AppController extends BaseController {
 		queryString = (queryString == null) ? "" : "?" + queryString;
 		
 		return getContextPath() + "app_direct/" + appName + "/" + queryString;
+	}
+
+	private String getPublicPath(String appName) {
+		return getContextPath() + "app_direct/" + appName + "/";
 	}
 }

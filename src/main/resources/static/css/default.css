@@ -118,3 +118,7 @@ body > div#navbar { padding-top: 0px; }
 	width: 2000px;
 	font-size: 18px;
 }
+
+#iframeinsert {
+	display: none;
+}

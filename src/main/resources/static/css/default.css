@@ -122,3 +122,17 @@ body > div#navbar { padding-top: 0px; }
 #iframeinsert {
 	display: none;
 }
+
+#newInstanceForm {
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+
+#instanceNameField {
+	width: 450px;
+	margin-right: 10px;
+}
+
+#newInstanceForm button {
+	width: 100px;
+}

@@ -34,6 +34,9 @@
 					<a class="navbar-brand" th:href="@{/}" th:text="${title}"></a>
 				</div>
 				<div class="navbar-form navbar-right">
+					<a role="button" class="btn btn-primary btn-sm" id="switchInstancesModal-btn"
+					   data-toggle="modal" data-target="#switchInstancesModal">Switch instance</a>
+
 					<a role="button" class="btn btn-primary btn-sm" th:if="${isSupportEnabled}"
 						data-toggle="modal" data-target="#reportIssueModal">Report Issue</a>
 					<a role="button" class="btn btn-primary btn-sm" th:href="@{/admin}" th:if="${isAdmin}">Admin</a>
@@ -70,6 +73,7 @@
 				</div>
 			</div>
 		</div>
+
 		<script lang="JavaScript">
 			$(document).ready(function() { $('input[name="currentLocation"]').val(window.location.href); });
 		</script>

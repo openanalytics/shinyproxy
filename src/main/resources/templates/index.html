@@ -45,7 +45,7 @@
 	<div th:if="${!displayAppLogos}" id="applist">
 		<ul>
 			<li th:each="app: ${apps}">
-				<a th:href="@{/app/}+${app.id}" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
+				<a th:href="@{/app/}+${app.id}+@{/_/}" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
 				<br th:if="${app.description != null}" />
 				<span th:if="${app.description != null}" th:utext="${app.description}"></span>
 			</li>
@@ -60,7 +60,7 @@
 						<img th:if="${appLogos.get(app) != null}" th:src="${appLogos.get(app)}"></img>
 					</div>
 					<div class="media-body">
-						<a th:href="@{/app/}+${app.id}" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
+						<a th:href="@{/app/}+${app.id}+@{/_/}" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
 						<br th:if="${app.description != null}" />
 						<span th:if="${app.description != null}" th:utext="${app.description}"></span>
 					</div>

@@ -49,10 +49,11 @@ window.Shiny = {
 
     navigatingAway: false,
     proxyId: null,
+    appName: null,
+    appInstanceName: null,
     reloaded: false,
     containerPath: null,
     webSocketReconnectionMode: null,
-    proxyId: null,
     injectorIntervalId: null,
     appWasLoaded: false,
     tryingToReconnect: false,
@@ -324,10 +325,14 @@ window.Shiny = {
      * @param proxyId
      * @param heartBeatRate
      * @param contextPath
+     * @param appName
+     * @param appInstanceName
      */
-    start: function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, contextPath) {
+    start: function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, contextPath, appName, appInstanceName) {
         Shiny.heartBeatRate = heartBeatRate;
         Shiny.contextPath = contextPath;
+        Shiny.appName = appName;
+        Shiny.appInstanceName = appInstanceName;
         if (containerPath === "") {
             Shiny.setShinyFrameHeight();
             Shiny.showLoading();
@@ -470,6 +475,71 @@ window.Shiny = {
 
             return originalFetch.apply(this, arguments);
         }
+    },
+
+    instancesModal: {
+        onShow: function() {
+            console.log(Shiny.appName);
+            console.log(Shiny.appInstanceName);
+
+            $('#appInstances').empty();
+
+            $.get(Shiny.contextPath + "api/proxy", function(response) {
+                var proxies = response.filter(proxy => proxy.spec.id === Shiny.appName && proxy.runtimeValues.SHINYPROXY_APP_INSTANCE !== '_');
+                var defaultProxy = response.find(proxy => proxy.spec.id === Shiny.appName && proxy.runtimeValues.SHINYPROXY_APP_INSTANCE === "_");
+
+                if (typeof defaultProxy !== 'undefined') {
+                    var el = $('<li></li>');
+                    el.append(Shiny.instancesModal.createInnerElement('_'));
+                    $('#appInstances').append(el);
+                }
+
+                for (var idx = 0; idx < proxies.length; idx++) {
+                    var appInstance = proxies[idx].runtimeValues.SHINYPROXY_APP_INSTANCE;
+                    var el = $('<li></li>');
+                    el.append(Shiny.instancesModal.createInnerElement(appInstance));
+                    $('#appInstances').append(el);
+                }
+
+            }).fail(function (request) {
+                // TODO
+            });
+        },
+        createUrlForInstance: function(instance) {
+            return Shiny.contextPath + "app/" + Shiny.appName + "/" + instance + "/";
+        },
+        createInnerElement: function(instance) {
+            if (Shiny.appInstanceName === instance) {
+                var el = $('<b></b>');
+                el.text(Shiny.instancesModal.createInnerText(instance) + ' (current instance)');
+                return el;
+            } else {
+                var el = $('<a href="" target="_blank"></a>');
+                el.attr('href', Shiny.instancesModal.createUrlForInstance(instance));
+                el.text(Shiny.instancesModal.createInnerText(instance));
+                return el;
+            }
+        },
+        createInnerText: function(instance) {
+            if (instance === "_") {
+                return "Default";
+            } else {
+                return instance;
+            }
+        },
+        newInstance() {
+            var instance = $("#instanceNameField").val().trim();
+            if (instance === "") {
+                return;
+            }
+            if (instance === Shiny.appInstanceName) {
+                alert("This instance is already opened in the current tab.");
+                return;
+            }
+            window.open(Shiny.instancesModal.createUrlForInstance(instance), "_blank");
+            $("#instanceNameField").val('');
+            $('#switchInstancesModal').modal('hide')
+        }
     }
 }
 
@@ -479,3 +549,13 @@ window.onbeforeunload = function (e) {
 };
 window.addEventListener("load", Shiny.setShinyFrameHeight);
 window.addEventListener("resize", Shiny.setShinyFrameHeight);
+window.addEventListener("load", function() {
+    $('#switchInstancesModal-btn').click(function () {
+        Shiny.instancesModal.onShow();
+    });
+    $('#newInstanceForm').submit(function(e) {
+        e.preventDefault();
+        Shiny.instancesModal.newInstance();
+    });
+});
+

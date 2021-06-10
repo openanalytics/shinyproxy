@@ -29,14 +29,14 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
 import eu.openanalytics.containerproxy.service.HeartbeatService;
+import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.core.env.Environment;
@@ -69,29 +69,16 @@ public abstract class BaseController {
 	@Inject
 	HeartbeatService heartbeatService;
 
-	private static Logger logger = LogManager.getLogger(BaseController.class);
-	private static Pattern appPattern = Pattern.compile(".*?/app[^/]*/([^/]*)/?.*");
-	private static Map<String, String> imageCache = new HashMap<>();
+	private static final Logger logger = LogManager.getLogger(BaseController.class);
+	private static final Map<String, String> imageCache = new HashMap<>();
 	
 	protected String getUserName(HttpServletRequest request) {
 		Principal principal = request.getUserPrincipal();
-		String username = (principal == null) ? request.getSession().getId() : principal.getName();
-		return username;
+		return (principal == null) ? request.getSession().getId() : principal.getName();
 	}
 	
-	protected String getAppName(HttpServletRequest request) {
-		return getAppName(request.getRequestURI());
-	}
-	
-	protected String getAppName(String uri) {
-		Matcher matcher = appPattern.matcher(uri);
-		String appName = matcher.matches() ? matcher.group(1) : null;
-		return appName;
-	}
-	
-	protected String getAppTitle(HttpServletRequest request) {
-		String appName = getAppName(request);
-		if (appName == null || appName.isEmpty()) return "";
+	protected String getAppTitle(AppRequestInfo appRequestInfo) {
+		String appName = appRequestInfo.getAppName();
 		ProxySpec spec = proxyService.getProxySpec(appName);
 		if (spec == null || spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) return appName;
 		else return spec.getDisplayName();
@@ -105,10 +92,12 @@ public abstract class BaseController {
 		return heartbeatService.getHeartbeatRate();
 	}
 	
-	protected Proxy findUserProxy(HttpServletRequest request) {
-		String appName = getAppName(request);
-		if (appName == null) return null;
-		return proxyService.findProxy(p -> appName.equals(p.getSpec().getId()) && userService.isOwner(p), false);
+	protected Proxy findUserProxy(AppRequestInfo appRequestInfo) {
+		return proxyService.findProxy(p ->
+				p.getSpec().getId().equals(appRequestInfo.getAppName())
+				&& p.getRuntimeValue(AppInstanceKey.inst).equals(appRequestInfo.getAppInstance())
+				&& userService.isOwner(p),
+				false);
 	}
 	
 	protected String getProxyEndpoint(Proxy proxy) {
@@ -166,4 +155,5 @@ public abstract class BaseController {
 		imageCache.put(resourceURI, resolvedValue);
 		return resolvedValue;
 	}
+
 }

@@ -85,7 +85,6 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		this.specs = specs.stream().map(ShinyProxySpecProvider::convert).collect(Collectors.toList());
 	}
 
-
 	private static ProxySpec convert(ShinyProxySpec from) {
 		ProxySpec to = new ProxySpec();
 		to.setId(from.getId());

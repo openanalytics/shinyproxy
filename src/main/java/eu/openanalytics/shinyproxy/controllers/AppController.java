@@ -23,20 +23,12 @@ package eu.openanalytics.shinyproxy.controllers;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
-import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.containerproxy.util.Retrying;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -45,21 +37,32 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
 @Controller
 public class AppController extends BaseController {
 
 	@Inject
 	private ProxyMappingManager mappingManager;
-	
-	@RequestMapping(value="/app/*", method=RequestMethod.GET)
+
+	@RequestMapping(value="/app/*/*", method=RequestMethod.GET)
 	public String app(ModelMap map, HttpServletRequest request) {
+		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequest(request);
+
 		prepareMap(map, request);
-		
-		Proxy proxy = findUserProxy(request);
+
+		Proxy proxy = findUserProxy(appRequestInfo);
 		awaitReady(proxy);
 
-		map.put("appTitle", getAppTitle(request));
-		map.put("containerPath", (proxy == null) ? "" : buildContainerPath(request));
+		map.put("appTitle", getAppTitle(appRequestInfo));
+		map.put("appName", appRequestInfo.getAppName());
+		map.put("appInstance", appRequestInfo.getAppInstance());
+		map.put("containerPath", (proxy == null) ? "" : buildContainerPath(request, appRequestInfo));
 		map.put("proxyId", (proxy == null) ? "" : proxy.getId());
 		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getWebSocketReconnectionMode());
 		map.put("contextPath", getContextPath());
@@ -68,11 +71,13 @@ public class AppController extends BaseController {
 		return "app";
 	}
 	
-	@RequestMapping(value="/app/*", method=RequestMethod.POST)
+	@RequestMapping(value="/app/*/*", method=RequestMethod.POST)
 	@ResponseBody
 	public Map<String,String> startApp(HttpServletRequest request) {
-		Proxy proxy = getOrStart(request);
-		String containerPath = buildContainerPath(request);
+		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequest(request);
+
+		Proxy proxy = getOrStart(appRequestInfo);
+		String containerPath = buildContainerPath(request, appRequestInfo);
 		
 		Map<String,String> response = new HashMap<>();
 		response.put("containerPath", containerPath);
@@ -83,16 +88,14 @@ public class AppController extends BaseController {
 	
 	@RequestMapping(value="/app_direct/**")
 	public void appDirect(HttpServletRequest request, HttpServletResponse response) {
-		Proxy proxy = getOrStart(request);
+		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequest(request);
+
+		Proxy proxy = getOrStart(appRequestInfo);
 		awaitReady(proxy);
 		
 		String mapping = getProxyEndpoint(proxy);
 		
-		String subPath = request.getRequestURI();
-		subPath = subPath.substring(subPath.indexOf("/app_direct/") + 12);
-		subPath = subPath.substring(getAppName(request).length());
-		
-		if (subPath.trim().isEmpty()) {
+		if (appRequestInfo.getSubPath() == null) {
 			try {
 				response.sendRedirect(request.getRequestURI() + "/");
 			} catch (Exception e) {
@@ -102,23 +105,25 @@ public class AppController extends BaseController {
 		}
 		
 		try {
-			mappingManager.dispatchAsync(mapping + subPath, request, response);
+			mappingManager.dispatchAsync(mapping + appRequestInfo.getSubPath(), request, response);
 		} catch (Exception e) {
 			throw new RuntimeException("Error routing proxy request", e);
 		}
 	}
 
-	private Proxy getOrStart(HttpServletRequest request) {
-		Proxy proxy = findUserProxy(request);
+	private Proxy getOrStart(AppRequestInfo appRequestInfo) {
+		Proxy proxy = findUserProxy(appRequestInfo);
 		if (proxy == null) {
-			String specId = getAppName(request);
-			ProxySpec spec = proxyService.getProxySpec(specId);
+			ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
 
-			if (spec == null) throw new IllegalArgumentException("Unknown proxy spec: " + specId);
+			if (spec == null) throw new BadRequestException("Unknown proxy spec: " + appRequestInfo.getAppName());
 			ProxySpec resolvedSpec = proxyService.resolveProxySpec(spec, null, null);
 
 			proxy = proxyService.startProxy(resolvedSpec, false,
-					Collections.singletonList(new RuntimeValue(PublicPathKey.inst, getPublicPath(specId))));
+					Arrays.asList(
+							new RuntimeValue(PublicPathKey.inst, getPublicPath(appRequestInfo)),
+							new RuntimeValue(AppInstanceKey.inst, appRequestInfo.getAppInstance())
+						));
 		}
 		return proxy;
 	}
@@ -136,15 +141,16 @@ public class AppController extends BaseController {
 		return (proxy.getStatus() == ProxyStatus.Up);
 	}
 	
-	private String buildContainerPath(HttpServletRequest request) {
-		String appName = getAppName(request);
-		if (appName == null) return "";
-
+	private String buildContainerPath(HttpServletRequest request, AppRequestInfo appRequestInfo) {
 		String queryString = ServletUriComponentsBuilder.fromRequest(request).replaceQueryParam("sp_hide_navbar").build().getQuery();
 
 		queryString = (queryString == null) ? "" : "?" + queryString;
 		
-		return getContextPath() + "app_direct/" + appName + "/" + queryString;
+		return getPublicPath(appRequestInfo) + queryString;
+	}
+
+	private String getPublicPath(AppRequestInfo appRequestInfo) {
+		return getContextPath() + "app_direct/" + appRequestInfo.getAppName() + "/" + appRequestInfo.getAppInstance() + '/';
 	}
 
 	private String getPublicPath(String appName) {

@@ -76,7 +76,6 @@
         Only applies to springframework-social before 1.1.3, but we are using 1.1.6 (however somewhere this version is referred).
     -->
     <suppress>
-        <sha1>5b2b52bf1e8e183a9a7c9bbc5b6cc7155ed108ab</sha1>
         <cve>CVE-2015-5258</cve>
     </suppress>
 </suppressions>

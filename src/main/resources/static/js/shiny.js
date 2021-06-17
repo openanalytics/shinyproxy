@@ -498,6 +498,10 @@ window.Shiny = {
                             continue;
                         }
 
+                        if (proxy.status !== "Up" && proxy.status !== "Starting" && proxy.status !== "New") {
+                            continue;
+                        }
+
                         var proxyName = ""
                         if (appInstance === "_") {
                             proxyName = "Default";

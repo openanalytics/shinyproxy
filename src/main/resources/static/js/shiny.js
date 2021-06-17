@@ -482,6 +482,7 @@ window.Shiny = {
 
     instancesModal: {
         template: null,
+        nameRegex: new RegExp('^[a-zA-Z0-9_.-]*$'),
         onShow: function() {
             $.get(Shiny.contextPath + "api/proxy", function(proxies) {
                 var templateData = {'instances': []};
@@ -527,16 +528,30 @@ window.Shiny = {
             return Shiny.contextPath + "app/" + Shiny.appName + "/" + instance + "/";
         },
         newInstance: function() {
-            var instance = $("#instanceNameField").val().trim();
+            var inputField = $("#instanceNameField");
+            var instance = inputField.val().trim();
+
             if (instance === "") {
                 return;
             }
-            if (instance === Shiny.appInstanceName) {
-                alert("This instance is already opened in the current tab.");
+
+            if (instance.length > 64) {
+                alert("The provide name is too long (maximum 64 characters)");
                 return;
             }
+
+            if (!Shiny.instancesModal.nameRegex.test(instance)) {
+                alert("The provide name contains invalid characters (ony alphanumeric characters, '_', '-' and '.' are allowed.)");
+                return;
+            }
+
+            if (instance === Shiny.appInstanceName) {
+                alert("This instance is already opened in the current tab");
+                return;
+            }
+
             window.open(Shiny.instancesModal.createUrlForInstance(instance), "_blank");
-            $("#instanceNameField").val('');
+            inputField.val('');
             $('#switchInstancesModal').modal('hide')
         }
     }

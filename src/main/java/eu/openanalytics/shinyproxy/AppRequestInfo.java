@@ -34,6 +34,8 @@ public class AppRequestInfo {
 
     private static final Pattern appPattern = Pattern.compile(".*?/app[^/]*/([^/]*)/([^/]*)(/?.*)");
 
+    private static final Pattern instanceNamePattern = Pattern.compile("^[a-zA-Z0-9_.-]*$");
+
     public AppRequestInfo(String appName, String appInstance, String subPath) {
         this.appName = appName;
         this.appInstance = appInstance;
@@ -56,6 +58,10 @@ public class AppRequestInfo {
             String appInstance =  matcher.group(2);
             if (appInstance == null || appInstance.trim().equals("")) {
                 throw new BadRequestException("Error parsing URL: name of instance not found in URL.");
+            }
+
+            if (appInstance.length() > 64 || !instanceNamePattern.matcher(appInstance).matches()) {
+                throw new BadRequestException("Error parsing URL: name of instance contains invalid characters or is too long.");
             }
 
             String subPath =  matcher.group(3);

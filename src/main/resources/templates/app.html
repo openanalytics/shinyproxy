@@ -30,7 +30,9 @@
 	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
 	<script th:src="@{${jqueryJs}}"></script>
 	<script th:src="@{${bootstrapJs}}"></script>
+	<script th:src="@{${handlebars}}"></script>
 	<script th:src="@{/js/shiny.js}"></script>
+	<script th:src="@{/handlebars/precompiled.js}"></script>
 </head>
 <body>
 	<div th:replace="../fragments/navbar :: navbar"></div>
@@ -65,8 +67,8 @@
 					<h4 class="modal-title">Switch instance</h4>
 				</div>
 				<div class="modal-body">
-					<ul id="appInstances">
-					</ul>
+					<div id="appInstances">
+					</div>
 					<form id="newInstanceForm" class="form-inline">
 						<div class="form-group">
 						<label for="instanceNameField"><span class="glyphicon glyphicon-chat"></span>Name of new instance:</label><br>

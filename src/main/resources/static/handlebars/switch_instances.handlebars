@@ -1,0 +1,9 @@
+<ul>
+    {{#each instances}}
+        {{#if active}}
+            <li><b>{{ name }}</b></li>
+        {{else}}
+            <li><a target="_blank" href="{{ url }}">{{ name }}</a></li>
+        {{/if}}
+    {{/each}}
+</ul>

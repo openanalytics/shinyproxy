@@ -1,3 +1,5 @@
+// noinspection ES6ConvertVarToLetConst
+
 /*
  * ShinyProxy
  *
@@ -333,6 +335,7 @@ window.Shiny = {
         Shiny.contextPath = contextPath;
         Shiny.appName = appName;
         Shiny.appInstanceName = appInstanceName;
+        Shiny.instancesModal.template = Handlebars.templates['switch_instances'];
         if (containerPath === "") {
             Shiny.setShinyFrameHeight();
             Shiny.showLoading();
@@ -416,7 +419,7 @@ window.Shiny = {
     startHeartBeats: function () {
         setInterval(function () {
             if (!Shiny.webSocketConnectionIsOpen()) {
-                const lastHeartbeat = Date.now() - Shiny.lastHeartbeatTime;
+                var lastHeartbeat = Date.now() - Shiny.lastHeartbeatTime;
                 if (lastHeartbeat > Shiny.heartBeatRate && Shiny.proxyId !== null) {
 
                     // contextPath is guaranteed to end with a slash
@@ -478,29 +481,44 @@ window.Shiny = {
     },
 
     instancesModal: {
+        template: null,
         onShow: function() {
-            console.log(Shiny.appName);
-            console.log(Shiny.appInstanceName);
-
-            $('#appInstances').empty();
-
-            $.get(Shiny.contextPath + "api/proxy", function(response) {
-                var proxies = response.filter(proxy => proxy.spec.id === Shiny.appName && proxy.runtimeValues.SHINYPROXY_APP_INSTANCE !== '_');
-                var defaultProxy = response.find(proxy => proxy.spec.id === Shiny.appName && proxy.runtimeValues.SHINYPROXY_APP_INSTANCE === "_");
-
-                if (typeof defaultProxy !== 'undefined') {
-                    var el = $('<li></li>');
-                    el.append(Shiny.instancesModal.createInnerElement('_'));
-                    $('#appInstances').append(el);
-                }
+            $.get(Shiny.contextPath + "api/proxy", function(proxies) {
+                var templateData = {'instances': []};
 
                 for (var idx = 0; idx < proxies.length; idx++) {
-                    var appInstance = proxies[idx].runtimeValues.SHINYPROXY_APP_INSTANCE;
-                    var el = $('<li></li>');
-                    el.append(Shiny.instancesModal.createInnerElement(appInstance));
-                    $('#appInstances').append(el);
+                    var proxy = proxies[idx];
+
+                    if (proxy.hasOwnProperty('spec') &&  proxy.spec.hasOwnProperty('id') &&
+                        proxy.hasOwnProperty('runtimeValues') && proxy.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE')) {
+
+                        var appInstance = proxy.runtimeValues.SHINYPROXY_APP_INSTANCE;
+                        if (proxy.spec.id !== Shiny.appName) {
+                            continue;
+                        }
+
+                        var proxyName = ""
+                        if (appInstance === "_") {
+                            proxyName = "Default";
+                        } else {
+                            proxyName = appInstance;
+                        }
+
+                        var active = Shiny.appInstanceName === appInstance;
+                        var url = Shiny.instancesModal.createUrlForInstance(appInstance);
+
+                        templateData['instances'].push({name: proxyName, active: active, url: url});
+                    } else {
+                        console.log("Received invalid proxy object from server.");
+                    }
+
                 }
 
+                templateData['instances'].sort(function(a, b) {
+                    return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
+                });
+
+                document.getElementById('appInstances').innerHTML = Shiny.instancesModal.template(templateData);
             }).fail(function (request) {
                 // TODO
             });
@@ -508,26 +526,7 @@ window.Shiny = {
         createUrlForInstance: function(instance) {
             return Shiny.contextPath + "app/" + Shiny.appName + "/" + instance + "/";
         },
-        createInnerElement: function(instance) {
-            if (Shiny.appInstanceName === instance) {
-                var el = $('<b></b>');
-                el.text(Shiny.instancesModal.createInnerText(instance) + ' (current instance)');
-                return el;
-            } else {
-                var el = $('<a href="" target="_blank"></a>');
-                el.attr('href', Shiny.instancesModal.createUrlForInstance(instance));
-                el.text(Shiny.instancesModal.createInnerText(instance));
-                return el;
-            }
-        },
-        createInnerText: function(instance) {
-            if (instance === "_") {
-                return "Default";
-            } else {
-                return instance;
-            }
-        },
-        newInstance() {
+        newInstance: function() {
             var instance = $("#instanceNameField").val().trim();
             if (instance === "") {
                 return;

@@ -30,6 +30,7 @@ import eu.openanalytics.containerproxy.util.Retrying;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,6 +41,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -83,16 +85,24 @@ public class AppController extends BaseController {
 		Map<String,String> response = new HashMap<>();
 		response.put("containerPath", containerPath);
 		response.put("proxyId", proxy.getId());
-		response.put("webSocketReconnectionMode", proxy.getWebSocketReconnectionMode().name());
+		response.put("webSocketReconnectionMode", proxy.getWebSocketReconnectionMode().name()); // NPE?
 		return response;
 	}
 	
 	@RequestMapping(value="/app_direct/**")
-	public void appDirect(HttpServletRequest request, HttpServletResponse response) {
+	public void appDirect(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequest(request);
 
-		Proxy proxy = getOrStart(appRequestInfo);
-		awaitReady(proxy);
+		Proxy proxy = findUserProxy(appRequestInfo);
+
+		if (proxy == null && appRequestInfo.getSubPath() != null && !appRequestInfo.getSubPath().equals("/")) {
+		    response.setStatus(410);
+		    response.getWriter().write("{\"status\":\"error\", \"message\":\"app_stopped_or_non_existent\"}");
+		    return;
+		} else {
+			proxy = getOrStart(appRequestInfo);
+			awaitReady(proxy);
+		}
 		
 		String mapping = getProxyEndpoint(proxy);
 		

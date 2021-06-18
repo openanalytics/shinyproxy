@@ -25,6 +25,7 @@ import eu.openanalytics.containerproxy.service.HeartbeatService;
 import eu.openanalytics.containerproxy.service.ProxyService;
 import eu.openanalytics.containerproxy.service.UserService;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,7 +35,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.inject.Inject;
 import java.util.HashMap;
-import java.util.Map;
 
 @Controller
 public class HeartbeatController {
@@ -51,11 +51,19 @@ public class HeartbeatController {
     /**
      * Endpoint used to force a heartbeat. This is used when an app cannot piggy-back heartbeats on other requests
      * or on a WebSocket connection.
+     * @return
      */
     @RequestMapping(value = "/heartbeat/{proxyId}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public Map<String, String> heartbeat(@PathVariable("proxyId") String proxyId) {
+    public ResponseEntity<HashMap<String, String>> heartbeat(@PathVariable("proxyId") String proxyId) {
         Proxy proxy = proxyService.getProxy(proxyId);
+
+        if (proxy == null) {
+            return ResponseEntity.status(410).body(new HashMap<String, String>() {{
+                put("status", "error");
+                put("message", "app_stopped_or_non_existent");
+            }});
+        }
 
         if (!userService.isOwner(proxy)) {
             throw new AccessDeniedException(String.format("Cannot register heartbeat for proxy %s: access denied", proxyId));
@@ -63,8 +71,8 @@ public class HeartbeatController {
 
         heartbeatService.heartbeatReceived(proxy);
 
-        Map<String,String> response = new HashMap<>();
-        response.put("status", "success");
-        return response;
+        return ResponseEntity.ok(new HashMap<String, String>() {{
+            put("status", "success");
+        }});
     }
 }

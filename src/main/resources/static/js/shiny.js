@@ -67,6 +67,7 @@ window.Shiny = {
     websocketConnections: [],
     lastHeartbeatTime: null,
     contextPath: null,
+    appStopped: false,
 
     /**
      * Determines whether this is a Shiny app.
@@ -104,15 +105,29 @@ window.Shiny = {
             // user already dismissed confirmation -> do not ask again
             return;
         }
-
-        if (Shiny.webSocketReconnectionMode === "Auto"
-            || (Shiny.webSocketReconnectionMode === "Confirm"
-                && confirm("Connection to server lost, try to reconnect to the application?"))
-        ) {
-            Shiny.reloadPage();
-        } else {
-            Shiny.reloadDismissed = true;
+        if (Shiny.appStopped) {
+            // app has been stopped -> no need to reconnect
+            return;
         }
+
+        // Check if the app has been stopped by another tab
+        Shiny.checkAppHasBeenStopped(function (isStopped) {
+            if (isStopped) {
+                // app was stopped, show stopped screen
+                Shiny.onProxyStopped();
+                return;
+            }
+            if (Shiny.webSocketReconnectionMode === "Auto"
+                || (Shiny.webSocketReconnectionMode === "Confirm"
+                    && confirm("Connection to server lost, try to reconnect to the application?"))
+            ) {
+                Shiny.reloadPage();
+            } else {
+                Shiny.reloadDismissed = true;
+            }
+
+        });
+
     },
 
     /**
@@ -429,6 +444,21 @@ window.Shiny = {
         }, Shiny.heartBeatRate);
     },
 
+    checkAppHasBeenStopped: function (cb) {
+        $.post(Shiny.contextPath + "heartbeat/" + Shiny.proxyId, function () {
+            cb(false);
+        }).fail(function (response) {
+            var res = JSON.parse(response.responseText);
+            if (res !== null && res.status === "error" && res.message === "app_stopped_or_non_existent") {
+                cb(true);
+                return;
+            }
+
+            cb(false);
+        });
+
+    },
+
     /**
      * @returns {boolean} whether at least one WebSocket connection is open
      */
@@ -455,6 +485,15 @@ window.Shiny = {
         var originalOpen = parent.open;
 
         parent.open = function () {
+            this.addEventListener('load', function () {
+                if (this.status === 410) {
+                    var res = JSON.parse(this.responseText);
+                    if (res !== null && res.status === "error" && res.message === "app_stopped_or_non_existent") {
+                        // app stopped
+                        Shiny.onProxyStopped();
+                    }
+                }
+            });
             Shiny.lastHeartbeatTime = Date.now();
 
             return originalOpen.apply(this, arguments);
@@ -476,21 +515,77 @@ window.Shiny = {
         parent.fetch = function () {
             Shiny.lastHeartbeatTime = Date.now();
 
-            return originalFetch.apply(this, arguments);
+            return new Promise((resolve, reject) => {
+                originalFetch.apply(this, arguments)
+                    .then((response) => {
+                        if (response.status === 410) {
+                            response.clone().json().then(function(clonedResponse) {
+                                if (clonedResponse.status === "error" && clonedResponse.message === "app_stopped_or_non_existent") {
+                                    Shiny.onProxyStopped();
+                                }
+                            });
+                        }
+                        resolve(response);
+                    })
+                    .catch((error) => {
+                        reject(error);
+                    })
+            });
         }
+    },
+
+    api: {
+        getProxies: function (cb) {
+            $.get(Shiny.contextPath + "api/proxy", function (proxies) {
+                cb(proxies);
+            }).fail(function (request) {
+                // TODO
+            });
+        },
+        deleteProxy: function (cb) {
+            Shiny.api.deleteProxyById(Shiny.proxyId, cb);
+        },
+        deleteProxyById: function (id, cb) {
+            $.ajax({
+                url: Shiny.contextPath + "api/proxy/" + id,
+                type: 'DELETE',
+                success: cb,
+                error: function (result) {
+                    // TODO
+                }
+            });
+        },
+        getProxyId: function (appName, instanceName, cb) {
+            Shiny.api.getProxies(function (proxies) {
+                for (var i = 0; i < proxies.length; i++) {
+                    // TODO check if properties exists
+                    if (proxies[i].spec.id === appName && proxies[i].runtimeValues.SHINYPROXY_APP_INSTANCE === instanceName) {
+                        cb(proxies[i].id);
+                        return;
+                    }
+                }
+                cb(null);
+            });
+        }
+    },
+
+    onProxyStopped: function () {
+        $('#shinyframe').remove();
+        $('#switchInstancesModal').modal('hide')
+        $('#appStopped').show();
     },
 
     instancesModal: {
         template: null,
         nameRegex: new RegExp('^[a-zA-Z0-9_.-]*$'),
-        onShow: function() {
-            $.get(Shiny.contextPath + "api/proxy", function(proxies) {
+        onShow: function () {
+            Shiny.api.getProxies(function (proxies) {
                 var templateData = {'instances': []};
 
                 for (var idx = 0; idx < proxies.length; idx++) {
                     var proxy = proxies[idx];
 
-                    if (proxy.hasOwnProperty('spec') &&  proxy.spec.hasOwnProperty('id') &&
+                    if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id') &&
                         proxy.hasOwnProperty('runtimeValues') && proxy.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE')) {
 
                         var appInstance = proxy.runtimeValues.SHINYPROXY_APP_INSTANCE;
@@ -516,22 +611,19 @@ window.Shiny = {
                     } else {
                         console.log("Received invalid proxy object from server.");
                     }
-
                 }
 
-                templateData['instances'].sort(function(a, b) {
+                templateData['instances'].sort(function (a, b) {
                     return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
                 });
 
                 document.getElementById('appInstances').innerHTML = Shiny.instancesModal.template(templateData);
-            }).fail(function (request) {
-                // TODO
             });
         },
-        createUrlForInstance: function(instance) {
+        createUrlForInstance: function (instance) {
             return Shiny.contextPath + "app/" + Shiny.appName + "/" + instance + "/";
         },
-        newInstance: function() {
+        newInstance: function () {
             var inputField = $("#instanceNameField");
             var instance = inputField.val().trim();
 
@@ -557,6 +649,22 @@ window.Shiny = {
             window.open(Shiny.instancesModal.createUrlForInstance(instance), "_blank");
             inputField.val('');
             $('#switchInstancesModal').modal('hide')
+        },
+        onDeleteInstance: function (instanceName) {
+            if (instanceName === Shiny.appInstanceName) {
+                Shiny.appStopped = true;
+                $('#shinyframe').remove();
+            }
+            if (instanceName === "Default") {
+                instanceName = "_";
+            }
+            Shiny.api.getProxyId(Shiny.appName, instanceName, function (proxyId) {
+                Shiny.api.deleteProxyById(proxyId, function () {
+                    if (instanceName === Shiny.appInstanceName) {
+                        Shiny.onProxyStopped();
+                    }
+                });
+            });
         }
     }
 }
@@ -567,17 +675,17 @@ window.onbeforeunload = function (e) {
 };
 window.addEventListener("load", Shiny.setShinyFrameHeight);
 window.addEventListener("resize", Shiny.setShinyFrameHeight);
-window.addEventListener("load", function() {
+window.addEventListener("load", function () {
     $('#switchInstancesModal-btn').click(function () {
         Shiny.instancesModal.onShow();
     });
-    $('#newInstanceForm').submit(function(e) {
+    $('#newInstanceForm').submit(function (e) {
         e.preventDefault();
         Shiny.instancesModal.newInstance();
     });
 });
 
-$(window).on('load', function() {
+$(window).on('load', function () {
     $('#switchInstancesModal').on('shown.bs.modal', function () {
         console.log('on modal show');
         setTimeout(function () {

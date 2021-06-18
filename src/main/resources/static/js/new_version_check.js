@@ -20,6 +20,7 @@
  */
 document.addEventListener('DOMContentLoaded', function() {
 	document.getElementById('new-version-btn').addEventListener("click", function() {
+		// TODO does this work with contextpath?
 		 $.get("api/proxy", function(data, status){
 		 	if (data.length > 0) {
 		 		if (confirm("Warning: you have " + data.length + " apps running, your existing session(s) will be closed once you switch to the new version.")) {

@@ -4,15 +4,15 @@
             <li>
                 <b>{{ name }}</b>
                 <div class="btn-group btn-group-xs" role="group">
-                    <button type="button" class="btn btn-primary" onclick="Shiny.instancesModal.onDeleteInstance('{{ name}}');">Stop app</button>
-                    <button type="button" class="btn btn-primary" onclick="Shiny.instancesModal.onRestartInstance('{{ name}}');">Restart app</button>
+                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ name}}');">Stop app</button>
+                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onRestartInstance('{{ name}}');">Restart app</button>
                 </div>
             </li>
         {{else}}
             <li>
                 <a target="_blank" href="{{ url }}">{{ name }}</a>
                 <div class="btn-group btn-group-xs" role="group">
-                    <button type="button" class="btn btn-primary" onclick="Shiny.instancesModal.onDeleteInstance('{{ name}}');">Stop app</button>
+                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ name}}');">Stop app</button>
                 </div>
             </li>
         {{/if}}

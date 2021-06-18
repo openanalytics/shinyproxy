@@ -32,6 +32,10 @@
 	<script th:src="@{${bootstrapJs}}"></script>
 	<script th:src="@{${handlebars}}"></script>
 	<script th:src="@{/js/shiny.js}"></script>
+	<script th:src="@{/js/shiny.api.js}"></script>
+	<script th:src="@{/js/shiny.connections.js}"></script>
+	<script th:src="@{/js/shiny.instances.js}"></script>
+	<script th:src="@{/js/shiny.ui.js}"></script>
 	<script th:src="@{/handlebars/precompiled.js}"></script>
 </head>
 <body>
@@ -95,7 +99,7 @@
 
 	<script type="text/javascript" th:inline="javascript">
 		$(window).on('load', function() {
-			window.Shiny.start(
+			window.Shiny.app.start(
 					[[${containerPath}]],
 					[[${webSocketReconnectionMode}]],
 					[[${proxyId}]],

@@ -566,13 +566,25 @@ window.Shiny = {
                 }
                 cb(null);
             });
+        },
+        getProxyById: function(proxyId, cb) {
+            $.get(Shiny.contextPath + "api/proxy/" + proxyId, function (proxy) {
+                cb(true, proxy);
+            }).fail(function (request) {
+                if (request.status === 404) {
+                    cb(false, null);
+                }
+                // TODO
+            });
         }
     },
 
     onProxyStopped: function () {
-        $('#shinyframe').remove();
-        $('#switchInstancesModal').modal('hide')
-        $('#appStopped').show();
+        if (!Shiny.appStopped) {
+            $('#shinyframe').remove();
+            $('#switchInstancesModal').modal('hide')
+            $('#appStopped').show();
+        }
     },
 
     instancesModal: {
@@ -650,21 +662,53 @@ window.Shiny = {
             inputField.val('');
             $('#switchInstancesModal').modal('hide')
         },
-        onDeleteInstance: function (instanceName) {
+        deleteInstance: function(instanceName, cb) {
+            if (instanceName === "Default") {
+                instanceName = "_";
+            }
             if (instanceName === Shiny.appInstanceName) {
                 Shiny.appStopped = true;
                 $('#shinyframe').remove();
             }
+            Shiny.api.getProxyId(Shiny.appName, instanceName, function (proxyId) {
+                Shiny.api.deleteProxyById(proxyId, function () {
+                    cb(proxyId);
+                });
+            });
+
+        },
+        onDeleteInstance: function (instanceName) {
+            Shiny.instancesModal.deleteInstance(instanceName, function() {
+                if (instanceName === Shiny.appInstanceName) {
+                    Shiny.onProxyStopped();
+                }
+            });
+        },
+        onRestartInstance: function(instanceName) {
             if (instanceName === "Default") {
                 instanceName = "_";
             }
-            Shiny.api.getProxyId(Shiny.appName, instanceName, function (proxyId) {
-                Shiny.api.deleteProxyById(proxyId, function () {
-                    if (instanceName === Shiny.appInstanceName) {
-                        Shiny.onProxyStopped();
-                    }
+            if (instanceName === Shiny.appInstanceName) {
+                $('#switchInstancesModal').modal('hide')
+                $("#loading").show();
+            }
+            Shiny.instancesModal.deleteInstance(instanceName, function(proxyId) {
+                Shiny.instancesModal.waitUntilInstanceDeleted(proxyId, function() {
+                    window.location.reload(false);
                 });
             });
+        },
+        waitUntilInstanceDeleted: function(proxyId, cb) {
+            Shiny.api.getProxyById(proxyId, function(found) {
+                if (!found) {
+                    cb();
+                    return;
+                }
+                setTimeout(function() {
+                    Shiny.instancesModal.waitUntilInstanceDeleted(proxyId, cb);
+                }, 500);
+            });
+
         }
     }
 }

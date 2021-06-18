@@ -67,6 +67,7 @@ public class AppController extends BaseController {
 		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getWebSocketReconnectionMode());
 		map.put("contextPath", getContextPath());
 		map.put("heartbeatRate", getHeartbeatRate());
+		map.put("isAppPage", true);
 
 		return "app";
 	}

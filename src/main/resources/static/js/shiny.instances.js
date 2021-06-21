@@ -23,54 +23,22 @@ Shiny.instances = {
 
     _template: null,
     _nameRegex: new RegExp('^[a-zA-Z0-9_.-]*$'),
+    _refreshIntervalId: null,
 
     eventHandlers: {
         onShow: function () {
-            Shiny.api.getProxies(function (proxies) {
-                var templateData = {'instances': []};
-
-                for (var idx = 0; idx < proxies.length; idx++) {
-                    var proxy = proxies[idx];
-
-                    if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id') &&
-                        proxy.hasOwnProperty('runtimeValues') && proxy.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE')) {
-
-                        var appInstance = proxy.runtimeValues.SHINYPROXY_APP_INSTANCE;
-                        if (proxy.spec.id !== Shiny.app.staticState.appName) {
-                            continue;
-                        }
-
-                        if (proxy.status !== "Up" && proxy.status !== "Starting" && proxy.status !== "New") {
-                            continue;
-                        }
-
-                        var proxyName = ""
-                        if (appInstance === "_") {
-                            proxyName = "Default";
-                        } else {
-                            proxyName = appInstance;
-                        }
-
-                        var active = Shiny.app.staticState.appInstanceName === appInstance;
-                        var url = Shiny.instances._createUrlForInstance(appInstance);
-
-                        templateData['instances'].push({name: proxyName, active: active, url: url});
-                    } else {
-                        console.log("Received invalid proxy object from server.");
-                    }
+            Shiny.instances._refreshModal();
+            clearInterval(Shiny.instances._refreshIntervalId);
+            Shiny.instances._refreshIntervalId = setInterval(function() {
+                if (!document.hidden) {
+                    Shiny.instances._refreshModal();
                 }
-
-                templateData['instances'].sort(function (a, b) {
-                    return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
-                });
-
-                document.getElementById('appInstances').innerHTML = Shiny.instances._template(templateData);
-            });
+            }, 2500);
+        },
+        onClose: function() {
+            clearInterval(Shiny.instances._refreshIntervalId);
         },
         onDeleteInstance: function (instanceName) {
-            if (instanceName === "Default") {
-                instanceName = "_";
-            }
             Shiny.instances._deleteInstance(instanceName, function () {
                 if (instanceName === Shiny.app.staticState.appInstanceName) {
                     Shiny.ui.showStoppedPage();
@@ -136,9 +104,11 @@ Shiny.instances = {
             Shiny.ui.removeFrame();
         }
         Shiny.api.getProxyId(Shiny.app.staticState.appName, instanceName, function (proxyId) {
-            Shiny.api.deleteProxyById(proxyId, function () {
-                cb(proxyId);
-            });
+            if (proxyId !== null) {
+                Shiny.api.deleteProxyById(proxyId, function () {
+                    cb(proxyId);
+                });
+            }
         });
     },
 
@@ -153,4 +123,47 @@ Shiny.instances = {
             }, 500);
         });
     },
+
+    _refreshModal: function() {
+        Shiny.api.getProxies(function (proxies) {
+            var templateData = {'instances': []};
+
+            for (var idx = 0; idx < proxies.length; idx++) {
+                var proxy = proxies[idx];
+
+                if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id') &&
+                    proxy.hasOwnProperty('runtimeValues') && proxy.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE')) {
+
+                    var appInstance = proxy.runtimeValues.SHINYPROXY_APP_INSTANCE;
+                    if (proxy.spec.id !== Shiny.app.staticState.appName) {
+                        continue;
+                    }
+
+                    if (proxy.status !== "Up" && proxy.status !== "Starting" && proxy.status !== "New") {
+                        continue;
+                    }
+
+                    var proxyName = ""
+                    if (appInstance === "_") {
+                        proxyName = "Default";
+                    } else {
+                        proxyName = appInstance;
+                    }
+
+                    var active = Shiny.app.staticState.appInstanceName === appInstance;
+                    var url = Shiny.instances._createUrlForInstance(appInstance);
+
+                    templateData['instances'].push({name: proxyName, active: active, url: url});
+                } else {
+                    console.log("Received invalid proxy object from server.");
+                }
+            }
+
+            templateData['instances'].sort(function (a, b) {
+                return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
+            });
+
+            document.getElementById('appInstances').innerHTML = Shiny.instances._template(templateData);
+        });
+    }
 };

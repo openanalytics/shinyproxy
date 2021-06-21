@@ -116,12 +116,11 @@ $(window).on('load', function () {
     });
 
     $('#switchInstancesModal').on('shown.bs.modal', function () {
-        console.log('on modal show');
         setTimeout(function () {
             $("#instanceNameField").focus();
         }, 10);
     });
-
+    
     $('#switchInstancesModal').on('hide.bs.modal', function () {
         Shiny.instances.eventHandlers.onClose();
     });

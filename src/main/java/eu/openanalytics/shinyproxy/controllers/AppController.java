@@ -28,9 +28,10 @@ import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.containerproxy.util.Retrying;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
-import org.springframework.http.ResponseEntity;
+import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,8 +43,8 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -51,6 +52,9 @@ public class AppController extends BaseController {
 
 	@Inject
 	private ProxyMappingManager mappingManager;
+
+	@Inject
+	private ShinyProxySpecProvider shinyProxySpecProvider;
 
 	@RequestMapping(value="/app/*/*", method=RequestMethod.GET)
 	public String app(ModelMap map, HttpServletRequest request) {
@@ -67,7 +71,7 @@ public class AppController extends BaseController {
 		map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
 		map.put("containerPath", (proxy == null) ? "" : buildContainerPath(request, appRequestInfo));
 		map.put("proxyId", (proxy == null) ? "" : proxy.getId());
-		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getWebSocketReconnectionMode());
+		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
 		map.put("contextPath", getContextPath());
 		map.put("heartbeatRate", getHeartbeatRate());
 		map.put("isAppPage", true);
@@ -86,7 +90,7 @@ public class AppController extends BaseController {
 		Map<String,String> response = new HashMap<>();
 		response.put("containerPath", containerPath);
 		response.put("proxyId", proxy.getId());
-		response.put("webSocketReconnectionMode", proxy.getWebSocketReconnectionMode().name()); // NPE?
+		response.put("webSocketReconnectionMode", proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst)); // TODO NPE?
 		return response;
 	}
 	
@@ -131,15 +135,16 @@ public class AppController extends BaseController {
 			if (spec == null) throw new BadRequestException("Unknown proxy spec: " + appRequestInfo.getAppName());
 			ProxySpec resolvedSpec = proxyService.resolveProxySpec(spec, null, null);
 
-			proxy = proxyService.startProxy(resolvedSpec, false,
-					Arrays.asList(
-							new RuntimeValue(PublicPathKey.inst, getPublicPath(appRequestInfo)),
-							new RuntimeValue(AppInstanceKey.inst, appRequestInfo.getAppInstance())
-						));
+			List<RuntimeValue> runtimeValues = shinyProxySpecProvider.getRuntimeValues(spec);
+			runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(appRequestInfo)));
+			runtimeValues.add(new RuntimeValue(AppInstanceKey.inst, appRequestInfo.getAppInstance()));
+
+			proxy = proxyService.startProxy(resolvedSpec, false, runtimeValues);
 		}
 		return proxy;
 	}
-	
+
+
 	private boolean awaitReady(Proxy proxy) {
 		if (proxy == null) return false;
 		if (proxy.getStatus() == ProxyStatus.Up) return true;

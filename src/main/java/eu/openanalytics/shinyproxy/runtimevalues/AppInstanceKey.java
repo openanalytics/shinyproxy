@@ -22,7 +22,7 @@ package eu.openanalytics.shinyproxy.runtimevalues;
 
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 
-public class AppInstanceKey extends RuntimeValueKey  {
+public class AppInstanceKey extends RuntimeValueKey<String>  {
 
     public AppInstanceKey() {
         super("openanalytics.eu/sp-app-instance",
@@ -30,9 +30,9 @@ public class AppInstanceKey extends RuntimeValueKey  {
                 false, // TODO
                 true,
                 true,
-                true);
+                true, String.class);
     }
 
-    public static RuntimeValueKey inst = new AppInstanceKey();
+    public static AppInstanceKey inst = new AppInstanceKey();
 
 }

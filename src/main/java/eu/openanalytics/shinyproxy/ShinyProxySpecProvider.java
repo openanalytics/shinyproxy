@@ -29,10 +29,10 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
-import eu.openanalytics.containerproxy.util.SessionHelper;
-import org.opensaml.xml.signature.G;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
+import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.springframework.beans.factory.annotation.Autowired;
-import eu.openanalytics.containerproxy.model.spec.WebSocketReconnectionMode;
+import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionMode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
@@ -57,6 +57,7 @@ import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
 public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 	private List<ProxySpec> specs = new ArrayList<>();
+	private Map<String, ShinyProxySpec> shinyProxySpecs = new HashMap<>();
 
 	private static Environment environment;
 
@@ -82,7 +83,10 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 	}
 
 	public void setSpecs(List<ShinyProxySpec> specs) {
-		this.specs = specs.stream().map(ShinyProxySpecProvider::convert).collect(Collectors.toList());
+		this.specs = specs.stream().map(s -> {
+			shinyProxySpecs.put(s.getId(), s);
+			return ShinyProxySpecProvider.convert(s);
+		}).collect(Collectors.toList());
 	}
 
 	private static ProxySpec convert(ShinyProxySpec from) {
@@ -100,7 +104,6 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		}
 		to.setKubernetesAdditionalManifests(from.getKubernetesAdditionalManifests());
 		to.setKubernetesAdditionalPersistentManifests(from.getKubernetesAdditionalPersistentManifests());
-		to.setWebSocketReconnectionMode(from.getWebSocketReconnectionMode());
 
 		if (from.getAccessGroups() != null && from.getAccessGroups().length > 0) {
 			ProxyAccessControl acl = new ProxyAccessControl();
@@ -136,6 +139,20 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		to.setContainerSpecs(Collections.singletonList(cSpec));
 
 		return to;
+	}
+
+	public List<RuntimeValue> getRuntimeValues(ProxySpec proxy) {
+	    List<RuntimeValue> runtimeValues = new ArrayList<>();
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(proxy.getId());
+
+		WebSocketReconnectionMode webSocketReconnectionMode = shinyProxySpec.getWebSocketReconnectionMode();
+		if (webSocketReconnectionMode == null) {
+			runtimeValues.add(new RuntimeValue(WebSocketReconnectionModeKey.inst, environment.getProperty("proxy.defaultWebSocketReconnectionMode", WebSocketReconnectionMode.class, WebSocketReconnectionMode.None)));
+		} else {
+			runtimeValues.add(new RuntimeValue(WebSocketReconnectionModeKey.inst, webSocketReconnectionMode));
+		}
+
+		return runtimeValues;
 	}
 
 	public static class ShinyProxySpec {

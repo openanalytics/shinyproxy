@@ -66,6 +66,7 @@ Shiny.app = {
         Shiny.app.staticState.contextPath = contextPath;
         Shiny.app.staticState.appName = appName;
         Shiny.app.staticState.appInstanceName = appInstanceName;
+        Shiny.app.staticState.maxInstances = parseInt(maxInstances, 10);
         Shiny.instances._template = Handlebars.templates['switch_instances']; // TODO
         if (containerPath === "") {
             Shiny.ui.setShinyFrameHeight();
@@ -74,7 +75,6 @@ Shiny.app = {
                 Shiny.app.staticState.containerPath = response.containerPath;
                 Shiny.app.staticState.webSocketReconnectionMode = response.webSocketReconnectionMode;
                 Shiny.app.staticState.proxyId = response.proxyId;
-                Shiny.app.staticState.maxInstances = parseInt(response.maxInstances, 10);
                 Shiny.ui.setupIframe();
                 Shiny.ui.showFrame();
                 Shiny.connections.startHeartBeats();
@@ -88,7 +88,6 @@ Shiny.app = {
         } else {
             Shiny.app.staticState.containerPath = containerPath;
             Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;
-            Shiny.app.staticState.maxInstances = parseInt(maxInstances, 10);
             Shiny.proxyId = proxyId;
             Shiny.ui.setupIframe();
             Shiny.ui.showFrame();

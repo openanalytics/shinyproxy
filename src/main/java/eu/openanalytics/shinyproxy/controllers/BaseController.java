@@ -128,7 +128,8 @@ public abstract class BaseController {
 		map.put("isAdmin", userService.isAdmin(authentication));
 		map.put("isSupportEnabled", isLoggedIn && getSupportAddress() != null);
 		map.put("logoutUrl", authenticationBackend.getLogoutURL());
-		map.put("isAppPage", false);
+		map.put("isAppPage", false); // defaults, used in navbar
+		map.put("maxInstances", 0); // defaults, used in navbar
 	}
 	
 	protected String getSupportAddress() {

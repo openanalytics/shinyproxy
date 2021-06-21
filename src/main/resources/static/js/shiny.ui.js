@@ -37,6 +37,7 @@ Shiny.ui = {
      * Shows the loading page.
      */
     showLoading: function () {
+        $('#appStopped').hide();
         $('#shinyframe').hide();
         $("#loading").show();
     },
@@ -45,12 +46,13 @@ Shiny.ui = {
      * Shows the reconnecting page.
      */
     showReconnecting: function() {
+        $('#appStopped').hide();
         $('#shinyframe').hide();
         $("#reconnecting").show();
     },
 
     /**
-     *  Hides the loading pages and showes the iframe;
+     *  Hides the loading pages and shows the iframe;
      */
     showFrame: function () {
         $('#shinyframe').show();
@@ -104,24 +106,15 @@ Shiny.ui = {
     },
 
     showStoppedPage: function() {
-        // if (!Shiny.app.runtimeState.appStopped) {
-            $('#shinyframe').remove();
-            $('#switchInstancesModal').modal('hide')
-            $('#appStopped').show();
-        // }
+        $('#shinyframe').remove();
+        $('#switchInstancesModal').modal('hide')
+        $('#appStopped').show();
     },
 
     hideInstanceModal: function() {
         $('#switchInstancesModal').modal('hide');
     },
 
-    showInstanceModal: function() {
-
-    },
-
-    eventHandlers: {
-
-    },
     removeFrame() {
         $('#shinyframe').remove();
     }

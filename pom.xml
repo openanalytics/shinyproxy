@@ -83,9 +83,11 @@
 			<artifactId>js-cookie</artifactId>
 			<version>2.2.1</version>
 		</dependency>
-<<<<<<< HEAD
-
-
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>handlebars</artifactId>
+			<version>4.7.6</version>
+		</dependency>
 		<dependency>
 			<groupId>io.undertow</groupId>
 			<artifactId>undertow-core</artifactId>
@@ -110,11 +112,7 @@
 			<groupId>org.jboss.xnio</groupId>
 			<artifactId>xnio-api</artifactId>
 			<version>3.8.4.Final</version>
-		<dependency>
-			<groupId>org.webjars</groupId>
-			<artifactId>handlebars</artifactId>
-			<version>4.7.6</version>
-		</dependency>
+                </dependency>
 	</dependencies>
 
 	<build>

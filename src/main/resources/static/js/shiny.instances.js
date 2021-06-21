@@ -39,31 +39,36 @@ Shiny.instances = {
             clearInterval(Shiny.instances._refreshIntervalId);
         },
         onDeleteInstance: function (instanceName) {
-            Shiny.instances._deleteInstance(instanceName, function () {
-                if (instanceName === "Default") {
-                    instanceName = "_";
-                }
-                if (instanceName === Shiny.app.staticState.appInstanceName) {
-                    Shiny.ui.showStoppedPage();
-                }
-            });
-        },
-        onRestartInstance: function (instanceName) {
-            if (instanceName === "Default") {
-                instanceName = "_";
+            if (instanceName === undefined) {
+                instanceName = Shiny.app.staticState.appInstanceName;
             }
-            if (instanceName !== Shiny.app.staticState.appInstanceName) {
-                return;
-            }
-
-            Shiny.ui.hideInstanceModal();
-            Shiny.ui.showLoading();
-
-            Shiny.instances._deleteInstance(instanceName, function (proxyId) {
-                Shiny.instances._waitUntilInstanceDeleted(proxyId, function () {
-                    window.location.reload(false);
+            if (confirm("Are you sure you want to delete instance \"" +  instanceName + "\"?")) {
+                Shiny.instances._deleteInstance(instanceName, function () {
+                    if (instanceName === "Default") {
+                        instanceName = "_";
+                    }
+                    if (instanceName === Shiny.app.staticState.appInstanceName) {
+                        Shiny.ui.showStoppedPage();
+                    }
                 });
-            });
+            }
+        },
+        onRestartInstance: function () {
+            if (confirm("Are you sure you want to restart the current instance?")) {
+                Shiny.ui.hideInstanceModal();
+                Shiny.ui.showLoading();
+
+                if (Shiny.app.runtimeState.appStopped) {
+                    window.location.reload(false);
+                    return;
+                }
+
+                Shiny.instances._deleteInstance(Shiny.app.staticState.appInstanceName, function (proxyId) {
+                    Shiny.instances._waitUntilInstanceDeleted(proxyId, function () {
+                        window.location.reload(false);
+                    });
+                });
+            }
         },
         onNewInstance: function () {
             var inputField = $("#instanceNameField");

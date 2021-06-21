@@ -23,7 +23,6 @@ package eu.openanalytics.shinyproxy.controllers;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
-import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
@@ -31,7 +30,6 @@ import eu.openanalytics.containerproxy.util.Retrying;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
-import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.springframework.stereotype.Controller;
@@ -45,7 +43,6 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +75,7 @@ public class AppController extends BaseController {
 		map.put("contextPath", getContextPath());
 		map.put("heartbeatRate", getHeartbeatRate());
 		map.put("isAppPage", true);
-		map.put("maxInstances", (proxy == null) ? null: proxy.getRuntimeValue(MaxInstancesKey.inst));
+		map.put("maxInstances", shinyProxySpecProvider.getMaxInstancesForSpec(appRequestInfo.getAppName()));
 
 		return "app";
 	}
@@ -95,7 +92,6 @@ public class AppController extends BaseController {
 		response.put("containerPath", containerPath);
 		response.put("proxyId", proxy.getId());
 		response.put("webSocketReconnectionMode", proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
-		response.put("maxInstances", proxy.getRuntimeValue(MaxInstancesKey.inst));
 		return response;
 	}
 	
@@ -183,7 +179,7 @@ public class AppController extends BaseController {
 	 * Validates whether a proxy should be allowed to start.
 	 */
 	private boolean validateProxyStart(ProxySpec spec) {
-		Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec);
+		Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec.getId());
 
 		if (maxInstances == -1) {
 		    return true;

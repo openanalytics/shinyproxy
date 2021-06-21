@@ -156,13 +156,13 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			runtimeValues.add(new RuntimeValue(WebSocketReconnectionModeKey.inst, webSocketReconnectionMode));
 		}
 
-		runtimeValues.add(new RuntimeValue(MaxInstancesKey.inst, getMaxInstancesForSpec(proxy)));
+		runtimeValues.add(new RuntimeValue(MaxInstancesKey.inst, getMaxInstancesForSpec(proxy.getId())));
 
 		return runtimeValues;
 	}
 
-	public Integer getMaxInstancesForSpec(ProxySpec proxySpec) {
-		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(proxySpec.getId());
+	public Integer getMaxInstancesForSpec(String specId) {
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
 		Integer defaultMaxInstances = environment.getProperty("proxy.defaultMaxInstances", Integer.class, 1);
 		Integer maxInstances = shinyProxySpec.getMaxInstances();
 		if (maxInstances != null) {

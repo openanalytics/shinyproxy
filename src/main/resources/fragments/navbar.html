@@ -35,7 +35,14 @@
 				</div>
 				<div class="navbar-form navbar-right">
 					<a role="button" class="btn btn-primary btn-sm" id="switchInstancesModal-btn"
-					   data-toggle="modal" data-target="#switchInstancesModal" th:if="${isAppPage}" >Switch instance</a>
+					   data-toggle="modal" data-target="#switchInstancesModal" th:if="${isAppPage && (maxInstances > 1 || maxInstances == -1)}" >Switch instance</a>
+
+					<a role="button" class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onRestartInstance();"
+						th:if="${isAppPage && maxInstances == 1}" >Restart instance</a>
+
+					<a role="button" class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onDeleteInstance();"
+					   th:if="${isAppPage && maxInstances == 1}" >Stop instance</a>
+
 					<a role="button" class="btn btn-primary btn-sm" th:if="${isSupportEnabled}"
 						data-toggle="modal" data-target="#reportIssueModal">Report Issue</a>
 					<a role="button" class="btn btn-primary btn-sm" th:href="@{/admin}" th:if="${isAdmin}">Admin</a>

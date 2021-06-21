@@ -29,9 +29,9 @@ public class WebSocketReconnectionModeKey extends RuntimeValueKey<WebSocketRecon
         super("openanalytics.eu/sp-websocket-reconnection-mode",
                 "SHINYPROXY_WEBSOCKET_RECONNECTION_MODE",
                 false,
-                true, // TODO
                 false,
-                true, WebSocketReconnectionMode.class); // TODO
+                false,
+                false, WebSocketReconnectionMode.class);
     }
 
     public static WebSocketReconnectionModeKey inst = new WebSocketReconnectionModeKey();

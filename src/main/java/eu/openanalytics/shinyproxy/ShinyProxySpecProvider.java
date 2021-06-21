@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
+import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -141,6 +142,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		return to;
 	}
 
+
 	public List<RuntimeValue> getRuntimeValues(ProxySpec proxy) {
 	    List<RuntimeValue> runtimeValues = new ArrayList<>();
 		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(proxy.getId());
@@ -153,6 +155,10 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		}
 
 		return runtimeValues;
+	}
+
+	public void postProcessRecoveredProxy(Proxy proxy) {
+		proxy.addRuntimeValues(getRuntimeValues(proxy.getSpec()));
 	}
 
 	public static class ShinyProxySpec {

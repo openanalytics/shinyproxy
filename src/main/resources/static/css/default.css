@@ -147,3 +147,19 @@ body > div#navbar { padding-top: 0px; }
     height: 40px;
 	line-height: 40px;
 }
+
+.admin-proxy-id {	
+	width: 20em;
+}
+
+.admin-proxy-status {
+	width: 5em;
+}
+
+.admin-proxy-uptime {
+	width: 5em;
+}
+
+.admin-proxy-heartbeat {
+	width: 8em;
+}

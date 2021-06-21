@@ -20,12 +20,15 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
-import java.util.HashMap;
+import java.net.URI;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import eu.openanalytics.containerproxy.service.HeartbeatService;
+import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,25 +38,86 @@ import eu.openanalytics.containerproxy.model.runtime.Proxy;
 @Controller
 public class AdminController extends BaseController {
 
+	@Inject
+	private HeartbeatService heartbeatService;
+
 	@RequestMapping("/admin")
 	private String admin(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
 		
 		List<Proxy> proxies = proxyService.getProxies(null, false);
-		Map<String, String> proxyUptimes = new HashMap<>();
-		for (Proxy proxy: proxies) {
-			long uptimeSec = 0;
-			// if the proxy hasn't started up yet, the uptime should be zero
-			if (proxy.getStartupTimestamp() > 0) {
-				uptimeSec = (System.currentTimeMillis() - proxy.getStartupTimestamp())/1000;
-			}
-			String uptime = String.format("%d:%02d:%02d", uptimeSec/3600, (uptimeSec%3600)/60, uptimeSec%60);
-			proxyUptimes.put(proxy.getId(), uptime);
-		}
-		
-		map.put("proxies", proxies);
-		map.put("proxyUptimes", proxyUptimes);
+//		Map<String, String> proxyUptimes = new HashMap<>();
+//		for (Proxy proxy: proxies) {
+//			long uptimeSec = 0;
+//			// if the proxy hasn't started up yet, the uptime should be zero
+//			if (proxy.getStartupTimestamp() > 0) {
+//				uptimeSec = (System.currentTimeMillis() - proxy.getStartupTimestamp())/1000;
+//			}
+//			String uptime = String.format("%d:%02d:%02d", uptimeSec/3600, (uptimeSec%3600)/60, uptimeSec%60);
+//			proxyUptimes.put(proxy.getId(), uptime);
+//		}
+//
+		map.put("proxies", proxies.stream().map(ProxyInfo::new).collect(Collectors.toList()));
+//		map.put("proxyUptimes", proxyUptimes);
 		
 		return "admin";
 	}
+
+	public class ProxyInfo {
+	    public final String status;
+		public final String id;
+		public final String userId;
+		public final String appName;
+		public final String appInstanceName;
+		public final String endpoint;
+		public final String uptime;
+		public final String lastHeartBeat;
+		public final String imageName;
+		public final String imageTag;
+
+		public ProxyInfo(Proxy proxy) {
+			status = proxy.getStatus().toString();
+			id = proxy.getId();
+			userId = proxy.getUserId();
+			appName = proxy.getSpec().getId();
+			appInstanceName = getInstanceName(proxy);
+			endpoint = proxy.getTargets().values().stream().map(URI::toString).findFirst().orElse("N/A"); // Shiny apps have only one endpoint
+
+			if (proxy.getStartupTimestamp() > 0) {
+				uptime = getTimeDelta(proxy.getStartupTimestamp());
+			} else {
+				uptime = "N/A";
+			}
+
+			Long heartBeat = heartbeatService.getLastHeartBeat(proxy.getId());
+			if (heartBeat == null) {
+				lastHeartBeat = "N/A";
+			} else {
+				lastHeartBeat = getTimeDelta(heartBeat);
+			}
+
+			String[] parts = proxy.getSpec().getContainerSpecs().get(0).getImage().split(":");
+			imageName = parts[0];
+			if (parts.length > 1) {
+				imageTag = parts[1];
+			} else {
+				imageTag = "latest";
+			}
+		}
+
+		private String getTimeDelta(Long timestamp) {
+			long uptimeSec = (System.currentTimeMillis() - timestamp)/1000;
+			return String.format("%d:%02d:%02d", uptimeSec/3600, (uptimeSec%3600)/60, uptimeSec%60);
+		}
+
+		private String getInstanceName(Proxy proxy) {
+			String appInstanceName = proxy.getRuntimeValue(AppInstanceKey.inst);
+			if (appInstanceName.equals("_")) {
+				return "Default";
+			}
+			return appInstanceName;
+		}
+
+	}
+
 }

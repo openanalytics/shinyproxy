@@ -33,25 +33,37 @@
 </head>
 <body>
 	<div th:replace="../fragments/navbar :: navbar"></div>
-	
-    <div id="admin">
-    	<h3>Active Proxies</h3>
-    	<table border="1">
-    		<tr>
-    			<th>ID</th>
-    			<th>User</th>
-    			<th>Appname</th>
-    			<th>Endpoint</th>
-    			<th>Uptime</th>
-    		</tr>
-    		<tr th:each="proxy: ${proxies}">
-    			<td th:text="${proxy.id}"></td>
-    			<td th:text="${proxy.userId}"></td>
-    			<td th:text="${proxy.spec.id}"></td>
-    			<td th:text="${proxy.targets}"></td>
-    			<td th:text="${proxyUptimes[proxy.id]}"></td>
-    		</tr>
-    	</table>
-    </div>
+
+	<div class="container-fluid">
+		<div id="admin">
+			<h3>Active Proxies</h3>
+			<table class="table table-condensed">
+				<tr>
+					<th class="admin-proxy-id" >ID</th>
+					<th class="admin-proxy-status">Status</th>
+					<th>User</th>
+					<th>Appname</th>
+					<th>Instance</th>
+					<th>Endpoint</th>
+					<th class="admin-proxy-uptime">Uptime</th>
+					<th class="admin-proxy-heartbeat">Last heartbeat</th>
+					<th>Image</th>
+					<th>Image tag</th>
+				</tr>
+				<tr th:each="proxy: ${proxies}">
+					<td class="admin-proxy-id" th:text="${proxy.id}"></td>
+					<td class="admin-proxy-status" th:text="${proxy.status}"></td>
+					<td th:text="${proxy.userId}"></td>
+					<td th:text="${proxy.appName}"></td>
+					<td th:text="${proxy.appInstanceName}"></td>
+					<td th:text="${proxy.endpoint}"></td>
+					<td class="admin-proxy-uptime" th:text="${proxy.uptime}"></td>
+					<td class="admin-proxy-heartbeat" th:text="${proxy.lastHeartBeat}"></td>
+					<td th:text="${proxy.imageName}"></td>
+					<td th:text="${proxy.imageTag}"></td>
+				</tr>
+			</table>
+		</div>
+	</div>
 </body>
 </html>

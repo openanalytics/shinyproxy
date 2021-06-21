@@ -64,6 +64,7 @@ public class AppController extends BaseController {
 		map.put("appTitle", getAppTitle(appRequestInfo));
 		map.put("appName", appRequestInfo.getAppName());
 		map.put("appInstance", appRequestInfo.getAppInstance());
+		map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
 		map.put("containerPath", (proxy == null) ? "" : buildContainerPath(request, appRequestInfo));
 		map.put("proxyId", (proxy == null) ? "" : proxy.getId());
 		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getWebSocketReconnectionMode());

@@ -81,6 +81,13 @@ public class AppRequestInfo {
         return appInstance;
     }
 
+    public String getAppInstanceDisplayName() {
+        if (appInstance.equals("_")) {
+            return "Default";
+        }
+        return appInstance;
+    }
+
     public String getAppName() {
         return appName;
     }

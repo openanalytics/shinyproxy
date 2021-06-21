@@ -185,6 +185,10 @@ public class AppController extends BaseController {
 	private boolean validateProxyStart(ProxySpec spec) {
 		Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec);
 
+		if (maxInstances == -1) {
+		    return true;
+		}
+
 		// note: there is a very small change that the user is able to start more instances than allowed, if the user
 		// starts many proxies at once. E.g. in the following scenario:
 		// - max proxies = 2

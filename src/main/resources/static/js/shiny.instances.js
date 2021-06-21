@@ -40,6 +40,9 @@ Shiny.instances = {
         },
         onDeleteInstance: function (instanceName) {
             Shiny.instances._deleteInstance(instanceName, function () {
+                if (instanceName === "Default") {
+                    instanceName = "_";
+                }
                 if (instanceName === Shiny.app.staticState.appInstanceName) {
                     Shiny.ui.showStoppedPage();
                 }
@@ -85,12 +88,14 @@ Shiny.instances = {
                 return;
             }
 
-            // this must be a synchronous call (i.e. without any callbacks) so that the window.open function is not
-            // blocked by the browser.
-            var currentAmountOfInstances = Shiny.instances._getCurrentAmountOfInstances();
-            if (currentAmountOfInstances >= Shiny.app.staticState.maxInstances) {
-                alert("You cannot start a new instance because you are using the maximum amount of instances of this app!");
-                return;
+            if (Shiny.app.staticState.maxInstances !== -1) {
+                // this must be a synchronous call (i.e. without any callbacks) so that the window.open function is not
+                // blocked by the browser.
+                var currentAmountOfInstances = Shiny.instances._getCurrentAmountOfInstances();
+                if (currentAmountOfInstances >= Shiny.app.staticState.maxInstances) {
+                    alert("You cannot start a new instance because you are using the maximum amount of instances of this app!");
+                    return;
+                }
             }
 
             window.open(Shiny.instances._createUrlForInstance(instance), "_blank");
@@ -171,6 +176,12 @@ Shiny.instances = {
                 return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
             });
 
+            if (Shiny.app.staticState.maxInstances === -1) {
+                $('#maxInstances').text("unlimited");
+            } else {
+                $('#maxInstances').text(Shiny.app.staticState.maxInstances);
+            }
+            $('#usedInstances').text(templateData['instances'].length);
             document.getElementById('appInstances').innerHTML = Shiny.instances._template(templateData);
         });
     },

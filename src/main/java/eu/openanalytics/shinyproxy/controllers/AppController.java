@@ -23,6 +23,7 @@ package eu.openanalytics.shinyproxy.controllers;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
@@ -30,6 +31,7 @@ import eu.openanalytics.containerproxy.util.Retrying;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
+import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.springframework.stereotype.Controller;
@@ -43,6 +45,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +78,7 @@ public class AppController extends BaseController {
 		map.put("contextPath", getContextPath());
 		map.put("heartbeatRate", getHeartbeatRate());
 		map.put("isAppPage", true);
+		map.put("maxInstances", (proxy == null) ? null: proxy.getRuntimeValue(MaxInstancesKey.inst));
 
 		return "app";
 	}
@@ -90,7 +94,8 @@ public class AppController extends BaseController {
 		Map<String,String> response = new HashMap<>();
 		response.put("containerPath", containerPath);
 		response.put("proxyId", proxy.getId());
-		response.put("webSocketReconnectionMode", proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst)); // TODO NPE?
+		response.put("webSocketReconnectionMode", proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
+		response.put("maxInstances", proxy.getRuntimeValue(MaxInstancesKey.inst));
 		return response;
 	}
 	
@@ -139,6 +144,10 @@ public class AppController extends BaseController {
 			runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(appRequestInfo)));
 			runtimeValues.add(new RuntimeValue(AppInstanceKey.inst, appRequestInfo.getAppInstance()));
 
+			if (!validateProxyStart(spec)) {
+				throw new BadRequestException("Cannot start new proxy because the maximum amount of instances of this proxy has been reached");
+			}
+
 			proxy = proxyService.startProxy(resolvedSpec, false, runtimeValues);
 		}
 		return proxy;
@@ -170,7 +179,28 @@ public class AppController extends BaseController {
 		return getContextPath() + "app_direct/" + appRequestInfo.getAppName() + "/" + appRequestInfo.getAppInstance() + '/';
 	}
 
-	private String getPublicPath(String appName) {
-		return getContextPath() + "app_direct/" + appName + "/";
+	/**
+	 * Validates whether a proxy should be allowed to start.
+	 */
+	private boolean validateProxyStart(ProxySpec spec) {
+		Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec);
+
+		// note: there is a very small change that the user is able to start more instances than allowed, if the user
+		// starts many proxies at once. E.g. in the following scenario:
+		// - max proxies = 2
+		// - user starts a proxy
+		// - user sends a start proxy request -> this function is called and returns true
+		// - just before this new proxy is added to the list of active proxies, the user sends a new start proxy request
+		// - again this new proxy is allowed, because there is still only one proxy in the list of active proxies
+		// -> the user has three proxies running.
+		// Because of chance that this happens is small and that the consequences are low, we accept this risk.
+		int currentAmountOfInstances = proxyService.getProxies(
+				p -> p.getSpec().getId().equals(spec.getId())
+						&& userService.isOwner(p),
+				false).size();
+
+
+		return currentAmountOfInstances < maxInstances;
 	}
+
 }

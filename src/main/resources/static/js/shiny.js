@@ -34,6 +34,7 @@ Shiny.app = {
         maxReloadAttempts: 10,
         heartBeatRate: null,
         contextPath: null,
+        maxInstances: null,
     },
 
     runtimeState: {
@@ -58,8 +59,9 @@ Shiny.app = {
      * @param contextPath
      * @param appName
      * @param appInstanceName
+     * @param maxInstances
      */
-    start: function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, contextPath, appName, appInstanceName) {
+    start: function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, contextPath, appName, appInstanceName, maxInstances) {
         Shiny.app.staticState.heartBeatRate = heartBeatRate;
         Shiny.app.staticState.contextPath = contextPath;
         Shiny.app.staticState.appName = appName;
@@ -72,6 +74,7 @@ Shiny.app = {
                 Shiny.app.staticState.containerPath = response.containerPath;
                 Shiny.app.staticState.webSocketReconnectionMode = response.webSocketReconnectionMode;
                 Shiny.app.staticState.proxyId = response.proxyId;
+                Shiny.app.staticState.maxInstances = response.maxInstances;
                 Shiny.ui.setupIframe();
                 Shiny.ui.showFrame();
                 Shiny.connections.startHeartBeats();
@@ -85,6 +88,7 @@ Shiny.app = {
         } else {
             Shiny.app.staticState.containerPath = containerPath;
             Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;
+            Shiny.app.staticState.maxInstances = maxInstances;
             Shiny.proxyId = proxyId;
             Shiny.ui.setupIframe();
             Shiny.ui.showFrame();

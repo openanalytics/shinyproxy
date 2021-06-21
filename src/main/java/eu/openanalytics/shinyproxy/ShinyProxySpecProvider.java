@@ -31,6 +31,8 @@ import javax.annotation.PostConstruct;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
+import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionMode;
@@ -144,7 +146,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 
 	public List<RuntimeValue> getRuntimeValues(ProxySpec proxy) {
-	    List<RuntimeValue> runtimeValues = new ArrayList<>();
+		List<RuntimeValue> runtimeValues = new ArrayList<>();
 		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(proxy.getId());
 
 		WebSocketReconnectionMode webSocketReconnectionMode = shinyProxySpec.getWebSocketReconnectionMode();
@@ -154,7 +156,19 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			runtimeValues.add(new RuntimeValue(WebSocketReconnectionModeKey.inst, webSocketReconnectionMode));
 		}
 
+		runtimeValues.add(new RuntimeValue(MaxInstancesKey.inst, getMaxInstancesForSpec(proxy)));
+
 		return runtimeValues;
+	}
+
+	public Integer getMaxInstancesForSpec(ProxySpec proxySpec) {
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(proxySpec.getId());
+		Integer defaultMaxInstances = environment.getProperty("proxy.defaultMaxInstances", Integer.class, 1);
+		Integer maxInstances = shinyProxySpec.getMaxInstances();
+		if (maxInstances != null) {
+            return shinyProxySpec.getMaxInstances();
+		}
+		return defaultMaxInstances;
 	}
 
 	public void postProcessRecoveredProxy(Proxy proxy) {
@@ -187,6 +201,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		private String targetPath;
 		private WebSocketReconnectionMode webSocketReconnectionMode;
+		private Integer maxInstances;
 
 		private Map<String,String> labels;
 
@@ -391,6 +406,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public void setWebSocketReconnectionMode(WebSocketReconnectionMode webSocketReconnectionMode) {
 			this.webSocketReconnectionMode = webSocketReconnectionMode;
+		}
+
+		public Integer getMaxInstances() {
+			return maxInstances;
+		}
+
+		public void setMaxInstances(Integer maxInstances) {
+			this.maxInstances = maxInstances;
 		}
 
 	}

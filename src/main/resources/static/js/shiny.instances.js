@@ -85,9 +85,18 @@ Shiny.instances = {
                 return;
             }
 
+            // this must be a synchronous call (i.e. without any callbacks) so that the window.open function is not
+            // blocked by the browser.
+            var currentAmountOfInstances = Shiny.instances._getCurrentAmountOfInstances();
+            if (currentAmountOfInstances >= Shiny.app.staticState.maxInstances) {
+                alert("You cannot start a new instance because you are using the maximum amount of instances of this app!");
+                return;
+            }
+
             window.open(Shiny.instances._createUrlForInstance(instance), "_blank");
             inputField.val('');
             Shiny.ui.hideInstanceModal();
+
         },
     },
 
@@ -123,7 +132,6 @@ Shiny.instances = {
             }, 500);
         });
     },
-
     _refreshModal: function() {
         Shiny.api.getProxies(function (proxies) {
             var templateData = {'instances': []};
@@ -165,5 +173,23 @@ Shiny.instances = {
 
             document.getElementById('appInstances').innerHTML = Shiny.instances._template(templateData);
         });
+    },
+    _getCurrentAmountOfInstances: function() {
+        var currentAmountOfInstances = 0;
+
+        $.ajax({
+            url: Shiny.app.staticState.contextPath + "api/proxy",
+            success: function(result) {
+                for (var idx = 0; idx < result.length; idx++) {
+                    var proxy = result[idx];
+                    if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id') && proxy.spec.id === Shiny.app.staticState.appName) {
+                        currentAmountOfInstances++;
+                    }
+                }
+            },
+            async: false
+        });
+
+        return currentAmountOfInstances;
     }
 };

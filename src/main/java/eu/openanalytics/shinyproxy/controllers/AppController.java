@@ -76,6 +76,7 @@ public class AppController extends BaseController {
 		map.put("heartbeatRate", getHeartbeatRate());
 		map.put("isAppPage", true);
 		map.put("maxInstances", shinyProxySpecProvider.getMaxInstancesForSpec(appRequestInfo.getAppName()));
+		map.put("shinyForceFullReload", shinyProxySpecProvider.getShinyForceFullReload(appRequestInfo.getAppName()));
 
 		return "app";
 	}

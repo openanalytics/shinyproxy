@@ -35,6 +35,7 @@ Shiny.app = {
         heartBeatRate: null,
         contextPath: null,
         maxInstances: null,
+        shinyForceFullReload: null,
     },
 
     runtimeState: {
@@ -60,13 +61,15 @@ Shiny.app = {
      * @param appName
      * @param appInstanceName
      * @param maxInstances
+     * @param shinyForceFullReload
      */
-    start: function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, contextPath, appName, appInstanceName, maxInstances) {
+    start: function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, contextPath, appName, appInstanceName, maxInstances, shinyForceFullReload) {
         Shiny.app.staticState.heartBeatRate = heartBeatRate;
         Shiny.app.staticState.contextPath = contextPath;
         Shiny.app.staticState.appName = appName;
         Shiny.app.staticState.appInstanceName = appInstanceName;
         Shiny.app.staticState.maxInstances = parseInt(maxInstances, 10);
+        Shiny.app.staticState.shinyForceFullReload = shinyForceFullReload;
         Shiny.instances._template = Handlebars.templates.switch_instances;
         if (containerPath === "") {
             Shiny.ui.setShinyFrameHeight();

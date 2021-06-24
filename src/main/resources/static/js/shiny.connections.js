@@ -120,6 +120,12 @@ Shiny.connections = {
             if (typeof _shinyFrame.contentWindow.Shiny !== 'undefined' &&
                 typeof _shinyFrame.contentWindow.Shiny.shinyapp !== 'undefined' &&
                 typeof _shinyFrame.contentWindow.Shiny.shinyapp.reconnect === 'function') {
+
+                if (Shiny.app.staticState.shinyForceFullReload) {
+                    // this is a Shiny app, but the forceFullReload option is set -> handle it as a non-Shiny app.
+                    return false;
+                }
+
                 return true;
             }
         } catch (error) {

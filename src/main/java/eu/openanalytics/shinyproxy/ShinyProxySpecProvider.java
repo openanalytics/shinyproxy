@@ -31,8 +31,8 @@ import javax.annotation.PostConstruct;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
-import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
+import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.springframework.beans.factory.annotation.Autowired;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionMode;
@@ -157,6 +157,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		}
 
 		runtimeValues.add(new RuntimeValue(MaxInstancesKey.inst, getMaxInstancesForSpec(proxy.getId())));
+		runtimeValues.add(new RuntimeValue(ShinyForceFullReloadKey.inst, getShinyForceFullReload(proxy.getId())));
 
 		return runtimeValues;
 	}
@@ -173,6 +174,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 	public void postProcessRecoveredProxy(Proxy proxy) {
 		proxy.addRuntimeValues(getRuntimeValues(proxy.getSpec()));
+	}
+
+	public Boolean getShinyForceFullReload(String specId) {
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
+		if (shinyProxySpec.getShinyForceFullReload() != null) {
+			return shinyProxySpec.getShinyForceFullReload();
+		}
+		return false;
 	}
 
 	public static class ShinyProxySpec {
@@ -201,6 +210,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		private String targetPath;
 		private WebSocketReconnectionMode webSocketReconnectionMode;
+		private Boolean shinyForceFullReload;
 		private Integer maxInstances;
 
 		private Map<String,String> labels;
@@ -406,6 +416,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public void setWebSocketReconnectionMode(WebSocketReconnectionMode webSocketReconnectionMode) {
 			this.webSocketReconnectionMode = webSocketReconnectionMode;
+		}
+
+		public Boolean getShinyForceFullReload() {
+			return shinyForceFullReload;
+		}
+
+		public void setShinyForceFullReload(Boolean shinyForceFullReload) {
+			this.shinyForceFullReload = shinyForceFullReload;
 		}
 
 		public Integer getMaxInstances() {

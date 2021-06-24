@@ -129,7 +129,7 @@ public abstract class BaseController {
 
 		map.put("bootstrapCss", "/webjars/bootstrap/3.4.1/css/bootstrap.min.css");
 		map.put("bootstrapJs", "/webjars/bootstrap/3.4.1/js/bootstrap.min.js");
-		map.put("jqueryJs", "/webjars/jquery/3.5.0/jquery.min.js");
+		map.put("jqueryJs", "/webjars/jquery/3.5.1/jquery.min.js");
 		map.put("cookieJs", "/webjars/js-cookie/2.2.1/js.cookie.min.js");
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

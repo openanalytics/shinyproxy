@@ -20,43 +20,46 @@
  */
 Shiny = window.Shiny || {};
 Shiny.api = {
-    getProxies: function (cb) {
+    getProxies: function (cb, cb_fail) {
         $.get(Shiny.app.staticState.contextPath + "api/proxy", function (proxies) {
             cb(proxies);
-        }).fail(function (request) {
-            // TODO
+        }).fail(function (response) {
+            cb_fail(response);
         });
     },
-    deleteProxyById: function (id, cb) {
+    deleteProxyById: function (id, cb, cb_fail) {
         $.ajax({
             url: Shiny.app.staticState.contextPath + "api/proxy/" + id,
             type: 'DELETE',
             success: cb,
             error: function (result) {
-                // TODO
+                cb_fail(result);
             }
         });
     },
-    getProxyId: function (appName, instanceName, cb) {
+    getProxyId: function (appName, instanceName, cb, cb_fail) {
         Shiny.api.getProxies(function (proxies) {
             for (var i = 0; i < proxies.length; i++) {
-                // TODO check if properties exists
-                if (proxies[i].spec.id === appName && proxies[i].runtimeValues.SHINYPROXY_APP_INSTANCE === instanceName) {
+                var proxy = proxies[i];
+                if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id') &&
+                    proxy.hasOwnProperty('runtimeValues') && proxy.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE')
+                    && proxy.spec.id === appName && proxy.runtimeValues.SHINYPROXY_APP_INSTANCE === instanceName) {
                     cb(proxies[i].id);
                     return;
                 }
             }
             cb(null);
-        });
+        }, cb_fail);
     },
-    getProxyById: function(proxyId, cb) {
+    getProxyById: function(proxyId, cb, cb_fail) {
         $.get(Shiny.app.staticState.contextPath + "api/proxy/" + proxyId, function (proxy) {
             cb(true, proxy);
-        }).fail(function (request) {
-            if (request.status === 404) {
+        }).fail(function (response) {
+            if (response.status === 404) {
                 cb(false, null);
+                return;
             }
-            // TODO
+            cb_fail(response);
         });
     }
 };

@@ -126,8 +126,12 @@ Shiny.instances = {
             if (proxyId !== null) {
                 Shiny.api.deleteProxyById(proxyId, function () {
                     cb(proxyId);
+                }, function() {
+                    alert("Error deleting proxy, please try again.")
                 });
             }
+        }, function() {
+            alert("Error deleting proxy, please try again.")
         });
     },
 
@@ -140,7 +144,7 @@ Shiny.instances = {
             setTimeout(function () {
                 Shiny.instances._waitUntilInstanceDeleted(proxyId, cb);
             }, 500);
-        });
+        }, function() {});
     },
     _refreshModal: function() {
         Shiny.api.getProxies(function (proxies) {

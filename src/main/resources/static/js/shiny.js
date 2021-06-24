@@ -67,7 +67,7 @@ Shiny.app = {
         Shiny.app.staticState.appName = appName;
         Shiny.app.staticState.appInstanceName = appInstanceName;
         Shiny.app.staticState.maxInstances = parseInt(maxInstances, 10);
-        Shiny.instances._template = Handlebars.templates['switch_instances']; // TODO
+        Shiny.instances._template = Handlebars.templates.switch_instances;
         if (containerPath === "") {
             Shiny.ui.setShinyFrameHeight();
             Shiny.ui.showLoading();

@@ -144,22 +144,33 @@ Shiny.connections = {
             return;  // give up
         }
 
-        var _shinyFrame = document.getElementById('shinyframe');
-        Shiny.ui.showReconnecting();
-        Shiny.app.runtimeState.reloadAttempts++;
-        Shiny.ui.updateLoadingTxt();
-        if (Shiny.connections._isShiny()) {
-            setTimeout(() => {
-                if (!_shinyFrame.contentWindow.Shiny.shinyapp.isConnected()) {
-                    _shinyFrame.contentWindow.Shiny.shinyapp.reconnect();
-                }
-                Shiny.connections._checkShinyReloadSucceeded();
-            }, 50);
-        } else {
-            Shiny.ui.removeFrame();
-            Shiny.ui.setupIframe();
-            Shiny.connections._checkReloadSucceeded();
-        }
+        // Check if the app has been stopped by ShinyProxy server (because of the timeout)
+        Shiny.connections._checkAppHasBeenStopped(function (isStopped) {
+            if (isStopped) {
+                Shiny.app.runtimeState.tryingToReconnect = false;
+                Shiny.app.runtimeState.reloadAttempts = 0;
+                // app was stopped, show stopped screen
+                Shiny.ui.showStoppedPage();
+                return;
+            }
+
+            var _shinyFrame = document.getElementById('shinyframe');
+            Shiny.ui.showReconnecting();
+            Shiny.app.runtimeState.reloadAttempts++;
+            Shiny.ui.updateLoadingTxt();
+            if (Shiny.connections._isShiny()) {
+                setTimeout(() => {
+                    if (!_shinyFrame.contentWindow.Shiny.shinyapp.isConnected()) {
+                        _shinyFrame.contentWindow.Shiny.shinyapp.reconnect();
+                    }
+                    Shiny.connections._checkShinyReloadSucceeded();
+                }, 50);
+            } else {
+                Shiny.ui.removeFrame();
+                Shiny.ui.setupIframe();
+                Shiny.connections._checkReloadSucceeded();
+            }
+        });
     },
 
     /**
@@ -300,6 +311,7 @@ Shiny.connections = {
 
     _checkAppHasBeenStopped: function (cb) {
         $.ajax({
+            method: 'POST',
             url: Shiny.app.staticState.contextPath + "heartbeat/" + Shiny.app.staticState.proxyId,
             timeout: 3000,
             success: function () {

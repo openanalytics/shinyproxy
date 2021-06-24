@@ -111,7 +111,7 @@ Shiny.instances = {
     },
 
     _createUrlForInstance: function (instance) {
-        return Shiny.app.staticState.contextPath + "app/" + Shiny.app.staticState.appName + "/" + instance + "/";
+        return Shiny.app.staticState.contextPath + "app_i/" + Shiny.app.staticState.appName + "/" + instance + "/";
     },
 
     _deleteInstance: function (instanceName, cb) {

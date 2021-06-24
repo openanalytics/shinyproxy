@@ -32,7 +32,8 @@ public class AppRequestInfo {
     private final String appInstance;
     private final String subPath;
 
-    private static final Pattern appPattern = Pattern.compile(".*?/app[^/]*/([^/]*)/([^/]*)(/?.*)");
+    private static final Pattern appInstancePattern = Pattern.compile(".*?/(app_i|app_direct_i)/([^/]*)/([^/]*)(/?.*)");
+    private static final Pattern appPattern = Pattern.compile(".*?/(app|app_direct)/([^/]*)(/?.*)");
 
     private static final Pattern instanceNamePattern = Pattern.compile("^[a-zA-Z0-9_.-]*$");
 
@@ -47,15 +48,15 @@ public class AppRequestInfo {
     }
 
     public static AppRequestInfo fromURI(String uri) {
-        Matcher matcher = appPattern.matcher(uri);
-        if (matcher.matches()) {
-
-            String appName =  matcher.group(1);
+        Matcher appMatcher = appPattern.matcher(uri);
+        Matcher appInstanceMatcher = appInstancePattern.matcher(uri);
+        if (appInstanceMatcher.matches()) {
+            String appName = appInstanceMatcher.group(2);
             if (appName == null || appName.trim().equals("")) {
                 throw new BadRequestException("Error parsing URL: name of app not found in URL.");
             }
 
-            String appInstance =  matcher.group(2);
+            String appInstance = appInstanceMatcher.group(3);
             if (appInstance == null || appInstance.trim().equals("")) {
                 throw new BadRequestException("Error parsing URL: name of instance not found in URL.");
             }
@@ -64,7 +65,23 @@ public class AppRequestInfo {
                 throw new BadRequestException("Error parsing URL: name of instance contains invalid characters or is too long.");
             }
 
-            String subPath =  matcher.group(3);
+            String subPath = appInstanceMatcher.group(4);
+            if (subPath == null || subPath.trim().equals("")) {
+                subPath = null;
+            } else {
+                subPath = subPath.trim();
+            }
+
+            return new AppRequestInfo(appName, appInstance, subPath);
+        } else if (appMatcher.matches()) {
+            String appName = appMatcher.group(2);
+            if (appName == null || appName.trim().equals("")) {
+                throw new BadRequestException("Error parsing URL: name of app not found in URL.");
+            }
+
+            String appInstance = "_";
+
+            String subPath = appMatcher.group(3);
             if (subPath == null || subPath.trim().equals("")) {
                 subPath = null;
             } else {

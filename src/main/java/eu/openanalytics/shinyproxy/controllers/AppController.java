@@ -56,7 +56,7 @@ public class AppController extends BaseController {
 	@Inject
 	private ShinyProxySpecProvider shinyProxySpecProvider;
 
-	@RequestMapping(value="/app/*/*", method=RequestMethod.GET)
+	@RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.GET)
 	public String app(ModelMap map, HttpServletRequest request) {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequest(request);
 
@@ -80,7 +80,7 @@ public class AppController extends BaseController {
 		return "app";
 	}
 	
-	@RequestMapping(value="/app/*/*", method=RequestMethod.POST)
+	@RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.POST)
 	@ResponseBody
 	public Map<String,String> startApp(HttpServletRequest request) {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequest(request);
@@ -95,7 +95,7 @@ public class AppController extends BaseController {
 		return response;
 	}
 	
-	@RequestMapping(value="/app_direct/**")
+	@RequestMapping(value={"/app_direct_i/**", "/app_direct/**"})
 	public void appDirect(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequest(request);
 
@@ -172,7 +172,7 @@ public class AppController extends BaseController {
 	}
 
 	private String getPublicPath(AppRequestInfo appRequestInfo) {
-		return getContextPath() + "app_direct/" + appRequestInfo.getAppName() + "/" + appRequestInfo.getAppInstance() + '/';
+		return getContextPath() + "app_direct_i/" + appRequestInfo.getAppName() + "/" + appRequestInfo.getAppInstance() + '/';
 	}
 
 	/**

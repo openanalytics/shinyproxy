@@ -88,7 +88,7 @@ Shiny.app = {
         } else {
             Shiny.app.staticState.containerPath = containerPath;
             Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;
-            Shiny.proxyId = proxyId;
+            Shiny.app.staticState.proxyId = proxyId;
             Shiny.ui.setupIframe();
             Shiny.ui.showFrame();
             Shiny.connections.startHeartBeats();

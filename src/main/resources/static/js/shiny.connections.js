@@ -77,6 +77,7 @@ Shiny.connections = {
             // ignore error
             return;
         }
+        Shiny.app.runtimeState.tryingToReconnect = true;
         if (Shiny.app.staticState.webSocketReconnectionMode === "None") {
             // ignore error
             return;
@@ -105,8 +106,8 @@ Shiny.connections = {
                 Shiny.connections._reloadPage();
             } else {
                 Shiny.app.runtimeState.reloadDismissed = true;
+                Shiny.app.runtimeState.tryingToReconnect = false;
             }
-
         });
     },
 
@@ -144,7 +145,6 @@ Shiny.connections = {
         }
 
         var _shinyFrame = document.getElementById('shinyframe');
-        Shiny.app.runtimeState.tryingToReconnect = true;
         Shiny.ui.showReconnecting();
         Shiny.app.runtimeState.reloadAttempts++;
         Shiny.ui.updateLoadingTxt();
@@ -299,20 +299,25 @@ Shiny.connections = {
 
 
     _checkAppHasBeenStopped: function (cb) {
-        $.post(Shiny.app.staticState.contextPath + "heartbeat/" + Shiny.proxyId, function () {
-            cb(false);
-        }).fail(function (response) {
-            try {
-                var res = JSON.parse(response.responseText);
-                if (res !== null && res.status === "error" && res.message === "app_stopped_or_non_existent") {
-                    cb(true);
-                    return;
+        $.ajax({
+            url: Shiny.app.staticState.contextPath + "heartbeat/" + Shiny.app.staticState.proxyId,
+            timeout: 3000,
+            success: function () {
+                cb(false);
+            },
+            error: function (response) {
+                try {
+                    var res = JSON.parse(response.responseText);
+                    if (res !== null && res.status === "error" && res.message === "app_stopped_or_non_existent") {
+                        cb(true);
+                        return;
+                    }
+                } catch (e) {
+                    // carry-on
                 }
-            } catch (e) {
-                // carry-on
-            }
 
-            cb(false);
+                cb(false);
+            }
         });
 
     },

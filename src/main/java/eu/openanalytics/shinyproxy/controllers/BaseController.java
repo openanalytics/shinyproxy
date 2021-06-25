@@ -130,6 +130,7 @@ public abstract class BaseController {
 		map.put("logoutUrl", authenticationBackend.getLogoutURL());
 		map.put("isAppPage", false); // defaults, used in navbar
 		map.put("maxInstances", 0); // defaults, used in navbar
+		map.put("contextPath", getContextPath());
 	}
 	
 	protected String getSupportAddress() {

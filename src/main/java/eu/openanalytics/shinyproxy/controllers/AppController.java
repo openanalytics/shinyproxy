@@ -58,7 +58,7 @@ public class AppController extends BaseController {
 
 	@RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.GET)
 	public String app(ModelMap map, HttpServletRequest request) {
-		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequest(request);
+		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
 
 		prepareMap(map, request);
 
@@ -72,7 +72,6 @@ public class AppController extends BaseController {
 		map.put("containerPath", (proxy == null) ? "" : buildContainerPath(request, appRequestInfo));
 		map.put("proxyId", (proxy == null) ? "" : proxy.getId());
 		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
-		map.put("contextPath", getContextPath());
 		map.put("heartbeatRate", getHeartbeatRate());
 		map.put("isAppPage", true);
 		map.put("maxInstances", shinyProxySpecProvider.getMaxInstancesForSpec(appRequestInfo.getAppName()));
@@ -84,7 +83,7 @@ public class AppController extends BaseController {
 	@RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.POST)
 	@ResponseBody
 	public Map<String,String> startApp(HttpServletRequest request) {
-		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequest(request);
+		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
 
 		Proxy proxy = getOrStart(appRequestInfo);
 		String containerPath = buildContainerPath(request, appRequestInfo);
@@ -98,7 +97,7 @@ public class AppController extends BaseController {
 	
 	@RequestMapping(value={"/app_direct_i/**", "/app_direct/**"})
 	public void appDirect(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequest(request);
+		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
 
 		Proxy proxy = findUserProxy(appRequestInfo);
 

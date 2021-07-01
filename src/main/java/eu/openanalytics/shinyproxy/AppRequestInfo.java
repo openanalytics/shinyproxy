@@ -43,8 +43,12 @@ public class AppRequestInfo {
         this.subPath = subPath;
     }
 
-    public static AppRequestInfo fromRequest(HttpServletRequest request) {
-        return fromURI(request.getRequestURI());
+    public static AppRequestInfo fromRequestOrException(HttpServletRequest request) {
+        AppRequestInfo result = fromURI(request.getRequestURI());
+        if (result == null) {
+            throw new BadRequestException("Error parsing URL.");
+        }
+        return result;
     }
 
     public static AppRequestInfo fromURI(String uri) {
@@ -90,7 +94,7 @@ public class AppRequestInfo {
 
             return new AppRequestInfo(appName, appInstance, subPath);
         } else {
-            throw new BadRequestException("Error parsing URL.");
+            return null;
         }
     }
 

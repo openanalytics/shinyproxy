@@ -59,7 +59,7 @@
 		<div class="modal fade" id="reportIssueModal" role="dialog">
 			<div class="modal-dialog">
 				<div class="modal-content">
-					<form role="form" method="post" th:action="@{/issue}">
+					<form id="issueForm">
 						<div class="modal-header">
 							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 							<h4 class="modal-title">Report Issue</h4>
@@ -67,7 +67,7 @@
 						<div class="modal-body">
 							<div class="form-group">
 								<label for="customMessage"><span class="glyphicon glyphicon-chat"></span> Message to add to the report:</label>
-								<textarea class="form-control" name="customMessage" placeholder="Enter message" cols="40" rows="5"></textarea>
+								<textarea class="form-control" id="customMessage" placeholder="Enter message" cols="40" rows="5"></textarea>
 								<input type="hidden" name="currentLocation"></input>
 							</div>
 						</div>
@@ -81,8 +81,28 @@
 		</div>
 
 		<script lang="JavaScript">
-			$(document).ready(function() { $('input[name="currentLocation"]').val(window.location.href); });
+			$(document).ready(function() {
+				$('input[name="currentLocation"]').val(window.location.href);
+
+				$("#issueForm").submit(function(event){
+					event.preventDefault();
+					var formValues= $(this).serialize();
+
+					$.post([[${contextPath}]] + "issue", formValues, function(data){
+						if (data.status === "success") {
+							$('#customMessage').val('');
+							$('#reportIssueModal').modal('hide');
+							alert("Your issue has been reported");
+						} else {
+							alert("Something went wrong when reporting your issue");
+						}
+					}).fail(function() {
+						alert("Something went wrong when reporting your issue");
+					});
+				});
+			});
 		</script>
+
 	</div>
 </body>
 </html>

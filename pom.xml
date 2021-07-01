@@ -83,8 +83,11 @@
 			<artifactId>js-cookie</artifactId>
 			<version>2.2.1</version>
 		</dependency>
-
-
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>handlebars</artifactId>
+			<version>4.7.6</version>
+		</dependency>
 		<dependency>
 			<groupId>io.undertow</groupId>
 			<artifactId>undertow-core</artifactId>
@@ -109,10 +112,22 @@
 			<groupId>org.jboss.xnio</groupId>
 			<artifactId>xnio-api</artifactId>
 			<version>3.8.4.Final</version>
-		</dependency>
+                </dependency>
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<excludes>
+					<exclude>static/handlebars/node_modules/**</exclude>
+					<exclude>static/handlebars/.gitignore</exclude>
+					<exclude>static/handlebars/generate.sh</exclude>
+					<exclude>static/handlebars/*.handlebars</exclude>
+					<exclude>**/.gitignore</exclude>
+				</excludes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -334,7 +349,7 @@
 						<exclude>.gitignore</exclude>
 						<exclude>src/deb/**</exclude>
 						<exclude>templates/**</exclude>
-						<exclude>src/main/resources/static/js/js.cookie-2.2.1.min.js</exclude>
+						<exclude>src/main/resources/static/handlebars/node_modules/**</exclude>
 					</excludes>
 				</configuration>
 				<executions>

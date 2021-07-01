@@ -20,19 +20,20 @@
  */
 package eu.openanalytics.shinyproxy.runtimevalues;
 
+
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 
-public class PublicPathKey extends RuntimeValueKey<String>  {
+public class ShinyForceFullReloadKey extends RuntimeValueKey<Boolean> {
 
-    public PublicPathKey() {
-        super("openanalytics.eu/sp-public-path",
-                "SHINYPROXY_PUBLIC_PATH",
+    public ShinyForceFullReloadKey() {
+        super("openanalytics.eu/sp-shiny-force-full-reload",
+                "SHINYPROXY_FORCE_FULL_RELOAD",
                 false,
-                true,
-                true,
-                true, String.class);
+                false,
+                false,
+                false, Boolean.class);
     }
 
-    public static PublicPathKey inst = new PublicPathKey();
+    public static ShinyForceFullReloadKey inst = new ShinyForceFullReloadKey();
 
 }

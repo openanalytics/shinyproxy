@@ -22,17 +22,18 @@ package eu.openanalytics.shinyproxy.runtimevalues;
 
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 
-public class PublicPathKey extends RuntimeValueKey<String>  {
+public class MaxInstancesKey extends RuntimeValueKey<Integer> {
 
-    public PublicPathKey() {
-        super("openanalytics.eu/sp-public-path",
-                "SHINYPROXY_PUBLIC_PATH",
+    public MaxInstancesKey() {
+        super("openanalytics.eu/sp-max-instances",
+                "SHINYPROXY_MAX_INSTANCES",
                 false,
-                true,
-                true,
-                true, String.class);
+                false,
+                false,
+                false, Integer.class);
     }
 
-    public static PublicPathKey inst = new PublicPathKey();
+    public static MaxInstancesKey inst = new MaxInstancesKey();
+
 
 }

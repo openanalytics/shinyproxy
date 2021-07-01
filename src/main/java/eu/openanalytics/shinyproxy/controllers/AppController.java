@@ -23,21 +23,15 @@ package eu.openanalytics.shinyproxy.controllers;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
-import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.containerproxy.util.Retrying;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
+import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
+import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,54 +39,81 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Controller
 public class AppController extends BaseController {
 
 	@Inject
 	private ProxyMappingManager mappingManager;
-	
-	@RequestMapping(value="/app/*", method=RequestMethod.GET)
+
+	@Inject
+	private ShinyProxySpecProvider shinyProxySpecProvider;
+
+	@RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.GET)
 	public String app(ModelMap map, HttpServletRequest request) {
+		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequest(request);
+
 		prepareMap(map, request);
-		
-		Proxy proxy = findUserProxy(request);
+
+		Proxy proxy = findUserProxy(appRequestInfo);
 		awaitReady(proxy);
 
-		map.put("appTitle", getAppTitle(request));
-		map.put("containerPath", (proxy == null) ? "" : buildContainerPath(request));
+		map.put("appTitle", getAppTitle(appRequestInfo));
+		map.put("appName", appRequestInfo.getAppName());
+		map.put("appInstance", appRequestInfo.getAppInstance());
+		map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
+		map.put("containerPath", (proxy == null) ? "" : buildContainerPath(request, appRequestInfo));
 		map.put("proxyId", (proxy == null) ? "" : proxy.getId());
-		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getWebSocketReconnectionMode());
+		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
 		map.put("contextPath", getContextPath());
 		map.put("heartbeatRate", getHeartbeatRate());
+		map.put("isAppPage", true);
+		map.put("maxInstances", shinyProxySpecProvider.getMaxInstancesForSpec(appRequestInfo.getAppName()));
+		map.put("shinyForceFullReload", shinyProxySpecProvider.getShinyForceFullReload(appRequestInfo.getAppName()));
 
 		return "app";
 	}
 	
-	@RequestMapping(value="/app/*", method=RequestMethod.POST)
+	@RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.POST)
 	@ResponseBody
 	public Map<String,String> startApp(HttpServletRequest request) {
-		Proxy proxy = getOrStart(request);
-		String containerPath = buildContainerPath(request);
+		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequest(request);
+
+		Proxy proxy = getOrStart(appRequestInfo);
+		String containerPath = buildContainerPath(request, appRequestInfo);
 		
 		Map<String,String> response = new HashMap<>();
 		response.put("containerPath", containerPath);
 		response.put("proxyId", proxy.getId());
-		response.put("webSocketReconnectionMode", proxy.getWebSocketReconnectionMode().name());
+		response.put("webSocketReconnectionMode", proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
 		return response;
 	}
 	
-	@RequestMapping(value="/app_direct/**")
-	public void appDirect(HttpServletRequest request, HttpServletResponse response) {
-		Proxy proxy = getOrStart(request);
-		awaitReady(proxy);
+	@RequestMapping(value={"/app_direct_i/**", "/app_direct/**"})
+	public void appDirect(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequest(request);
+
+		Proxy proxy = findUserProxy(appRequestInfo);
+
+		if (proxy == null && appRequestInfo.getSubPath() != null && !appRequestInfo.getSubPath().equals("/")) {
+		    response.setStatus(410);
+		    response.getWriter().write("{\"status\":\"error\", \"message\":\"app_stopped_or_non_existent\"}");
+		    return;
+		} else {
+			proxy = getOrStart(appRequestInfo);
+			awaitReady(proxy);
+		}
 		
 		String mapping = getProxyEndpoint(proxy);
 		
-		String subPath = request.getRequestURI();
-		subPath = subPath.substring(subPath.indexOf("/app_direct/") + 12);
-		subPath = subPath.substring(getAppName(request).length());
-		
-		if (subPath.trim().isEmpty()) {
+		if (appRequestInfo.getSubPath() == null) {
 			try {
 				response.sendRedirect(request.getRequestURI() + "/");
 			} catch (Exception e) {
@@ -102,27 +123,34 @@ public class AppController extends BaseController {
 		}
 		
 		try {
-			mappingManager.dispatchAsync(mapping + subPath, request, response);
+			mappingManager.dispatchAsync(mapping + appRequestInfo.getSubPath(), request, response);
 		} catch (Exception e) {
 			throw new RuntimeException("Error routing proxy request", e);
 		}
 	}
 
-	private Proxy getOrStart(HttpServletRequest request) {
-		Proxy proxy = findUserProxy(request);
+	private Proxy getOrStart(AppRequestInfo appRequestInfo) {
+		Proxy proxy = findUserProxy(appRequestInfo);
 		if (proxy == null) {
-			String specId = getAppName(request);
-			ProxySpec spec = proxyService.getProxySpec(specId);
+			ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
 
-			if (spec == null) throw new IllegalArgumentException("Unknown proxy spec: " + specId);
+			if (spec == null) throw new BadRequestException("Unknown proxy spec: " + appRequestInfo.getAppName());
 			ProxySpec resolvedSpec = proxyService.resolveProxySpec(spec, null, null);
 
-			proxy = proxyService.startProxy(resolvedSpec, false,
-					Collections.singletonList(new RuntimeValue(PublicPathKey.inst, getPublicPath(specId))));
+			List<RuntimeValue> runtimeValues = shinyProxySpecProvider.getRuntimeValues(spec);
+			runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(appRequestInfo)));
+			runtimeValues.add(new RuntimeValue(AppInstanceKey.inst, appRequestInfo.getAppInstance()));
+
+			if (!validateProxyStart(spec)) {
+				throw new BadRequestException("Cannot start new proxy because the maximum amount of instances of this proxy has been reached");
+			}
+
+			proxy = proxyService.startProxy(resolvedSpec, false, runtimeValues);
 		}
 		return proxy;
 	}
-	
+
+
 	private boolean awaitReady(Proxy proxy) {
 		if (proxy == null) return false;
 		if (proxy.getStatus() == ProxyStatus.Up) return true;
@@ -136,18 +164,44 @@ public class AppController extends BaseController {
 		return (proxy.getStatus() == ProxyStatus.Up);
 	}
 	
-	private String buildContainerPath(HttpServletRequest request) {
-		String appName = getAppName(request);
-		if (appName == null) return "";
-
+	private String buildContainerPath(HttpServletRequest request, AppRequestInfo appRequestInfo) {
 		String queryString = ServletUriComponentsBuilder.fromRequest(request).replaceQueryParam("sp_hide_navbar").build().getQuery();
 
 		queryString = (queryString == null) ? "" : "?" + queryString;
 		
-		return getContextPath() + "app_direct/" + appName + "/" + queryString;
+		return getPublicPath(appRequestInfo) + queryString;
 	}
 
-	private String getPublicPath(String appName) {
-		return getContextPath() + "app_direct/" + appName + "/";
+	private String getPublicPath(AppRequestInfo appRequestInfo) {
+		return getContextPath() + "app_direct_i/" + appRequestInfo.getAppName() + "/" + appRequestInfo.getAppInstance() + '/';
 	}
+
+	/**
+	 * Validates whether a proxy should be allowed to start.
+	 */
+	private boolean validateProxyStart(ProxySpec spec) {
+		Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec.getId());
+
+		if (maxInstances == -1) {
+		    return true;
+		}
+
+		// note: there is a very small change that the user is able to start more instances than allowed, if the user
+		// starts many proxies at once. E.g. in the following scenario:
+		// - max proxies = 2
+		// - user starts a proxy
+		// - user sends a start proxy request -> this function is called and returns true
+		// - just before this new proxy is added to the list of active proxies, the user sends a new start proxy request
+		// - again this new proxy is allowed, because there is still only one proxy in the list of active proxies
+		// -> the user has three proxies running.
+		// Because of chance that this happens is small and that the consequences are low, we accept this risk.
+		int currentAmountOfInstances = proxyService.getProxies(
+				p -> p.getSpec().getId().equals(spec.getId())
+						&& userService.isOwner(p),
+				false).size();
+
+
+		return currentAmountOfInstances < maxInstances;
+	}
+
 }

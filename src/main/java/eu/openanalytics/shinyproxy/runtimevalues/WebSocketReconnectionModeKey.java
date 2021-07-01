@@ -20,19 +20,20 @@
  */
 package eu.openanalytics.shinyproxy.runtimevalues;
 
+
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 
-public class PublicPathKey extends RuntimeValueKey<String>  {
+public class WebSocketReconnectionModeKey extends RuntimeValueKey<WebSocketReconnectionMode> {
 
-    public PublicPathKey() {
-        super("openanalytics.eu/sp-public-path",
-                "SHINYPROXY_PUBLIC_PATH",
+    public WebSocketReconnectionModeKey() {
+        super("openanalytics.eu/sp-websocket-reconnection-mode",
+                "SHINYPROXY_WEBSOCKET_RECONNECTION_MODE",
                 false,
-                true,
-                true,
-                true, String.class);
+                false,
+                false,
+                false, WebSocketReconnectionMode.class);
     }
 
-    public static PublicPathKey inst = new PublicPathKey();
+    public static WebSocketReconnectionModeKey inst = new WebSocketReconnectionModeKey();
 
 }

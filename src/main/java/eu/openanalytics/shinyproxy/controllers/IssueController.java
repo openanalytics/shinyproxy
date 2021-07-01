@@ -27,6 +27,7 @@ import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import eu.openanalytics.shinyproxy.AppRequestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -51,7 +52,7 @@ public class IssueController extends BaseController {
 		IssueForm form = new IssueForm();
 		form.setUserName(getUserName(request));
 		form.setCurrentLocation(request.getParameter("currentLocation"));
-		form.setAppName(getAppName(form.getCurrentLocation()));
+		form.setAppName(AppRequestInfo.fromURI(form.getCurrentLocation()).getAppName()); // TODO
 		form.setCustomMessage(request.getParameter("customMessage"));
 		
 		Proxy activeProxy = null;

@@ -29,10 +29,13 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
-import eu.openanalytics.containerproxy.util.SessionHelper;
-import org.opensaml.xml.signature.G;
+import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
+import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
+import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
+import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.springframework.beans.factory.annotation.Autowired;
-import eu.openanalytics.containerproxy.model.spec.WebSocketReconnectionMode;
+import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionMode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
@@ -57,6 +60,7 @@ import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
 public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 	private List<ProxySpec> specs = new ArrayList<>();
+	private Map<String, ShinyProxySpec> shinyProxySpecs = new HashMap<>();
 
 	private static Environment environment;
 
@@ -82,9 +86,11 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 	}
 
 	public void setSpecs(List<ShinyProxySpec> specs) {
-		this.specs = specs.stream().map(ShinyProxySpecProvider::convert).collect(Collectors.toList());
+		this.specs = specs.stream().map(s -> {
+			shinyProxySpecs.put(s.getId(), s);
+			return ShinyProxySpecProvider.convert(s);
+		}).collect(Collectors.toList());
 	}
-
 
 	private static ProxySpec convert(ShinyProxySpec from) {
 		ProxySpec to = new ProxySpec();
@@ -101,7 +107,6 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		}
 		to.setKubernetesAdditionalManifests(from.getKubernetesAdditionalManifests());
 		to.setKubernetesAdditionalPersistentManifests(from.getKubernetesAdditionalPersistentManifests());
-		to.setWebSocketReconnectionMode(from.getWebSocketReconnectionMode());
 
 		if (from.getAccessGroups() != null && from.getAccessGroups().length > 0) {
 			ProxyAccessControl acl = new ProxyAccessControl();
@@ -139,6 +144,46 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		return to;
 	}
 
+
+	public List<RuntimeValue> getRuntimeValues(ProxySpec proxy) {
+		List<RuntimeValue> runtimeValues = new ArrayList<>();
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(proxy.getId());
+
+		WebSocketReconnectionMode webSocketReconnectionMode = shinyProxySpec.getWebSocketReconnectionMode();
+		if (webSocketReconnectionMode == null) {
+			runtimeValues.add(new RuntimeValue(WebSocketReconnectionModeKey.inst, environment.getProperty("proxy.defaultWebSocketReconnectionMode", WebSocketReconnectionMode.class, WebSocketReconnectionMode.None)));
+		} else {
+			runtimeValues.add(new RuntimeValue(WebSocketReconnectionModeKey.inst, webSocketReconnectionMode));
+		}
+
+		runtimeValues.add(new RuntimeValue(MaxInstancesKey.inst, getMaxInstancesForSpec(proxy.getId())));
+		runtimeValues.add(new RuntimeValue(ShinyForceFullReloadKey.inst, getShinyForceFullReload(proxy.getId())));
+
+		return runtimeValues;
+	}
+
+	public Integer getMaxInstancesForSpec(String specId) {
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
+		Integer defaultMaxInstances = environment.getProperty("proxy.defaultMaxInstances", Integer.class, 1);
+		Integer maxInstances = shinyProxySpec.getMaxInstances();
+		if (maxInstances != null) {
+            return shinyProxySpec.getMaxInstances();
+		}
+		return defaultMaxInstances;
+	}
+
+	public void postProcessRecoveredProxy(Proxy proxy) {
+		proxy.addRuntimeValues(getRuntimeValues(proxy.getSpec()));
+	}
+
+	public Boolean getShinyForceFullReload(String specId) {
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
+		if (shinyProxySpec.getShinyForceFullReload() != null) {
+			return shinyProxySpec.getShinyForceFullReload();
+		}
+		return false;
+	}
+
 	public static class ShinyProxySpec {
 
 		private String id;
@@ -165,6 +210,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		private String targetPath;
 		private WebSocketReconnectionMode webSocketReconnectionMode;
+		private Boolean shinyForceFullReload;
+		private Integer maxInstances;
 
 		private Map<String,String> labels;
 
@@ -369,6 +416,22 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public void setWebSocketReconnectionMode(WebSocketReconnectionMode webSocketReconnectionMode) {
 			this.webSocketReconnectionMode = webSocketReconnectionMode;
+		}
+
+		public Boolean getShinyForceFullReload() {
+			return shinyForceFullReload;
+		}
+
+		public void setShinyForceFullReload(Boolean shinyForceFullReload) {
+			this.shinyForceFullReload = shinyForceFullReload;
+		}
+
+		public Integer getMaxInstances() {
+			return maxInstances;
+		}
+
+		public void setMaxInstances(Integer maxInstances) {
+			this.maxInstances = maxInstances;
 		}
 
 	}

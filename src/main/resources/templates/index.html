@@ -31,14 +31,16 @@
 	<script th:src="@{${jqueryJs}}"></script>
 	<script th:src="@{${bootstrapJs}}"></script>
 	<script th:src="@{${cookieJs}}"></script>
-	<script th:src="@{/js/new_version_check.js}"></script>
+	<script th:if="${operatorEnabled}" th:src="@{/js/shiny.operator.js}"></script>
+	<script th:src="@{/js/shiny.api.js}"></script>
+	<script th:src="@{/js/shiny.common.js}"></script>
 </head>
 <body>
 	<!-- navigation bar -->
 	<div th:replace="../fragments/navbar :: navbar"></div>
 	
 	<div id="new-version-banner" class="alert alert-info" role="alert" style="display:none;">
-		A new version of ShinyProxy is available <button id="new-version-btn" class="btn btn-default btn-sm" >Switch to new version!</button>
+		A new version of <span th:text="${application_name}"></span> is available <button id="new-version-btn" class="btn btn-default btn-sm" >Switch to new version!</button>
 	</div>
 	
 	<!-- content -->
@@ -68,5 +70,13 @@
 			</div>
 		</div>
 	</div>
+
+	<script th:if="${operatorEnabled}" type="text/javascript" th:inline="javascript">
+		$(window).on('load', function() {
+			window.Shiny.common.init([[${contextPath}]], [[${application_name}]]);
+			window.Shiny.operator.init([[${contextPath}]], [[${operatorForceTransfer}]]);
+			window.Shiny.operator.start();
+		});
+	</script>
 </body>
 </html>

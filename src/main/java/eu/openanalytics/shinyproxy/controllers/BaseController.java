@@ -30,12 +30,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
 import eu.openanalytics.containerproxy.service.HeartbeatService;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.shinyproxy.OperatorService;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,9 +71,12 @@ public abstract class BaseController {
 	@Inject
 	HeartbeatService heartbeatService;
 
+	@Inject
+	OperatorService operatorService;
+
 	private static final Logger logger = LogManager.getLogger(BaseController.class);
 	private static final Map<String, String> imageCache = new HashMap<>();
-	
+
 	protected String getUserName(HttpServletRequest request) {
 		Principal principal = request.getUserPrincipal();
 		return (principal == null) ? request.getSession().getId() : principal.getName();
@@ -132,6 +137,10 @@ public abstract class BaseController {
 		map.put("isAppPage", false); // defaults, used in navbar
 		map.put("maxInstances", 0); // defaults, used in navbar
 		map.put("contextPath", getContextPath());
+
+		// operator specific
+		map.put("operatorEnabled", operatorService.isEnabled());
+		map.put("operatorForceTransfer", operatorService.mustForceTransfer());
 	}
 	
 	protected String getSupportAddress() {

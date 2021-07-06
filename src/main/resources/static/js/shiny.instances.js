@@ -111,7 +111,7 @@ Shiny.instances = {
     },
 
     _createUrlForInstance: function (instance) {
-        return Shiny.app.staticState.contextPath + "app_i/" + Shiny.app.staticState.appName + "/" + instance + "/";
+        return Shiny.common.staticState.contextPath + "app_i/" + Shiny.app.staticState.appName + "/" + instance + "/";
     },
 
     _deleteInstance: function (instanceName, cb) {
@@ -198,7 +198,7 @@ Shiny.instances = {
         var currentAmountOfInstances = 0;
 
         $.ajax({
-            url: Shiny.app.staticState.contextPath + "api/proxy",
+            url: Shiny.common.staticState.contextPath + "api/proxy",
             success: function(result) {
                 for (var idx = 0; idx < result.length; idx++) {
                     var proxy = result[idx];

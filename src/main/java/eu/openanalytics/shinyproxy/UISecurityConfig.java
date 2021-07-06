@@ -48,7 +48,7 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 	private ProxyService proxyService;
 
 	@Inject
-    private Environment environment;
+	private OperatorService operatorService;
 
 	@Override
 	public void apply(HttpSecurity http) throws Exception {
@@ -69,7 +69,7 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 			http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminGroups());
 		}
 
-		if (RunningInOperatorCondition.runningInOperator(environment)) {
+		if (operatorService.isEnabled()) {
 		    // running using operator
             http.addFilterAfter(new OperatorCookieFilter(), AnonymousAuthenticationFilter.class);
             http.authorizeRequests().antMatchers("/server-transfer").permitAll();

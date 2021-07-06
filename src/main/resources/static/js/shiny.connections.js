@@ -60,7 +60,7 @@ Shiny.connections = {
                 if (lastHeartbeat > Shiny.app.staticState.heartBeatRate && Shiny.app.staticState.proxyId !== null) {
 
                     // contextPath is guaranteed to end with a slash
-                    $.post(Shiny.app.staticState.contextPath + "heartbeat/" + Shiny.app.staticState.proxyId);
+                    $.post(Shiny.common.staticState.contextPath + "heartbeat/" + Shiny.app.staticState.proxyId);
                 }
             }
         }, Shiny.app.staticState.heartBeatRate);
@@ -318,7 +318,7 @@ Shiny.connections = {
     _checkAppHasBeenStopped: function (cb) {
         $.ajax({
             method: 'POST',
-            url: Shiny.app.staticState.contextPath + "heartbeat/" + Shiny.app.staticState.proxyId,
+            url: Shiny.common.staticState.contextPath + "heartbeat/" + Shiny.app.staticState.proxyId,
             timeout: 3000,
             success: function () {
                 cb(false);

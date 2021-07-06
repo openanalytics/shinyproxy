@@ -1,4 +1,4 @@
-/**
+/*
  * ShinyProxy
  *
  * Copyright (C) 2016-2021 Open Analytics
@@ -18,22 +18,17 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
-package eu.openanalytics.shinyproxy;
+Shiny = window.Shiny || {};
+Shiny.common = {
 
-import org.springframework.context.annotation.Condition;
-import org.springframework.context.annotation.ConditionContext;
-import org.springframework.core.env.Environment;
-import org.springframework.core.type.AnnotatedTypeMetadata;
+    staticState: {
+        contextPath: null,
+        applicationName: null,
+    },
 
-public class RunningInOperatorCondition implements Condition {
-
-    @Override
-    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-        return runningInOperator(context.getEnvironment());
-    }
-
-    public static boolean runningInOperator(Environment environment) {
-        return environment.getProperty("proxy.realm-id") != null;
+    init: function(contextPath, applicationName) {
+        Shiny.common.staticState.contextPath = contextPath;
+        Shiny.common.staticState.applicationName = applicationName;
     }
 
 }

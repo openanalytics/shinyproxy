@@ -30,11 +30,13 @@ import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
 import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 
 import eu.openanalytics.containerproxy.service.HeartbeatService;
 
 @Configuration
+@PropertySource("classpath:application.properties")
 public class ShinyProxyConfiguration {
 
 	@Inject

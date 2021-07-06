@@ -20,46 +20,29 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
-
 import eu.openanalytics.shinyproxy.OperatorCookieFilter;
+import eu.openanalytics.shinyproxy.RunningInOperatorCondition;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.servlet.view.RedirectView;
 
-import eu.openanalytics.containerproxy.model.spec.ProxySpec;
- 
+import javax.servlet.http.HttpServletRequest;
+
 @Controller
-public class IndexController extends BaseController {
+@Conditional(RunningInOperatorCondition.class)
+public class OperatorController extends BaseController {
 
-	@RequestMapping("/")
-    private Object index(ModelMap map, HttpServletRequest request) {
-		String landingPage = environment.getProperty("proxy.landing-page", "/");
-		if (!landingPage.equals("/")) return new RedirectView(landingPage);	
-		
-		prepareMap(map, request);
-		
-		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
-		map.put("apps", apps);
+    @RequestMapping(value = "/server-transfer", method = RequestMethod.GET)
+    public String getServerTransferPage(ModelMap map, HttpServletRequest request) {
+        String redirectUri = request.getParameter("redirectUri");
+        String allowedRedirectUri = OperatorCookieFilter.getRedirectUriByMatch(redirectUri);
 
-		Map<ProxySpec, String> appLogos = new HashMap<>();
-		map.put("appLogos", appLogos);
-		
-		boolean displayAppLogos = false;
-		for (ProxySpec app: apps) {
-			if (app.getLogoURL() != null) {
-				displayAppLogos = true;
-				appLogos.put(app, resolveImageURI(app.getLogoURL()));
-			}
-		}
-		map.put("displayAppLogos", displayAppLogos);
+        map.put("redirectUri", allowedRedirectUri);
 
-		return "index";
+        prepareMap(map, request);
+        return "server-transfer";
     }
 
 }

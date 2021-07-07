@@ -27,16 +27,18 @@ Shiny.operator = {
 
     staticState: {
         forceTransfer: null,
+        showTransferMessage: null,
     },
 
     /**
      * Start the Shiny Application.
-     * @param contextPath
      * @param forceTransfer whether to force transferring the user to the latest instance if no apps running
-     * @param cb optional callback after checks are done
+     * @param showTransferMessage whether a message/popup should be shown when the user is using an old server and they
+     * have at least one app running.
      */
-    init: function (forceTransfer) {
+    init: function (forceTransfer, showTransferMessage) {
         Shiny.operator.staticState.forceTransfer = forceTransfer;
+        Shiny.operator.staticState.showTransferMessage = showTransferMessage;
     },
 
     start: function(cb=null) {
@@ -87,7 +89,10 @@ Shiny.operator = {
     },
 
     displayMessage: function() {
-        document.getElementById('new-version-banner').style.display = "block";
+        // only show the message if the option is enabled
+        if (Shiny.operator.staticState.showTransferMessage) {
+            document.getElementById('new-version-banner').style.display = "block";
+        }
     },
 
     hideMessage: function() {

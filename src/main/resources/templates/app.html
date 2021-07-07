@@ -110,7 +110,7 @@
 		$(window).on('load', function() {
 		    window.Shiny.common.init([[${contextPath}]], [[${application_name}]]);
 			if ([[${operatorEnabled}]]) {
-				window.Shiny.operator.init([[${operatorForceTransfer}]]);
+				window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorShowTransferMessage}]]);
 			}
 			window.Shiny.app.start(
 					[[${containerPath}]],

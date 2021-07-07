@@ -197,7 +197,7 @@ Shiny.connections = {
     _checkIfIframeHasStartupMessage: function () {
         try {
             var _shinyFrame = document.getElementById('shinyframe');
-            return (_shinyFrame.contentDocument.documentElement.textContent || _shinyFrame.contentDocument.documentElement.innerText).indexOf('ShinyProxy is starting up') > -1;
+            return (_shinyFrame.contentDocument.documentElement.textContent || _shinyFrame.contentDocument.documentElement.innerText).indexOf('is starting up, check back in a few seconds.') > -1;
         } catch {
         }
         return false;

@@ -164,6 +164,9 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 	public Integer getMaxInstancesForSpec(String specId) {
 		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
+		if (shinyProxySpec == null) {
+			return null;
+		}
 		Integer defaultMaxInstances = environment.getProperty("proxy.defaultMaxInstances", Integer.class, 1);
 		Integer maxInstances = shinyProxySpec.getMaxInstances();
 		if (maxInstances != null) {
@@ -178,6 +181,9 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 	public Boolean getShinyForceFullReload(String specId) {
 		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
+		if (shinyProxySpec == null) {
+			return null;
+		}
 		if (shinyProxySpec.getShinyForceFullReload() != null) {
 			return shinyProxySpec.getShinyForceFullReload();
 		}

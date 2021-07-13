@@ -88,7 +88,7 @@
 					event.preventDefault();
 					var formValues= $(this).serialize();
 
-					$.post([[${contextPath}]] + "issue", formValues, function(data){
+					$.post("[[${contextPath}]]" + "issue", formValues, function(data){
 						if (data.status === "success") {
 							$('#customMessage').val('');
 							$('#reportIssueModal').modal('hide');

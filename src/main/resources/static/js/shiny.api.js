@@ -21,7 +21,7 @@
 Shiny = window.Shiny || {};
 Shiny.api = {
     getProxies: function (cb, cb_fail) {
-        $.get(Shiny.app.staticState.contextPath + "api/proxy", function (proxies) {
+        $.get(Shiny.common.staticState.contextPath + "api/proxy", function (proxies) {
             cb(proxies);
         }).fail(function (response) {
             cb_fail(response);
@@ -29,7 +29,7 @@ Shiny.api = {
     },
     deleteProxyById: function (id, cb, cb_fail) {
         $.ajax({
-            url: Shiny.app.staticState.contextPath + "api/proxy/" + id,
+            url: Shiny.common.staticState.contextPath + "api/proxy/" + id,
             type: 'DELETE',
             success: cb,
             error: function (result) {
@@ -52,7 +52,7 @@ Shiny.api = {
         }, cb_fail);
     },
     getProxyById: function(proxyId, cb, cb_fail) {
-        $.get(Shiny.app.staticState.contextPath + "api/proxy/" + proxyId, function (proxy) {
+        $.get(Shiny.common.staticState.contextPath + "api/proxy/" + proxyId, function (proxy) {
             cb(true, proxy);
         }).fail(function (response) {
             if (response.status === 404) {

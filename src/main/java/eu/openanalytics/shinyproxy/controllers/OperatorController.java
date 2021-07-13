@@ -21,7 +21,7 @@
 package eu.openanalytics.shinyproxy.controllers;
 
 import eu.openanalytics.shinyproxy.OperatorCookieFilter;
-import eu.openanalytics.shinyproxy.RunningInOperatorCondition;
+import eu.openanalytics.shinyproxy.OperatorEnabledCondition;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import javax.servlet.http.HttpServletRequest;
 
 @Controller
-@Conditional(RunningInOperatorCondition.class)
+@Conditional(OperatorEnabledCondition.class)
 public class OperatorController extends BaseController {
 
     @RequestMapping(value = "/server-transfer", method = RequestMethod.GET)

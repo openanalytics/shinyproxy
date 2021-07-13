@@ -59,6 +59,9 @@ public class IndexController extends BaseController {
 		}
 		map.put("displayAppLogos", displayAppLogos);
 
+		// operator specific
+		map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnMainPage());
+
 		return "index";
     }
 

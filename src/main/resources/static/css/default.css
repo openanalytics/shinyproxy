@@ -163,3 +163,25 @@ body > div#navbar { padding-top: 0px; }
 .admin-proxy-heartbeat {
 	width: 8em;
 }
+
+#server-transfer-message {
+	margin-top: 10px;
+	padding-top: 50px;
+}
+
+
+#appPage #new-version-banner {
+	margin: 70px 20px 20px 30px;
+	position: absolute;
+	right: 200px;
+	top: 0px;
+}
+
+#appPage #new-version-banner button.close {
+	line-height: 1.5;
+}
+
+#appPage #new-version-btn {
+	margin-left: 20px;
+	margin-right: 20px;
+}

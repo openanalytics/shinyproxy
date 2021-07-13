@@ -77,6 +77,9 @@ public class AppController extends BaseController {
 		map.put("maxInstances", shinyProxySpecProvider.getMaxInstancesForSpec(appRequestInfo.getAppName()));
 		map.put("shinyForceFullReload", shinyProxySpecProvider.getShinyForceFullReload(appRequestInfo.getAppName()));
 
+		// operator specific
+		map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnAppPage());
+
 		return "app";
 	}
 	

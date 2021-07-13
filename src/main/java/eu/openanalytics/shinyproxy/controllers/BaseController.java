@@ -106,6 +106,7 @@ public abstract class BaseController {
 	}
 	
 	protected void prepareMap(ModelMap map, HttpServletRequest request) {
+        map.put("application_name", environment.getProperty("spring.application.name")); // name of ShinyProxy, ContainerProxy etc
 		map.put("title", environment.getProperty("proxy.title", "ShinyProxy"));
 		map.put("logo", resolveImageURI(environment.getProperty("proxy.logo-url")));
 

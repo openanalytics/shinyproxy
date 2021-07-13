@@ -24,7 +24,9 @@ import java.util.Arrays;
 
 import javax.inject.Inject;
 
+import org.springframework.core.env.Environment;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.stereotype.Component;
 
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
@@ -44,7 +46,10 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 	
 	@Inject
 	private ProxyService proxyService;
-	
+
+	@Inject
+    private Environment environment;
+
 	@Override
 	public void apply(HttpSecurity http) throws Exception {
 		if (auth.hasAuthorization()) {
@@ -63,5 +68,11 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 			// Limit access to the admin pages
 			http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminGroups());
 		}
+
+		if (RunningInOperatorCondition.runningInOperator(environment)) {
+		    // running using operator
+            http.addFilterAfter(new OperatorCookieFilter(), AnonymousAuthenticationFilter.class);
+            http.authorizeRequests().antMatchers("/server-transfer").permitAll();
+        }
 	}
 }

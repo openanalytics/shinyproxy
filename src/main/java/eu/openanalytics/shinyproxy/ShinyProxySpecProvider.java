@@ -175,10 +175,6 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		return defaultMaxInstances;
 	}
 
-	public void postProcessRecoveredProxy(Proxy proxy) {
-		proxy.addRuntimeValues(getRuntimeValues(proxy.getSpec()));
-	}
-
 	public Boolean getShinyForceFullReload(String specId) {
 		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
 		if (shinyProxySpec == null) {
@@ -188,6 +184,21 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			return shinyProxySpec.getShinyForceFullReload();
 		}
 		return false;
+	}
+
+	public Boolean getHideNavbarOnMainPageLink(String specId) {
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
+		if (shinyProxySpec == null) {
+			return null;
+		}
+		if (shinyProxySpec.getHideNavbarOnMainPageLink() != null) {
+			return shinyProxySpec.getHideNavbarOnMainPageLink();
+		}
+		return false;
+	}
+
+	public void postProcessRecoveredProxy(Proxy proxy) {
+		proxy.addRuntimeValues(getRuntimeValues(proxy.getSpec()));
 	}
 
 	public static class ShinyProxySpec {
@@ -218,6 +229,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private WebSocketReconnectionMode webSocketReconnectionMode;
 		private Boolean shinyForceFullReload;
 		private Integer maxInstances;
+		private Boolean hideNavbarOnMainPageLink;
 
 		private Map<String,String> labels;
 
@@ -438,6 +450,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public void setMaxInstances(Integer maxInstances) {
 			this.maxInstances = maxInstances;
+		}
+
+		public Boolean getHideNavbarOnMainPageLink() {
+			return hideNavbarOnMainPageLink;
+		}
+
+		public void setHideNavbarOnMainPageLink(Boolean hideNavbarOnMainPageLink) {
+			this.hideNavbarOnMainPageLink = hideNavbarOnMainPageLink;
 		}
 
 	}

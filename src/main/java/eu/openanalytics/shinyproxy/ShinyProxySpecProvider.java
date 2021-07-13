@@ -59,6 +59,8 @@ import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
 @ConfigurationProperties(prefix = "proxy")
 public class ShinyProxySpecProvider implements IProxySpecProvider {
 
+	private static final String PROP_DEFAULT_MAX_INSTANCES = "proxy.default-max-instances";
+
 	private List<ProxySpec> specs = new ArrayList<>();
 	private Map<String, ShinyProxySpec> shinyProxySpecs = new HashMap<>();
 
@@ -167,7 +169,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		if (shinyProxySpec == null) {
 			return null;
 		}
-		Integer defaultMaxInstances = environment.getProperty("proxy.defaultMaxInstances", Integer.class, 1);
+		Integer defaultMaxInstances = environment.getProperty(PROP_DEFAULT_MAX_INSTANCES, Integer.class, 1);
 		Integer maxInstances = shinyProxySpec.getMaxInstances();
 		if (maxInstances != null) {
             return shinyProxySpec.getMaxInstances();

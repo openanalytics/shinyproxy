@@ -21,7 +21,7 @@
 package eu.openanalytics.shinyproxy.controllers;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
-import eu.openanalytics.containerproxy.service.HeartbeatService;
+import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.containerproxy.service.ProxyService;
 import eu.openanalytics.containerproxy.service.UserService;
 import org.springframework.http.MediaType;
@@ -69,7 +69,7 @@ public class HeartbeatController {
             throw new AccessDeniedException(String.format("Cannot register heartbeat for proxy %s: access denied", proxyId));
         }
 
-        heartbeatService.heartbeatReceived(proxy);
+        heartbeatService.heartbeatReceived(HeartbeatService.HeartbeatSource.FALLBACK, proxy.getId(), null);
 
         return ResponseEntity.ok(new HashMap<String, String>() {{
             put("status", "success");

@@ -27,7 +27,8 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
-import eu.openanalytics.containerproxy.service.HeartbeatService;
+import eu.openanalytics.containerproxy.service.hearbeat.ActiveProxiesService;
+import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -39,7 +40,7 @@ import eu.openanalytics.containerproxy.model.runtime.Proxy;
 public class AdminController extends BaseController {
 
 	@Inject
-	private HeartbeatService heartbeatService;
+	private ActiveProxiesService activeProxiesService;
 
 	@RequestMapping("/admin")
 	private String admin(ModelMap map, HttpServletRequest request) {
@@ -77,7 +78,7 @@ public class AdminController extends BaseController {
 				uptime = "N/A";
 			}
 
-			Long heartBeat = heartbeatService.getLastHeartBeat(proxy.getId());
+			Long heartBeat = activeProxiesService.getLastHeartBeat(proxy.getId());
 			if (heartBeat == null) {
 				lastHeartBeat = "N/A";
 			} else {

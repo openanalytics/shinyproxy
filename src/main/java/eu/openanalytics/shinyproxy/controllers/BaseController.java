@@ -30,12 +30,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
-import eu.openanalytics.containerproxy.service.HeartbeatService;
+import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.OperatorService;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;

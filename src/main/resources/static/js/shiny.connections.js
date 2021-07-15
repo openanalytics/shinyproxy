@@ -198,7 +198,7 @@ Shiny.connections = {
         try {
             var _shinyFrame = document.getElementById('shinyframe');
             return (_shinyFrame.contentDocument.documentElement.textContent || _shinyFrame.contentDocument.documentElement.innerText).indexOf('is starting up, check back in a few seconds.') > -1;
-        } catch {
+        } catch (error) {
         }
         return false;
     },
@@ -294,7 +294,7 @@ Shiny.connections = {
         Shiny.app.runtimeState.injectorIntervalId = setInterval(function () {
             try {
                 var state = document.getElementById('shinyframe').contentWindow.document.readyState
-            } catch {
+            } catch (error) {
                 return;
             }
             if (replaced && state === "complete") {

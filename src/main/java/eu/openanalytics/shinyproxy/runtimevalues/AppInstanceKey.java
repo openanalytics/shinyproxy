@@ -27,9 +27,9 @@ public class AppInstanceKey extends RuntimeValueKey<String>  {
     public AppInstanceKey() {
         super("openanalytics.eu/sp-app-instance",
                 "SHINYPROXY_APP_INSTANCE",
-                false, // TODO
-                true,
-                true,
+                false,
+                true, // include as annotation so that the value can be recovered
+                false,
                 true, String.class);
     }
 

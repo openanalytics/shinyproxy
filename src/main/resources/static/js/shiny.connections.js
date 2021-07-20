@@ -286,6 +286,10 @@ Shiny.connections = {
      * See: https://developer.mozilla.org/en-US/docs/Web/API/Document/readyState
      */
     startInjector: function () {
+        if (Shiny.app.staticState.webSocketReconnectionMode === "None") {
+            // don't inject when reconnecting is disabled
+            return;
+        }
         if (Shiny.app.runtimeState.injectorIntervalId !== null) {
             Shiny.connections._stopInjector();
         }

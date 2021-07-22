@@ -20,7 +20,7 @@
  */
 package eu.openanalytics.shinyproxy.runtimevalues;
 
-public enum WebSocketReconnectionMode {
+public enum WebsocketReconnectionMode {
     None,
     Auto,
     Confirm

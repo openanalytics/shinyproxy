@@ -35,7 +35,7 @@ import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
 import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.springframework.beans.factory.annotation.Autowired;
-import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionMode;
+import eu.openanalytics.shinyproxy.runtimevalues.WebsocketReconnectionMode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
@@ -151,9 +151,9 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		List<RuntimeValue> runtimeValues = new ArrayList<>();
 		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(proxy.getId());
 
-		WebSocketReconnectionMode webSocketReconnectionMode = shinyProxySpec.getWebSocketReconnectionMode();
+		WebsocketReconnectionMode webSocketReconnectionMode = shinyProxySpec.getWebsocketReconnectionMode();
 		if (webSocketReconnectionMode == null) {
-			runtimeValues.add(new RuntimeValue(WebSocketReconnectionModeKey.inst, environment.getProperty("proxy.defaultWebSocketReconnectionMode", WebSocketReconnectionMode.class, WebSocketReconnectionMode.None)));
+			runtimeValues.add(new RuntimeValue(WebSocketReconnectionModeKey.inst, environment.getProperty("proxy.default-websocket-reconnection-mode", WebsocketReconnectionMode.class, WebsocketReconnectionMode.None)));
 		} else {
 			runtimeValues.add(new RuntimeValue(WebSocketReconnectionModeKey.inst, webSocketReconnectionMode));
 		}
@@ -228,7 +228,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private List<String> kubernetesAdditionalPersistentManifests = new ArrayList<>();
 
 		private String targetPath;
-		private WebSocketReconnectionMode webSocketReconnectionMode;
+		private WebsocketReconnectionMode websocketReconnectionMode;
 		private Boolean shinyForceFullReload;
 		private Integer maxInstances;
 		private Boolean hideNavbarOnMainPageLink;
@@ -430,12 +430,12 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			this.targetPath = targetPath;
 		}
 
-		public WebSocketReconnectionMode getWebSocketReconnectionMode() {
-			return webSocketReconnectionMode;
+		public WebsocketReconnectionMode getWebsocketReconnectionMode() {
+			return websocketReconnectionMode;
 		}
 
-		public void setWebSocketReconnectionMode(WebSocketReconnectionMode webSocketReconnectionMode) {
-			this.webSocketReconnectionMode = webSocketReconnectionMode;
+		public void setWebsocketReconnectionMode(WebsocketReconnectionMode websocketReconnectionMode) {
+			this.websocketReconnectionMode = websocketReconnectionMode;
 		}
 
 		public Boolean getShinyForceFullReload() {

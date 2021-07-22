@@ -23,7 +23,7 @@ package eu.openanalytics.shinyproxy.runtimevalues;
 
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 
-public class WebSocketReconnectionModeKey extends RuntimeValueKey<WebSocketReconnectionMode> {
+public class WebSocketReconnectionModeKey extends RuntimeValueKey<WebsocketReconnectionMode> {
 
     public WebSocketReconnectionModeKey() {
         super("openanalytics.eu/sp-websocket-reconnection-mode",
@@ -31,7 +31,7 @@ public class WebSocketReconnectionModeKey extends RuntimeValueKey<WebSocketRecon
                 false,
                 false,
                 false,
-                false, WebSocketReconnectionMode.class);
+                false, WebsocketReconnectionMode.class);
     }
 
     public static WebSocketReconnectionModeKey inst = new WebSocketReconnectionModeKey();

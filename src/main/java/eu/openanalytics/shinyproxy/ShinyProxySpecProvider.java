@@ -100,6 +100,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		to.setDisplayName(from.getDisplayName());
 		to.setDescription(from.getDescription());
 		to.setLogoURL(from.getLogoURL());
+		to.setMaxLifeTime(from.getMaxLifetime());
 		if (from.getKubernetesPodPatches() != null) {
 			try {
 				to.setKubernetesPodPatches(from.getKubernetesPodPatches());
@@ -232,6 +233,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private Boolean shinyForceFullReload;
 		private Integer maxInstances;
 		private Boolean hideNavbarOnMainPageLink;
+		private Long maxLifetime;
 
 		private Map<String,String> labels;
 
@@ -462,5 +464,12 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			this.hideNavbarOnMainPageLink = hideNavbarOnMainPageLink;
 		}
 
+		public Long getMaxLifetime() {
+			return maxLifetime;
+		}
+
+		public void setMaxLifetime(Long maxLifetime) {
+			this.maxLifetime = maxLifetime;
+		}
 	}
 }

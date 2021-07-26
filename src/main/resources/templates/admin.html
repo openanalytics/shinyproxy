@@ -50,7 +50,7 @@
 					<th>Image</th>
 					<th>Image tag</th>
 				</tr>
-				<tr th:each="proxy: ${proxies}">
+				<tr th:each="proxy: ${proxies}" class="admin-monospace">
 					<td class="admin-proxy-id" th:text="${proxy.id}"></td>
 					<td class="admin-proxy-status" th:text="${proxy.status}"></td>
 					<td th:text="${proxy.userId}"></td>

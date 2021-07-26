@@ -149,7 +149,11 @@ body > div#navbar { padding-top: 0px; }
 }
 
 .admin-proxy-id {
-	width: 20em;
+	width: 23em;
+}
+
+.admin-monospace {
+	font-family: monospace;
 }
 
 .admin-proxy-status {

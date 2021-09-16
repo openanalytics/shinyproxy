@@ -22,61 +22,104 @@
 -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+>
 <head lang="en">
-	<title th:text="${title}"></title>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link rel="stylesheet" media="screen" th:href="@{${bootstrapCss}}" />
-	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
-	<script th:src="@{${jqueryJs}}"></script>
-	<script th:src="@{${bootstrapJs}}"></script>
-	<script th:src="@{${cookieJs}}"></script>
-	<script th:if="${operatorEnabled}" th:src="@{/js/shiny.operator.js}"></script>
-	<script th:src="@{/js/shiny.api.js}"></script>
-	<script th:src="@{/js/shiny.common.js}"></script>
+    <title th:text="${title}"></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" media="screen" th:href="@{${bootstrapCss}}"/>
+    <link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
+    <script th:src="@{${jqueryJs}}"></script>
+    <script th:src="@{${bootstrapJs}}"></script>
+    <script th:src="@{${cookieJs}}"></script>
+    <script th:if="${operatorEnabled}" th:src="@{/js/shiny.operator.js}"></script>
+    <script th:src="@{/js/shiny.api.js}"></script>
+    <script th:src="@{/js/shiny.common.js}"></script>
 </head>
 <body>
-	<!-- navigation bar -->
-	<div th:replace="../fragments/navbar :: navbar"></div>
-	
-	<div id="new-version-banner" class="alert alert-info" role="alert" style="display:none;">
-		A new version of <span th:text="${application_name}"></span> is available <button id="new-version-btn" class="btn btn-default btn-sm" >Switch to new version!</button>
-	</div>
-	
-	<!-- content -->
-	<div th:if="${!displayAppLogos}" id="applist">
-		<ul>
-			<li th:each="app: ${apps}">
-				<a th:href="${@thymeleaf.getAppUrl(app)}" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
-				<br th:if="${app.description != null}" />
-				<span th:if="${app.description != null}" th:utext="${app.description}"></span>
-			</li>
-		</ul>
-	</div>
-    
-    <div th:if="${displayAppLogos}" class="container" id="applist">
-		<div class="row" style="margin-top:20px;" th:each="app: ${apps}">
-			<div class="col-md-6 col-md-offset-3">
-				<div class="media">
-					<div class="media-left">
-						<img th:if="${appLogos.get(app) != null}" th:src="${appLogos.get(app)}"></img>
-					</div>
-					<div class="media-body">
-						<a th:href="${@thymeleaf.getAppUrl(app)}" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
-						<br th:if="${app.description != null}" />
-						<span th:if="${app.description != null}" th:utext="${app.description}"></span>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+<!-- navigation bar -->
+<div th:replace="../fragments/navbar :: navbar"></div>
 
-	<script th:if="${operatorEnabled}" type="text/javascript" th:inline="javascript">
-		$(window).on('load', function() {
-			window.Shiny.common.init([[${contextPath}]], [[${application_name}]]);
-			window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorShowTransferMessage}]]);
-			window.Shiny.operator.start();
-		});
-	</script>
+<div id="new-version-banner" class="alert alert-info" role="alert" style="display:none;">
+    A new version of <span th:text="${application_name}"></span> is available
+    <button id="new-version-btn" class="btn btn-default btn-sm">Switch to new version!</button>
+</div>
+
+<!-- This is a fragment used to display a single app. -->
+<!-- Modify this in order to change how a single app looks. -->
+<th:block th:fragment="app(app)">
+    <th:block th:if="${app != null}">
+        <li th:if="${!displayAppLogos}">
+            <a th:href="${@thymeleaf.getAppUrl(app)}"
+               th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
+            <br th:if="${app.description != null}"/>
+            <span th:if="${app.description != null}" th:utext="${app.description}"></span>
+        </li>
+        <div th:if="${displayAppLogos}" class="row" style="margin-top:20px;">
+            <div class="col-md-6 col-md-offset-3">
+                <div class="media">
+                    <div class="media-left">
+                        <img th:if="${appLogos.get(app) != null}" th:src="${appLogos.get(app)}"></img>
+                    </div>
+                    <div class="media-body">
+                        <a th:href="${@thymeleaf.getAppUrl(app)}"
+                           th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
+                        <br th:if="${app.description != null}"/>
+                        <span th:if="${app.description != null}" th:utext="${app.description}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </th:block>
+</th:block>
+<!--End of the template.-->
+
+<!-- Part that shows a list when none of the apps contain a logo -->
+<div th:if="${!displayAppLogos}" id="applist">
+    <th:block th:each="group: ${templateGroups}">
+        <h2 th:text="${group.properties.get('display-name')}"></h2>
+        <ul>
+            <th:block th:each="app: ${groupedApps.get(group.id)}" th:include="index :: app(${app})"/>
+        </ul>
+        <br>
+    </th:block>
+    <th:block th:if="${ungroupedApps.size() > 0}">
+        <!-- Only show the "Other" header if there are other groups with apps -->
+        <h2 th:if="${groupedApps.size() > 0}">Other</h2>
+        <ul>
+            <th:block th:each="app: ${ungroupedApps}" th:include="index :: app(${app})"/>
+        </ul>
+    </th:block>
+</div>
+
+<!-- Part that shows a list when the apps contain a logo -->
+<div th:if="${displayAppLogos}" class="container" id="applist">
+    <th:block th:each="group: ${templateGroups}">
+        <div class="row" style="margin-top:20px;">
+            <div class="col-md-6 col-md-offset-3">
+                <h2 th:text="${group.properties.get('display-name')}"></h2>
+            </div>
+        </div>
+        <th:block th:each="app: ${groupedApps.get(group.id)}" th:include="index :: app(${app})"/>
+        <br>
+    </th:block>
+    <th:block th:if="${ungroupedApps.size() > 0}">
+        <div class="row" style="margin-top:20px;">
+            <div class="col-md-6 col-md-offset-3">
+                <!-- Only show the "Other" header if there are other groups with apps -->
+                <h2 th:if="${groupedApps.size() > 0}">Other</h2>
+            </div>
+        </div>
+        <th:block th:each="app: ${ungroupedApps}" th:include="index :: app(${app})"/>
+    </th:block>
+</div>
+
+
+<script th:if="${operatorEnabled}" type="text/javascript" th:inline="javascript">
+    $(window).on('load', function () {
+        window.Shiny.common.init([[${contextPath}]], [[${application_name}]]);
+        window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorShowTransferMessage}]]);
+        window.Shiny.operator.start();
+    });
+</script>
 </body>
 </html>

@@ -43,4 +43,20 @@ public class Thymeleaf {
         return builder.toUriString();
     }
 
+    public String getTemplateProperty(String specId, String property) {
+        ShinyProxySpecProvider.ShinyProxySpec shinyProxySpec = shinyProxySpecProvider.getShinyProxySpec(specId);
+        if (shinyProxySpec == null) {
+            return null;
+        }
+        return shinyProxySpec.getTemplateProperties().get(property);
+    }
+
+    public String getTemplateProperty(String specId, String property, String defaultValue) {
+        String res = getTemplateProperty(specId, property);
+        if (res != null) {
+            return res;
+        }
+        return defaultValue;
+    }
+
 }

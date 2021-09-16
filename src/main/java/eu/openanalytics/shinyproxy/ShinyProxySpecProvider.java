@@ -88,6 +88,10 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		return specs.stream().filter(s -> id.equals(s.getId())).findAny().orElse(null);
 	}
 
+	public ShinyProxySpec getShinyProxySpec(String specId) {
+		return shinyProxySpecs.get(specId);
+	}
+
 	public void setSpecs(List<ShinyProxySpec> specs) {
 		this.specs = specs.stream().map(s -> {
 			shinyProxySpecs.put(s.getId(), s);
@@ -257,6 +261,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private int port;
 		private String[] accessGroups;
 		private String templateGroup;
+		private Map<String, String> templateProperties = new HashMap<>();
 
 		public String getId() {
 			return id;
@@ -496,6 +501,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public String getTemplateGroup() {
 			return templateGroup;
+		}
+
+		public void setTemplateProperties(Map<String, String> templateProperties) {
+			this.templateProperties = templateProperties;
+		}
+
+		public Map<String, String> getTemplateProperties() {
+			return templateProperties;
 		}
 	}
 

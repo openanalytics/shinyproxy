@@ -124,10 +124,19 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		to.setKubernetesAdditionalManifests(from.getKubernetesAdditionalManifests());
 		to.setKubernetesAdditionalPersistentManifests(from.getKubernetesAdditionalPersistentManifests());
 
+		ProxyAccessControl acl = new ProxyAccessControl();
+		to.setAccessControl(acl);
+
 		if (from.getAccessGroups() != null && from.getAccessGroups().length > 0) {
-			ProxyAccessControl acl = new ProxyAccessControl();
 			acl.setGroups(from.getAccessGroups());
-			to.setAccessControl(acl);
+		}
+
+		if (from.getAccessUsers() != null && from.getAccessUsers().length > 0) {
+			acl.setUsers(from.getAccessUsers());
+		}
+
+		if (from.getAccessExpression() != null && from.getAccessExpression().length() > 0) {
+			acl.setExpression(from.getAccessExpression());
 		}
 
 		ContainerSpec cSpec = new ContainerSpec();
@@ -260,6 +269,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		private int port;
 		private String[] accessGroups;
+		private String[] accessUsers;
+		private String accessExpression;
 		private String templateGroup;
 		private Map<String, String> templateProperties = new HashMap<>();
 
@@ -509,6 +520,22 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public Map<String, String> getTemplateProperties() {
 			return templateProperties;
+		}
+
+		public String[] getAccessUsers() {
+			return accessUsers;
+		}
+
+		public void setAccessUsers(String[] accessUsers) {
+			this.accessUsers = accessUsers;
+		}
+
+		public String getAccessExpression() {
+			return accessExpression;
+		}
+
+		public void setAccessExpression(String accessExpression) {
+			this.accessExpression = accessExpression;
 		}
 	}
 

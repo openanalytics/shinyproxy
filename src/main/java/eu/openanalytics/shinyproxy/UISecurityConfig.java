@@ -20,20 +20,14 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import java.util.Arrays;
-
-import javax.inject.Inject;
-
-import org.springframework.core.env.Environment;
+import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
+import eu.openanalytics.containerproxy.security.ICustomSecurityConfig;
+import eu.openanalytics.containerproxy.service.UserService;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.stereotype.Component;
 
-import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
-import eu.openanalytics.containerproxy.model.spec.ProxySpec;
-import eu.openanalytics.containerproxy.security.ICustomSecurityConfig;
-import eu.openanalytics.containerproxy.service.ProxyService;
-import eu.openanalytics.containerproxy.service.UserService;
+import javax.inject.Inject;
 
 @Component
 public class UISecurityConfig implements ICustomSecurityConfig {
@@ -43,9 +37,6 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 	
 	@Inject
 	private UserService userService;
-	
-	@Inject
-	private ProxyService proxyService;
 
 	@Inject
 	private OperatorService operatorService;
@@ -55,15 +46,10 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 		if (auth.hasAuthorization()) {
 			
 			// Limit access to the app pages according to spec permissions
-			for (ProxySpec spec: proxyService.getProxySpecs(null, true)) {
-				if (spec.getAccessControl() == null) continue;
-				
-				String[] groups = spec.getAccessControl().getGroups();
-				if (groups == null || groups.length == 0) continue;
-				
-				String[] appGroups = Arrays.stream(groups).map(s -> s.toUpperCase()).toArray(i -> new String[i]);
-				http.authorizeRequests().antMatchers("/app/" + spec.getId()).hasAnyRole(appGroups);
-			}
+			http.authorizeRequests().antMatchers("/app/{specId}/**").access("@accessControlService.canAccess(authentication, #specId)");
+			http.authorizeRequests().antMatchers("/app_i/{specId}/**").access("@accessControlService.canAccess(authentication, #specId)");
+			http.authorizeRequests().antMatchers("/app_direct/{specId}/**").access("@accessControlService.canAccess(authentication, #specId)");
+			http.authorizeRequests().antMatchers("/app_direct_i/{specId}/**").access("@accessControlService.canAccess(authentication, #specId)");
 
 			// Limit access to the admin pages
 			http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminGroups());

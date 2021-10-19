@@ -63,6 +63,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 	private List<ProxySpec> specs = new ArrayList<>();
 	private Map<String, ShinyProxySpec> shinyProxySpecs = new HashMap<>();
+	private List<TemplateGroup> templateGroups = new ArrayList<>();
 
 	private static Environment environment;
 
@@ -87,11 +88,23 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		return specs.stream().filter(s -> id.equals(s.getId())).findAny().orElse(null);
 	}
 
+	public ShinyProxySpec getShinyProxySpec(String specId) {
+		return shinyProxySpecs.get(specId);
+	}
+
 	public void setSpecs(List<ShinyProxySpec> specs) {
 		this.specs = specs.stream().map(s -> {
 			shinyProxySpecs.put(s.getId(), s);
 			return ShinyProxySpecProvider.convert(s);
 		}).collect(Collectors.toList());
+	}
+
+	public void setTemplateGroups(List<TemplateGroup> templateGroups) {
+		this.templateGroups = templateGroups;
+	}
+
+	public List<TemplateGroup> getTemplateGroups() {
+		return templateGroups;
 	}
 
 	private static ProxySpec convert(ShinyProxySpec from) {
@@ -200,6 +213,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		return false;
 	}
 
+	public String getTemplateGroupOfApp(String specId) {
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
+		if (shinyProxySpec == null) {
+			return null;
+		}
+		return shinyProxySpec.getTemplateGroup();
+	}
+
 	public void postProcessRecoveredProxy(Proxy proxy) {
 		proxy.addRuntimeValues(getRuntimeValues(proxy.getSpec()));
 	}
@@ -239,6 +260,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		private int port;
 		private String[] accessGroups;
+		private String templateGroup;
+		private Map<String, String> templateProperties = new HashMap<>();
 
 		public String getId() {
 			return id;
@@ -471,5 +494,44 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		public void setMaxLifetime(Long maxLifetime) {
 			this.maxLifetime = maxLifetime;
 		}
+
+		public void setTemplateGroup(String templateGroup) {
+			this.templateGroup = templateGroup;
+		}
+
+		public String getTemplateGroup() {
+			return templateGroup;
+		}
+
+		public void setTemplateProperties(Map<String, String> templateProperties) {
+			this.templateProperties = templateProperties;
+		}
+
+		public Map<String, String> getTemplateProperties() {
+			return templateProperties;
+		}
 	}
+
+	public static class TemplateGroup {
+
+		private String id;
+		private Map<String, String> properties;
+
+		public Map<String, String> getProperties() {
+			return properties;
+		}
+
+		public void setProperties(Map<String, String> properties) {
+			this.properties = properties;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+	}
+
 }

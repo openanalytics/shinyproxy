@@ -115,6 +115,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		to.setLogoURL(from.getLogoURL());
 		to.setMaxLifeTime(from.getMaxLifetime());
 		to.setStopOnLogout(from.getStopOnLogout());
+		to.setHeartbeatTimeout(from.getHeartbeatTimeout());
+
 		if (from.getKubernetesPodPatches() != null) {
 			try {
 				to.setKubernetesPodPatches(from.getKubernetesPodPatches());
@@ -266,6 +268,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private Boolean hideNavbarOnMainPageLink;
 		private Long maxLifetime;
 		private Boolean stopOnLogout;
+		private Long heartbeatTimeout;
 
 		private Map<String,String> labels;
 
@@ -514,6 +517,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public void setStopOnLogout(Boolean stopOnLogout) {
 			this.stopOnLogout = stopOnLogout;
+		}
+
+		public void setHeartbeatTimeout(Long heartbeatTimeout) {
+			this.heartbeatTimeout = heartbeatTimeout;
+		}
+
+		public Long getHeartbeatTimeout() {
+			return heartbeatTimeout;
 		}
 
 		public void setTemplateGroup(String templateGroup) {

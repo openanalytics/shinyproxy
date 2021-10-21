@@ -114,6 +114,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		to.setDescription(from.getDescription());
 		to.setLogoURL(from.getLogoURL());
 		to.setMaxLifeTime(from.getMaxLifetime());
+		to.setStopOnLogout(from.getStopOnLogout());
 		if (from.getKubernetesPodPatches() != null) {
 			try {
 				to.setKubernetesPodPatches(from.getKubernetesPodPatches());
@@ -264,6 +265,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private Integer maxInstances;
 		private Boolean hideNavbarOnMainPageLink;
 		private Long maxLifetime;
+		private Boolean stopOnLogout;
 
 		private Map<String,String> labels;
 
@@ -504,6 +506,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public void setMaxLifetime(Long maxLifetime) {
 			this.maxLifetime = maxLifetime;
+		}
+
+		public Boolean getStopOnLogout() {
+			return stopOnLogout;
+		}
+
+		public void setStopOnLogout(Boolean stopOnLogout) {
+			this.stopOnLogout = stopOnLogout;
 		}
 
 		public void setTemplateGroup(String templateGroup) {

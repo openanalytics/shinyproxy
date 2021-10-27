@@ -21,7 +21,7 @@
 Shiny = window.Shiny || {};
 Shiny.api = {
     getProxies: function (cb, cb_fail) {
-        $.get(Shiny.common.staticState.contextPath + "api/proxy", function (proxies) {
+        $.get(Shiny.common.staticState.contextPath + "api/proxy?only_owned_proxies=true", function (proxies) {
             cb(proxies);
         }).fail(function (response) {
             cb_fail(response);

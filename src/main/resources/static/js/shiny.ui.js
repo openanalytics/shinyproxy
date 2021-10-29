@@ -112,6 +112,10 @@ Shiny.ui = {
         $('#appStopped').show();
     },
 
+    redirectToLogin: function() {
+        window.location.href = Shiny.common.staticState.contextPath;
+    },
+
     hideInstanceModal: function() {
         $('#switchInstancesModal').modal('hide');
     },

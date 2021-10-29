@@ -92,6 +92,7 @@ Shiny.operator = {
         // only show the message if the option is enabled
         if (Shiny.operator.staticState.showTransferMessage) {
             document.getElementById('new-version-banner').style.display = "block";
+            document.getElementById('loading').style.top = "200px";
         }
     },
 

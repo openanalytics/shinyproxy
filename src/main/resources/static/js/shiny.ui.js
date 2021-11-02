@@ -113,7 +113,10 @@ Shiny.ui = {
     },
 
     redirectToLogin: function() {
-        window.location.href = Shiny.common.staticState.contextPath;
+        if (!Shiny.app.runtimeState.navigatingAway) {
+            // only redirect to login when not navigating away, e.g. when logging out
+            window.location.href = Shiny.common.staticState.contextPath;
+        }
     },
 
     hideInstanceModal: function() {

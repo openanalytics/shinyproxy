@@ -21,14 +21,12 @@
 package eu.openanalytics.shinyproxy.controllers;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
-import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.containerproxy.service.ProxyService;
 import eu.openanalytics.containerproxy.service.UserService;
+import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,14 +34,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.inject.Inject;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.HashMap;
 
 @Controller
-public class HeartbeatController implements AuthenticationEntryPoint {
+public class HeartbeatController {
 
     @Inject
     private HeartbeatService heartbeatService;
@@ -82,14 +76,4 @@ public class HeartbeatController implements AuthenticationEntryPoint {
         }});
     }
 
-    /**
-     * Special handler for the Heartbeat endpoint when the user is not authenticated.
-     * Instead of redirecting the user to the login form/URL we send a special message that can be used by the UI
-     * in order to properly handle a logout from a different tab (in case when an app keeps running even when the user logs out).
-     */
-    @Override
-    public void commence(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, AuthenticationException e) throws IOException, ServletException {
-        httpServletResponse.setStatus(401);
-        httpServletResponse.getWriter().write("{\"status\":\"error\", \"message\":\"authentication_required\"}");
-    }
 }

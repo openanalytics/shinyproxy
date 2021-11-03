@@ -112,10 +112,14 @@ Shiny.ui = {
         $('#appStopped').show();
     },
 
-    redirectToLogin: function() {
+    showLoggedOutPage: function() {
         if (!Shiny.app.runtimeState.navigatingAway) {
-            // only redirect to login when not navigating away, e.g. when logging out
-            window.location.href = Shiny.common.staticState.contextPath;
+            // only show it when not navigating away, e.g. when logging out in the current tab
+            $('#shinyframe').remove();
+            $("#reconnecting").hide();
+            $('#switchInstancesModal').modal('hide')
+            $("#navbar").hide();
+            $('#userLoggedOut').show();
         }
     },
 

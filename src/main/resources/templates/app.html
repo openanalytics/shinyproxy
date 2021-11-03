@@ -65,7 +65,7 @@
 		<div class="loading-txt">
 			Failed to reload <span th:text="${appTitle}"></span><br><br>
 			<span class="refreshButton">
-				<button onClick="window.location.reload()">Refresh page</button>
+				<button onClick="window.location.reload()" class="btn btn-default">Refresh page</button>
 			</span>
 		</div>
 	</div>
@@ -73,7 +73,15 @@
 		<div class="loading-txt">
 			This app has been stopped, you can now close this tab.<br><br>
 			<span class="refreshButton">
-				<button onClick="window.location.reload()">Restart app</button>
+				<button onClick="window.location.reload()" class="btn btn-default">Restart app</button>
+			</span>
+		</div>
+	</div>
+	<div id="userLoggedOut" class="loading">
+		<div class="loading-txt">
+			You logged out using another browser tab, you can now close this tab.<br><br>
+			<span class="refreshButton">
+				<a th:href="@{/}" class="btn btn-default">Login again</a>
 			</span>
 		</div>
 	</div>

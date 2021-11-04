@@ -39,10 +39,22 @@ Shiny.instances = {
             clearInterval(Shiny.instances._refreshIntervalId);
         },
         onDeleteInstance: function (instanceName) {
+            // this function can be called with one of:
+            // - no argument (i.e. undefined) -> the current instance
+            // - `_` or `Default` -> both represent the default instance
+            // - any other name of an instance
+
             if (instanceName === undefined) {
                 instanceName = Shiny.app.staticState.appInstanceName;
             }
-            if (confirm("Are you sure you want to delete instance \"" +  instanceName + "\"?")) {
+
+            // show `_` as `Default` in the confirmation message
+            var displayName = instanceName;
+            if (displayName === "_") {
+                displayName = "Default";
+            }
+
+            if (confirm("Are you sure you want to delete instance \"" +  displayName + "\"?")) {
                 Shiny.instances._deleteInstance(instanceName, function () {
                     if (instanceName === "Default") {
                         instanceName = "_";

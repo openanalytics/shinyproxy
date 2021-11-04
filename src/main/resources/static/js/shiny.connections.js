@@ -295,8 +295,8 @@ Shiny.connections = {
                                     response.clone().json().then(function(clonedResponse) {
                                         if (clonedResponse.status === "error" && clonedResponse.message === "app_stopped_or_non_existent") {
                                             window.__shinyProxyParent.ui.showStoppedPage();
-                                        } else if (clonedResponse.status === "error" && clonedResponse.message === "authentication_required") {
-                                            window.__shinyProxyParent.ui.redirectToLogin();
+                                        } else if (clonedResponse.status === "error" && clonedResponse.message === "shinyproxy_authentication_required") {
+                                            window.__shinyProxyParent.ui.showLoggedOutPage();
                                         }
                                     });
                                 }
@@ -331,9 +331,9 @@ Shiny.connections = {
                             if (res !== null && res.status === "error" && res.message === "app_stopped_or_non_existent") {
                                 // app stopped
                                 window.__shinyProxyParent.ui.showStoppedPage();
-                            } else if (res !== null && res.status === "error" && res.message === "authentication_required") {
+                            } else if (res !== null && res.status === "error" && res.message === "shinyproxy_authentication_required") {
                                 // app stopped
-                                window.__shinyProxyParent.ui.redirectToLogin();
+                                window.__shinyProxyParent.ui.showLoggedOutPage();
                             }
                         }
                     });
@@ -451,8 +451,8 @@ Shiny.connections = {
                         if (res.message === "app_stopped_or_non_existent") {
                             cb(true);
                             return;
-                        } else if (res.message === "authentication_required") {
-                            Shiny.ui.redirectToLogin();
+                        } else if (res.message === "shinyproxy_authentication_required") {
+                            Shiny.ui.showLoggedOutPage();
                             // never call call-back, but just redirect to login page
                             return;
                         }

@@ -25,6 +25,7 @@ import eu.openanalytics.containerproxy.security.ICustomSecurityConfig;
 import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.shinyproxy.controllers.HeartbeatController;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.stereotype.Component;
@@ -43,9 +44,6 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 	@Inject
 	private OperatorService operatorService;
 
-	@Inject
-	private HeartbeatController heartbeatController;
-
 	@Override
 	public void apply(HttpSecurity http) throws Exception {
 		if (auth.hasAuthorization()) {
@@ -59,8 +57,7 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 			// Limit access to the admin pages
 			http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminGroups());
 
-			// Add special handler for unAuthenticated users to the heartbeat endpoint
-			http.exceptionHandling().defaultAuthenticationEntryPointFor(heartbeatController, new AntPathRequestMatcher("/heartbeat/**", "POST"));
+			http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
 		}
 
 		if (operatorService.isEnabled()) {
@@ -68,5 +65,6 @@ public class UISecurityConfig implements ICustomSecurityConfig {
             http.addFilterAfter(new OperatorCookieFilter(), AnonymousAuthenticationFilter.class);
             http.authorizeRequests().antMatchers("/server-transfer").permitAll();
         }
+
 	}
 }

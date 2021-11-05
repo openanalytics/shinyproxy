@@ -24,39 +24,112 @@
 <html xmlns:th="http://www.thymeleaf.org"
 	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head lang="en">
-	<title th:text="${appTitle}"></title>
+	<title th:text="${appTitle} + ' - ' + ${appInstanceDisplayName}"></title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<link rel="stylesheet" media="screen" th:href="@{${bootstrapCss}}" />
 	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
 	<script th:src="@{${jqueryJs}}"></script>
 	<script th:src="@{${bootstrapJs}}"></script>
+	<script th:src="@{${handlebars}}"></script>
+	<script th:src="@{${cookieJs}}"></script>
+	<script th:src="@{/js/shiny.app.js}"></script>
+	<script th:src="@{/js/shiny.api.js}"></script>
+	<script th:src="@{/js/shiny.connections.js}"></script>
+	<script th:src="@{/js/shiny.instances.js}"></script>
+	<script th:src="@{/js/shiny.ui.js}"></script>
+	<script th:src="@{/js/shiny.common.js}"></script>
+	<script th:if="${operatorEnabled}" th:src="@{/js/shiny.operator.js}"></script>
+	<script th:src="@{/handlebars/precompiled.js}"></script>
 </head>
-<body>
+<body id="appPage">
 	<div th:replace="../fragments/navbar :: navbar"></div>
-	
-    <iframe id="shinyframe" th:src="${container}" width="100%" frameBorder="0"></iframe>
-    <div class="loading"><div class="loading-txt">Launching <span th:text="${appTitle}"></span>...</div></div>
-    
+
+    <div id="iframeinsert"></div>
+	<div id="new-version-banner" class="alert alert-info" role="alert" style="display:none;">
+		<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+		A new version of <span th:text="${application_name}"></span> is available <button id="new-version-btn" class="btn btn-default btn-sm" >Switch to new version!</button>
+	</div>
+    <div id="loading" class="loading loading-img"><div class="loading-txt">Launching <span th:text="${appTitle}"></span>...</div></div>
+	<div id="reconnecting" class="loading loading-img">
+		<div class="loading-txt">
+			Reconnecting to <span th:text="${appTitle}"></span>...
+			<span class="retryingDetails">
+				<br>
+				Attempt <span class="reloadAttempts"></span>/<span class="maxReloadAttempts"></span>
+				<br>
+				Retrying <span id="retryInXSeconds">in <span class="retrySeconds"></span></span><span id="retryNow">now</span>
+			</span>
+		</div>
+	</div>
+	<div id="reloadFailed" class="loading loading-img">
+		<div class="loading-txt">
+			Failed to reload <span th:text="${appTitle}"></span><br><br>
+			<span class="refreshButton">
+				<button onClick="window.location.reload()" class="btn btn-default">Refresh page</button>
+			</span>
+		</div>
+	</div>
+	<div id="appStopped" class="loading">
+		<div class="loading-txt">
+			This app has been stopped, you can now close this tab.<br><br>
+			<span class="refreshButton">
+				<button onClick="window.location.reload()" class="btn btn-default">Restart app</button>
+			</span>
+		</div>
+	</div>
+	<div id="userLoggedOut" class="loading">
+		<div class="loading-txt">
+			You logged out using another browser tab, you can now close this tab.<br><br>
+			<span class="refreshButton">
+				<a th:href="@{/}" class="btn btn-default">Login again</a>
+			</span>
+		</div>
+	</div>
+
+	<div class="modal fade" id="switchInstancesModal" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h4 class="modal-title">Switch instance</h4>
+				</div>
+				<div class="modal-body">
+					<div id="appInstances">
+					</div>
+					<form id="newInstanceForm" class="form-inline">
+						<div class="form-group">
+						<label for="instanceNameField"><span class="glyphicon glyphicon-chat"></span>Name of new instance:</label><br>
+						<div class="input-group">
+							<input class="form-control" id="instanceNameField" type="text">
+							<button type="submit" class="btn btn-default btn-success">Start</button>
+						</div>
+						</div>
+					</form>
+					Max instances: <span id="maxInstances"></span>, used: <span id="usedInstances"></span>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<script type="text/javascript" th:inline="javascript">
-		function setShinyframeHeight() {
-			$('#shinyframe').css('height', ($(window).height())+'px');
-		}
-		window.addEventListener("load", setShinyframeHeight);
-		window.addEventListener("resize",  setShinyframeHeight);
-		
 		$(window).on('load', function() {
-			var source = $("#shinyframe").attr("src");
-			if (source == "") {
-				$(".loading").show();
-				$.post(window.location.pathname + window.location.search, function(response) {
-					$("#shinyframe").attr("src", response.containerPath);
-					$(".loading").fadeOut("slow");
-				}).fail(function(request) {
-					var newDoc = document.open("text/html", "replace");
-					newDoc.write(request.responseText);
-					newDoc.close();
-				});
+		    window.Shiny.common.init([[${contextPath}]], [[${application_name}]]);
+			if ([[${operatorEnabled}]]) {
+				window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorShowTransferMessage}]]);
 			}
+			window.Shiny.app.start(
+					[[${containerPath}]],
+					[[${webSocketReconnectionMode}]],
+					[[${proxyId}]],
+					[[${heartbeatRate}]],
+					[[${appName}]],
+					[[${appInstance}]],
+					[[${maxInstances}]],
+					[[${shinyForceFullReload}]],
+			);
 		});
 	</script>
 </body>

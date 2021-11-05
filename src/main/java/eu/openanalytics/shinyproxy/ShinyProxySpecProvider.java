@@ -20,7 +20,6 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,17 +28,19 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 
-import eu.openanalytics.containerproxy.util.SessionHelper;
+import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
+import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
+import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
+import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.springframework.beans.factory.annotation.Autowired;
+import eu.openanalytics.shinyproxy.runtimevalues.WebsocketReconnectionMode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 
 import eu.openanalytics.containerproxy.model.spec.ContainerSpec;
 import eu.openanalytics.containerproxy.model.spec.ProxyAccessControl;
@@ -50,7 +51,7 @@ import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
  * This component converts proxy specs from the 'ShinyProxy notation' into the 'ContainerProxy' notation.
  * ShinyProxy notation is slightly more compact, and omits several things that Shiny apps do not need,
  * such as definition of multiple containers.
- * 
+ *
  * Also, if no port is specified, a port mapping is automatically created for Shiny port 3838.
  */
 @Component
@@ -58,46 +59,64 @@ import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
 @ConfigurationProperties(prefix = "proxy")
 public class ShinyProxySpecProvider implements IProxySpecProvider {
 
+	private static final String PROP_DEFAULT_MAX_INSTANCES = "proxy.default-max-instances";
+
 	private List<ProxySpec> specs = new ArrayList<>();
-	
+	private Map<String, ShinyProxySpec> shinyProxySpecs = new HashMap<>();
+	private List<TemplateGroup> templateGroups = new ArrayList<>();
+
 	private static Environment environment;
 
 	@Autowired
 	public void setEnvironment(Environment env){
 		ShinyProxySpecProvider.environment = env;
 	}
-	
+
 	@PostConstruct
 	public void afterPropertiesSet() {
 		this.specs.stream().collect(Collectors.groupingBy(ProxySpec::getId)).forEach((id, duplicateSpecs) -> {
 			if (duplicateSpecs.size() > 1) throw new IllegalArgumentException(String.format("Configuration error: spec with id '%s' is defined multiple times", id));
 		});
 	}
-	
+
 	public List<ProxySpec> getSpecs() {
 		return new ArrayList<>(specs);
 	}
-	
+
 	public ProxySpec getSpec(String id) {
 		if (id == null || id.isEmpty()) return null;
 		return specs.stream().filter(s -> id.equals(s.getId())).findAny().orElse(null);
 	}
-	
-	public void setSpecs(List<ShinyProxySpec> specs) {
-		this.specs = specs.stream().map(ShinyProxySpecProvider::convert).collect(Collectors.toList());
+
+	public ShinyProxySpec getShinyProxySpec(String specId) {
+		return shinyProxySpecs.get(specId);
 	}
 
-	private static String getPublicPath(String appName) {
-		String contextPath = SessionHelper.getContextPath(environment, true);
-		return contextPath + "app_direct/" + appName + "/";
+	public void setSpecs(List<ShinyProxySpec> specs) {
+		this.specs = specs.stream().map(s -> {
+			shinyProxySpecs.put(s.getId(), s);
+			return ShinyProxySpecProvider.convert(s);
+		}).collect(Collectors.toList());
 	}
-	
+
+	public void setTemplateGroups(List<TemplateGroup> templateGroups) {
+		this.templateGroups = templateGroups;
+	}
+
+	public List<TemplateGroup> getTemplateGroups() {
+		return templateGroups;
+	}
+
 	private static ProxySpec convert(ShinyProxySpec from) {
 		ProxySpec to = new ProxySpec();
 		to.setId(from.getId());
 		to.setDisplayName(from.getDisplayName());
 		to.setDescription(from.getDescription());
 		to.setLogoURL(from.getLogoURL());
+		to.setMaxLifeTime(from.getMaxLifetime());
+		to.setStopOnLogout(from.getStopOnLogout());
+		to.setHeartbeatTimeout(from.getHeartbeatTimeout());
+
 		if (from.getKubernetesPodPatches() != null) {
 			try {
 				to.setKubernetesPodPatches(from.getKubernetesPodPatches());
@@ -106,25 +125,27 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			}
 		}
 		to.setKubernetesAdditionalManifests(from.getKubernetesAdditionalManifests());
-		
+		to.setKubernetesAdditionalPersistentManifests(from.getKubernetesAdditionalPersistentManifests());
+
+		ProxyAccessControl acl = new ProxyAccessControl();
+		to.setAccessControl(acl);
+
 		if (from.getAccessGroups() != null && from.getAccessGroups().length > 0) {
-			ProxyAccessControl acl = new ProxyAccessControl();
 			acl.setGroups(from.getAccessGroups());
-			to.setAccessControl(acl);
 		}
-		
+
+		if (from.getAccessUsers() != null && from.getAccessUsers().length > 0) {
+			acl.setUsers(from.getAccessUsers());
+		}
+
+		if (from.getAccessExpression() != null && from.getAccessExpression().length() > 0) {
+			acl.setExpression(from.getAccessExpression());
+		}
+
 		ContainerSpec cSpec = new ContainerSpec();
 		cSpec.setImage(from.getContainerImage());
 		cSpec.setCmd(from.getContainerCmd());
-
-		Map<String, String> env = from.getContainerEnv();
-		if (env == null) {
-			env = new HashMap<>();
-		}
-
-		env.put("SHINYPROXY_PUBLIC_PATH", getPublicPath(from.getId()));
-		cSpec.setEnv(env);
-
+		cSpec.setEnv(from.getContainerEnv());
 		cSpec.setEnvFile(from.getContainerEnvFile());
 		cSpec.setNetwork(from.getContainerNetwork());
 		cSpec.setNetworkConnections(from.getContainerNetworkConnections());
@@ -136,7 +157,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		cSpec.setCpuLimit(from.getContainerCpuLimit());
 		cSpec.setPrivileged(from.isContainerPrivileged());
 		cSpec.setLabels(from.getLabels());
-		
+		cSpec.setTargetPath(from.getTargetPath());
+
 		Map<String, Integer> portMapping = new HashMap<>();
 		if (from.getPort() > 0) {
 			portMapping.put("default", from.getPort());
@@ -144,19 +166,84 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			portMapping.put("default", 3838);
 		}
 		cSpec.setPortMapping(portMapping);
-		
+
 		to.setContainerSpecs(Collections.singletonList(cSpec));
-		
+
 		return to;
 	}
-	
+
+
+	public List<RuntimeValue> getRuntimeValues(ProxySpec proxy) {
+		List<RuntimeValue> runtimeValues = new ArrayList<>();
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(proxy.getId());
+
+		WebsocketReconnectionMode webSocketReconnectionMode = shinyProxySpec.getWebsocketReconnectionMode();
+		if (webSocketReconnectionMode == null) {
+			runtimeValues.add(new RuntimeValue(WebSocketReconnectionModeKey.inst, environment.getProperty("proxy.default-websocket-reconnection-mode", WebsocketReconnectionMode.class, WebsocketReconnectionMode.None)));
+		} else {
+			runtimeValues.add(new RuntimeValue(WebSocketReconnectionModeKey.inst, webSocketReconnectionMode));
+		}
+
+		runtimeValues.add(new RuntimeValue(MaxInstancesKey.inst, getMaxInstancesForSpec(proxy.getId())));
+		runtimeValues.add(new RuntimeValue(ShinyForceFullReloadKey.inst, getShinyForceFullReload(proxy.getId())));
+
+		return runtimeValues;
+	}
+
+	public Integer getMaxInstancesForSpec(String specId) {
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
+		if (shinyProxySpec == null) {
+			return null;
+		}
+		Integer defaultMaxInstances = environment.getProperty(PROP_DEFAULT_MAX_INSTANCES, Integer.class, 1);
+		Integer maxInstances = shinyProxySpec.getMaxInstances();
+		if (maxInstances != null) {
+            return shinyProxySpec.getMaxInstances();
+		}
+		return defaultMaxInstances;
+	}
+
+	public Boolean getShinyForceFullReload(String specId) {
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
+		if (shinyProxySpec == null) {
+			return null;
+		}
+		if (shinyProxySpec.getShinyForceFullReload() != null) {
+			return shinyProxySpec.getShinyForceFullReload();
+		}
+		return false;
+	}
+
+	public Boolean getHideNavbarOnMainPageLink(String specId) {
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
+		if (shinyProxySpec == null) {
+			return null;
+		}
+		if (shinyProxySpec.getHideNavbarOnMainPageLink() != null) {
+			return shinyProxySpec.getHideNavbarOnMainPageLink();
+		}
+		return false;
+	}
+
+	public String getTemplateGroupOfApp(String specId) {
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
+		if (shinyProxySpec == null) {
+			return null;
+		}
+		return shinyProxySpec.getTemplateGroup();
+	}
+
+	public void postProcessRecoveredProxy(Proxy proxy) {
+		proxy.addRuntimeValues(getRuntimeValues(proxy.getSpec()));
+	}
+
 	public static class ShinyProxySpec {
-		
+
 		private String id;
 		private String displayName;
 		private String description;
 		private String logoURL;
-		
+
 		private String containerImage;
 		private String[] containerCmd;
 		private Map<String,String> containerEnv;
@@ -172,11 +259,25 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private boolean containerPrivileged;
 		private String kubernetesPodPatches;
 		private List<String> kubernetesAdditionalManifests = new ArrayList<>();
-		
+		private List<String> kubernetesAdditionalPersistentManifests = new ArrayList<>();
+
+		private String targetPath;
+		private WebsocketReconnectionMode websocketReconnectionMode;
+		private Boolean shinyForceFullReload;
+		private Integer maxInstances;
+		private Boolean hideNavbarOnMainPageLink;
+		private Long maxLifetime;
+		private Boolean stopOnLogout;
+		private Long heartbeatTimeout;
+
 		private Map<String,String> labels;
-		
+
 		private int port;
 		private String[] accessGroups;
+		private String[] accessUsers;
+		private String accessExpression;
+		private String templateGroup;
+		private Map<String, String> templateProperties = new HashMap<>();
 
 		public String getId() {
 			return id;
@@ -317,19 +418,19 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		public Map<String, String> getLabels() {
 			return labels;
 		}
-		
+
 		public void setLabels(Map<String, String> labels) {
 			this.labels = labels;
 		}
-		
+
 		public int getPort() {
 			return port;
 		}
-		
+
 		public void setPort(int port) {
 			this.port = port;
 		}
-		
+
 		public String[] getAccessGroups() {
 			return accessGroups;
 		}
@@ -345,7 +446,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		public void setKubernetesPodPatches(String kubernetesPodPatches) {
 			this.kubernetesPodPatches = kubernetesPodPatches;
 		}
-		
+
 		public void setKubernetesAdditionalManifests(List<String> manifests) {
 			this.kubernetesAdditionalManifests = manifests;
 		}
@@ -353,5 +454,132 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		public List<String> getKubernetesAdditionalManifests() {
 			return kubernetesAdditionalManifests;
 		}
+
+		public void setKubernetesAdditionalPersistentManifests(List<String> manifests) {
+			this.kubernetesAdditionalPersistentManifests = manifests;
+		}
+
+		public List<String> getKubernetesAdditionalPersistentManifests() {
+			return kubernetesAdditionalPersistentManifests;
+                }
+
+		public String getTargetPath() {
+			return targetPath;
+		}
+
+		public void setTargetPath(String targetPath) {
+			this.targetPath = targetPath;
+		}
+
+		public WebsocketReconnectionMode getWebsocketReconnectionMode() {
+			return websocketReconnectionMode;
+		}
+
+		public void setWebsocketReconnectionMode(WebsocketReconnectionMode websocketReconnectionMode) {
+			this.websocketReconnectionMode = websocketReconnectionMode;
+		}
+
+		public Boolean getShinyForceFullReload() {
+			return shinyForceFullReload;
+		}
+
+		public void setShinyForceFullReload(Boolean shinyForceFullReload) {
+			this.shinyForceFullReload = shinyForceFullReload;
+		}
+
+		public Integer getMaxInstances() {
+			return maxInstances;
+		}
+
+		public void setMaxInstances(Integer maxInstances) {
+			this.maxInstances = maxInstances;
+		}
+
+		public Boolean getHideNavbarOnMainPageLink() {
+			return hideNavbarOnMainPageLink;
+		}
+
+		public void setHideNavbarOnMainPageLink(Boolean hideNavbarOnMainPageLink) {
+			this.hideNavbarOnMainPageLink = hideNavbarOnMainPageLink;
+		}
+
+		public Long getMaxLifetime() {
+			return maxLifetime;
+		}
+
+		public void setMaxLifetime(Long maxLifetime) {
+			this.maxLifetime = maxLifetime;
+		}
+
+		public Boolean getStopOnLogout() {
+			return stopOnLogout;
+		}
+
+		public void setStopOnLogout(Boolean stopOnLogout) {
+			this.stopOnLogout = stopOnLogout;
+		}
+
+		public void setHeartbeatTimeout(Long heartbeatTimeout) {
+			this.heartbeatTimeout = heartbeatTimeout;
+		}
+
+		public Long getHeartbeatTimeout() {
+			return heartbeatTimeout;
+		}
+
+		public void setTemplateGroup(String templateGroup) {
+			this.templateGroup = templateGroup;
+		}
+
+		public String getTemplateGroup() {
+			return templateGroup;
+		}
+
+		public void setTemplateProperties(Map<String, String> templateProperties) {
+			this.templateProperties = templateProperties;
+		}
+
+		public Map<String, String> getTemplateProperties() {
+			return templateProperties;
+		}
+
+		public String[] getAccessUsers() {
+			return accessUsers;
+		}
+
+		public void setAccessUsers(String[] accessUsers) {
+			this.accessUsers = accessUsers;
+		}
+
+		public String getAccessExpression() {
+			return accessExpression;
+		}
+
+		public void setAccessExpression(String accessExpression) {
+			this.accessExpression = accessExpression;
+		}
 	}
+
+	public static class TemplateGroup {
+
+		private String id;
+		private Map<String, String> properties;
+
+		public Map<String, String> getProperties() {
+			return properties;
+		}
+
+		public void setProperties(Map<String, String> properties) {
+			this.properties = properties;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+	}
+
 }

@@ -31,6 +31,7 @@ import javax.annotation.PostConstruct;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
+import eu.openanalytics.containerproxy.model.spec.DockerSwarmSecret;
 import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
 import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
@@ -158,6 +159,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		cSpec.setPrivileged(from.isContainerPrivileged());
 		cSpec.setLabels(from.getLabels());
 		cSpec.setTargetPath(from.getTargetPath());
+		cSpec.setDockerSwarmSecrets(from.getDockerSwarmSecrets());
 
 		Map<String, Integer> portMapping = new HashMap<>();
 		if (from.getPort() > 0) {
@@ -260,6 +262,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private String kubernetesPodPatches;
 		private List<String> kubernetesAdditionalManifests = new ArrayList<>();
 		private List<String> kubernetesAdditionalPersistentManifests = new ArrayList<>();
+		private List<DockerSwarmSecret> dockerSwarmSecrets = new ArrayList<>();
 
 		private String targetPath;
 		private WebsocketReconnectionMode websocketReconnectionMode;
@@ -557,6 +560,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public void setAccessExpression(String accessExpression) {
 			this.accessExpression = accessExpression;
+		}
+
+		public List<DockerSwarmSecret> getDockerSwarmSecrets() {
+			return dockerSwarmSecrets;
+		}
+
+		public void setDockerSwarmSecrets(List<DockerSwarmSecret> dockerSwarmSecrets) {
+			this.dockerSwarmSecrets = dockerSwarmSecrets;
 		}
 	}
 

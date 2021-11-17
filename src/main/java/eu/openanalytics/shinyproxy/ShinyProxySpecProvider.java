@@ -160,6 +160,9 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		cSpec.setLabels(from.getLabels());
 		cSpec.setTargetPath(from.getTargetPath());
 		cSpec.setDockerSwarmSecrets(from.getDockerSwarmSecrets());
+		cSpec.setDockerSwarmRegistryDomain(from.getDockerSwarmRegistryDomain());
+		cSpec.setDockerSwarmRegistryUsername(from.getDockerSwarmRegistryUsername());
+		cSpec.setDockerSwarmRegistryPassword(from.getDockerSwarmRegistryPassword());
 
 		Map<String, Integer> portMapping = new HashMap<>();
 		if (from.getPort() > 0) {
@@ -263,6 +266,9 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private List<String> kubernetesAdditionalManifests = new ArrayList<>();
 		private List<String> kubernetesAdditionalPersistentManifests = new ArrayList<>();
 		private List<DockerSwarmSecret> dockerSwarmSecrets = new ArrayList<>();
+		private String dockerSwarmRegistryDomain;
+		private String dockerSwarmRegistryUsername;
+		private String dockerSwarmRegistryPassword;
 
 		private String targetPath;
 		private WebsocketReconnectionMode websocketReconnectionMode;
@@ -568,6 +574,30 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public void setDockerSwarmSecrets(List<DockerSwarmSecret> dockerSwarmSecrets) {
 			this.dockerSwarmSecrets = dockerSwarmSecrets;
+		}
+
+		public String getDockerSwarmRegistryDomain() {
+			return dockerSwarmRegistryDomain;
+		}
+
+		public void setDockerSwarmRegistryDomain(String dockerSwarmRegistryDomain) {
+			this.dockerSwarmRegistryDomain = dockerSwarmRegistryDomain;
+		}
+
+		public String getDockerSwarmRegistryUsername() {
+			return dockerSwarmRegistryUsername;
+		}
+
+		public void setDockerSwarmRegistryUsername(String dockerSwarmRegistryUsername) {
+			this.dockerSwarmRegistryUsername = dockerSwarmRegistryUsername;
+		}
+
+		public String getDockerSwarmRegistryPassword() {
+			return dockerSwarmRegistryPassword;
+		}
+
+		public void setDockerSwarmRegistryPassword(String dockerSwarmRegistryPassword) {
+			this.dockerSwarmRegistryPassword = dockerSwarmRegistryPassword;
 		}
 	}
 

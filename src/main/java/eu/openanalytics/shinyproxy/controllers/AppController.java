@@ -111,9 +111,16 @@ public class AppController extends BaseController {
 			// This parameter is only added by ShinyProxy when using the /app end point (not using the /app_direct) endpoint.
 			// If the parameter is included and no proxy is found, we return an error instead of starting the app.
 			// This way the client (i.e. ShinyProxy) knows that the app has been stopped (e.g. in a different tab).
-		    response.setStatus(410);
-		    response.getWriter().write("{\"status\":\"error\", \"message\":\"app_stopped_or_non_existent\"}");
-		    return;
+			response.setStatus(410);
+			response.getWriter().write("{\"status\":\"error\", \"message\":\"app_stopped_or_non_existent\"}");
+			return;
+		} else if (proxy != null && appRequestInfo.getProxyIdHint() != null && !proxy.getId().equals(appRequestInfo.getProxyIdHint())) {
+			// the proxy was restarted by the client before the client was aware that the app was stopped externally
+			// therefore the proxy_id_hints are different.
+			proxyService.stopProxy(proxy, true, false);
+			response.setStatus(410);
+			response.getWriter().write("{\"status\":\"error\", \"message\":\"app_stopped_or_non_existent\"}");
+			return;
 		} else {
 			proxy = getOrStart(appRequestInfo);
 			awaitReady(proxy);

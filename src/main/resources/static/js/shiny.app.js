@@ -81,7 +81,7 @@ Shiny.app = {
                     Shiny.ui.showFrame();
                     Shiny.connections.startHeartBeats();
                 }).fail(function (request) {
-                    if (!Shiny.app.runtimeState.navigatingAway) {
+                    if (!Shiny.app.runtimeState.navigatingAway && !Shiny.app.runtimeState.appStopped) {
                         var newDoc = document.open("text/html", "replace");
                         newDoc.write(request.responseText);
                         newDoc.close();

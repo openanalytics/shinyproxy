@@ -107,6 +107,7 @@ Shiny.ui = {
 
     showStoppedPage: function() {
         $('#shinyframe').remove();
+        $("#loading").hide();
         $("#reconnecting").hide();
         $('#switchInstancesModal').modal('hide')
         $('#appStopped').show();

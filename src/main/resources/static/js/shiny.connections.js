@@ -28,6 +28,7 @@ Shiny.connections = {
      * in the last `Shiny.heartBeatRate` milliseconds.
      */
     startHeartBeats: function () {
+        Shiny.connections.sendHeartBeat(); // send heartbeat right after loading app to validate the app is working
         setInterval(function () {
             if (Shiny.app.runtimeState.appStopped) {
                 return;
@@ -35,12 +36,36 @@ Shiny.connections = {
             if (!Shiny.connections._webSocketConnectionIsOpen()) {
                 var lastHeartbeat = Date.now() - Shiny.app.runtimeState.lastHeartbeatTime;
                 if (lastHeartbeat > Shiny.app.staticState.heartBeatRate && Shiny.app.staticState.proxyId !== null) {
-
-                    // contextPath is guaranteed to end with a slash
-                    $.post(Shiny.common.staticState.contextPath + "heartbeat/" + Shiny.app.staticState.proxyId);
+                    Shiny.connections.sendHeartBeat();
                 }
             }
         }, Shiny.app.staticState.heartBeatRate);
+    },
+
+    /**
+     * Send heartbeat and process the result.
+     */
+    sendHeartBeat: function() {
+        // contextPath is guaranteed to end with a slash
+        $.post(Shiny.common.staticState.contextPath + "heartbeat/" + Shiny.app.staticState.proxyId, function() {})
+            .fail(function (response) {
+                if (Shiny.app.runtimeState.appStopped) {
+                    // if stopped in meantime -> ignore
+                    return;
+                }
+                if (response.status === 401) {
+                    Shiny.ui.showLoggedOutPage();
+                    return;
+                }
+                var res = JSON.parse(response.responseText);
+                if (res !== null && res.status === "error") {
+                    if (res.message === "app_stopped_or_non_existent") {
+                        Shiny.ui.showStoppedPage();
+                    } else if (res.message === "shinyproxy_authentication_required") {
+                        Shiny.ui.showLoggedOutPage();
+                    }
+                }
+            });
     },
 
     /**

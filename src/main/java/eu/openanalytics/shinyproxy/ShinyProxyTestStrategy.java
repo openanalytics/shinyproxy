@@ -28,6 +28,7 @@ import java.util.function.IntPredicate;
 
 import javax.inject.Inject;
 
+import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Primary;
@@ -63,6 +64,11 @@ public class ShinyProxyTestStrategy implements IProxyTestStrategy {
 
 		return retry(i -> {
 			try {
+				if (proxy.getStatus() == ProxyStatus.Stopping || proxy.getStatus() == ProxyStatus.Stopped) {
+					// proxy got stopped while loading -> no need to try to connect it since the container will already be deleted
+					return true;
+				}
+				System.out.println(proxy.getStatus());
 				URL testURL = new URL(targetURI.toString());
 				HttpURLConnection connection = ((HttpURLConnection) testURL.openConnection());
 				connection.setConnectTimeout(timeoutMs);

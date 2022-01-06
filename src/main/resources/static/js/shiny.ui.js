@@ -106,6 +106,7 @@ Shiny.ui = {
     },
 
     showStoppedPage: function() {
+        Shiny.app.runtimeState.appStopped = true;
         $('#shinyframe').remove();
         $("#loading").hide();
         $("#reconnecting").hide();
@@ -114,9 +115,11 @@ Shiny.ui = {
     },
 
     showLoggedOutPage: function() {
+        Shiny.app.runtimeState.appStopped = true;
         if (!Shiny.app.runtimeState.navigatingAway) {
             // only show it when not navigating away, e.g. when logging out in the current tab
             $('#shinyframe').remove();
+            $("#loading").hide();
             $("#reconnecting").hide();
             $('#switchInstancesModal').modal('hide')
             $("#navbar").hide();

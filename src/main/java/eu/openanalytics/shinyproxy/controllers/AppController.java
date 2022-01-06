@@ -47,6 +47,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static eu.openanalytics.shinyproxy.AppRequestInfo.PROXY_HINT_PARAM;
+
 @Controller
 public class AppController extends BaseController {
 
@@ -69,7 +71,7 @@ public class AppController extends BaseController {
 		map.put("appName", appRequestInfo.getAppName());
 		map.put("appInstance", appRequestInfo.getAppInstance());
 		map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
-		map.put("containerPath", (proxy == null) ? "" : buildContainerPath(request, appRequestInfo));
+		map.put("containerPath", (proxy == null) ? "" : buildContainerPath(request, appRequestInfo, proxy.getId()));
 		map.put("proxyId", (proxy == null) ? "" : proxy.getId());
 		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
 		map.put("heartbeatRate", getHeartbeatRate());
@@ -89,7 +91,7 @@ public class AppController extends BaseController {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
 
 		Proxy proxy = getOrStart(appRequestInfo);
-		String containerPath = buildContainerPath(request, appRequestInfo);
+		String containerPath = buildContainerPath(request, appRequestInfo, proxy.getId());
 		
 		Map<String,String> response = new HashMap<>();
 		response.put("containerPath", containerPath);
@@ -104,7 +106,11 @@ public class AppController extends BaseController {
 
 		Proxy proxy = findUserProxy(appRequestInfo);
 
-		if (proxy == null && appRequestInfo.getSubPath() != null && !appRequestInfo.getSubPath().equals("/")) {
+		if (proxy == null && appRequestInfo.getProxyIdHint() != null) {
+			// The request included a ProxyIdHint, this is just the id of the proxy sent by the client.
+			// This parameter is only added by ShinyProxy when using the /app end point (not using the /app_direct) endpoint.
+			// If the parameter is included and no proxy is found, we return an error instead of starting the app.
+			// This way the client (i.e. ShinyProxy) knows that the app has been stopped (e.g. in a different tab).
 		    response.setStatus(410);
 		    response.getWriter().write("{\"status\":\"error\", \"message\":\"app_stopped_or_non_existent\"}");
 		    return;
@@ -166,8 +172,11 @@ public class AppController extends BaseController {
 		return (proxy.getStatus() == ProxyStatus.Up);
 	}
 	
-	private String buildContainerPath(HttpServletRequest request, AppRequestInfo appRequestInfo) {
-		String queryString = ServletUriComponentsBuilder.fromRequest(request).replaceQueryParam("sp_hide_navbar").build().getQuery();
+	private String buildContainerPath(HttpServletRequest request, AppRequestInfo appRequestInfo, String proxyId) {
+		String queryString = ServletUriComponentsBuilder.fromRequest(request)
+				.replaceQueryParam("sp_hide_navbar")
+				.queryParam(PROXY_HINT_PARAM, proxyId)
+				.build().getQuery();
 
 		queryString = (queryString == null) ? "" : "?" + queryString;
 		

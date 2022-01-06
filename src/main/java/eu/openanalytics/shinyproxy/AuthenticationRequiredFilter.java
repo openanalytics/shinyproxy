@@ -20,6 +20,7 @@
  */
 package eu.openanalytics.shinyproxy;
 
+import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.shinyproxy.controllers.AppController;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
@@ -28,7 +29,6 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.util.ThrowableAnalyzer;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.GenericFilterBean;
 
@@ -41,10 +41,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
- * A filter that blocks the default {@link AuthenticationEntryPoint} when requests are made to certain endpoints.
- * These endpoints are:
- * - /app_direct_i/* /* /** (without spaces), i.e. any subpath on the app_direct endpoint (thus not the page that loads the app)
- * - /heartbeat/* , i.e. heartbeat requests
+ * A filter that blocks the default {@link AuthenticationEntryPoint} when requests are made by the ShinyProxy (client) JS code.
+ * The JS client always attaches the proxy id hint, therefore we use this to identify the client.
  *
  * When the filter detects that a user is not authenticated when requesting one of these endpoints, it returns the response:
  * {"status":"error", "message":"shinyproxy_authentication_required"} with status code 401.
@@ -59,9 +57,7 @@ public class AuthenticationRequiredFilter extends GenericFilterBean {
 
     private final ThrowableAnalyzer throwableAnalyzer = new DefaultThrowableAnalyzer();
 
-    private static final RequestMatcher REQUEST_MATCHER = new OrRequestMatcher(
-            new AntPathRequestMatcher("/app_direct_i/*/*/**"),
-            new AntPathRequestMatcher("/heartbeat/*"));
+    private static final RequestMatcher HEARTBEAT_REQUEST_MATCHER = new AntPathRequestMatcher("/heartbeat/*");
 
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;
@@ -72,7 +68,7 @@ public class AuthenticationRequiredFilter extends GenericFilterBean {
         } catch (IOException ex) {
             throw ex;
         } catch (Exception ex) {
-            if (REQUEST_MATCHER.matches(request) && isAuthException(ex)) {
+            if (matches(request) && isAuthException(ex)) {
                 if (response.isCommitted()) {
                     throw new ServletException("Unable to handle the Spring Security Exception because the response is already committed.", ex);
                 }
@@ -82,6 +78,21 @@ public class AuthenticationRequiredFilter extends GenericFilterBean {
                 return;
             }
             throw ex;
+        }
+    }
+
+    private boolean matches(HttpServletRequest request) {
+        if (HEARTBEAT_REQUEST_MATCHER.matches(request)) {
+            // heartbeats are always sent by the JS client
+            return true;
+        }
+        try {
+            AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
+            // only if we have a ProxyHint we will intercept the request and return a JSON response
+            return appRequestInfo != null && appRequestInfo.getProxyIdHint() != null;
+        } catch (BadRequestException e) {
+            // not an app request or invalid request
+            return false;
         }
     }
 

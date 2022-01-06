@@ -313,6 +313,24 @@ Shiny.connections = {
                 parent.fetch = function () {
                     window.__shinyProxyParent.app.runtimeState.lastHeartbeatTime = Date.now();
 
+                    // insert the Proxy-Hint_id header
+                    // see: https://developer.mozilla.org/en-US/docs/Web/API/fetch#parameters
+                    var arguments = Array.prototype.slice.call(arguments);
+                    if (arguments.length > 1) {
+                        if (arguments[1].hasOwnProperty("headers")) {
+                            var headers = arguments[1]["headers"];
+                            if (headers.constructor.name === "Headers") {
+                                headers.append("X-ShinyProxy-Proxy-Id-Hint", window.__shinyProxyParent.app.staticState.proxyId);
+                            } else {
+                                arguments[1]["headers"]["X-ShinyProxy-Proxy-Id-Hint"] = window.__shinyProxyParent.app.staticState.proxyId;
+                            }
+                        } else {
+                            arguments[1]["headers"] = {"X-ShinyProxy-Proxy-Id-Hint": window.__shinyProxyParent.app.staticState.proxyId};
+                        }
+                    } else {
+                        arguments.push({"headers": {"X-ShinyProxy-Proxy-Id-Hint": window.__shinyProxyParent.app.staticState.proxyId}});
+                    }
+
                     return new Promise((resolve, reject) => {
                         originalFetch.apply(this, arguments)
                             .then((response) => {
@@ -364,7 +382,9 @@ Shiny.connections = {
                     });
                     window.__shinyProxyParent.app.runtimeState.lastHeartbeatTime = Date.now();
 
-                    return originalOpen.apply(this, arguments);
+                    var res = originalOpen.apply(this, arguments);
+                    this.setRequestHeader("X-ShinyProxy-Proxy-Id-Hint", window.__shinyProxyParent.app.staticState.proxyId);
+                    return res;
                 }
             };
 

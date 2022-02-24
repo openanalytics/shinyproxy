@@ -218,7 +218,8 @@ public class AppController extends BaseController {
 
 	private Proxy getOrStart(AppRequestInfo appRequestInfo, Map<String, String> parameters) throws InvalidParametersException {
 		Proxy proxy = findUserProxy(appRequestInfo);
-		if (proxy == null) {
+		// TODO Pausing
+		if (proxy == null || proxy.getStatus().equals(ProxyStatus.Paused)) {
 			ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
 
 			if (spec == null) throw new BadRequestException("Unknown proxy spec: " + appRequestInfo.getAppName());

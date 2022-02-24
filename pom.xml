@@ -69,6 +69,11 @@
 			<version>${containerproxy.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>eu.openanalytics</groupId>
+			<artifactId>ec2proxy</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr353</artifactId>
 			<version>2.11.2</version>

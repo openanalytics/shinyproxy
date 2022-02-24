@@ -20,23 +20,21 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.function.IntPredicate;
-
-import javax.inject.Inject;
-
+import eu.openanalytics.containerproxy.backend.strategy.IProxyTestStrategy;
+import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
+import eu.openanalytics.containerproxy.util.Retrying;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
-import eu.openanalytics.containerproxy.backend.strategy.IProxyTestStrategy;
-import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import javax.inject.Inject;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URL;
+import java.util.Arrays;
 
 /**
  * This component tests the responsiveness of Shiny containers by making an HTTP GET request to the container's published port (default 3838).
@@ -55,14 +53,12 @@ public class ShinyProxyTestStrategy implements IProxyTestStrategy {
 	public boolean testProxy(Proxy proxy) {
 
 		int totalWaitMs = Integer.parseInt(environment.getProperty("proxy.container-wait-time", "20000"));
-		int waitMs = Math.min(2000, totalWaitMs);
-		int maxTries = totalWaitMs / waitMs;
 		int timeoutMs = Integer.parseInt(environment.getProperty("proxy.container-wait-timeout", "5000"));
 
 		if (proxy.getTargets().isEmpty()) return false;
 		URI targetURI = proxy.getTargets().values().iterator().next();
 
-		return retry(i -> {
+		return Retrying.retry((currentAttempt, maxAttempts) -> {
 			try {
 				if (proxy.getStatus() == ProxyStatus.Stopping || proxy.getStatus() == ProxyStatus.Stopped) {
 					// proxy got stopped while loading -> no need to try to connect it since the container will already be deleted
@@ -71,33 +67,18 @@ public class ShinyProxyTestStrategy implements IProxyTestStrategy {
 				URL testURL = new URL(targetURI.toString());
 				HttpURLConnection connection = ((HttpURLConnection) testURL.openConnection());
 				connection.setConnectTimeout(timeoutMs);
+				connection.setReadTimeout(timeoutMs);
 				connection.setInstanceFollowRedirects(false);
 				int responseCode = connection.getResponseCode();
-				if (Arrays.asList(200, 301, 302, 303, 307, 308).contains(responseCode)) return true;
+				if (Arrays.asList(200, 301, 302, 303, 307, 308).contains(responseCode)) {
+					log.info("Container responsive {}", proxy.getContainers().get(0).getId());
+					return true;
+				}
 			} catch (Exception e) {
-				if (i > 1 && log != null) log.warn(String.format("Container unresponsive, trying again (%d/%d): %s", i, maxTries, targetURI));
+				if (currentAttempt > 0 && log != null) log.warn(String.format("Container unresponsive, trying again (%d/%d): %s", currentAttempt, maxAttempts, targetURI));
 			}
 			return false;
-		}, maxTries, waitMs, false);
+		}, totalWaitMs);
 	}
 
-	private static boolean retry(IntPredicate job, int tries, int waitTime, boolean retryOnException) {
-		boolean retVal = false;
-		RuntimeException exception = null;
-		for (int currentTry = 1; currentTry <= tries; currentTry++) {
-			try {
-				if (job.test(currentTry)) {
-					retVal = true;
-					exception = null;
-					break;
-				}
-			} catch (RuntimeException e) {
-				if (retryOnException) exception = e;
-				else throw e;
-			}
-			try { Thread.sleep(waitTime); } catch (InterruptedException ignore) {}
-		}
-		if (exception == null) return retVal;
-		else throw exception;
-	}
 }

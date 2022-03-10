@@ -21,13 +21,16 @@
 package eu.openanalytics.shinyproxy.controllers;
 
 import java.io.File;
+import java.util.HashMap;
 
 import javax.inject.Inject;
 import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import eu.openanalytics.shinyproxy.AppRequestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Controller;
@@ -47,11 +50,14 @@ public class IssueController extends BaseController {
     JavaMailSender mailSender;
 	
 	@RequestMapping(value="/issue", method=RequestMethod.POST)
-	public String postIssue(HttpServletRequest request, HttpServletResponse response) {
+	public ResponseEntity<HashMap<String, String>> postIssue(HttpServletRequest request, HttpServletResponse response) {
 		IssueForm form = new IssueForm();
 		form.setUserName(getUserName(request));
 		form.setCurrentLocation(request.getParameter("currentLocation"));
-		form.setAppName(getAppName(form.getCurrentLocation()));
+		AppRequestInfo appRequestInfo = AppRequestInfo.fromURI(form.getCurrentLocation());
+		if (appRequestInfo != null) {
+			form.setAppName(appRequestInfo.getAppName());
+		}
 		form.setCustomMessage(request.getParameter("customMessage"));
 		
 		Proxy activeProxy = null;
@@ -63,8 +69,9 @@ public class IssueController extends BaseController {
 		}
 		sendSupportMail(form, activeProxy);
 		
-		//TODO Redirect to current location
-		return "redirect:" + getContextPath();
+		return ResponseEntity.ok(new HashMap<String, String>() {{
+			put("status", "success");
+		}});
 	}
 	
 	public void sendSupportMail(IssueForm form, Proxy proxy) {

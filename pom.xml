@@ -5,7 +5,7 @@
 
 	<groupId>eu.openanalytics</groupId>
 	<artifactId>shinyproxy</artifactId>
-	<version>2.5.0</version>
+	<version>2.6.0</version>
 	<packaging>jar</packaging>
 
 	<name>ShinyProxy</name>
@@ -19,14 +19,14 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.3.4.RELEASE</version>
+		<version>2.3.12.RELEASE</version>
 		<relativePath />
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
-		<containerproxy.version>0.8.8</containerproxy.version>
+		<containerproxy.version>0.8.10</containerproxy.version>
 		<resource.delimiter>&amp;</resource.delimiter>
 	</properties>
 
@@ -83,9 +83,51 @@
 			<artifactId>js-cookie</artifactId>
 			<version>2.2.1</version>
 		</dependency>
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>handlebars</artifactId>
+			<version>4.7.6</version>
+		</dependency>
+		<dependency>
+			<groupId>io.undertow</groupId>
+			<artifactId>undertow-core</artifactId>
+			<version>2.2.8.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>io.undertow</groupId>
+			<artifactId>undertow-servlet</artifactId>
+			<version>2.2.8.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>io.undertow</groupId>
+			<artifactId>undertow-websockets-jsr</artifactId>
+			<version>2.2.8.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.xnio</groupId>
+			<artifactId>xnio-nio</artifactId>
+			<version>3.8.4.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.xnio</groupId>
+			<artifactId>xnio-api</artifactId>
+			<version>3.8.4.Final</version>
+                </dependency>
 	</dependencies>
 
 	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<excludes>
+					<exclude>static/handlebars/node_modules/**</exclude>
+					<exclude>static/handlebars/.gitignore</exclude>
+					<exclude>static/handlebars/generate.sh</exclude>
+					<exclude>static/handlebars/*.handlebars</exclude>
+					<exclude>**/.gitignore</exclude>
+				</excludes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
@@ -307,7 +349,7 @@
 						<exclude>.gitignore</exclude>
 						<exclude>src/deb/**</exclude>
 						<exclude>templates/**</exclude>
-						<exclude>src/main/resources/static/js/js.cookie-2.2.1.min.js</exclude>
+						<exclude>src/main/resources/static/handlebars/node_modules/**</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -380,7 +422,7 @@
                 <plugin>
                   <groupId>org.owasp</groupId>
                   <artifactId>dependency-check-maven</artifactId>
-                  <version>5.3.0</version>
+				<version>6.1.6</version>
                   <configuration>
                     <suppressionFiles>
                         <suppressionFile>owasp-suppression.xml</suppressionFile>

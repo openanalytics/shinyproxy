@@ -20,27 +20,24 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
-
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKeyRegistry;
+import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
+import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
+import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
+import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
+import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
-
-import eu.openanalytics.containerproxy.service.HeartbeatService;
+import org.springframework.context.annotation.PropertySource;
 
 @Configuration
+@PropertySource("classpath:application.properties")
 public class ShinyProxyConfiguration {
 
-	@Inject
-	private Environment environment;
-	
-	@Inject
-	private HeartbeatService heartbeatService;
-	
-	@PostConstruct
-	public void init() {
-		// Enable heartbeat unless explicitly disabled.
-		boolean enabled = Boolean.valueOf(environment.getProperty("proxy.heartbeat-enabled", "true"));
-		heartbeatService.setEnabled(enabled);
+	static {
+		RuntimeValueKeyRegistry.addRuntimeValueKey(AppInstanceKey.inst);
+		RuntimeValueKeyRegistry.addRuntimeValueKey(MaxInstancesKey.inst);
+		RuntimeValueKeyRegistry.addRuntimeValueKey(PublicPathKey.inst);
+		RuntimeValueKeyRegistry.addRuntimeValueKey(ShinyForceFullReloadKey.inst);
+		RuntimeValueKeyRegistry.addRuntimeValueKey(WebSocketReconnectionModeKey.inst);
 	}
 }

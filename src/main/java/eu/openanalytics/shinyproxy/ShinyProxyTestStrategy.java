@@ -66,8 +66,17 @@ public class ShinyProxyTestStrategy implements IProxyTestStrategy {
 				}
 				URL testURL = new URL(targetURI.toString());
 				HttpURLConnection connection = ((HttpURLConnection) testURL.openConnection());
-				connection.setConnectTimeout(timeoutMs);
-				connection.setReadTimeout(timeoutMs);
+				if (currentAttempt <= 5) {
+					// When the container has only just started (or when the k8s service has only just been created),
+					// it could be that our traffic ends in a black hole, and we need to wait the full 5s seconds of
+					// the timeout. Therefore, we first try a few attempts with a lower timeout. If the container is
+					// fast, this will result in a faster startup. If the container is slow to startup, not time is waste.
+					connection.setConnectTimeout(200);
+					connection.setReadTimeout(200);
+				} else {
+					connection.setConnectTimeout(timeoutMs);
+					connection.setReadTimeout(timeoutMs);
+				}
 				connection.setInstanceFollowRedirects(false);
 				int responseCode = connection.getResponseCode();
 				if (Arrays.asList(200, 301, 302, 303, 307, 308).contains(responseCode)) {
@@ -75,7 +84,7 @@ public class ShinyProxyTestStrategy implements IProxyTestStrategy {
 					return true;
 				}
 			} catch (Exception e) {
-				if (currentAttempt > 0 && log != null) log.warn(String.format("Container unresponsive, trying again (%d/%d): %s", currentAttempt, maxAttempts, targetURI));
+				if (currentAttempt > 10 && log != null) log.warn(String.format("Container unresponsive, trying again (%d/%d): %s", currentAttempt, maxAttempts, targetURI));
 			}
 			return false;
 		}, totalWaitMs);

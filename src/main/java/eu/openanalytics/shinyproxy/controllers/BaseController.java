@@ -136,6 +136,7 @@ public abstract class BaseController {
 		map.put("isAppPage", false); // defaults, used in navbar
 		map.put("maxInstances", 0); // defaults, used in navbar
 		map.put("contextPath", getContextPath());
+		map.put("resourceSuffix", "");
 
 		// operator specific
 		map.put("operatorEnabled", operatorService.isEnabled());

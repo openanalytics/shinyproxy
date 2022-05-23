@@ -26,20 +26,21 @@
 <head lang="en">
 	<title th:text="${appTitle} + ' - ' + ${appInstanceDisplayName}"></title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link rel="stylesheet" media="screen" th:href="@{${bootstrapCss}}" />
-	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
-	<script th:src="@{${jqueryJs}}"></script>
-	<script th:src="@{${bootstrapJs}}"></script>
-	<script th:src="@{${handlebars}}"></script>
-	<script th:src="@{${cookieJs}}"></script>
-	<script th:src="@{/js/shiny.app.js}"></script>
-	<script th:src="@{/js/shiny.api.js}"></script>
-	<script th:src="@{/js/shiny.connections.js}"></script>
-	<script th:src="@{/js/shiny.instances.js}"></script>
-	<script th:src="@{/js/shiny.ui.js}"></script>
-	<script th:src="@{/js/shiny.common.js}"></script>
-	<script th:if="${operatorEnabled}" th:src="@{/js/shiny.operator.js}"></script>
-	<script th:src="@{/handlebars/precompiled.js}"></script>
+	<link rel="stylesheet" media="screen" th:href="@{${bootstrapCss} + ${resourceSuffix}}" />
+	<link rel="stylesheet" media="screen" th:href="@{'/css/default.css' + ${resourceSuffix}}"/>
+	<script th:src="@{${jqueryJs} + ${resourceSuffix}}"></script>
+	<script th:src="@{${bootstrapJs} + ${resourceSuffix}}"></script>
+	<script th:src="@{${handlebars} + ${resourceSuffix}}"></script>
+	<script th:src="@{${cookieJs} + ${resourceSuffix}}"></script>
+	<script th:src="@{'/js/shiny.app.js' + ${resourceSuffix}}"></script>
+	<script th:src="@{'/js/shiny.api.js' + ${resourceSuffix}}"></script>
+	<script th:src="@{'/js/shiny.connections.js' + ${resourceSuffix}}"></script>
+	<script th:src="@{'/js/shiny.instances.js' + ${resourceSuffix}}"></script>
+	<script th:src="@{'/js/shiny.ui.js' + ${resourceSuffix}}"></script>
+	<script th:src="@{'/js/shiny.common.js' + ${resourceSuffix}}"></script>
+	<script th:if="${operatorEnabled}" th:src="@{'/js/shiny.operator.js' + ${resourceSuffix}}"></script>
+	<script th:src="@{'/handlebars/precompiled.js' + ${resourceSuffix}}"></script>
+
 </head>
 <body id="appPage">
 	<div th:replace="../fragments/navbar :: navbar"></div>
@@ -129,6 +130,7 @@
 					[[${appInstance}]],
 					[[${maxInstances}]],
 					[[${shinyForceFullReload}]],
+					[[${spInstanceOverride}]],
 			);
 		});
 	</script>

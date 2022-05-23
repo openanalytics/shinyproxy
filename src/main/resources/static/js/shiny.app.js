@@ -29,12 +29,13 @@ Shiny.app = {
         proxyId: null,
         appName: null,
         appInstanceName: null,
+        overrideSpInstance: null,
         containerPath: null,
         webSocketReconnectionMode: null,
         maxReloadAttempts: 10,
         heartBeatRate: null,
         maxInstances: null,
-        shinyForceFullReload: null,
+        spInstanceOverride: null,
     },
 
     runtimeState: {
@@ -60,17 +61,23 @@ Shiny.app = {
      * @param appInstanceName
      * @param maxInstances
      * @param shinyForceFullReload
+     * @param spInstanceOverride
      */
-    start: function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, maxInstances, shinyForceFullReload) {
+    start: function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, maxInstances, shinyForceFullReload, spInstanceOverride) {
         Shiny.app.staticState.heartBeatRate = heartBeatRate;
         Shiny.app.staticState.appName = appName;
         Shiny.app.staticState.appInstanceName = appInstanceName;
         Shiny.app.staticState.maxInstances = parseInt(maxInstances, 10);
         Shiny.app.staticState.shinyForceFullReload = shinyForceFullReload;
+        Shiny.app.staticState.spInstanceOverride = spInstanceOverride;
         Shiny.instances._template = Handlebars.templates.switch_instances;
 
         function internalStart() {
             if (containerPath === "") {
+                if (Shiny.app.staticState.overrideSpInstance != null) {
+                    // TODO
+                    alert("Cannot start new app on old instance!");
+                }
                 Shiny.ui.setShinyFrameHeight();
                 Shiny.ui.showLoading();
                 $.post(window.location.pathname + window.location.search, function (response) {
@@ -91,6 +98,10 @@ Shiny.app = {
                 Shiny.app.staticState.containerPath = containerPath;
                 Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;
                 Shiny.app.staticState.proxyId = proxyId;
+                if (Shiny.app.staticState.spInstanceOverride != null) {
+                    var parsedUrl = new URL("http://localhost" + Shiny.app.staticState.containerPath); // TODO
+                    Cookies.set('sp-instance-override', Shiny.app.staticState.spInstanceOverride,  {path: parsedUrl.pathname});
+                }
                 Shiny.ui.setupIframe();
                 Shiny.ui.showFrame();
                 Shiny.connections.startHeartBeats();

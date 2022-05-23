@@ -24,6 +24,7 @@ import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.service.IdentifierService;
 import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.containerproxy.util.Retrying;
@@ -32,6 +33,8 @@ import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,12 +43,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.inject.Inject;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Controller
 public class AppController extends BaseController {
@@ -55,6 +60,11 @@ public class AppController extends BaseController {
 
 	@Inject
 	private ShinyProxySpecProvider shinyProxySpecProvider;
+
+	@Inject
+	private IdentifierService identifierService;
+
+	private final Logger logger = LogManager.getLogger(getClass());
 
 	@RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.GET)
 	public String app(ModelMap map, HttpServletRequest request) {
@@ -69,7 +79,7 @@ public class AppController extends BaseController {
 		map.put("appName", appRequestInfo.getAppName());
 		map.put("appInstance", appRequestInfo.getAppInstance());
 		map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
-		map.put("containerPath", (proxy == null) ? "" : buildContainerPath(request, appRequestInfo));
+		map.put("containerPath", (proxy == null) ? "" : buildContainerPath(request, proxy, appRequestInfo));
 		map.put("proxyId", (proxy == null) ? "" : proxy.getId());
 		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
 		map.put("heartbeatRate", getHeartbeatRate());
@@ -78,6 +88,12 @@ public class AppController extends BaseController {
 		map.put("shinyForceFullReload", shinyProxySpecProvider.getShinyForceFullReload(appRequestInfo.getAppName()));
 
 		// operator specific
+		String spInstanceOverride = getSpInstanceOverride(request);
+		map.put("spInstanceOverride", spInstanceOverride);
+		if (spInstanceOverride != null) {
+			map.put("resourceSuffix", "?sp_instance_override=" + spInstanceOverride);
+		}
+
 		map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnAppPage());
 
 		return "app";
@@ -89,7 +105,7 @@ public class AppController extends BaseController {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
 
 		Proxy proxy = getOrStart(appRequestInfo);
-		String containerPath = buildContainerPath(request, appRequestInfo);
+		String containerPath = buildContainerPath(request, proxy, appRequestInfo);
 		
 		Map<String,String> response = new HashMap<>();
 		response.put("containerPath", containerPath);
@@ -140,14 +156,15 @@ public class AppController extends BaseController {
 			ProxySpec resolvedSpec = proxyService.resolveProxySpec(spec, null, null);
 
 			List<RuntimeValue> runtimeValues = shinyProxySpecProvider.getRuntimeValues(spec);
-			runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(appRequestInfo)));
+			String id = UUID.randomUUID().toString();
+			runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(id)));
 			runtimeValues.add(new RuntimeValue(AppInstanceKey.inst, appRequestInfo.getAppInstance()));
 
 			if (!validateProxyStart(spec)) {
 				throw new BadRequestException("Cannot start new proxy because the maximum amount of instances of this proxy has been reached");
 			}
 
-			proxy = proxyService.startProxy(resolvedSpec, false, runtimeValues);
+			proxy = proxyService.startProxy(resolvedSpec, false, runtimeValues, id);
 		}
 		return proxy;
 	}
@@ -166,16 +183,35 @@ public class AppController extends BaseController {
 		return (proxy.getStatus() == ProxyStatus.Up);
 	}
 	
-	private String buildContainerPath(HttpServletRequest request, AppRequestInfo appRequestInfo) {
+	private String buildContainerPath(HttpServletRequest request, Proxy proxy, AppRequestInfo appRequestInfo) {
 		String queryString = ServletUriComponentsBuilder.fromRequest(request).replaceQueryParam("sp_hide_navbar").build().getQuery();
 
 		queryString = (queryString == null) ? "" : "?" + queryString;
 		
-		return getPublicPath(appRequestInfo) + queryString;
+		return getPublicPath(proxy.getId()) + queryString;
 	}
 
-	private String getPublicPath(AppRequestInfo appRequestInfo) {
-		return getContextPath() + "app_direct_i/" + appRequestInfo.getAppName() + "/" + appRequestInfo.getAppInstance() + '/';
+	private String getSpInstanceOverride(HttpServletRequest request) {
+		String override = request.getParameter("sp_instance_override");
+		if (override == null) {
+			for (Cookie cookie : request.getCookies()) {
+				if (cookie.getName().equals("sp-instance-override")) {
+					override = cookie.getValue();
+				}
+			}
+		}
+		if (override == null) {
+			return null;
+		} else if (override.equals(identifierService.instanceId)) {
+			return override;
+		} else {
+			logger.warn("Received request for instanceId \"{}\" but current id is \"{}\"", override, identifierService.instanceId);
+			return null;
+		}
+	}
+
+	private String getPublicPath(String proxyId) {
+		return getContextPath() + "api/route/" + proxyId + "/";
 	}
 
 	/**

@@ -209,8 +209,10 @@ Shiny.instances = {
     _getCurrentAmountOfInstances: function() {
         var currentAmountOfInstances = 0;
 
+        // TODO current instance
+        // TODO owned only
         $.ajax({
-            url: Shiny.common.staticState.contextPath + "api/proxy",
+            url: Shiny.api.buildURL("api/proxy?only_owned_proxies=true", false),
             success: function(result) {
                 for (var idx = 0; idx < result.length; idx++) {
                     var proxy = result[idx];

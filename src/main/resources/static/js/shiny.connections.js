@@ -37,6 +37,7 @@ Shiny.connections = {
                 var lastHeartbeat = Date.now() - Shiny.app.runtimeState.lastHeartbeatTime;
                 if (lastHeartbeat > Shiny.app.staticState.heartBeatRate && Shiny.app.staticState.proxyId !== null) {
                     Shiny.connections.sendHeartBeat();
+                    $.post(Shiny.api.buildURL("heartbeat/" + Shiny.app.staticState.proxyId));
                 }
             }
         }, Shiny.app.staticState.heartBeatRate);
@@ -464,7 +465,7 @@ Shiny.connections = {
     _checkAppHasBeenStopped: function (cb) {
         $.ajax({
             method: 'POST',
-            url: Shiny.common.staticState.contextPath + "heartbeat/" + Shiny.app.staticState.proxyId,
+            url: Shiny.api.buildURL("heartbeat/" + Shiny.app.staticState.proxyId),
             timeout: 3000,
             success: function () {
                 cb(false);

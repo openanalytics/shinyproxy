@@ -21,7 +21,7 @@
 Shiny = window.Shiny || {};
 Shiny.api = {
     getProxies: async function () {
-        let resp  = await fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true", false));
+        let resp = await fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true", false));
         return await resp.json();
     },
     getAllSpInstances: async function () {
@@ -29,7 +29,7 @@ Shiny.api = {
         const json = await resp.json();
         return json.instances.map(i => i.hashOfSpec);
     },
-    getProxiesOnAllSpInstances:  async function () {
+    getProxiesOnAllSpInstances: async function () {
         if (!Shiny.app.staticState.operatorEnabled) {
             return await Shiny.api.getProxies();
         }
@@ -56,48 +56,37 @@ Shiny.api = {
         }
         return proxies;
     },
-    deleteProxyById: function (id, cb, cb_fail) {
-        $.ajax({
-            url: Shiny.api.buildURL("api/proxy/" + id),
-            type: 'DELETE',
-            success: cb,
-            error: function (result) {
-                cb_fail(result);
-            }
+    deleteProxyById: async function (proxyId, spInstance) {
+        await fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId, spInstance), {
+            method: 'DELETE',
         });
     },
-    getProxyId: function (appName, instanceName, cb, cb_fail) {
-        Shiny.api.getProxies(function (proxies) {
-            for (var i = 0; i < proxies.length; i++) {
-                var proxy = proxies[i];
-                if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id') &&
-                    proxy.hasOwnProperty('runtimeValues') && proxy.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE')
-                    && proxy.spec.id === appName && proxy.runtimeValues.SHINYPROXY_APP_INSTANCE === instanceName) {
-                    cb(proxies[i].id);
-                    return;
+    getProxyById: async function (proxyId, spInstance) {
+        return await fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId, spInstance))
+            .then(response => {
+                if (response.status === 200) {
+                    return response;
                 }
-            }
-            cb(null);
-        }, cb_fail);
+                return null;
+            });
     },
-    getProxyById: function(proxyId, cb, cb_fail) {
-        $.get(Shiny.api.buildURL("api/proxy/" + id), function (proxy) {
-            cb(true, proxy);
-        }).fail(function (response) {
-            if (response.status === 404) {
-                cb(false, null);
-                return;
-            }
-            cb_fail(response);
-        });
-    },
-    buildURL(location, allowSpInstanceOverride= true) {
-        var baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
-        var url = new URL(location, baseURL);
+    buildURL(location, allowSpInstanceOverride = true) {
+        const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
+        const url = new URL(location, baseURL);
         if (!allowSpInstanceOverride || Shiny.app.staticState.spInstanceOverride === null) {
             return url;
         }
         url.searchParams.set("sp_instance_override", Shiny.app.staticState.spInstanceOverride);
+        return url;
+    },
+    buildURLForInstance(location, spInstance) {
+        const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
+        const url = new URL(location, baseURL);
+        if (spInstance === Shiny.app.staticState.spInstance && Shiny.app.staticState.spInstanceOverride === null) {
+            // we are targeting the current instance, and we are not using the override system -> no need to include the override in the URL
+            return url;
+        }
+        url.searchParams.set("sp_instance_override", spInstance);
         return url;
     }
 };

@@ -29,6 +29,10 @@ Shiny.common = {
     init: function(contextPath, applicationName) {
         Shiny.common.staticState.contextPath = contextPath;
         Shiny.common.staticState.applicationName = applicationName;
+    },
+
+    sleep: function (ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
 }

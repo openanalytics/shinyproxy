@@ -29,43 +29,31 @@ Shiny.instances = {
         onShow: function () {
             Shiny.instances._refreshModal();
             clearInterval(Shiny.instances._refreshIntervalId);
-            Shiny.instances._refreshIntervalId = setInterval(async function() {
+            Shiny.instances._refreshIntervalId = setInterval(async function () {
                 if (!document.hidden) {
                     await Shiny.instances._refreshModal();
                 }
             }, 2500);
         },
-        onClose: function() {
+        onClose: function () {
             clearInterval(Shiny.instances._refreshIntervalId);
         },
-        onDeleteInstance: function (instanceName) {
-            // this function can be called with one of:
-            // - no argument (i.e. undefined) -> the current instance
-            // - `_` or `Default` -> both represent the default instance
-            // - any other name of an instance
-
-            if (instanceName === undefined) {
-                instanceName = Shiny.app.staticState.appInstanceName;
+        onDeleteInstance: async function (appInstanceName, proxyId, spInstance) {
+            if (appInstanceName === undefined) {
+                // when no arguments provided -> stop the current app
+                appInstanceName = Shiny.instances._toAppDisplayName(Shiny.app.staticState.appInstanceName);
+                proxyId = Shiny.app.staticState.proxyId;
+                spInstance = Shiny.app.staticState.spInstance;
             }
 
-            // show `_` as `Default` in the confirmation message
-            var displayName = instanceName;
-            if (displayName === "_") {
-                displayName = "Default";
-            }
-
-            if (confirm("Are you sure you want to delete instance \"" +  displayName + "\"?")) {
-                Shiny.instances._deleteInstance(instanceName, function () {
-                    if (instanceName === "Default") {
-                        instanceName = "_";
-                    }
-                    if (instanceName === Shiny.app.staticState.appInstanceName) {
-                        Shiny.ui.showStoppedPage();
-                    }
-                });
+            if (confirm("Are you sure you want to stop instance \"" + appInstanceName + "\"?")) {
+                await Shiny.instances._deleteInstance(proxyId, spInstance);
+                if (proxyId === Shiny.app.staticState.proxyId) {
+                    Shiny.ui.showStoppedPage();
+                }
             }
         },
-        onRestartInstance: function () {
+        onRestartInstance: async function () {
             if (confirm("Are you sure you want to restart the current instance?")) {
                 Shiny.ui.hideInstanceModal();
                 Shiny.ui.showLoading();
@@ -75,11 +63,9 @@ Shiny.instances = {
                     return;
                 }
 
-                Shiny.instances._deleteInstance(Shiny.app.staticState.appInstanceName, function (proxyId) {
-                    Shiny.instances._waitUntilInstanceDeleted(proxyId, function () {
-                        window.location.reload(false);
-                    });
-                });
+                await Shiny.instances._deleteInstance(Shiny.app.staticState.proxyId, Shiny.app.staticState.spInstance);
+                await Shiny.instances._waitUntilInstanceDeleted(Shiny.app.staticState.proxyId, Shiny.app.staticState.spInstance);
+                window.location.reload(false);
             }
         },
         onNewInstance: function () {
@@ -126,38 +112,22 @@ Shiny.instances = {
         return Shiny.common.staticState.contextPath + "app_i/" + Shiny.app.staticState.appName + "/" + instance + "/";
     },
 
-    _deleteInstance: function (instanceName, cb) {
-        if (instanceName === "Default") {
-            instanceName = "_";
-        }
-        if (instanceName === Shiny.app.staticState.appInstanceName) {
+    _deleteInstance: async function (proxyId, spInstance) {
+        if (proxyId === Shiny.app.staticState.proxyId) {
             Shiny.app.runtimeState.appStopped = true;
             Shiny.ui.removeFrame();
         }
-        // TODO broken
-        // Shiny.api.getProxyId(Shiny.app.staticState.appName, instanceName, function (proxyId) {
-        //     if (proxyId !== null) {
-        //         Shiny.api.deleteProxyById(proxyId, function () {
-        //             cb(proxyId);
-        //         }, function() {
-        //             alert("Error deleting proxy, please try again.")
-        //         });
-        //     }
-        // }, function() {
-        //     alert("Error deleting proxy, please try again.")
-        // });
+        try {
+            await Shiny.api.deleteProxyById(proxyId, spInstance);
+        } catch (e) {
+            alert("Error stopping proxy, please try again.")
+        }
     },
 
-    _waitUntilInstanceDeleted: function (proxyId, cb) {
-        Shiny.api.getProxyById(proxyId, function (found) {
-            if (!found) {
-                cb();
-                return;
-            }
-            setTimeout(function () {
-                Shiny.instances._waitUntilInstanceDeleted(proxyId, cb);
-            }, 500);
-        }, function() {});
+    _waitUntilInstanceDeleted: async function (proxyId, spInstance) {
+        while (await Shiny.api.getProxyById(proxyId, spInstance) != null) {
+            await Shiny.common.sleep(500);
+        }
     },
     _refreshModal: async function () {
         const proxies = await Shiny.api.getProxiesOnAllSpInstances();
@@ -186,10 +156,16 @@ Shiny.instances = {
                     proxyName = appInstance;
                 }
 
-                const active = Shiny.app.staticState.proxyId === proxy.id;
+                const active = Shiny.app.staticState.proxyId === proxy.id; // TODO startup
                 const url = Shiny.instances._createUrlForProxy(proxy);
 
-                templateData['instances'].push({name: proxyName, active: active, url: url});
+                templateData['instances'].push({
+                    name: proxyName,
+                    active: active,
+                    url: url,
+                    spInstance: proxy.runtimeValues.SHINYPROXY_INSTANCE,
+                    proxyId: proxy.id
+                });
             } else {
                 console.log("Received invalid proxy object from server.");
             }
@@ -207,7 +183,7 @@ Shiny.instances = {
         $('#usedInstances').text(templateData['instances'].length); // TODO
         document.getElementById('appInstances').innerHTML = Shiny.instances._template(templateData);
     },
-    _createUrlForProxy: function(proxy) {
+    _createUrlForProxy: function (proxy) {
         const appName = proxy.spec.id;
         const appInstance = proxy.runtimeValues.SHINYPROXY_APP_INSTANCE;
         const appSpInstance = proxy.runtimeValues.SHINYPROXY_INSTANCE;
@@ -217,14 +193,14 @@ Shiny.instances = {
             return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/";
         }
     },
-    _getCurrentAmountOfInstances: function() {
+    _getCurrentAmountOfInstances: function () {
         var currentAmountOfInstances = 0;
 
         // TODO current instance
         // TODO owned only
         $.ajax({
             url: Shiny.api.buildURL("api/proxy?only_owned_proxies=true", false),
-            success: function(result) {
+            success: function (result) {
                 for (var idx = 0; idx < result.length; idx++) {
                     var proxy = result[idx];
                     if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id') && proxy.spec.id === Shiny.app.staticState.appName) {
@@ -236,5 +212,11 @@ Shiny.instances = {
         });
 
         return currentAmountOfInstances;
+    },
+    _toAppDisplayName(appInstanceName) {
+        if (appInstanceName === "_") {
+            return "Default";
+        }
+        return appInstanceName;
     }
 };

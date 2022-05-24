@@ -54,6 +54,9 @@ Shiny.operator = {
             }
         });
         if (Shiny.operator.newInstanceAvailable()) {
+            if (Shiny.app !== undefined && Shiny.app.staticState.spInstanceOverride) {
+                return true;
+            }
             // check amount of apps running
             if (Shiny.operator.staticState.forceTransfer) {
                 try {
@@ -102,7 +105,7 @@ Shiny.operator = {
 
         Cookies.set('sp-instance', Cookies.get('sp-latest-instance'), {path: Shiny.common.staticState.contextPath});
         location.reload();
-    }
+    },
 
 }
 

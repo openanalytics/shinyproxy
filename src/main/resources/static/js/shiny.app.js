@@ -29,7 +29,6 @@ Shiny.app = {
         proxyId: null,
         appName: null,
         appInstanceName: null,
-        overrideSpInstance: null,
         containerPath: null,
         webSocketReconnectionMode: null,
         maxReloadAttempts: 10,
@@ -63,6 +62,7 @@ Shiny.app = {
      * @param appInstanceName
      * @param maxInstances
      * @param shinyForceFullReload
+     * @param spInstance
      * @param spInstanceOverride
      */
     start: async function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, maxInstances, shinyForceFullReload, spInstance, spInstanceOverride) {
@@ -76,28 +76,30 @@ Shiny.app = {
         Shiny.app.staticState.operatorEnabled = Shiny.operator !== undefined;
         Shiny.instances._template = Handlebars.templates.switch_instances;
 
-        function internalStart() {
+        if (Shiny.operator === undefined || await Shiny.operator.start()) {
             if (containerPath === "") {
-                if (Shiny.app.staticState.overrideSpInstance != null) {
-                    // TODO
-                    alert("Cannot start new app on old instance!");
+                if (Shiny.app.staticState.spInstanceOverride !== null) {
+                    // do not start new apps on old SP instances
+                    window.location.href = Shiny.api.buildURL("", false);
+                    return;
                 }
                 Shiny.ui.setShinyFrameHeight();
                 Shiny.ui.showLoading();
-                $.post(window.location.pathname + window.location.search, function (response) {
-                    Shiny.app.staticState.containerPath = response.containerPath;
-                    Shiny.app.staticState.webSocketReconnectionMode = response.webSocketReconnectionMode;
-                    Shiny.app.staticState.proxyId = response.proxyId;
-                    Shiny.ui.setupIframe();
-                    Shiny.ui.showFrame();
-                    Shiny.connections.startHeartBeats();
-                }).fail(function (request) {
+                let response = await fetch(window.location.pathname + window.location.search, {
+                    method: 'POST'
+                });
+                if (response.status !== 200) {
                     if (!Shiny.app.runtimeState.navigatingAway && !Shiny.app.runtimeState.appStopped) {
                         var newDoc = document.open("text/html", "replace");
-                        newDoc.write(request.responseText);
+                        newDoc.write(await response.text());
                         newDoc.close();
+                        return;
                     }
-                });
+                }
+                response = await response.json();
+                Shiny.app.staticState.containerPath = response.containerPath;
+                Shiny.app.staticState.webSocketReconnectionMode = response.webSocketReconnectionMode;
+                Shiny.app.staticState.proxyId = response.proxyId;
             } else {
                 Shiny.app.staticState.containerPath = containerPath;
                 Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;
@@ -106,21 +108,12 @@ Shiny.app = {
                     var parsedUrl = new URL("http://localhost" + Shiny.app.staticState.containerPath); // TODO
                     Cookies.set('sp-instance-override', Shiny.app.staticState.spInstanceOverride,  {path: parsedUrl.pathname});
                 }
-                Shiny.ui.setupIframe();
-                Shiny.ui.showFrame();
-                Shiny.connections.startHeartBeats();
             }
-        }
-
-        if (Shiny.operator !== undefined) {
-            if (await Shiny.operator.start()) {
-                internalStart();
-            }
-        } else {
-            internalStart();
+            Shiny.ui.setupIframe();
+            Shiny.ui.showFrame();
+            Shiny.connections.startHeartBeats();
         }
     },
-
 }
 
 

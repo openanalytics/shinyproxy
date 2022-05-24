@@ -20,13 +20,41 @@
  */
 Shiny = window.Shiny || {};
 Shiny.api = {
-    getProxies: function (cb, cb_fail) {
-        // TODO current instance?
-        $.get(Shiny.api.buildURL("api/proxy?only_owned_proxies=true", false), function (proxies) {
-            cb(proxies);
-        }).fail(function (response) {
-            cb_fail(response);
-        });
+    getProxies: async function () {
+        let resp  = await fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true", false));
+        return await resp.json();
+    },
+    getAllSpInstances: async function () {
+        const resp = await fetch(Shiny.api.buildURL("operator/metadata", false));
+        const json = await resp.json();
+        return json.instances.map(i => i.hashOfSpec);
+    },
+    getProxiesOnAllSpInstances:  async function () {
+        if (!Shiny.app.staticState.operatorEnabled) {
+            return await Shiny.api.getProxies();
+        }
+        const instances = await Shiny.api.getAllSpInstances();
+        const requests = [];
+        for (const instance of instances) {
+            requests.push(fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true&sp_instance_override=" + instance, false)));
+        }
+        const responses = await Promise.all(requests);
+        let proxies = [];
+        let handled = [];
+        for (const response of responses) {
+            try {
+                const json = await response.json();
+                for (const proxy of json) {
+                    if (!handled.includes(proxy.id)) {
+                        handled.push(proxy.id);
+                        proxies.push(proxy);
+                    }
+                }
+            } catch (e) {
+                console.log(e);
+            }
+        }
+        return proxies;
     },
     deleteProxyById: function (id, cb, cb_fail) {
         $.ajax({

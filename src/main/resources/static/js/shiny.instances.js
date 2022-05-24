@@ -29,9 +29,9 @@ Shiny.instances = {
         onShow: function () {
             Shiny.instances._refreshModal();
             clearInterval(Shiny.instances._refreshIntervalId);
-            Shiny.instances._refreshIntervalId = setInterval(function() {
+            Shiny.instances._refreshIntervalId = setInterval(async function() {
                 if (!document.hidden) {
-                    Shiny.instances._refreshModal();
+                    await Shiny.instances._refreshModal();
                 }
             }, 2500);
         },
@@ -134,17 +134,18 @@ Shiny.instances = {
             Shiny.app.runtimeState.appStopped = true;
             Shiny.ui.removeFrame();
         }
-        Shiny.api.getProxyId(Shiny.app.staticState.appName, instanceName, function (proxyId) {
-            if (proxyId !== null) {
-                Shiny.api.deleteProxyById(proxyId, function () {
-                    cb(proxyId);
-                }, function() {
-                    alert("Error deleting proxy, please try again.")
-                });
-            }
-        }, function() {
-            alert("Error deleting proxy, please try again.")
-        });
+        // TODO broken
+        // Shiny.api.getProxyId(Shiny.app.staticState.appName, instanceName, function (proxyId) {
+        //     if (proxyId !== null) {
+        //         Shiny.api.deleteProxyById(proxyId, function () {
+        //             cb(proxyId);
+        //         }, function() {
+        //             alert("Error deleting proxy, please try again.")
+        //         });
+        //     }
+        // }, function() {
+        //     alert("Error deleting proxy, please try again.")
+        // });
     },
 
     _waitUntilInstanceDeleted: function (proxyId, cb) {
@@ -158,53 +159,63 @@ Shiny.instances = {
             }, 500);
         }, function() {});
     },
-    _refreshModal: function() {
-        Shiny.api.getProxies(function (proxies) {
-            var templateData = {'instances': []};
+    _refreshModal: async function () {
+        const proxies = await Shiny.api.getProxiesOnAllSpInstances();
+        let templateData = {'instances': []};
 
-            for (var idx = 0; idx < proxies.length; idx++) {
-                var proxy = proxies[idx];
+        for (const proxy of proxies) {
+            if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id') &&
+                proxy.hasOwnProperty('runtimeValues') &&
+                proxy.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE') &&
+                proxy.runtimeValues.hasOwnProperty('SHINYPROXY_INSTANCE')
+            ) {
 
-                if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id') &&
-                    proxy.hasOwnProperty('runtimeValues') && proxy.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE')) {
-
-                    var appInstance = proxy.runtimeValues.SHINYPROXY_APP_INSTANCE;
-                    if (proxy.spec.id !== Shiny.app.staticState.appName) {
-                        continue;
-                    }
-
-                    if (proxy.status !== "Up" && proxy.status !== "Starting" && proxy.status !== "New") {
-                        continue;
-                    }
-
-                    var proxyName = ""
-                    if (appInstance === "_") {
-                        proxyName = "Default";
-                    } else {
-                        proxyName = appInstance;
-                    }
-
-                    var active = Shiny.app.staticState.appInstanceName === appInstance;
-                    var url = Shiny.instances._createUrlForInstance(appInstance);
-
-                    templateData['instances'].push({name: proxyName, active: active, url: url});
-                } else {
-                    console.log("Received invalid proxy object from server.");
+                let appInstance = proxy.runtimeValues.SHINYPROXY_APP_INSTANCE;
+                if (proxy.spec.id !== Shiny.app.staticState.appName) {
+                    continue;
                 }
-            }
 
-            templateData['instances'].sort(function (a, b) {
-                return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
-            });
+                if (proxy.status !== "Up" && proxy.status !== "Starting" && proxy.status !== "New") {
+                    continue;
+                }
 
-            if (Shiny.app.staticState.maxInstances === -1) {
-                $('#maxInstances').text("unlimited");
+                let proxyName = ""
+                if (appInstance === "_") {
+                    proxyName = "Default";
+                } else {
+                    proxyName = appInstance;
+                }
+
+                const active = Shiny.app.staticState.proxyId === proxy.id;
+                const url = Shiny.instances._createUrlForProxy(proxy);
+
+                templateData['instances'].push({name: proxyName, active: active, url: url});
             } else {
-                $('#maxInstances').text(Shiny.app.staticState.maxInstances);
+                console.log("Received invalid proxy object from server.");
             }
-            $('#usedInstances').text(templateData['instances'].length);
-            document.getElementById('appInstances').innerHTML = Shiny.instances._template(templateData);
+        }
+
+        templateData['instances'].sort(function (a, b) {
+            return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
         });
+
+        if (Shiny.app.staticState.maxInstances === -1) {
+            $('#maxInstances').text("unlimited");
+        } else {
+            $('#maxInstances').text(Shiny.app.staticState.maxInstances);
+        }
+        $('#usedInstances').text(templateData['instances'].length); // TODO
+        document.getElementById('appInstances').innerHTML = Shiny.instances._template(templateData);
+    },
+    _createUrlForProxy: function(proxy) {
+        const appName = proxy.spec.id;
+        const appInstance = proxy.runtimeValues.SHINYPROXY_APP_INSTANCE;
+        const appSpInstance = proxy.runtimeValues.SHINYPROXY_INSTANCE;
+        if (appSpInstance !== Shiny.app.staticState.spInstance) {
+            return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/?sp_instance_override=" + appSpInstance;
+        } else {
+            return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/";
+        }
     },
     _getCurrentAmountOfInstances: function() {
         var currentAmountOfInstances = 0;

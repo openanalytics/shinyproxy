@@ -90,6 +90,7 @@ public class AppController extends BaseController {
 		// operator specific
 		String spInstanceOverride = getSpInstanceOverride(request);
 		map.put("spInstanceOverride", spInstanceOverride);
+		map.put("spInstance", identifierService.instanceId);
 		if (spInstanceOverride != null) {
 			map.put("resourceSuffix", "?sp_instance_override=" + spInstanceOverride);
 		}

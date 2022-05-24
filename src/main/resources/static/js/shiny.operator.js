@@ -41,54 +41,46 @@ Shiny.operator = {
         Shiny.operator.staticState.showTransferMessage = showTransferMessage;
     },
 
-    start: function(cb=null) {
-        document.getElementById('new-version-btn').addEventListener("click", function() {
-            Shiny.api.getProxies(function (proxies) {
-                Shiny.operator.hideMessage();
-                if (proxies.length > 0) {
-                    if (confirm("Warning: you have " + proxies.length + " apps running, your existing session(s) will be closed once you switch to the new version.")) {
-                        Shiny.operator.transferToNewInstance();
-                    }
-                } else {
+    start: async function () {
+        document.getElementById('new-version-btn').addEventListener("click", async function () {
+            const proxies = await Shiny.api.getProxies();
+            Shiny.operator.hideMessage();
+            if (proxies.length > 0) {
+                if (confirm("Warning: you have " + proxies.length + " apps running, your existing session(s) will be closed once you switch to the new version.")) {
                     Shiny.operator.transferToNewInstance();
                 }
-            });
+            } else {
+                Shiny.operator.transferToNewInstance();
+            }
         });
         if (Shiny.operator.newInstanceAvailable()) {
             // check amount of apps running
             if (Shiny.operator.staticState.forceTransfer) {
-                Shiny.api.getProxies(function (proxies) {
+                try {
+                    const proxies = await Shiny.api.getProxies(); // TODO failure
                     if (proxies.length === 0) {
                         // force transfer
                         Shiny.operator.transferToNewInstance();
-                    } else {
-                        // display message
-                        Shiny.operator.displayMessage();
-                        if (cb !== null) cb();
+                        return false;
                     }
-                }, function() {
-                    // failure -> display message
-                    Shiny.operator.displayMessage();
-                    if (cb !== null) cb();
-                });
-            } else {
-                // display message
-                Shiny.operator.displayMessage();
-                if (cb !== null) cb();
+                } catch (e) {
+                    console.log(e);
+                }
             }
-        } else {
-            if (cb !== null) cb();
+            // display message
+            Shiny.operator.displayMessage();
         }
+        return true;
     },
 
-    newInstanceAvailable: function() {
+    newInstanceAvailable: function () {
         var spInstanceCookie = Cookies.get('sp-instance');
         var spLatestInstanceCookie = Cookies.get('sp-latest-instance');
 
         return typeof spInstanceCookie !== 'undefined' && typeof spLatestInstanceCookie !== 'undefined' && spInstanceCookie !== spLatestInstanceCookie;
     },
 
-    displayMessage: function() {
+    displayMessage: function () {
         // only show the message if the option is enabled
         if (Shiny.operator.staticState.showTransferMessage) {
             document.getElementById('new-version-banner').style.display = "block";
@@ -96,19 +88,19 @@ Shiny.operator = {
         }
     },
 
-    hideMessage: function() {
+    hideMessage: function () {
         document.getElementById('new-version-banner').style.display = "none";
     },
 
-    transferToNewInstance: function() {
+    transferToNewInstance: function () {
         $('#loading,#reconnecting,#reloadFailed,#appStopped,#shinyframe').remove();
 
         $('#applist,#iframeinsert').replaceWith(
             "<div id='server-transfer-message' class='container'>" +
-                "<h2>Transferring you to the latest version of " + Shiny.common.staticState.applicationName + " ...</h2>" +
+            "<h2>Transferring you to the latest version of " + Shiny.common.staticState.applicationName + " ...</h2>" +
             "</div>");
 
-        Cookies.set('sp-instance', Cookies.get('sp-latest-instance'),  {path: Shiny.common.staticState.contextPath});
+        Cookies.set('sp-instance', Cookies.get('sp-latest-instance'), {path: Shiny.common.staticState.contextPath});
         location.reload();
     }
 

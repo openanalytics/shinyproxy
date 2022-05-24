@@ -35,7 +35,9 @@ Shiny.app = {
         maxReloadAttempts: 10,
         heartBeatRate: null,
         maxInstances: null,
+        spInstance: null,
         spInstanceOverride: null,
+        operatorEnabled: null,
     },
 
     runtimeState: {
@@ -63,13 +65,15 @@ Shiny.app = {
      * @param shinyForceFullReload
      * @param spInstanceOverride
      */
-    start: function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, maxInstances, shinyForceFullReload, spInstanceOverride) {
+    start: async function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, maxInstances, shinyForceFullReload, spInstance, spInstanceOverride) {
         Shiny.app.staticState.heartBeatRate = heartBeatRate;
         Shiny.app.staticState.appName = appName;
         Shiny.app.staticState.appInstanceName = appInstanceName;
         Shiny.app.staticState.maxInstances = parseInt(maxInstances, 10);
         Shiny.app.staticState.shinyForceFullReload = shinyForceFullReload;
+        Shiny.app.staticState.spInstance = spInstance;
         Shiny.app.staticState.spInstanceOverride = spInstanceOverride;
+        Shiny.app.staticState.operatorEnabled = Shiny.operator !== undefined;
         Shiny.instances._template = Handlebars.templates.switch_instances;
 
         function internalStart() {
@@ -109,9 +113,9 @@ Shiny.app = {
         }
 
         if (Shiny.operator !== undefined) {
-            Shiny.operator.start(function() {
+            if (await Shiny.operator.start()) {
                 internalStart();
-            });
+            }
         } else {
             internalStart();
         }

@@ -61,9 +61,6 @@ public class AppController extends BaseController {
 	@Inject
 	private ShinyProxySpecProvider shinyProxySpecProvider;
 
-	@Inject
-	private IdentifierService identifierService;
-
 	private final Logger logger = LogManager.getLogger(getClass());
 
 	@RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.GET)
@@ -83,14 +80,13 @@ public class AppController extends BaseController {
 		map.put("proxyId", (proxy == null) ? "" : proxy.getId());
 		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
 		map.put("heartbeatRate", getHeartbeatRate());
-		map.put("isAppPage", true);
+		map.put("page", "app");
 		map.put("maxInstances", shinyProxySpecProvider.getMaxInstancesForSpec(appRequestInfo.getAppName()));
 		map.put("shinyForceFullReload", shinyProxySpecProvider.getShinyForceFullReload(appRequestInfo.getAppName()));
 
 		// operator specific
 		String spInstanceOverride = getSpInstanceOverride(request);
 		map.put("spInstanceOverride", spInstanceOverride);
-		map.put("spInstance", identifierService.instanceId);
 		if (spInstanceOverride != null) {
 			map.put("resourceSuffix", "?sp_instance_override=" + spInstanceOverride);
 		}

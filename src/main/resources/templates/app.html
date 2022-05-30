@@ -109,7 +109,7 @@
 					Max instances: <span id="maxInstances"></span>, used: <span id="usedInstances"></span>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
 				</div>
 			</div>
 		</div>
@@ -117,7 +117,7 @@
 
 	<script type="text/javascript" th:inline="javascript">
 		$(window).on('load', function() {
-		    window.Shiny.common.init([[${contextPath}]], [[${application_name}]]);
+		    window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]]);
 			if ([[${operatorEnabled}]]) {
 				window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorShowTransferMessage}]]);
 			}
@@ -130,7 +130,6 @@
 					[[${appInstance}]],
 					[[${maxInstances}]],
 					[[${shinyForceFullReload}]],
-					[[${spInstance}]],
 					[[${spInstanceOverride}]],
 			);
 		});

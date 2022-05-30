@@ -43,7 +43,7 @@ Shiny.instances = {
                 // when no arguments provided -> stop the current app
                 appInstanceName = Shiny.instances._toAppDisplayName(Shiny.app.staticState.appInstanceName);
                 proxyId = Shiny.app.staticState.proxyId;
-                spInstance = Shiny.app.staticState.spInstance;
+                spInstance = Shiny.common.staticState.spInstance;
             }
 
             if (confirm("Are you sure you want to stop instance \"" + appInstanceName + "\"?")) {
@@ -63,8 +63,8 @@ Shiny.instances = {
                     return;
                 }
 
-                await Shiny.instances._deleteInstance(Shiny.app.staticState.proxyId, Shiny.app.staticState.spInstance);
-                await Shiny.instances._waitUntilInstanceDeleted(Shiny.app.staticState.proxyId, Shiny.app.staticState.spInstance);
+                await Shiny.instances._deleteInstance(Shiny.app.staticState.proxyId, Shiny.common.staticState.spInstance);
+                await Shiny.instances._waitUntilInstanceDeleted(Shiny.app.staticState.proxyId, Shiny.common.staticState.spInstance);
                 window.location.reload(false);
             }
         },
@@ -197,7 +197,7 @@ Shiny.instances = {
         const appName = proxy.spec.id;
         const appInstance = proxy.runtimeValues.SHINYPROXY_APP_INSTANCE;
         const appSpInstance = proxy.runtimeValues.SHINYPROXY_INSTANCE;
-        if (appSpInstance !== Shiny.app.staticState.spInstance) {
+        if (appSpInstance !== Shiny.common.staticState.spInstance) {
             return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/?sp_instance_override=" + appSpInstance;
         } else {
             return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/";

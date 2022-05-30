@@ -34,6 +34,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
+import eu.openanalytics.containerproxy.service.IdentifierService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.OperatorService;
@@ -72,6 +73,9 @@ public abstract class BaseController {
 
 	@Inject
 	OperatorService operatorService;
+
+	@Inject
+	IdentifierService identifierService;
 
 	private static final Logger logger = LogManager.getLogger(BaseController.class);
 	private static final Map<String, String> imageCache = new HashMap<>();
@@ -133,7 +137,7 @@ public abstract class BaseController {
 		map.put("isAdmin", userService.isAdmin(authentication));
 		map.put("isSupportEnabled", isLoggedIn && getSupportAddress() != null);
 		map.put("logoutUrl", authenticationBackend.getLogoutURL());
-		map.put("isAppPage", false); // defaults, used in navbar
+		map.put("page", ""); // defaults, used in navbar
 		map.put("maxInstances", 0); // defaults, used in navbar
 		map.put("contextPath", getContextPath());
 		map.put("resourceSuffix", "");
@@ -141,6 +145,7 @@ public abstract class BaseController {
 		// operator specific
 		map.put("operatorEnabled", operatorService.isEnabled());
 		map.put("operatorForceTransfer", operatorService.mustForceTransfer());
+		map.put("spInstance", identifierService.instanceId);
 	}
 	
 	protected String getSupportAddress() {

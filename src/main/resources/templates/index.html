@@ -31,9 +31,15 @@
     <script th:src="@{${jqueryJs}}"></script>
     <script th:src="@{${bootstrapJs}}"></script>
     <script th:src="@{${cookieJs}}"></script>
-    <script th:if="${operatorEnabled}" th:src="@{/js/shiny.operator.js}"></script>
-    <script th:src="@{/js/shiny.api.js}"></script>
-    <script th:src="@{/js/shiny.common.js}"></script>
+    <script th:src="@{${handlebars} + ${resourceSuffix}}"></script>
+    <script th:src="@{'/js/shiny.app.js' + ${resourceSuffix}}"></script>
+    <script th:src="@{'/js/shiny.api.js' + ${resourceSuffix}}"></script>
+    <script th:src="@{'/js/shiny.connections.js' + ${resourceSuffix}}"></script>
+    <script th:src="@{'/js/shiny.instances.js' + ${resourceSuffix}}"></script>
+    <script th:src="@{'/js/shiny.ui.js' + ${resourceSuffix}}"></script>
+    <script th:src="@{'/js/shiny.common.js' + ${resourceSuffix}}"></script>
+    <script th:if="${operatorEnabled}" th:src="@{'/js/shiny.operator.js' + ${resourceSuffix}}"></script>
+    <script th:src="@{'/handlebars/precompiled.js' + ${resourceSuffix}}"></script>
 </head>
 <body>
 <!-- navigation bar -->
@@ -113,11 +119,31 @@
     </th:block>
 </div>
 
-<script th:if="${operatorEnabled}" type="text/javascript" th:inline="javascript">
+<div class="modal fade" id="myAppsModal" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title">My apps</h4>
+            </div>
+            <div class="modal-body">
+                <div id="myApps">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" th:inline="javascript">
     $(window).on('load', function () {
-        window.Shiny.common.init([[${contextPath}]], [[${application_name}]]);
-        window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorShowTransferMessage}]]);
-        window.Shiny.operator.start();
+        window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]]);
+        if ([[${operatorEnabled}]]) {
+            window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorShowTransferMessage}]]);
+            window.Shiny.operator.start();
+        }
     });
 </script>
 </body>

@@ -36,7 +36,7 @@ Shiny.app = {
         maxInstances: null,
         spInstance: null,
         spInstanceOverride: null,
-        operatorEnabled: null,
+        operatorEnabled: false,
     },
 
     runtimeState: {
@@ -62,18 +62,15 @@ Shiny.app = {
      * @param appInstanceName
      * @param maxInstances
      * @param shinyForceFullReload
-     * @param spInstance
      * @param spInstanceOverride
      */
-    start: async function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, maxInstances, shinyForceFullReload, spInstance, spInstanceOverride) {
+    start: async function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, maxInstances, shinyForceFullReload, spInstanceOverride) {
         Shiny.app.staticState.heartBeatRate = heartBeatRate;
         Shiny.app.staticState.appName = appName;
         Shiny.app.staticState.appInstanceName = appInstanceName;
         Shiny.app.staticState.maxInstances = parseInt(maxInstances, 10);
         Shiny.app.staticState.shinyForceFullReload = shinyForceFullReload;
-        Shiny.app.staticState.spInstance = spInstance;
         Shiny.app.staticState.spInstanceOverride = spInstanceOverride;
-        Shiny.app.staticState.operatorEnabled = Shiny.operator !== undefined;
         Shiny.instances._template = Handlebars.templates.switch_instances;
 
         if (Shiny.operator === undefined || await Shiny.operator.start()) {
@@ -131,6 +128,7 @@ $(window).on('load', function () {
     $('#switchInstancesModal-btn').click(function () {
         Shiny.instances.eventHandlers.onShow();
     });
+
 
     $('#newInstanceForm').submit(function (e) {
         e.preventDefault();

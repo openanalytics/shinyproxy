@@ -154,6 +154,28 @@ body > div#navbar { padding-top: 0px; }
 	float: left;
 }
 
+#myAppsModal .btn-group {
+	float: right;
+}
+
+#myAppsModal .app-instance {
+	height: 50px;
+}
+
+#myAppsModal .uptime {
+	clear: both;
+	float: left;
+}
+
+#myAppsModal .app-list {
+	list-style: none;
+}
+
+#myAppsModal .instance-list {
+	list-style: disc;
+}
+
+
 .admin-proxy-id {
 	width: 23em;
 }

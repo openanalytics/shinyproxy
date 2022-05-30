@@ -156,6 +156,15 @@ Shiny.instances = {
                     proxyName = appInstance;
                 }
 
+                let uptime = "N/A";
+                if (proxy.hasOwnProperty("startupTimestamp") && proxy.startupTimestamp > 0) {
+                    const uptimeSec = (Date.now() - proxy.startupTimestamp) / 1000;
+                    const hours = Math.floor(uptimeSec / 3600);
+                    const minutes = Math.floor((uptimeSec % 3600) / 60).toString().padStart(2, '0');
+                    const seconds = Math.floor(uptimeSec % 60).toString().padStart(2, '0');
+                    uptime = `${hours}:${minutes}:${seconds}`
+                }
+
                 const active = Shiny.app.staticState.proxyId === proxy.id; // TODO startup
                 const url = Shiny.instances._createUrlForProxy(proxy);
 
@@ -164,7 +173,8 @@ Shiny.instances = {
                     active: active,
                     url: url,
                     spInstance: proxy.runtimeValues.SHINYPROXY_INSTANCE,
-                    proxyId: proxy.id
+                    proxyId: proxy.id,
+                    uptime: uptime
                 });
             } else {
                 console.log("Received invalid proxy object from server.");

@@ -143,12 +143,15 @@ body > div#navbar { padding-top: 0px; }
 
 #switchInstancesModal .btn-group {
 	float: right;
-    margin-top: 9px;
 }
 
 #switchInstancesModal li {
-    height: 40px;
-	line-height: 40px;
+    height: 50px;
+}
+
+#switchInstancesModal .uptime {
+	clear: both;
+	float: left;
 }
 
 .admin-proxy-id {

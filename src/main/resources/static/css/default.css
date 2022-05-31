@@ -204,3 +204,7 @@ body > div#navbar { padding-top: 0px; }
 	margin-left: 20px;
 	margin-right: 20px;
 }
+
+.sp-override-active .btn-restart-app {
+	display: none;
+}

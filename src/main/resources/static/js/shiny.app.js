@@ -110,6 +110,9 @@ Shiny.app = {
             Shiny.ui.showFrame();
             Shiny.connections.startHeartBeats();
         }
+        if (spInstanceOverride !== null) {
+            $('body').addClass('sp-override-active');
+        }
     },
 }
 

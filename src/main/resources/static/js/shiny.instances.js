@@ -90,7 +90,7 @@ Shiny.instances = {
                 return;
             }
 
-            if (instance === Shiny.app.staticState.appInstanceName) {
+            if (instance === Shiny.app.staticState.appInstanceName && !Shiny.app.runtimeState.appStopped) {
                 alert("This instance is already opened in the current tab");
                 return;
             }
@@ -135,13 +135,18 @@ Shiny.instances = {
     },
     _refreshModal: async function () {
         let templateData = await Shiny.api.getProxiesAsTemplateData();
-        templateData = templateData['apps'][Shiny.app.staticState.appName];
+        if (templateData.apps.hasOwnProperty(Shiny.app.staticState.appName)) {
+            templateData = templateData.apps[Shiny.app.staticState.appName];
 
-       templateData['instances'].forEach(instance => {
-            instance['active'] = instance['spInstance'] === Shiny.common.staticState.spInstance
-                && instance['appName'] ===  Shiny.app.staticState.appName
-                && instance['instanceName'] === Shiny.instances._toAppDisplayName(Shiny.app.staticState.appInstanceName)
-        });
+            templateData.instances.forEach(instance => {
+                instance.active = instance.spInstance === Shiny.common.staticState.spInstance
+                    && instance.appName === Shiny.app.staticState.appName
+                    && instance.instanceName === Shiny.instances._toAppDisplayName(Shiny.app.staticState.appInstanceName)
+            });
+
+        } else {
+            templateData = {"instances": []};
+        }
 
         if (Shiny.app.staticState.maxInstances === -1) {
             $('#maxInstances').text("unlimited");

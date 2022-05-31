@@ -141,40 +141,27 @@ body > div#navbar { padding-top: 0px; }
 	width: 100px;
 }
 
-#switchInstancesModal .btn-group {
+.apps-modal .btn-group {
 	float: right;
 }
 
-#switchInstancesModal li {
-    height: 50px;
-}
-
-#switchInstancesModal .uptime {
-	clear: both;
-	float: left;
-}
-
-#myAppsModal .btn-group {
-	float: right;
-}
-
-#myAppsModal .app-instance {
+.apps-modal .app-instance {
 	height: 50px;
 }
 
-#myAppsModal .uptime {
+.apps-modal .uptime {
 	clear: both;
 	float: left;
 }
 
-#myAppsModal .app-list {
+.apps-modal .app-list {
 	list-style: none;
+	padding-left: 0;
 }
 
-#myAppsModal .instance-list {
+.apps-modal .instance-list {
 	list-style: disc;
 }
-
 
 .admin-proxy-id {
 	width: 23em;

@@ -76,6 +76,10 @@ Shiny.instances = {
                 return;
             }
 
+            if (instance.toLowerCase() === "default") {
+                instance = "_";
+            }
+
             if (instance.length > 64) {
                 alert("The provided name is too long (maximum 64 characters)");
                 return;
@@ -130,59 +134,13 @@ Shiny.instances = {
         }
     },
     _refreshModal: async function () {
-        const proxies = await Shiny.api.getProxiesOnAllSpInstances();
-        let templateData = {'instances': []};
+        let templateData = await Shiny.api.getProxiesAsTemplateData();
+        templateData = templateData['apps'][Shiny.app.staticState.appName];
 
-        for (const proxy of proxies) {
-            if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id') &&
-                proxy.hasOwnProperty('runtimeValues') &&
-                proxy.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE') &&
-                proxy.runtimeValues.hasOwnProperty('SHINYPROXY_INSTANCE')
-            ) {
-
-                let appInstance = proxy.runtimeValues.SHINYPROXY_APP_INSTANCE;
-                if (proxy.spec.id !== Shiny.app.staticState.appName) {
-                    continue;
-                }
-
-                if (proxy.status !== "Up" && proxy.status !== "Starting" && proxy.status !== "New") {
-                    continue;
-                }
-
-                let proxyName = ""
-                if (appInstance === "_") {
-                    proxyName = "Default";
-                } else {
-                    proxyName = appInstance;
-                }
-
-                let uptime = "N/A";
-                if (proxy.hasOwnProperty("startupTimestamp") && proxy.startupTimestamp > 0) {
-                    const uptimeSec = (Date.now() - proxy.startupTimestamp) / 1000;
-                    const hours = Math.floor(uptimeSec / 3600);
-                    const minutes = Math.floor((uptimeSec % 3600) / 60).toString().padStart(2, '0');
-                    const seconds = Math.floor(uptimeSec % 60).toString().padStart(2, '0');
-                    uptime = `${hours}:${minutes}:${seconds}`
-                }
-
-                const active = Shiny.app.staticState.proxyId === proxy.id; // TODO startup
-                const url = Shiny.instances._createUrlForProxy(proxy);
-
-                templateData['instances'].push({
-                    name: proxyName,
-                    active: active,
-                    url: url,
-                    spInstance: proxy.runtimeValues.SHINYPROXY_INSTANCE,
-                    proxyId: proxy.id,
-                    uptime: uptime
-                });
-            } else {
-                console.log("Received invalid proxy object from server.");
-            }
-        }
-
-        templateData['instances'].sort(function (a, b) {
-            return a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
+       templateData['instances'].forEach(instance => {
+            instance['active'] = instance['spInstance'] === Shiny.common.staticState.spInstance
+                && instance['appName'] ===  Shiny.app.staticState.appName
+                && instance['instanceName'] === Shiny.instances._toAppDisplayName(Shiny.app.staticState.appInstanceName)
         });
 
         if (Shiny.app.staticState.maxInstances === -1) {
@@ -190,7 +148,9 @@ Shiny.instances = {
         } else {
             $('#maxInstances').text(Shiny.app.staticState.maxInstances);
         }
+
         $('#usedInstances').text(templateData['instances'].length); // TODO
+
         document.getElementById('appInstances').innerHTML = Shiny.instances._template(templateData);
     },
     _createUrlForProxy: function (proxy) {

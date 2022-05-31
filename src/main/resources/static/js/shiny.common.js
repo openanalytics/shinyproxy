@@ -49,62 +49,11 @@ Shiny.common = {
     },
 
     _refreshModal: async function () {
-        const proxies = await Shiny.api.getProxiesOnAllSpInstances();
-        let templateData = {'apps': {}};
-
-        for (const proxy of proxies) {
-            if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id') &&
-                proxy.hasOwnProperty('runtimeValues') &&
-                proxy.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE') &&
-                proxy.runtimeValues.hasOwnProperty('SHINYPROXY_INSTANCE')
-            ) {
-
-                let appInstance = proxy.runtimeValues.SHINYPROXY_APP_INSTANCE;
-
-                if (proxy.status !== "Up" && proxy.status !== "Starting" && proxy.status !== "New") {
-                    continue;
-                }
-
-                let appName = proxy.spec.id;
-                if (proxy.spec.displayName !== "") {
-                    appName = proxy.spec.displayName;
-                }
-
-                let instanceName = "";
-                if (appInstance === "_") {
-                    instanceName = "Default";
-                } else {
-                    instanceName = appInstance;
-                }
-
-                let uptime = "N/A";
-                if (proxy.hasOwnProperty("startupTimestamp") && proxy.startupTimestamp > 0) {
-                    const uptimeSec = (Date.now() - proxy.startupTimestamp) / 1000;
-                    const hours = Math.floor(uptimeSec / 3600);
-                    const minutes = Math.floor((uptimeSec % 3600) / 60).toString().padStart(2, '0');
-                    const seconds = Math.floor(uptimeSec % 60).toString().padStart(2, '0');
-                    uptime = `${hours}:${minutes}:${seconds}`
-                }
-
-                const url = Shiny.instances._createUrlForProxy(proxy);
-
-                if (!templateData['apps'].hasOwnProperty(appName)) {
-                    templateData['apps'][appName] = [];
-                }
-
-                templateData['apps'][appName].push({
-                    instanceName: instanceName,
-                    appName: appName,
-                    url: url,
-                    spInstance: proxy.runtimeValues.SHINYPROXY_INSTANCE,
-                    proxyId: proxy.id,
-                    uptime: uptime
-                });
-            } else {
-                console.log("Received invalid proxy object from server.");
-            }
-        }
-
+        const templateData = await Shiny.api.getProxiesAsTemplateData();
+        templateData.apps = Object.values(templateData.apps);
+        templateData.apps.sort(function (a, b) {
+            return a.displayName.toLowerCase() > b.displayName.toLowerCase() ? 1 : -1
+        });
         document.getElementById('myApps').innerHTML = Handlebars.templates.my_apps(templateData);
     },
 

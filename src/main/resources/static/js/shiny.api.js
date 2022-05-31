@@ -70,6 +70,70 @@ Shiny.api = {
                 return null;
             });
     },
+    getProxiesAsTemplateData: async function() {
+        const proxies = await Shiny.api.getProxiesOnAllSpInstances();
+        let templateData = {'apps': {}};
+
+        for (const proxy of proxies) {
+            if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id') &&
+                proxy.hasOwnProperty('runtimeValues') &&
+                proxy.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE') &&
+                proxy.runtimeValues.hasOwnProperty('SHINYPROXY_INSTANCE')
+            ) {
+
+                let appInstance = proxy.runtimeValues.SHINYPROXY_APP_INSTANCE;
+
+                if (proxy.status !== "Up" && proxy.status !== "Starting" && proxy.status !== "New") {
+                    continue;
+                }
+
+                let displayName = proxy.spec.id;
+                if (proxy.spec.displayName !== null && proxy.spec.displayName !== "") {
+                    displayName = proxy.spec.displayName;
+                }
+
+                let instanceName = Shiny.instances._toAppDisplayName(appInstance);
+
+                let uptime = "N/A";
+                if (proxy.hasOwnProperty("startupTimestamp") && proxy.startupTimestamp > 0) {
+                    const uptimeSec = (Date.now() - proxy.startupTimestamp) / 1000;
+                    const hours = Math.floor(uptimeSec / 3600);
+                    const minutes = Math.floor((uptimeSec % 3600) / 60).toString().padStart(2, '0');
+                    const seconds = Math.floor(uptimeSec % 60).toString().padStart(2, '0');
+                    uptime = `${hours}:${minutes}:${seconds}`
+                }
+
+                const url = Shiny.instances._createUrlForProxy(proxy);
+
+                if (!templateData.apps.hasOwnProperty(proxy.spec.id)) {
+                    templateData.apps[proxy.spec.id] = {
+                        displayName: displayName,
+                        instances: []
+                    };
+                }
+
+                templateData.apps[proxy.spec.id].instances.push({
+                    appName: proxy.spec.id,
+                    instanceName: instanceName,
+                    displayName: displayName,
+                    url: url,
+                    spInstance: proxy.runtimeValues.SHINYPROXY_INSTANCE,
+                    proxyId: proxy.id,
+                    uptime: uptime
+                });
+            } else {
+                console.log("Received invalid proxy object from server.", proxy);
+            }
+        }
+
+        Object.values(templateData.apps).forEach((app) => {
+            app.instances.sort(function (a, b) {
+                return a.instanceName.toLowerCase() > b.instanceName.toLowerCase() ? 1 : -1
+            });
+        });
+
+        return templateData;
+    },
     buildURL(location, allowSpInstanceOverride = true) {
         const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
         const url = new URL(location, baseURL);

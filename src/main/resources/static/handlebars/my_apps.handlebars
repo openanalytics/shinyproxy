@@ -1,9 +1,9 @@
 <ul class="app-list">
     {{#each apps}}
         <li>
-            <b>{{@key}}</b>
+            <b>{{ displayName }}</b>
             <ul class="instance-list">
-                {{#each this}}
+                {{#each instances}}
                     <li class="app-instance">
                         <a target="_blank" href="{{ url }}">{{ instanceName }}</a>
                         <div class="btn-group btn-group-xs" role="group">

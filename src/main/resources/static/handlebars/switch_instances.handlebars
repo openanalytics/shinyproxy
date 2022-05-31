@@ -1,19 +1,19 @@
-<ul>
+<ul class="instance-list">
     {{#each instances}}
         {{#if active}}
-            <li>
-                <b>{{ name }}</b>
+            <li class="app-instance">
+                <b>{{ instanceName }}</b>
                 <div class="btn-group btn-group-xs" role="group">
-                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ name }}', '{{ proxyId }}', '{{ spInstance }}');">Stop app</button>
+                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Stop app</button>
                     <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onRestartInstance();">Restart app</button>
                 </div>
                 <span class="uptime">Uptime: {{ uptime }}</span>
             </li>
         {{else}}
-            <li>
-                <a target="_blank" href="{{ url }}">{{ name }}</a>
+            <li class="app-instance">
+                <a target="_blank" href="{{ url }}">{{ instanceName }}</a>
                 <div class="btn-group btn-group-xs" role="group">
-                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ name }}', '{{ proxyId }}', '{{ spInstance }}');">Stop app</button>
+                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Stop app</button>
                 </div>
                 <span class="uptime">Uptime: {{ uptime }}</span>
             </li>

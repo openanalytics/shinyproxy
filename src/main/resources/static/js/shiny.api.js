@@ -33,7 +33,13 @@ Shiny.api = {
         if (!Shiny.app.staticState.operatorEnabled) {
             return Shiny.api._groupByApp(await Shiny.api.getProxies());
         }
-        const instances = await Shiny.api.getAllSpInstances();
+        let instances = [];
+        try {
+            instances = await Shiny.api.getAllSpInstances();
+        } catch (e) {
+            console.log("Failure when getting operator metadata, limiting to current instance");
+            instances = [Shiny.app.staticState.spInstance];
+        }
         const requests = [];
         for (const instance of instances) {
             requests.push(fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true&sp_instance_override=" + instance, false))

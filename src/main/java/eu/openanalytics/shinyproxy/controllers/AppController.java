@@ -24,7 +24,6 @@ import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
-import eu.openanalytics.containerproxy.service.IdentifierService;
 import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.containerproxy.util.Retrying;
@@ -115,17 +114,9 @@ public class AppController extends BaseController {
 	public void appDirect(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
 
-		Proxy proxy = findUserProxy(appRequestInfo);
+		Proxy proxy = getOrStart(appRequestInfo);
+		awaitReady(proxy);
 
-		if (proxy == null && appRequestInfo.getSubPath() != null && !appRequestInfo.getSubPath().equals("/")) {
-		    response.setStatus(410);
-		    response.getWriter().write("{\"status\":\"error\", \"message\":\"app_stopped_or_non_existent\"}");
-		    return;
-		} else {
-			proxy = getOrStart(appRequestInfo);
-			awaitReady(proxy);
-		}
-		
 		String mapping = getProxyEndpoint(proxy);
 		
 		if (appRequestInfo.getSubPath() == null) {

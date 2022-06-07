@@ -31,30 +31,23 @@ Shiny.api = {
     },
     getProxiesOnAllSpInstances: async function () {
         if (!Shiny.app.staticState.operatorEnabled) {
-            return await Shiny.api.getProxies();
+            return Shiny.api._groupByApp(await Shiny.api.getProxies());
         }
         const instances = await Shiny.api.getAllSpInstances();
         const requests = [];
         for (const instance of instances) {
-            requests.push(fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true&sp_instance_override=" + instance, false)));
+            requests.push(fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true&sp_instance_override=" + instance, false))
+                .then(response => response.json()));
         }
         const responses = await Promise.all(requests);
-        let proxies = [];
-        let handled = [];
-        for (const response of responses) {
-            try {
-                const json = await response.json();
-                for (const proxy of json) {
-                    if (!handled.includes(proxy.id)) {
-                        handled.push(proxy.id);
-                        proxies.push(proxy);
-                    }
-                }
-            } catch (e) {
-                console.log(e);
-            }
+        return Shiny.api._groupByApp(responses.flat());
+    },
+    async getNumberOfAppInstances(appName) {
+        const instances = await Shiny.api.getProxiesOnAllSpInstances();
+        if (!instances.hasOwnProperty(appName)) {
+            return 0;
         }
-        return proxies;
+        return instances[appName].length;
     },
     deleteProxyById: async function (proxyId, spInstance) {
         await fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId, spInstance), {
@@ -70,67 +63,84 @@ Shiny.api = {
                 return null;
             });
     },
-    getProxiesAsTemplateData: async function() {
-        const proxies = await Shiny.api.getProxiesOnAllSpInstances();
-        let templateData = {'apps': {}};
-
+    _groupByApp: function (proxies) {
+        let handled = [];
+        let result = {};
         for (const proxy of proxies) {
-            if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id') &&
-                proxy.hasOwnProperty('runtimeValues') &&
-                proxy.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE') &&
-                proxy.runtimeValues.hasOwnProperty('SHINYPROXY_INSTANCE')
-            ) {
-
-                let appInstance = proxy.runtimeValues.SHINYPROXY_APP_INSTANCE;
-
-                if (proxy.status !== "Up" && proxy.status !== "Starting" && proxy.status !== "New") {
-                    continue;
+            if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id')) {
+                if (!handled.includes(proxy.id)) {
+                    handled.push(proxy.id);
+                    proxies.push(proxy);
+                    if (!result.hasOwnProperty(proxy.spec.id)) {
+                        result[proxy.spec.id] = []
+                    }
+                    result[proxy.spec.id].push(proxy);
                 }
-
-                let displayName = proxy.spec.id;
-                if (proxy.spec.displayName !== null && proxy.spec.displayName !== "") {
-                    displayName = proxy.spec.displayName;
-                }
-
-                let instanceName = Shiny.instances._toAppDisplayName(appInstance);
-
-                let uptime = "N/A";
-                if (proxy.hasOwnProperty("startupTimestamp") && proxy.startupTimestamp > 0) {
-                    const uptimeSec = (Date.now() - proxy.startupTimestamp) / 1000;
-                    const hours = Math.floor(uptimeSec / 3600);
-                    const minutes = Math.floor((uptimeSec % 3600) / 60).toString().padStart(2, '0');
-                    const seconds = Math.floor(uptimeSec % 60).toString().padStart(2, '0');
-                    uptime = `${hours}:${minutes}:${seconds}`
-                }
-
-                const url = Shiny.instances._createUrlForProxy(proxy);
-
-                if (!templateData.apps.hasOwnProperty(proxy.spec.id)) {
-                    templateData.apps[proxy.spec.id] = {
-                        displayName: displayName,
-                        instances: []
-                    };
-                }
-
-                templateData.apps[proxy.spec.id].instances.push({
-                    appName: proxy.spec.id,
-                    instanceName: instanceName,
-                    displayName: displayName,
-                    url: url,
-                    spInstance: proxy.runtimeValues.SHINYPROXY_INSTANCE,
-                    proxyId: proxy.id,
-                    uptime: uptime
-                });
             } else {
                 console.log("Received invalid proxy object from server.", proxy);
             }
         }
+        return result;
+    },
+    getProxiesAsTemplateData: async function () {
+        const proxies = await Shiny.api.getProxiesOnAllSpInstances();
+        let templateData = {'apps': {}};
 
-        Object.values(templateData.apps).forEach((app) => {
-            app.instances.sort(function (a, b) {
+        for (const [appName, instances] of Object.entries(proxies)) {
+            let displayName = null;
+            let processedInstances = instances.reduce( (res, instance) => {
+                if (instance.hasOwnProperty('spec') && instance.hasOwnProperty('id') &&
+                    instance.hasOwnProperty('runtimeValues') &&
+                    instance.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE') &&
+                    instance.runtimeValues.hasOwnProperty('SHINYPROXY_INSTANCE')
+                ) {
+
+                    let appInstance = instance.runtimeValues.SHINYPROXY_APP_INSTANCE;
+
+                    if (instance.status !== "Up" && instance.status !== "Starting" && instance.status !== "New") {
+                        return res;
+                    }
+
+                    if (displayName == null) {
+                        displayName = instance.spec.id;
+                        if (instance.spec.displayName !== null && instance.spec.displayName !== "") {
+                            displayName = instance.spec.displayName;
+                        }
+                    }
+
+                    let instanceName = Shiny.instances._toAppDisplayName(appInstance);
+
+                    let uptime = "N/A";
+                    if (instance.hasOwnProperty("startupTimestamp") && instance.startupTimestamp > 0) {
+                        const uptimeSec = (Date.now() - instance.startupTimestamp) / 1000;
+                        const hours = Math.floor(uptimeSec / 3600);
+                        const minutes = Math.floor((uptimeSec % 3600) / 60).toString().padStart(2, '0');
+                        const seconds = Math.floor(uptimeSec % 60).toString().padStart(2, '0');
+                        uptime = `${hours}:${minutes}:${seconds}`
+                    }
+
+                    const url = Shiny.instances._createUrlForProxy(instance);
+                    res.push({
+                        appName: instance.spec.id,
+                        instanceName: instanceName,
+                        displayName: displayName,
+                        url: url,
+                        spInstance: instance.runtimeValues.SHINYPROXY_INSTANCE,
+                        proxyId: instance.id,
+                        uptime: uptime
+                    });
+                } else {
+                    console.log("Received invalid instance object from server.", instance);
+                }
+                return res;
+            }, []);
+
+            processedInstances.sort(function (a, b) {
                 return a.instanceName.toLowerCase() > b.instanceName.toLowerCase() ? 1 : -1
             });
-        });
+
+            templateData.apps[appName] = {'instances': processedInstances, displayName: displayName};
+        }
 
         return templateData;
     },

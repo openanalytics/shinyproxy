@@ -68,7 +68,7 @@ Shiny.instances = {
                 window.location.reload(false);
             }
         },
-        onNewInstance: function () {
+        onNewInstance: async function () {
             var inputField = $("#instanceNameField");
             var instance = inputField.val().trim();
 
@@ -98,7 +98,7 @@ Shiny.instances = {
             if (Shiny.app.staticState.maxInstances !== -1) {
                 // this must be a synchronous call (i.e. without any callbacks) so that the window.open function is not
                 // blocked by the browser.
-                var currentAmountOfInstances = Shiny.instances._getCurrentAmountOfInstances();
+                const currentAmountOfInstances = await Shiny.api.getNumberOfAppInstances(Shiny.app.staticState.appName);
                 if (currentAmountOfInstances >= Shiny.app.staticState.maxInstances) {
                     alert("You cannot start a new instance because you are using the maximum amount of instances of this app!");
                     return;
@@ -154,7 +154,7 @@ Shiny.instances = {
             $('#maxInstances').text(Shiny.app.staticState.maxInstances);
         }
 
-        $('#usedInstances').text(templateData['instances'].length); // TODO
+        $('#usedInstances').text(templateData['instances'].length);
 
         document.getElementById('appInstances').innerHTML = Shiny.instances._template(templateData);
     },
@@ -167,26 +167,6 @@ Shiny.instances = {
         } else {
             return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/";
         }
-    },
-    _getCurrentAmountOfInstances: function () {
-        var currentAmountOfInstances = 0;
-
-        // TODO current instance
-        // TODO owned only
-        $.ajax({
-            url: Shiny.api.buildURL("api/proxy?only_owned_proxies=true", false),
-            success: function (result) {
-                for (var idx = 0; idx < result.length; idx++) {
-                    var proxy = result[idx];
-                    if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id') && proxy.spec.id === Shiny.app.staticState.appName) {
-                        currentAmountOfInstances++;
-                    }
-                }
-            },
-            async: false
-        });
-
-        return currentAmountOfInstances;
     },
     _toAppDisplayName(appInstanceName) {
         if (appInstanceName === "_") {

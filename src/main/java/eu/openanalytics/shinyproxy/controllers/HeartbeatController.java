@@ -65,7 +65,6 @@ public class HeartbeatController {
                 put("message", "app_stopped_or_non_existent");
             }});
         }
-        System.out.println(proxy.getStatus());
 
         if (!userService.isOwner(proxy)) {
             throw new AccessDeniedException(String.format("Cannot register heartbeat for proxy %s: access denied", proxyId));

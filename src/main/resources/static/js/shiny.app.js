@@ -102,7 +102,8 @@ Shiny.app = {
                 Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;
                 Shiny.app.staticState.proxyId = proxyId;
                 if (Shiny.app.staticState.spInstanceOverride != null) {
-                    var parsedUrl = new URL("http://localhost" + Shiny.app.staticState.containerPath); // TODO
+                    // get only the path part of the containerPath for the cookie (without query string, hash etc)
+                    var parsedUrl = new URL(Shiny.app.staticState.containerPath, window.location.origin);
                     Cookies.set('sp-instance-override', Shiny.app.staticState.spInstanceOverride,  {path: parsedUrl.pathname});
                 }
             }

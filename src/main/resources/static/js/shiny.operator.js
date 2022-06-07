@@ -61,7 +61,7 @@ Shiny.operator = {
             // check amount of apps running
             if (Shiny.operator.staticState.forceTransfer) {
                 try {
-                    const proxies = await Shiny.api.getProxies(); // TODO failure
+                    const proxies = await Shiny.api.getProxies();
                     if (proxies.length === 0) {
                         // force transfer
                         Shiny.operator.transferToNewInstance();

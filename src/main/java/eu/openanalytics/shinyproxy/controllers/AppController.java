@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.inject.Inject;
+import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -135,6 +136,39 @@ public class AppController extends BaseController {
 		}
 	}
 
+	@RequestMapping(value="/app_proxy/**")
+	public void appProxy(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String requestUrl = request.getRequestURI().substring(getBasePublicPath().length());
+		String proxyId = mappingManager.getProxyId(requestUrl);
+
+		Proxy proxy = proxyService.getProxy(proxyId);
+		if (proxy == null) {
+			response.setStatus(410);
+			response.getWriter().write("{\"status\":\"error\", \"message\":\"app_stopped_or_non_existent\"}");
+			return;
+		}
+		if (!userService.isOwner(proxy)) {
+			response.setStatus(401);
+			response.getWriter().write("{\"status\":\"error\", \"message\":\"shinyproxy_authentication_required\"}");
+			return;
+		}
+		if (requestUrl.equals(proxyId)) {
+			// requested an empty path -> redirect to the root path
+			// i.e. request /app_proxy/<proxy_id> redirect to /app_proxy/<proxy_id>/
+			try {
+				response.sendRedirect(request.getRequestURI() + "/");
+			} catch (Exception e) {
+				throw new RuntimeException("Error redirecting proxy request", e);
+			}
+			return;
+		}
+		try {
+			mappingManager.dispatchAsync(requestUrl, request, response);
+		} catch (Exception e) {
+			throw new RuntimeException("Error routing proxy request", e);
+		}
+	}
+
 	private Proxy getOrStart(AppRequestInfo appRequestInfo) {
 		Proxy proxy = findUserProxy(appRequestInfo);
 		if (proxy == null) {
@@ -199,7 +233,11 @@ public class AppController extends BaseController {
 	}
 
 	private String getPublicPath(String proxyId) {
-		return getContextPath() + "api/route/" + proxyId + "/";
+		return getBasePublicPath() + proxyId + "/";
+	}
+
+	private String getBasePublicPath() {
+		return getContextPath() + "app_proxy/";
 	}
 
 	/**

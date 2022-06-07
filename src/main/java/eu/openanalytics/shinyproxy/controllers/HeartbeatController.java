@@ -21,6 +21,7 @@
 package eu.openanalytics.shinyproxy.controllers;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.service.ProxyService;
 import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
@@ -58,12 +59,13 @@ public class HeartbeatController {
     public ResponseEntity<HashMap<String, String>> heartbeat(@PathVariable("proxyId") String proxyId) {
         Proxy proxy = proxyService.getProxy(proxyId);
 
-        if (proxy == null) {
+        if (proxy == null || proxy.getStatus().equals(ProxyStatus.Stopping) || proxy.getStatus().equals(ProxyStatus.Stopped)) {
             return ResponseEntity.status(410).body(new HashMap<String, String>() {{
                 put("status", "error");
                 put("message", "app_stopped_or_non_existent");
             }});
         }
+        System.out.println(proxy.getStatus());
 
         if (!userService.isOwner(proxy)) {
             throw new AccessDeniedException(String.format("Cannot register heartbeat for proxy %s: access denied", proxyId));

@@ -32,8 +32,6 @@ import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
-import io.undertow.server.HttpServerExchange;
-import io.undertow.servlet.handlers.ServletRequestContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,8 +40,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.inject.Inject;
-import javax.servlet.AsyncContext;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -117,21 +113,6 @@ public class AppController extends BaseController {
 			// This way the client (i.e. ShinyProxy) knows that the app has been stopped (e.g. in a different tab).
 			response.setStatus(410);
 			response.getWriter().write("{\"status\":\"error\", \"message\":\"app_stopped_or_non_existent\"}");
-			return;
-		} else if (proxy == null && (appRequestInfo.isCssOrJsResource() || request.getHeader("Upgrade") != null)) {
-			// No proxy found and the request is for a CSS or JS file or a websocket connection.
-			// We do not start a new proxy instance, because this is most probably a background request by an old, stopped app
-			// We reply to the request after 10 seconds. This way the app should detect that it has been stopped before the resource is loaded.
-			// (simply returning an error code could trigger the error handling logic of the app)
-			response.setStatus(200);
-			final AsyncContext acontext = request.startAsync();
-			acontext.start(() -> {
-				try {
-					Thread.sleep(10000);
-				} catch (InterruptedException ignored) {
-				}
-				acontext.complete();
-			});
 			return;
 		} else if (proxy != null && appRequestInfo.getProxyIdHint() != null && !proxy.getId().equals(appRequestInfo.getProxyIdHint())) {
 			// the proxy was restarted by the client before the client was aware that the app was stopped externally

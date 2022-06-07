@@ -53,7 +53,7 @@ public class AppRequestInfo {
         if (result == null) {
             throw new BadRequestException("Error parsing URL.");
         }
-        // do not use request.getParam() here as it will inspect the request body and proxying the request will fail
+        // do not user request.getParam() hear as it will inspect the request body and proxying the request will fail
         List<String> param = ServletUriComponentsBuilder.fromRequest(request).build().getQueryParams().get(PROXY_HINT_PARAM);
         if (param != null && param.size() > 0) {
             result = new AppRequestInfo(result.appName, result.appInstance, result.subPath, param.get(0));
@@ -132,13 +132,4 @@ public class AppRequestInfo {
     public String getProxyIdHint() {
         return proxyIdHint;
     }
-
-    public Boolean isCssOrJsResource() {
-        if (subPath != null) {
-            String lowerSubPath = subPath.toLowerCase();
-            return lowerSubPath.endsWith(".js") || lowerSubPath.endsWith(".css");
-        }
-        return false;
-    }
-
 }

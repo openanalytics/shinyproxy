@@ -6,7 +6,15 @@ metadata:
 spec:
   containers:
    - name: containerproxy-build
-     image: 196229073436.dkr.ecr.eu-west-1.amazonaws.com/openanalytics/containerproxy-build 
+     image: 196229073436.dkr.ecr.eu-west-1.amazonaws.com/openanalytics/containerproxy-build
      command:
      - cat
-     tty: true	
+     tty: true
+     resources:
+       requests:
+         memory: "2Gi"
+         cpu: "1.0"
+       limits:
+         memory: "4Gi"
+         cpu: "1.5"
+

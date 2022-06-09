@@ -48,9 +48,42 @@ Shiny.common = {
         }, 2500);
     },
 
+    async onStopAllApps() {
+        $('#stop-all-apps-btn').hide();
+        $('#stopping-all-apps-btn').show();
+        const proxies = await Shiny.api.getProxiesAsTemplateData()
+        const proxyIds = [];
+        for (const app of Object.values(proxies.apps)) {
+            for (const proxy of app.instances) {
+                Shiny.api.deleteProxyById(proxy.proxyId, proxy.spInstance)
+                proxyIds.push(proxy.proxyId);
+            }
+        }
+        // wait for all proxies to be stopped
+        while (!await Shiny.common._areAllProxiesDeleted(proxyIds)) {
+            await Shiny.common.sleep(500);
+        }
+        await Shiny.common._refreshModal();
+        $('#stop-all-apps-btn').show();
+        $('#stopping-all-apps-btn').hide();
+    },
+
+    async _areAllProxiesDeleted(proxyIds) {
+        const proxies = await Shiny.api.getProxiesAsTemplateData()
+        for (const app of Object.values(proxies.apps)) {
+            for (const proxy of app.instances) {
+                if (proxyIds.includes(proxy.proxyId)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    },
+
     _refreshModal: async function () {
         const templateData = await Shiny.api.getProxiesAsTemplateData();
         templateData.apps = Object.values(templateData.apps);
+        console.log(templateData.apps);
         templateData.apps.sort(function (a, b) {
             return a.displayName.toLowerCase() > b.displayName.toLowerCase() ? 1 : -1
         });

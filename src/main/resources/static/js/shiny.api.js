@@ -33,7 +33,7 @@ Shiny.api = {
         if (!Shiny.app.staticState.operatorEnabled) {
             return Shiny.api._groupByApp(await Shiny.api.getProxies());
         }
-        let instances = [];
+        let instances;
         try {
             instances = await Shiny.api.getAllSpInstances();
         } catch (e) {
@@ -141,11 +141,13 @@ Shiny.api = {
                 return res;
             }, []);
 
-            processedInstances.sort(function (a, b) {
-                return a.instanceName.toLowerCase() > b.instanceName.toLowerCase() ? 1 : -1
-            });
+            if (processedInstances.length > 0) {
+                processedInstances.sort(function (a, b) {
+                    return a.instanceName.toLowerCase() > b.instanceName.toLowerCase() ? 1 : -1
+                });
 
-            templateData.apps[appName] = {'instances': processedInstances, displayName: displayName};
+                templateData.apps[appName] = {'instances': processedInstances, displayName: displayName};
+            }
         }
 
         return templateData;

@@ -208,3 +208,7 @@ body > div#navbar { padding-top: 0px; }
 .sp-override-active .btn-restart-app {
 	display: none;
 }
+
+#stopping-all-apps-btn {
+	display: none;
+}

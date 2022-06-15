@@ -91,12 +91,12 @@ Shiny.instances = {
             }
 
             if (instance.length > 64) {
-                alert("The provide name is too long (maximum 64 characters)");
+                alert("The provided name is too long (maximum 64 characters)");
                 return;
             }
 
             if (!Shiny.instances._nameRegex.test(instance)) {
-                alert("The provide name contains invalid characters (ony alphanumeric characters, '_', '-' and '.' are allowed.)");
+                alert("The provided name contains invalid characters (only alphanumeric characters, '_', '-' and '.' are allowed.)");
                 return;
             }
 

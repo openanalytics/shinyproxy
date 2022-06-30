@@ -32,6 +32,7 @@ import javax.annotation.PostConstruct;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.DockerSwarmSecret;
+import eu.openanalytics.containerproxy.model.spec.Parameters;
 import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
 import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
@@ -41,11 +42,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-
-
 import eu.openanalytics.containerproxy.model.spec.ContainerSpec;
-import eu.openanalytics.containerproxy.model.spec.ProxyAccessControl;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.model.spec.AccessControl;
 import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
 
 /**
@@ -127,8 +126,9 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		}
 		to.setKubernetesAdditionalManifests(from.getKubernetesAdditionalManifests());
 		to.setKubernetesAdditionalPersistentManifests(from.getKubernetesAdditionalPersistentManifests());
+        to.setParameters(from.getParameters());
 
-		ProxyAccessControl acl = new ProxyAccessControl();
+		AccessControl acl = new AccessControl();
 		to.setAccessControl(acl);
 
 		if (from.getAccessGroups() != null && from.getAccessGroups().length > 0) {
@@ -237,7 +237,6 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		}
 		return shinyProxySpec.getTemplateGroup();
 	}
-
 	public void postProcessRecoveredProxy(Proxy proxy) {
 		proxy.addRuntimeValues(getRuntimeValues(proxy.getSpec()));
 	}
@@ -275,11 +274,11 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private Boolean shinyForceFullReload;
 		private Integer maxInstances;
 		private Boolean hideNavbarOnMainPageLink;
-		private Long maxLifetime;
+		private String maxLifetime;
 		private Boolean stopOnLogout;
-		private Long heartbeatTimeout;
+		private String heartbeatTimeout;
 
-		private Map<String,String> labels;
+		private Map<String,String> labels = new HashMap<>();
 
 		private int port;
 		private String[] accessGroups;
@@ -287,6 +286,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private String accessExpression;
 		private String templateGroup;
 		private Map<String, String> templateProperties = new HashMap<>();
+
+        private Parameters parameters;
 
 		public String getId() {
 			return id;
@@ -512,11 +513,11 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			this.hideNavbarOnMainPageLink = hideNavbarOnMainPageLink;
 		}
 
-		public Long getMaxLifetime() {
+		public String getMaxLifetime() {
 			return maxLifetime;
 		}
 
-		public void setMaxLifetime(Long maxLifetime) {
+		public void setMaxLifetime(String maxLifetime) {
 			this.maxLifetime = maxLifetime;
 		}
 
@@ -528,11 +529,11 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			this.stopOnLogout = stopOnLogout;
 		}
 
-		public void setHeartbeatTimeout(Long heartbeatTimeout) {
+		public void setHeartbeatTimeout(String heartbeatTimeout) {
 			this.heartbeatTimeout = heartbeatTimeout;
 		}
 
-		public Long getHeartbeatTimeout() {
+		public String getHeartbeatTimeout() {
 			return heartbeatTimeout;
 		}
 
@@ -599,7 +600,15 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		public void setDockerRegistryPassword(String dockerRegistryPassword) {
 			this.dockerRegistryPassword = dockerRegistryPassword;
 		}
-	}
+
+        public Parameters getParameters() {
+            return parameters;
+        }
+
+        public void setParameters(Parameters parameters) {
+            this.parameters = parameters;
+        }
+    }
 
 	public static class TemplateGroup {
 
@@ -622,5 +631,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			this.id = id;
 		}
 	}
+
+
 
 }

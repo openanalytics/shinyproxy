@@ -212,3 +212,19 @@ body > div#navbar { padding-top: 0px; }
 #stopping-all-apps-btn {
 	display: none;
 }
+
+#parameterForm {
+    display: none;
+    top: 50px;
+    width: 100%;
+    position: absolute;
+}
+
+#parameterForm .form-horizontal {
+    margin-top: 25px;
+}
+
+#parameterForm .help-block {
+    margin-bottom: 0;
+    padding-left: 10px;
+}

@@ -28,7 +28,10 @@ import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.containerproxy.util.Retrying;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.containerproxy.service.ParametersService;
+import eu.openanalytics.containerproxy.model.runtime.ProvidedParameters;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
+import eu.openanalytics.containerproxy.model.runtime.AllowedParametersForUser;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
@@ -36,13 +39,13 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.inject.Inject;
-import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -61,6 +64,9 @@ public class AppController extends BaseController {
 	@Inject
 	private ShinyProxySpecProvider shinyProxySpecProvider;
 
+    @Inject
+    private ParametersService parameterizedAppService;
+
 	private final Logger logger = LogManager.getLogger(getClass());
 
 	@RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.GET)
@@ -72,7 +78,10 @@ public class AppController extends BaseController {
 		Proxy proxy = findUserProxy(appRequestInfo);
 		awaitReady(proxy);
 
-		map.put("appTitle", getAppTitle(appRequestInfo));
+        ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
+        // TODO if spec = null;
+
+		map.put("appTitle", getAppTitle(appRequestInfo)); // TODO optimise
 		map.put("appName", appRequestInfo.getAppName());
 		map.put("appInstance", appRequestInfo.getAppInstance());
 		map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
@@ -83,6 +92,18 @@ public class AppController extends BaseController {
 		map.put("page", "app");
 		map.put("maxInstances", shinyProxySpecProvider.getMaxInstancesForSpec(appRequestInfo.getAppName()));
 		map.put("shinyForceFullReload", shinyProxySpecProvider.getShinyForceFullReload(appRequestInfo.getAppName()));
+        if (spec.getParameters() != null) {
+            AllowedParametersForUser allowedParametersForUser = parameterizedAppService.calculateAllowedParametersForUser(spec);
+            map.put("parameterAllowedCombinations", allowedParametersForUser.getAllowedCombinations());
+            map.put("parameterValues", allowedParametersForUser.getValues());
+            map.put("parameterDefinitions", spec.getParameters().getDefinitions()); // TODO null
+            map.put("parameterIds", spec.getParameters().getIds()); // TODO null
+        } else  {
+            map.put("parameterAllowedCombinations", null);
+            map.put("parameterValues", null);
+            map.put("parameterDefinitions", null);
+            map.put("parameterIds", null);
+        }
 
 		// operator specific
 		String spInstanceOverride = getSpInstanceOverride(request);
@@ -101,7 +122,7 @@ public class AppController extends BaseController {
 	public Map<String,String> startApp(HttpServletRequest request) {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
 
-		Proxy proxy = getOrStart(appRequestInfo);
+		Proxy proxy = getOrStart(appRequestInfo, null);
 		String containerPath = buildContainerPath(request, proxy, appRequestInfo);
 		
 		Map<String,String> response = new HashMap<>();
@@ -110,12 +131,28 @@ public class AppController extends BaseController {
 		response.put("webSocketReconnectionMode", proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
 		return response;
 	}
-	
+
+    @RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.POST, consumes = "application/json")
+    @ResponseBody
+    public Map<String,String> startAppWithParameters(HttpServletRequest request, @RequestBody AppBody appBody) {
+        // TODO duplicate code
+        AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
+
+        Proxy proxy = getOrStart(appRequestInfo, appBody.getParameters());
+        String containerPath = buildContainerPath(request, proxy, appRequestInfo);
+
+        Map<String,String> response = new HashMap<>();
+        response.put("containerPath", containerPath);
+        response.put("proxyId", proxy.getId());
+        response.put("webSocketReconnectionMode", proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
+        return response;
+    }
+
 	@RequestMapping(value={"/app_direct_i/**", "/app_direct/**"})
 	public void appDirect(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
 
-		Proxy proxy = getOrStart(appRequestInfo);
+		Proxy proxy = getOrStart(appRequestInfo, null);
 		awaitReady(proxy);
 
 		String mapping = getProxyEndpoint(proxy);
@@ -169,13 +206,12 @@ public class AppController extends BaseController {
 		}
 	}
 
-	private Proxy getOrStart(AppRequestInfo appRequestInfo) {
+	private Proxy getOrStart(AppRequestInfo appRequestInfo, ProvidedParameters parameters) {
 		Proxy proxy = findUserProxy(appRequestInfo);
 		if (proxy == null) {
 			ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
 
 			if (spec == null) throw new BadRequestException("Unknown proxy spec: " + appRequestInfo.getAppName());
-			ProxySpec resolvedSpec = proxyService.resolveProxySpec(spec, null, null);
 
 			List<RuntimeValue> runtimeValues = shinyProxySpecProvider.getRuntimeValues(spec);
 			String id = UUID.randomUUID().toString();
@@ -186,7 +222,7 @@ public class AppController extends BaseController {
 				throw new BadRequestException("Cannot start new proxy because the maximum amount of instances of this proxy has been reached");
 			}
 
-			proxy = proxyService.startProxy(resolvedSpec, false, runtimeValues, id);
+			proxy = proxyService.startProxy(spec, false, runtimeValues, id, parameters);
 		}
 		return proxy;
 	}
@@ -267,5 +303,17 @@ public class AppController extends BaseController {
 
 		return currentAmountOfInstances < maxInstances;
 	}
+
+    private static class AppBody {
+        private ProvidedParameters parameters;
+
+        public ProvidedParameters getParameters() {
+            return parameters;
+        }
+
+        public void setParameters(ProvidedParameters parameters) {
+            this.parameters = parameters;
+        }
+    }
 
 }

@@ -35,6 +35,12 @@ Shiny.app = {
         heartBeatRate: null,
         maxInstances: null,
         spInstanceOverride: null,
+        operatorEnabled: false,
+        parameters: {
+            allowedCombinations: null,
+            names: null,
+            ids: null
+        }
     },
 
     runtimeState: {
@@ -61,8 +67,11 @@ Shiny.app = {
      * @param maxInstances
      * @param shinyForceFullReload
      * @param spInstanceOverride
+     * @param parameterAllowedCombinations
+     * @param parameterDefinitions
+     * @param parametersIds
      */
-    start: async function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, maxInstances, shinyForceFullReload, spInstanceOverride) {
+    start: async function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, maxInstances, shinyForceFullReload, spInstanceOverride, parameterAllowedCombinations, parameterDefinitions, parametersIds) {
         Shiny.app.staticState.heartBeatRate = heartBeatRate;
         Shiny.app.staticState.appName = appName;
         Shiny.app.staticState.appInstanceName = appInstanceName;
@@ -70,47 +79,72 @@ Shiny.app = {
         Shiny.app.staticState.shinyForceFullReload = shinyForceFullReload;
         Shiny.app.staticState.spInstanceOverride = spInstanceOverride;
         Shiny.instances._template = Handlebars.templates.switch_instances;
+        Shiny.app.staticState.parameters.allowedCombinations = parameterAllowedCombinations;
+        Shiny.app.staticState.parameters.names = parameterDefinitions;
+        Shiny.app.staticState.parameters.ids = parametersIds;
 
-        if (Shiny.operator === undefined || await Shiny.operator.start()) {
-            if (containerPath === "") {
-                if (Shiny.app.staticState.spInstanceOverride !== null) {
-                    // do not start new apps on old SP instances
-                    window.location.href = Shiny.api.buildURL("", false);
-                    return;
-                }
-                Shiny.ui.setShinyFrameHeight();
-                Shiny.ui.showLoading();
-                let response = await fetch(window.location.pathname + window.location.search, {
-                    method: 'POST'
-                });
-                if (response.status !== 200) {
-                    if (!Shiny.app.runtimeState.navigatingAway && !Shiny.app.runtimeState.appStopped) {
-                        var newDoc = document.open("text/html", "replace");
-                        newDoc.write(await response.text());
-                        newDoc.close();
-                        return;
-                    }
-                }
-                response = await response.json();
-                Shiny.app.staticState.containerPath = response.containerPath;
-                Shiny.app.staticState.webSocketReconnectionMode = response.webSocketReconnectionMode;
-                Shiny.app.staticState.proxyId = response.proxyId;
-            } else {
-                Shiny.app.staticState.containerPath = containerPath;
-                Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;
-                Shiny.app.staticState.proxyId = proxyId;
-                if (Shiny.app.staticState.spInstanceOverride != null) {
-                    // get only the path part of the containerPath for the cookie (without query string, hash etc)
-                    var parsedUrl = new URL(Shiny.app.staticState.containerPath, window.location.origin);
-                    Cookies.set('sp-instance-override', Shiny.app.staticState.spInstanceOverride,  {path: parsedUrl.pathname});
-                }
+        if (spInstanceOverride !== null) {
+            $('body').addClass('sp-override-active');
+        }
+
+        if (containerPath !== "") {
+            Shiny.app.staticState.containerPath = containerPath;
+            Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;
+            Shiny.app.staticState.proxyId = proxyId;
+            if (Shiny.app.staticState.spInstanceOverride != null) {
+                // get only the path part of the containerPath for the cookie (without query string, hash etc)
+                var parsedUrl = new URL(Shiny.app.staticState.containerPath, window.location.origin);
+                Cookies.set('sp-instance-override', Shiny.app.staticState.spInstanceOverride, {path: parsedUrl.pathname});
             }
             Shiny.ui.setupIframe();
             Shiny.ui.showFrame();
             Shiny.connections.startHeartBeats();
+        } else {
+            if (parameterDefinitions !== null) {
+                Shiny.ui.showParameterForm();
+            } else {
+                Shiny.app.startAppWithParameters(null);
+            }
         }
-        if (spInstanceOverride !== null) {
-            $('body').addClass('sp-override-active');
+    },
+    async startAppWithParameters(parameters) {
+        if (Shiny.operator === undefined || await Shiny.operator.start()) {
+            if (Shiny.app.staticState.spInstanceOverride !== null) {
+                // do not start new apps on old SP instances
+                window.location.href = Shiny.api.buildURL("", false);
+                return;
+            }
+            Shiny.ui.setShinyFrameHeight();
+            Shiny.ui.showLoading();
+            let response;
+            if (parameters !== null) {
+                response = await fetch(window.location.pathname + window.location.search, {
+                    method: 'POST',
+                    body:  JSON.stringify({parameters}),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                });
+            } else {
+                response = await fetch(window.location.pathname + window.location.search, {
+                    method: 'POST'
+                });
+            }
+            if (response.status !== 200) {
+                if (!Shiny.app.runtimeState.navigatingAway && !Shiny.app.runtimeState.appStopped) {
+                    var newDoc = document.open("text/html", "replace");
+                    newDoc.write(await response.text());
+                    newDoc.close();
+                    return;
+                }
+            }
+            response = await response.json();
+            Shiny.app.staticState.containerPath = response.containerPath;
+            Shiny.app.staticState.webSocketReconnectionMode = response.webSocketReconnectionMode;
+            Shiny.app.staticState.proxyId = response.proxyId;
+            Shiny.ui.setupIframe();
+            Shiny.ui.showFrame();
+            Shiny.connections.startHeartBeats();
         }
     },
 }
@@ -142,8 +176,17 @@ $(window).on('load', function () {
             $("#instanceNameField").focus();
         }, 10);
     });
-    
+
     $('#switchInstancesModal').on('hide.bs.modal', function () {
         Shiny.instances.eventHandlers.onClose();
+    });
+
+    $('#parameterForm form').on('submit', function (e) {
+        e.preventDefault();
+        Shiny.ui.submitParameterForm();
+    });
+
+    $('#parameterForm select').on('change', function (e) {
+        Shiny.ui.selectChange(e.target);
     });
 });

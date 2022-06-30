@@ -45,7 +45,7 @@ Shiny.ui = {
     /**
      * Shows the reconnecting page.
      */
-    showReconnecting: function() {
+    showReconnecting: function () {
         $('#appStopped').hide();
         $('#shinyframe').hide();
         $("#reconnecting").show();
@@ -105,7 +105,7 @@ Shiny.ui = {
         $("#reloadFailed").show();
     },
 
-    showStoppedPage: function() {
+    showStoppedPage: function () {
         Shiny.app.runtimeState.appStopped = true;
         $('#shinyframe').remove();
         $("#loading").hide();
@@ -114,7 +114,7 @@ Shiny.ui = {
         $('#appStopped').show();
     },
 
-    showLoggedOutPage: function() {
+    showLoggedOutPage: function () {
         Shiny.app.runtimeState.appStopped = true;
         if (!Shiny.app.runtimeState.navigatingAway) {
             // only show it when not navigating away, e.g. when logging out in the current tab
@@ -127,11 +127,72 @@ Shiny.ui = {
         }
     },
 
-    hideInstanceModal: function() {
+    showParameterForm: function () {
+        $('#parameterForm').show();
+    },
+
+    hideInstanceModal: function () {
         $('#switchInstancesModal').modal('hide');
     },
 
     removeFrame() {
         $('#shinyframe').remove();
+    },
+    submitParameterForm() {
+        console.log("ok parameter form submitted");
+        const data = $('#parameterForm form').serializeArray();
+        const json = {};
+        // $.each(data, function () {
+        console.log(data);
+        for (const element of data) {
+            console.log(element);
+            json[element.name] = element.value;
+        }
+        console.log(json);
+        $('#parameterForm').hide();
+        Shiny.app.startAppWithParameters(json);
+        // return json;
+    },
+    selectChange(target) {
+        const equals = (a, b) =>
+            a.length === b.length &&
+            a.every((v, i) => v === b[i]);
+        const selectedValues = [];
+        const selectedIndex = target.selectedIndex;
+        const changedKey = $(target).prop('name');
+        const changedOptionIndex = Shiny.app.staticState.parameters.ids.indexOf(changedKey);
+        for (let i = 0; i < Shiny.app.staticState.parameters.ids.length; i++) {
+            const keyName = Shiny.app.staticState.parameters.ids[i];
+            if (i <= changedOptionIndex) {
+                let selected = $('select[name=' + keyName + ']').prop('selectedIndex');
+                selectedValues.push(selected);
+            } else {
+                if (i === changedOptionIndex + 1 && selectedIndex !== 0) {
+                    $('select[name=' + keyName + ']').prop("disabled", false);
+                } else {
+                    $('select[name=' + keyName + ']').prop("disabled", true);
+                }
+                const nextOptions = $('select[name=' + keyName + '] option');
+                nextOptions.first().prop("selected", true);
+            }
+
+        }
+
+        const allowedNextValues = [];
+        for (const allowedValue of Shiny.app.staticState.parameters.allowedCombinations) {
+            if (equals(allowedValue.slice(0, selectedValues.length), selectedValues)) {
+                allowedNextValues.push(allowedValue[selectedValues.length]);
+            }
+        }
+
+        const nextKey = Shiny.app.staticState.parameters.ids[selectedValues.length];
+        const nextOptions = $('select[name=' + nextKey + '] option');
+        for (const nextOption of nextOptions) {
+            if (allowedNextValues.includes(nextOption.index)) {
+                $(nextOption).prop("disabled", false);
+            } else {
+                $(nextOption).prop("disabled", true);
+            }
+        }
     }
 }

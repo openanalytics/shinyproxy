@@ -85,10 +85,8 @@ public abstract class BaseController {
 		return (principal == null) ? request.getSession().getId() : principal.getName();
 	}
 	
-	protected String getAppTitle(AppRequestInfo appRequestInfo) {
-		String appName = appRequestInfo.getAppName();
-		ProxySpec spec = proxyService.getProxySpec(appName);
-		if (spec == null || spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) return appName;
+	protected String getAppTitle(ProxySpec spec) {
+		if (spec == null || spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) return spec.getId();
 		else return spec.getDisplayName();
 	}
 	

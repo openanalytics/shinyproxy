@@ -80,9 +80,8 @@ public class AppController extends BaseController {
 		awaitReady(proxy);
 
         ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
-        // TODO if spec = null;
 
-		map.put("appTitle", getAppTitle(appRequestInfo)); // TODO optimise
+		map.put("appTitle", getAppTitle(spec));
 		map.put("appName", appRequestInfo.getAppName());
 		map.put("appInstance", appRequestInfo.getAppInstance());
 		map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
@@ -97,8 +96,8 @@ public class AppController extends BaseController {
             AllowedParametersForUser allowedParametersForUser = parameterizedAppService.calculateAllowedParametersForUser(spec);
             map.put("parameterAllowedCombinations", allowedParametersForUser.getAllowedCombinations());
             map.put("parameterValues", allowedParametersForUser.getValues());
-            map.put("parameterDefinitions", spec.getParameters().getDefinitions()); // TODO null
-            map.put("parameterIds", spec.getParameters().getIds()); // TODO null
+            map.put("parameterDefinitions", spec.getParameters().getDefinitions());
+            map.put("parameterIds", spec.getParameters().getIds());
         } else  {
             map.put("parameterAllowedCombinations", null);
             map.put("parameterValues", null);

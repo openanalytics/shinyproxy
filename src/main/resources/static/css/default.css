@@ -228,3 +228,11 @@ body > div#navbar { padding-top: 0px; }
     margin-bottom: 0;
     padding-left: 10px;
 }
+
+#selectAllWarning {
+    display: none;
+}
+
+#selectAllWarning div {
+    margin-bottom: 0px;
+}

@@ -138,22 +138,35 @@ Shiny.ui = {
     removeFrame() {
         $('#shinyframe').remove();
     },
+
+    validateParameterForm() {
+        for (let i = 0; i < Shiny.app.staticState.parameters.ids.length; i++) {
+            const keyName = Shiny.app.staticState.parameters.ids[i];
+            let selected =  $('select[name=' + keyName + ']').prop('selectedIndex');
+            if (selected === 0) {
+                $('#selectAllWarning').show();
+                return false;
+            }
+        }
+        $('#selectAllWarning').hide();
+        return true;
+    },
+
     submitParameterForm() {
-        console.log("ok parameter form submitted");
+        if (!Shiny.ui.validateParameterForm()) {
+            return;
+        }
         const data = $('#parameterForm form').serializeArray();
         const json = {};
-        // $.each(data, function () {
-        console.log(data);
         for (const element of data) {
-            console.log(element);
             json[element.name] = element.value;
         }
-        console.log(json);
         $('#parameterForm').hide();
         Shiny.app.startAppWithParameters(json);
-        // return json;
     },
+
     selectChange(target) {
+        $('#selectAllWarning').hide();
         const equals = (a, b) =>
             a.length === b.length &&
             a.every((v, i) => v === b[i]);
@@ -175,7 +188,6 @@ Shiny.ui = {
                 const nextOptions = $('select[name=' + keyName + '] option');
                 nextOptions.first().prop("selected", true);
             }
-
         }
 
         const allowedNextValues = [];

@@ -91,13 +91,15 @@
             <div class="row">
                 <h2>Choose the parameters for this app</h2>
             </div>
+            <div class="row" id="selectAllWarning">
+                <div class="alert alert-danger" role="alert">Please select a value for each parameter before starting the app!</div>
+            </div>
             <div class="row">
                 <form class="form-horizontal">
                     <div class="form-group" th:each="parameterDefinition : ${parameterDefinitions}">
-    <!--                    TODO for label -->
-                        <label  class="col-sm-2 control-label" th:text="${parameterDefinition.getDisplayNameOrId()}"></label>
+                        <label th:for="${'parameter-' + parameterDefinition.getId()}" class="col-sm-2 control-label" th:text="${parameterDefinition.getDisplayNameOrId()}"></label>
                         <div class="col-sm-10">
-                            <select th:name="${parameterDefinition.getId()}" class="form-control" th:disabled="${parameterDefinition != parameterDefinitions.get(0)}">
+                            <select th:id="${'parameter-' + parameterDefinition.getId()}" th:name="${parameterDefinition.getId()}" class="form-control" th:disabled="${parameterDefinition != parameterDefinitions.get(0)}">
                                 <option>Select an option</option>
                                 <option th:each="value : ${parameterValues.get(parameterDefinition.id)}" th:text="${value.getValue()}"></option>
                             </select>

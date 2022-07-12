@@ -24,6 +24,7 @@ import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.service.InvalidParametersException;
 import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.containerproxy.util.Retrying;
@@ -119,26 +120,20 @@ public class AppController extends BaseController {
 	
 	@RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.POST)
 	@ResponseBody
-	public Map<String,String> startApp(HttpServletRequest request) {
-		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
-
-		Proxy proxy = getOrStart(appRequestInfo, null);
-		String containerPath = buildContainerPath(request, proxy, appRequestInfo);
-		
-		Map<String,String> response = new HashMap<>();
-		response.put("containerPath", containerPath);
-		response.put("proxyId", proxy.getId());
-		response.put("webSocketReconnectionMode", proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
-		return response;
+	public Map<String,String> startApp(HttpServletRequest request) throws InvalidParametersException {
+        return startApp(request, null);
 	}
 
     @RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.POST, consumes = "application/json")
     @ResponseBody
-    public Map<String,String> startAppWithParameters(HttpServletRequest request, @RequestBody AppBody appBody) {
-        // TODO duplicate code
+    public Map<String,String> startAppWithParameters(HttpServletRequest request, @RequestBody AppBody appBody) throws InvalidParametersException {
+        return startApp(request, appBody.getParameters());
+    }
+
+    private Map<String,String> startApp(HttpServletRequest request, ProvidedParameters parameters) throws InvalidParametersException {
         AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
 
-        Proxy proxy = getOrStart(appRequestInfo, appBody.getParameters());
+        Proxy proxy = getOrStart(appRequestInfo, parameters);
         String containerPath = buildContainerPath(request, proxy, appRequestInfo);
 
         Map<String,String> response = new HashMap<>();
@@ -148,8 +143,9 @@ public class AppController extends BaseController {
         return response;
     }
 
-	@RequestMapping(value={"/app_direct_i/**", "/app_direct/**"})
-	public void appDirect(HttpServletRequest request, HttpServletResponse response) throws IOException {
+
+    @RequestMapping(value={"/app_direct_i/**", "/app_direct/**"})
+	public void appDirect(HttpServletRequest request, HttpServletResponse response) throws IOException, InvalidParametersException {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
 
 		Proxy proxy = getOrStart(appRequestInfo, null);
@@ -206,7 +202,7 @@ public class AppController extends BaseController {
 		}
 	}
 
-	private Proxy getOrStart(AppRequestInfo appRequestInfo, ProvidedParameters parameters) {
+	private Proxy getOrStart(AppRequestInfo appRequestInfo, ProvidedParameters parameters) throws InvalidParametersException {
 		Proxy proxy = findUserProxy(appRequestInfo);
 		if (proxy == null) {
 			ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());

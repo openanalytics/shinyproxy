@@ -20,32 +20,31 @@
  */
 package eu.openanalytics.shinyproxy;
 
+import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
+import eu.openanalytics.containerproxy.model.spec.AccessControl;
+import eu.openanalytics.containerproxy.model.spec.ContainerSpec;
+import eu.openanalytics.containerproxy.model.spec.DockerSwarmSecret;
+import eu.openanalytics.containerproxy.model.spec.Parameters;
+import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
+import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
+import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
+import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
+import eu.openanalytics.shinyproxy.runtimevalues.WebsocketReconnectionMode;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Primary;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-
-import eu.openanalytics.containerproxy.model.runtime.Proxy;
-import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
-import eu.openanalytics.containerproxy.model.spec.DockerSwarmSecret;
-import eu.openanalytics.containerproxy.model.spec.Parameters;
-import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
-import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
-import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
-import org.springframework.beans.factory.annotation.Autowired;
-import eu.openanalytics.shinyproxy.runtimevalues.WebsocketReconnectionMode;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Primary;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
-import eu.openanalytics.containerproxy.model.spec.ContainerSpec;
-import eu.openanalytics.containerproxy.model.spec.ProxySpec;
-import eu.openanalytics.containerproxy.model.spec.AccessControl;
-import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
 
 /**
  * This component converts proxy specs from the 'ShinyProxy notation' into the 'ContainerProxy' notation.

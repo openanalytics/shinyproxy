@@ -49,10 +49,10 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 		if (auth.hasAuthorization()) {
 			
 			// Limit access to the app pages according to spec permissions
-			http.authorizeRequests().antMatchers("/app/{specId}/**").access("@accessControlService.canAccess(authentication, #specId)");
-			http.authorizeRequests().antMatchers("/app_i/{specId}/**").access("@accessControlService.canAccess(authentication, #specId)");
-			http.authorizeRequests().antMatchers("/app_direct/{specId}/**").access("@accessControlService.canAccess(authentication, #specId)");
-			http.authorizeRequests().antMatchers("/app_direct_i/{specId}/**").access("@accessControlService.canAccess(authentication, #specId)");
+			http.authorizeRequests().antMatchers("/app/{specId}/**").access("@proxyAccessControlService.canAccess(authentication, #specId)");
+			http.authorizeRequests().antMatchers("/app_i/{specId}/**").access("@proxyAccessControlService.canAccess(authentication, #specId)");
+			http.authorizeRequests().antMatchers("/app_direct/{specId}/**").access("@proxyAccessControlService.canAccess(authentication, #specId)");
+			http.authorizeRequests().antMatchers("/app_direct_i/{specId}/**").access("@proxyAccessControlService.canAccess(authentication, #specId)");
 
 			// Limit access to the admin pages
 			http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminGroups());

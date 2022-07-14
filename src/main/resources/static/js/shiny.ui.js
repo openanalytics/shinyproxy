@@ -142,7 +142,7 @@ Shiny.ui = {
     validateParameterForm() {
         for (let i = 0; i < Shiny.app.staticState.parameters.ids.length; i++) {
             const keyName = Shiny.app.staticState.parameters.ids[i];
-            let selected =  $('select[name=' + keyName + ']').prop('selectedIndex');
+            let selected = $('select[name=' + keyName + ']').prop('selectedIndex');
             if (selected === 0) {
                 $('#selectAllWarning').show();
                 return false;
@@ -200,10 +200,13 @@ Shiny.ui = {
         const nextKey = Shiny.app.staticState.parameters.ids[selectedValues.length];
         const nextOptions = $('select[name=' + nextKey + '] option');
         for (const nextOption of nextOptions) {
+            if (nextOption.index === 0) {
+                continue;
+            }
             if (allowedNextValues.includes(nextOption.index)) {
-                $(nextOption).prop("disabled", false);
+                $(nextOption).show();
             } else {
-                $(nextOption).prop("disabled", true);
+                $(nextOption).hide();
             }
         }
     }

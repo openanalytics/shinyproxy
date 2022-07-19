@@ -48,13 +48,6 @@ Shiny.api = {
         const responses = await Promise.all(requests);
         return Shiny.api._groupByApp(responses.flat());
     },
-    async getNumberOfAppInstances(appName) {
-        const instances = await Shiny.api.getProxiesOnAllSpInstances();
-        if (!instances.hasOwnProperty(appName)) {
-            return 0;
-        }
-        return instances[appName].length;
-    },
     deleteProxyById: async function (proxyId, spInstance) {
         await fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId, spInstance), {
             method: 'DELETE',

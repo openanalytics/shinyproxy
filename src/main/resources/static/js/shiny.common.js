@@ -26,13 +26,18 @@ Shiny.common = {
         applicationName: null,
         spInstance: null,
         operatorEnabled: false,
+        appMaxInstances: null, // max instances per app
+    },
+    runtimeState: {
+        switchInstanceApp: null,
     },
     _refreshIntervalId: null,
 
-    init: function (contextPath, applicationName, spInstance) {
+    init: function (contextPath, applicationName, spInstance, appMaxInstances) {
         Shiny.common.staticState.contextPath = contextPath;
         Shiny.common.staticState.applicationName = applicationName;
         Shiny.common.staticState.spInstance = spInstance;
+        Shiny.common.staticState.appMaxInstances = appMaxInstances;
     },
 
     sleep: function (ms) {

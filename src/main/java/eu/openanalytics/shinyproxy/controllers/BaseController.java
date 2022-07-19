@@ -38,6 +38,7 @@ import eu.openanalytics.containerproxy.service.IdentifierService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.OperatorService;
+import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -77,6 +78,9 @@ public abstract class BaseController {
 	@Inject
 	IdentifierService identifierService;
 
+	@Inject
+	protected ShinyProxySpecProvider shinyProxySpecProvider;
+
 	private static final Logger logger = LogManager.getLogger(BaseController.class);
 	private static final Map<String, String> imageCache = new HashMap<>();
 
@@ -110,7 +114,7 @@ public abstract class BaseController {
 		if (proxy == null || proxy.getTargets().isEmpty()) return null;
 		return proxy.getTargets().keySet().iterator().next();
 	}
-	
+
 	protected void prepareMap(ModelMap map, HttpServletRequest request) {
         map.put("application_name", environment.getProperty("spring.application.name")); // name of ShinyProxy, ContainerProxy etc
 		map.put("title", environment.getProperty("proxy.title", "ShinyProxy"));
@@ -139,6 +143,7 @@ public abstract class BaseController {
 		map.put("maxInstances", 0); // defaults, used in navbar
 		map.put("contextPath", getContextPath());
 		map.put("resourceSuffix", "");
+		map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
 
 		// operator specific
 		map.put("operatorEnabled", operatorService.isEnabled());

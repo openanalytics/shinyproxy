@@ -26,7 +26,21 @@ Shiny.instances = {
     _refreshIntervalId: null,
 
     eventHandlers: {
-        onShow: function () {
+        onShow: function (appName) {
+            if (appName === null) {
+                Shiny.common.runtimeState.switchInstanceApp = {
+                    appName: Shiny.app.staticState.appName,
+                    maxInstances: Shiny.common.staticState.appMaxInstances[Shiny.app.staticState.appName],
+                    newTab: true,
+                }
+            } else {
+                Shiny.common.runtimeState.switchInstanceApp = {
+                    appName: appName,
+                    maxInstances: Shiny.common.staticState.appMaxInstances[appName],
+                    newTab: false,
+                }
+            }
+
             Shiny.instances._refreshModal();
             clearInterval(Shiny.instances._refreshIntervalId);
             Shiny.instances._refreshIntervalId = setInterval(async function () {
@@ -69,8 +83,9 @@ Shiny.instances = {
             }
         },
         onNewInstance: async function () {
-            var inputField = $("#instanceNameField");
-            var instance = inputField.val().trim();
+            const appName = Shiny.common.runtimeState.switchInstanceApp.appName;
+            const inputField = $("#instanceNameField");
+            let instance = inputField.val().trim();
 
             if (instance === "") {
                 return;
@@ -90,22 +105,27 @@ Shiny.instances = {
                 return;
             }
 
-            if (instance === Shiny.app.staticState.appInstanceName && !Shiny.app.runtimeState.appStopped) {
-                alert("This instance is already opened in the current tab");
-                return;
-            }
-
-            if (Shiny.app.staticState.maxInstances !== -1) {
-                // this must be a synchronous call (i.e. without any callbacks) so that the window.open function is not
-                // blocked by the browser.
-                const currentAmountOfInstances = await Shiny.api.getNumberOfAppInstances(Shiny.app.staticState.appName);
-                if (currentAmountOfInstances >= Shiny.app.staticState.maxInstances) {
+            const existingInstances = await Shiny.api.getProxiesOnAllSpInstances();
+            if (existingInstances.hasOwnProperty(appName)) {
+                const currentAmountOfInstances = existingInstances[appName].length;
+                const maxInstances = Shiny.common.runtimeState.switchInstanceApp.maxInstances;
+                if (maxInstances !== -1 && currentAmountOfInstances >= maxInstances) {
                     alert("You cannot start a new instance because you are using the maximum amount of instances of this app!");
                     return;
                 }
+                for (const existingInstance of existingInstances[appName]) {
+                    if (existingInstance.runtimeValues.SHINYPROXY_APP_INSTANCE === instance) {
+                        alert("You are already using an instance with this name!");
+                        return;
+                    }
+                }
             }
 
-            window.open(Shiny.instances._createUrlForInstance(instance), "_blank");
+            if (Shiny.common.runtimeState.switchInstanceApp.newTab) {
+                window.open(Shiny.instances._createUrlForInstance(instance), "_blank");
+            } else {
+                window.location = Shiny.instances._createUrlForInstance(instance);
+            }
             inputField.val('');
             Shiny.ui.hideInstanceModal();
 
@@ -113,7 +133,7 @@ Shiny.instances = {
     },
 
     _createUrlForInstance: function (instance) {
-        return Shiny.common.staticState.contextPath + "app_i/" + Shiny.app.staticState.appName + "/" + instance + "/";
+        return Shiny.common.staticState.contextPath + "app_i/" + Shiny.common.runtimeState.switchInstanceApp.appName + "/" + instance + "/";
     },
 
     _deleteInstance: async function (proxyId, spInstance) {
@@ -135,12 +155,13 @@ Shiny.instances = {
     },
     _refreshModal: async function () {
         let templateData = await Shiny.api.getProxiesAsTemplateData();
-        if (templateData.apps.hasOwnProperty(Shiny.app.staticState.appName)) {
-            templateData = templateData.apps[Shiny.app.staticState.appName];
+        let appName = Shiny.common.runtimeState.switchInstanceApp.appName;
+        if (templateData.apps.hasOwnProperty(appName)) {
+            templateData = templateData.apps[appName];
 
             templateData.instances.forEach(instance => {
                 instance.active = instance.spInstance === Shiny.common.staticState.spInstance
-                    && instance.appName === Shiny.app.staticState.appName
+                    && instance.appName === appName
                     && instance.instanceName === Shiny.instances._toAppDisplayName(Shiny.app.staticState.appInstanceName)
             });
 
@@ -148,15 +169,21 @@ Shiny.instances = {
             templateData = {"instances": []};
         }
 
-        if (Shiny.app.staticState.maxInstances === -1) {
+        if (Shiny.common.runtimeState.switchInstanceApp.maxInstances === -1) {
             $('#maxInstances').text("unlimited");
         } else {
-            $('#maxInstances').text(Shiny.app.staticState.maxInstances);
+            $('#maxInstances').text(Shiny.common.runtimeState.switchInstanceApp.maxInstances);
         }
 
         $('#usedInstances').text(templateData['instances'].length);
 
-        document.getElementById('appInstances').innerHTML = Shiny.instances._template(templateData);
+        if (Shiny.common.runtimeState.switchInstanceApp.newTab) {
+            templateData['target'] = 'target="_blank"';
+        } else {
+            templateData['target'] = '';
+        }
+
+        document.getElementById('appInstances').innerHTML = Handlebars.templates.switch_instances(templateData);
     },
     _createUrlForProxy: function (proxy) {
         const appName = proxy.spec.id;

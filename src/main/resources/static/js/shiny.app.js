@@ -64,21 +64,18 @@ Shiny.app = {
      * @param heartBeatRate
      * @param appName
      * @param appInstanceName
-     * @param maxInstances
      * @param shinyForceFullReload
      * @param spInstanceOverride
      * @param parameterAllowedCombinations
      * @param parameterDefinitions
      * @param parametersIds
      */
-    start: async function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, maxInstances, shinyForceFullReload, spInstanceOverride, parameterAllowedCombinations, parameterDefinitions, parametersIds) {
+    start: async function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, shinyForceFullReload, spInstanceOverride, parameterAllowedCombinations, parameterDefinitions, parametersIds) {
         Shiny.app.staticState.heartBeatRate = heartBeatRate;
         Shiny.app.staticState.appName = appName;
         Shiny.app.staticState.appInstanceName = appInstanceName;
-        Shiny.app.staticState.maxInstances = parseInt(maxInstances, 10);
         Shiny.app.staticState.shinyForceFullReload = shinyForceFullReload;
         Shiny.app.staticState.spInstanceOverride = spInstanceOverride;
-        Shiny.instances._template = Handlebars.templates.switch_instances;
         Shiny.app.staticState.parameters.allowedCombinations = parameterAllowedCombinations;
         Shiny.app.staticState.parameters.names = parameterDefinitions;
         Shiny.app.staticState.parameters.ids = parametersIds;
@@ -162,9 +159,13 @@ $(window).on('load', function () {
     Shiny.ui.setShinyFrameHeight();
 
     $('#switchInstancesModal-btn').click(function () {
-        Shiny.instances.eventHandlers.onShow();
+        Shiny.instances.eventHandlers.onShow(null);
     });
 
+    $('.app-link').click(function(e) {
+        const appId = $(e.target).data("app-id");
+        Shiny.instances.eventHandlers.onShow(appId);
+    });
 
     $('#newInstanceForm').submit(function (e) {
         e.preventDefault();

@@ -59,12 +59,17 @@ import java.util.stream.Collectors;
 public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 	private static final String PROP_DEFAULT_MAX_INSTANCES = "proxy.default-max-instances";
+	private static final String PROP_DEFAULT_ALWAYS_SWITCH_INSTANCE = "proxy.default-always-switch-instance";
 
 	private List<ProxySpec> specs = new ArrayList<>();
 	private Map<String, ShinyProxySpec> shinyProxySpecs = new HashMap<>();
 	private List<TemplateGroup> templateGroups = new ArrayList<>();
 
 	private static Environment environment;
+
+	private Integer defaultMaxInstances;
+
+	private Boolean defaultAlwaysSwitchInstance;
 
 	@Autowired
 	public void setEnvironment(Environment env){
@@ -76,6 +81,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		this.specs.stream().collect(Collectors.groupingBy(ProxySpec::getId)).forEach((id, duplicateSpecs) -> {
 			if (duplicateSpecs.size() > 1) throw new IllegalArgumentException(String.format("Configuration error: spec with id '%s' is defined multiple times", id));
 		});
+		defaultMaxInstances = environment.getProperty(PROP_DEFAULT_MAX_INSTANCES, Integer.class, 1);
+		defaultAlwaysSwitchInstance = environment.getProperty(PROP_DEFAULT_ALWAYS_SWITCH_INSTANCE, Boolean.class, false);
 	}
 
 	public List<ProxySpec> getSpecs() {
@@ -199,12 +206,28 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		if (shinyProxySpec == null) {
 			return null;
 		}
-		Integer defaultMaxInstances = environment.getProperty(PROP_DEFAULT_MAX_INSTANCES, Integer.class, 1);
+		// TODO support SpEL
 		Integer maxInstances = shinyProxySpec.getMaxInstances();
 		if (maxInstances != null) {
             return shinyProxySpec.getMaxInstances();
 		}
 		return defaultMaxInstances;
+	}
+
+	public Map<String, Integer> getMaxInstances() {
+		Map<String, Integer> result = new HashMap<>();
+
+		// TODO support SpEL
+		for (ShinyProxySpec shinyProxySpec : shinyProxySpecs.values()) {
+			Integer maxInstances = shinyProxySpec.getMaxInstances();
+			if (maxInstances != null) {
+				result.put(shinyProxySpec.getId(), maxInstances);
+			} else {
+				result.put(shinyProxySpec.getId(), defaultMaxInstances);
+			}
+		}
+
+		return result;
 	}
 
 	public Boolean getShinyForceFullReload(String specId) {
@@ -227,6 +250,17 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			return shinyProxySpec.getHideNavbarOnMainPageLink();
 		}
 		return false;
+	}
+	
+	public Boolean getAlwaysShowSwitchInstance(String specId) {
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
+		if (shinyProxySpec == null) {
+			return null;
+		}
+		if (shinyProxySpec.getAlwaysShowSwitchInstance() != null) {
+			return shinyProxySpec.getAlwaysShowSwitchInstance();
+		}
+		return defaultAlwaysSwitchInstance;
 	}
 
 	public String getTemplateGroupOfApp(String specId) {
@@ -273,6 +307,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private Boolean shinyForceFullReload;
 		private Integer maxInstances;
 		private Boolean hideNavbarOnMainPageLink;
+		private Boolean alwaysSwitchInstance;
 		private String maxLifetime;
 		private Boolean stopOnLogout;
 		private String heartbeatTimeout;
@@ -512,6 +547,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			this.hideNavbarOnMainPageLink = hideNavbarOnMainPageLink;
 		}
 
+		public void setAlwaysSwitchInstance(Boolean alwaysSwitchInstance) {
+			this.alwaysSwitchInstance = alwaysSwitchInstance;
+		}
+
+		public Boolean getAlwaysShowSwitchInstance() {
+			return alwaysSwitchInstance;
+		}
+
 		public String getMaxLifetime() {
 			return maxLifetime;
 		}
@@ -607,7 +650,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
         public void setParameters(Parameters parameters) {
             this.parameters = parameters;
         }
-    }
+	}
 
 	public static class TemplateGroup {
 

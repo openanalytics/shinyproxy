@@ -64,8 +64,6 @@ public class AppController extends BaseController {
 	@Inject
 	private ProxyMappingManager mappingManager;
 
-	@Inject
-	private ShinyProxySpecProvider shinyProxySpecProvider;
 
     @Inject
     private ParametersService parameterizedAppService;
@@ -92,7 +90,6 @@ public class AppController extends BaseController {
 		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
 		map.put("heartbeatRate", getHeartbeatRate());
 		map.put("page", "app");
-		map.put("maxInstances", shinyProxySpecProvider.getMaxInstancesForSpec(appRequestInfo.getAppName()));
 		map.put("shinyForceFullReload", shinyProxySpecProvider.getShinyForceFullReload(appRequestInfo.getAppName()));
         if (spec.getParameters() != null) {
 			Authentication auth = SecurityContextHolder.getContext().getAuthentication();

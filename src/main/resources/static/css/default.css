@@ -234,5 +234,25 @@ body > div#navbar { padding-top: 0px; }
 }
 
 #selectAllWarning div {
-    margin-bottom: 0px;
+    margin-bottom: 0;
+}
+
+#switchInstancesModal, #myAppsModal, #appDetailsModal {
+	display: none;
+}
+
+#appDetailsModal table {
+	width: 100%;
+}
+
+#appDetailsModal td {
+	width: 50%;
+}
+
+#appDetailsModal tr:first-child td {
+	border-top: 0;
+}
+
+#appDetailsModal .help-block {
+	margin-bottom: 0;
 }

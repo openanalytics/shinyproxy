@@ -58,7 +58,6 @@
 
         <a th:if="${@thymeleaf.openSwitchInstanceInsteadOfApp(app)}"
            class="app-link"
-           data-toggle="modal" data-target="#switchInstancesModal"
            th:data-app-id="${app.id}"
            th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
     </th:block>
@@ -131,27 +130,7 @@
     </th:block>
 </div>
 
-<div class="modal fade apps-modal" id="myAppsModal" role="dialog">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h4 class="modal-title">My apps</h4>
-            </div>
-            <div class="modal-body">
-                <div id="myApps">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button onclick="Shiny.common.onStopAllApps();"  id="stop-all-apps-btn" type="button" class="btn pull-left btn-danger">Stop all apps</button>
-                <button type="button" disabled class="btn pull-left btn-danger" id="stopping-all-apps-btn">Stopping all apps...</button>
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div th:replace="fragments/switch-instance-modal :: switch-instance-modal"></div>
+<div th:replace="fragments/modal :: modal"></div>
 
 <script type="text/javascript" th:inline="javascript">
     $(window).on('load', function () {

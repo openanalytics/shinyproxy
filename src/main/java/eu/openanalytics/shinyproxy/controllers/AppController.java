@@ -129,7 +129,7 @@ public class AppController extends BaseController {
         return startApp(request, appBody.getParameters());
     }
 
-    private Map<String,String> startApp(HttpServletRequest request, ProvidedParameters parameters) throws InvalidParametersException {
+    private Map<String,String> startApp(HttpServletRequest request, Map<String, String> parameters) throws InvalidParametersException {
         AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
 
         Proxy proxy = getOrStart(appRequestInfo, parameters);
@@ -201,7 +201,7 @@ public class AppController extends BaseController {
 		}
 	}
 
-	private Proxy getOrStart(AppRequestInfo appRequestInfo, ProvidedParameters parameters) throws InvalidParametersException {
+	private Proxy getOrStart(AppRequestInfo appRequestInfo, Map<String, String> parameters) throws InvalidParametersException {
 		Proxy proxy = findUserProxy(appRequestInfo);
 		if (proxy == null) {
 			ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
@@ -300,13 +300,13 @@ public class AppController extends BaseController {
 	}
 
     private static class AppBody {
-        private ProvidedParameters parameters;
+        private Map<String, String> parameters;
 
-        public ProvidedParameters getParameters() {
+        public Map<String, String> getParameters() {
             return parameters;
         }
 
-        public void setParameters(ProvidedParameters parameters) {
+        public void setParameters(Map<String, String> parameters) {
             this.parameters = parameters;
         }
     }

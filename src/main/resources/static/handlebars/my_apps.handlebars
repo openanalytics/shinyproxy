@@ -8,6 +8,10 @@
                         <a target="_blank" href="{{ url }}">{{ instanceName }}</a>
                         <div class="btn-group btn-group-xs" role="group">
                             <button type="button" class="btn btn-primary"
+                                    onclick="Shiny.common.showAppDetails('{{ name }}', '{{ proxyId }}', '{{ spInstance }}');">
+                                Details
+                            </button>
+                            <button type="button" class="btn btn-primary"
                                     onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ name }}', '{{ proxyId }}', '{{ spInstance }}');">
                                 Stop app
                             </button>

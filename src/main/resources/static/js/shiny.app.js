@@ -159,11 +159,17 @@ $(window).on('load', function () {
     Shiny.ui.setShinyFrameHeight();
 
     $('#switchInstancesModal-btn').click(function () {
+        Shiny.ui.showInstanceModal();
         Shiny.instances.eventHandlers.onShow(null);
+    });
+
+    $('#appDetails-btn').click(function () {
+        Shiny.instances.eventHandlers.showAppDetails();
     });
 
     $('.app-link').click(function(e) {
         const appId = $(e.target).data("app-id");
+        Shiny.ui.showInstanceModal();
         Shiny.instances.eventHandlers.onShow(appId);
     });
 
@@ -172,14 +178,15 @@ $(window).on('load', function () {
         Shiny.instances.eventHandlers.onNewInstance();
     });
 
-    $('#switchInstancesModal').on('shown.bs.modal', function () {
-        setTimeout(function () {
-            $("#instanceNameField").focus();
-        }, 10);
+    $('#myAppsModal-btn').click(function () {
+        Shiny.ui.showMyAppsModal();
+        Shiny.common.onShowMyApps();
     });
 
-    $('#switchInstancesModal').on('hide.bs.modal', function () {
+    $('#modal').on('hide.bs.modal', function () {
         Shiny.instances.eventHandlers.onClose();
+        Shiny.common.onCloseMyApps();
+        Shiny.ui.hideModal();
     });
 
     $('#parameterForm form').on('submit', function (e) {

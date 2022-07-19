@@ -20,6 +20,7 @@
  */
 Shiny = window.Shiny || {};
 Shiny.api = {
+    _proxiesCache: null,
     getProxies: async function () {
         let resp = await fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true", false));
         return await resp.json();
@@ -55,12 +56,25 @@ Shiny.api = {
     },
     getProxyById: async function (proxyId, spInstance) {
         return await fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId, spInstance))
-            .then(response => {
+            .then(async response => {
                 if (response.status === 200) {
-                    return response;
+                    return await response.json();
                 }
                 return null;
             });
+    },
+    getProxyByIdFromCache: async function (proxyId, spInstance) {
+        if (Shiny.api._proxiesCache === null) {
+            return await Shiny.api.getProxyById(proxyId, spInstance);
+        }
+        for (const [appName, instances] of Object.entries(Shiny.api._proxiesCache)) {
+            for (const instance of instances) {
+                if (instance.id === proxyId) {
+                    return instance;
+                }
+            }
+        }
+        return null;
     },
     _groupByApp: function (proxies) {
         let handled = [];
@@ -83,6 +97,7 @@ Shiny.api = {
     },
     getProxiesAsTemplateData: async function () {
         const proxies = await Shiny.api.getProxiesOnAllSpInstances();
+        Shiny.api._proxiesCache = proxies;
         let templateData = {'apps': {}};
 
         for (const [appName, instances] of Object.entries(proxies)) {
@@ -118,6 +133,7 @@ Shiny.api = {
                         uptime = `${hours}:${minutes}:${seconds}`
                     }
 
+
                     const url = Shiny.instances._createUrlForProxy(instance);
                     res.push({
                         appName: instance.spec.id,
@@ -126,7 +142,7 @@ Shiny.api = {
                         url: url,
                         spInstance: instance.runtimeValues.SHINYPROXY_INSTANCE,
                         proxyId: instance.id,
-                        uptime: uptime
+                        uptime: uptime,
                     });
                 } else {
                     console.log("Received invalid instance object from server.", instance);

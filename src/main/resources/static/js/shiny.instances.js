@@ -52,6 +52,18 @@ Shiny.instances = {
         onClose: function () {
             clearInterval(Shiny.instances._refreshIntervalId);
         },
+        showAppDetails: function(appInstanceName, proxyId, spInstance) {
+            if (appInstanceName === undefined) {
+                // when no arguments provided -> show the current app
+                appInstanceName = Shiny.instances._toAppDisplayName(Shiny.app.staticState.appInstanceName);
+                proxyId = Shiny.app.staticState.proxyId;
+                spInstance = Shiny.common.staticState.spInstance;
+                Shiny.ui.showAppDetailsModal();
+            } else {
+                Shiny.ui.showAppDetailsModal($('#switchInstancesModal'));
+            }
+            Shiny.common.loadAppDetails(appInstanceName, proxyId, spInstance);
+        },
         onDeleteInstance: async function (appInstanceName, proxyId, spInstance) {
             if (appInstanceName === undefined) {
                 // when no arguments provided -> stop the current app
@@ -70,7 +82,7 @@ Shiny.instances = {
         },
         onRestartInstance: async function () {
             if (confirm("Are you sure you want to restart the current instance?")) {
-                Shiny.ui.hideInstanceModal();
+                Shiny.ui.hideModal();
                 Shiny.ui.showLoading();
 
                 if (Shiny.app.runtimeState.appStopped) {
@@ -128,7 +140,7 @@ Shiny.instances = {
                 window.location = Shiny.instances._createUrlForInstance(instance);
             }
             inputField.val('');
-            Shiny.ui.hideInstanceModal();
+            Shiny.ui.hideModal();
 
         },
     },
@@ -201,5 +213,5 @@ Shiny.instances = {
             return "Default";
         }
         return appInstanceName;
-    }
+    },
 };

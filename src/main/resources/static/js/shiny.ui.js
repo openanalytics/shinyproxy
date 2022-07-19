@@ -110,7 +110,7 @@ Shiny.ui = {
         $('#shinyframe').remove();
         $("#loading").hide();
         $("#reconnecting").hide();
-        $('#switchInstancesModal').modal('hide')
+        $('#modal').modal('hide')
         $('#appStopped').show();
     },
 
@@ -121,7 +121,7 @@ Shiny.ui = {
             $('#shinyframe').remove();
             $("#loading").hide();
             $("#reconnecting").hide();
-            $('#switchInstancesModal').modal('hide')
+            $('#modal').modal('hide')
             $("#navbar").hide();
             $('#userLoggedOut').show();
         }
@@ -131,8 +131,39 @@ Shiny.ui = {
         $('#parameterForm').show();
     },
 
-    hideInstanceModal: function () {
-        $('#switchInstancesModal').modal('hide');
+    showInstanceModal: function () {
+        $('#switchInstancesModal').show();
+        $('#modal').modal('show');
+        setTimeout(function () {
+            $("#instanceNameField").focus();
+        }, 10);
+    },
+
+    showMyAppsModal: function () {
+        $('#myAppsModal').show();
+        $('#modal').modal('show');
+    },
+
+    hideModal: function() {
+        $('#modal .modal-dialog').hide();
+    },
+
+    showAppDetailsModal: function (currentModal) {
+        if (currentModal === undefined) {
+            $('#appDetailsModal').show();
+            $('#modal').modal('show');
+            $('#appDetailsModal .close-button').one('click', function (e) {
+                $('#modal').modal('hide');
+                $('#appDetailsModal').hide();
+            });
+        } else {
+            $(currentModal).hide();
+            $('#appDetailsModal').show();
+            $('#appDetailsModal .close-button').one('click', function (e) {
+                $('#appDetailsModal').hide();
+                $(currentModal).show();
+            });
+        }
     },
 
     removeFrame() {
@@ -209,5 +240,12 @@ Shiny.ui = {
                 $(nextOption).hide();
             }
         }
+    },
+
+    formatSeconds(time) {
+        const hours = Math.floor(time / 3600);
+        const minutes = Math.floor((time % 3600) / 60).toString().padStart(2, '0');
+        const seconds = Math.floor(time % 60).toString().padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`
     }
 }

@@ -21,7 +21,7 @@
 
 -->
 <!DOCTYPE html>
-<html 
+<html
 	xmlns:th="http://www.thymeleaf.org"
 	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head></head>
@@ -35,7 +35,10 @@
 				</div>
 				<div class="navbar-form navbar-right">
 					<a role="button" class="btn btn-primary btn-sm" id="switchInstancesModal-btn"
-					   data-toggle="modal" data-target="#switchInstancesModal" th:if="${page == 'app' && appMaxInstances.get(appName) != 1}" >Switch instance</a>
+					   th:if="${page == 'app' && appMaxInstances.get(appName) != 1}" >Switch instance</a>
+
+					<a role="button" class="btn btn-primary btn-sm btn-restart-app" onclick="Shiny.instances.eventHandlers.showAppDetails();"
+					   th:if="${page == 'app' && appMaxInstances.get(appName) == 1}" >App details</a>
 
 					<a role="button" class="btn btn-primary btn-sm btn-restart-app" onclick="Shiny.instances.eventHandlers.onRestartInstance();"
 						th:if="${page == 'app' && appMaxInstances.get(appName) == 1}" >Restart app</a>
@@ -44,7 +47,7 @@
 					   th:if="${page == 'app' && appMaxInstances.get(appName) == 1}" >Stop app</a>
 
 					<a role="button" class="btn btn-primary btn-sm" id="myAppsModal-btn"
-					   data-toggle="modal" data-target="#myAppsModal" th:if="${page == 'index'}" >My apps</a>
+					   th:if="${page == 'index'}" >My apps</a>
 
 					<a role="button" class="btn btn-primary btn-sm" th:if="${isSupportEnabled}"
 						data-toggle="modal" data-target="#reportIssueModal">Report Issue</a>

@@ -54,6 +54,54 @@ Shiny.common = {
         }, 2500);
     },
 
+    onCloseMyApps: function () {
+        clearInterval(Shiny.common._refreshIntervalId);
+    },
+
+    showAppDetails: function (appInstanceName, proxyId, spInstance) {
+        Shiny.ui.showAppDetailsModal($('#myAppsModal'));
+        Shiny.common.loadAppDetails(appInstanceName, proxyId, spInstance);
+    },
+
+    async loadAppDetails(appInstanceName, proxyId, spInstance) {
+        const proxy = await Shiny.api.getProxyByIdFromCache(proxyId, spInstance);
+
+        let uptime = null;
+        if (proxy.hasOwnProperty("startupTimestamp") && proxy.startupTimestamp > 0) {
+            const uptimeSec = (Date.now() - proxy.startupTimestamp) / 1000;
+            uptime = Shiny.ui.formatSeconds(uptimeSec);
+        }
+
+        const timeoutSec = parseInt(proxy.runtimeValues.SHINYPROXY_HEARTBEAT_TIMEOUT, 10);
+        let heartbeatTimeout = null;
+        if (timeoutSec !== -1) {
+            heartbeatTimeout = Shiny.ui.formatSeconds(timeoutSec / 1000);
+        }
+
+        const maxLifetimeSec = parseInt(proxy.runtimeValues.SHINYPROXY_MAX_LIFETIME, 10);
+        let maxLifetime  = null;
+        if (maxLifetimeSec !== -1) {
+            maxLifetime = Shiny.ui.formatSeconds(maxLifetimeSec * 60);
+        }
+
+        let parameters = null;
+        if (proxy.runtimeValues.hasOwnProperty("SHINYPROXY_PARAMETERS")) {
+            parameters = JSON.parse(proxy.runtimeValues.SHINYPROXY_PARAMETERS);
+        }
+
+        const templateData = {
+            appName: proxy.spec.id,
+            proxyId: proxy.id,
+            status: proxy.status,
+            instanceName: appInstanceName,
+            uptime: uptime,
+            heartbeatTimeout: heartbeatTimeout,
+            maxLifetime: maxLifetime,
+            parameters: parameters
+        }
+        document.getElementById('appDetails').innerHTML = Handlebars.templates.app_details(templateData);
+    },
+
     async onStopAllApps() {
         $('#stop-all-apps-btn').hide();
         $('#stopping-all-apps-btn').show();
@@ -89,7 +137,6 @@ Shiny.common = {
     _refreshModal: async function () {
         const templateData = await Shiny.api.getProxiesAsTemplateData();
         templateData.apps = Object.values(templateData.apps);
-        console.log(templateData.apps);
         templateData.apps.sort(function (a, b) {
             return a.displayName.toLowerCase() > b.displayName.toLowerCase() ? 1 : -1
         });
@@ -97,9 +144,3 @@ Shiny.common = {
     },
 
 }
-
-$(window).on('load', function () {
-    $('#myAppsModal-btn').click(function () {
-        Shiny.common.onShowMyApps();
-    });
-});

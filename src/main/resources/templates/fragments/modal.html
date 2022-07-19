@@ -26,9 +26,9 @@
         xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head></head>
 <body>
-<th:block th:fragment="switch-instance-modal">
-    <div class="modal fade apps-modal" id="switchInstancesModal" role="dialog">
-        <div class="modal-dialog">
+<th:block th:fragment="modal">
+    <div class="modal fade" id="modal" role="dialog">
+        <div class="modal-dialog apps-modal" id="switchInstancesModal">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -51,6 +51,42 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+        <div class="modal-dialog apps-modal" id="myAppsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">My apps</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="myApps">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button onclick="Shiny.common.onStopAllApps();" id="stop-all-apps-btn" type="button"
+                            class="btn pull-left btn-danger">Stop all apps
+                    </button>
+                    <button type="button" disabled class="btn pull-left btn-danger" id="stopping-all-apps-btn">Stopping
+                        all apps...
+                    </button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+        <div class="modal-dialog" id="appDetailsModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title">App Details</h4>
+                </div>
+                <div class="modal-body">
+                    <div id="appDetails">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default close-button">Close</button>
                 </div>
             </div>
         </div>

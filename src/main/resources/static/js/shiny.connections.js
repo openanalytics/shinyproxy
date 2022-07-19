@@ -106,7 +106,7 @@ Shiny.connections = {
                 Shiny.ui.showStoppedPage();
                 return;
             }
-            Shiny.ui.hideInstanceModal();
+            Shiny.ui.hideModal();
             if (Shiny.app.staticState.webSocketReconnectionMode === "Auto"
                 || (Shiny.app.staticState.webSocketReconnectionMode === "Confirm"
                     && confirm("Connection to server lost, try to reconnect to the application?"))

@@ -1,0 +1,85 @@
+<table class="table table-condensed">
+    <tr>
+        <td>
+            <b>App Name</b>
+        </td>
+        <td>
+            {{ appName }}
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <b>Instance</b>
+        </td>
+        <td>
+            {{ instanceName }}
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <b>ID</b>
+        </td>
+        <td>
+            {{ proxyId }}
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <b>Status</b>
+        </td>
+        <td>
+            {{ status }}
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <b>Uptime</b>
+        </td>
+        <td>
+            {{ uptime }}
+        </td>
+    </tr>
+    {{#if heartbeatTimeout }}
+        <tr>
+            <td>
+                <b>Heartbeat timeout</b>
+                <span class="help-block">
+                The app is automatically stopped when it has not been used for this amount of time.
+            </span>
+            </td>
+            <td>
+                {{ heartbeatTimeout }}
+            </td>
+        </tr>
+    {{/if}}
+    {{#if maxLifetime}}
+        <tr>
+            <td>
+                <b>Max lifetime</b>
+                <span class="help-block">
+                The app is automatically stopped when it has been running for this amount of time (even if it is in use).
+            </span>
+            </td>
+            <td>
+                {{ maxLifetime }}
+            </td>
+        </tr>
+    {{/if}}
+    {{#if parameters}}
+        {{#each parameters}}
+            <tr>
+                <td>
+                    <b>{{ displayName }}</b>
+                    {{#if description}}
+                        <span class="help-block">
+                            {{ description }}
+                        </span>
+                    {{/if}}
+                </td>
+                <td>
+                    {{ value }}
+                </td>
+            </tr>
+        {{/each}}
+    {{/if}}
+</table>

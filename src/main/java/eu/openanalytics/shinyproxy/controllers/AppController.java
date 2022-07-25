@@ -30,8 +30,6 @@ import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.containerproxy.util.Retrying;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.containerproxy.service.ParametersService;
-import eu.openanalytics.containerproxy.model.runtime.ProvidedParameters;
-import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.containerproxy.model.runtime.AllowedParametersForUser;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
@@ -47,6 +45,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.ExpressionContext;
+import org.thymeleaf.spring5.dialect.SpringStandardDialect;
+import org.thymeleaf.templatemode.TemplateMode;
+import org.thymeleaf.templateresolver.StringTemplateResolver;
 
 import javax.inject.Inject;
 import javax.servlet.http.Cookie;
@@ -66,7 +69,7 @@ public class AppController extends BaseController {
 
 
     @Inject
-    private ParametersService parameterizedAppService;
+    private ParametersService parameterService;
 
 	private final Logger logger = LogManager.getLogger(getClass());
 
@@ -93,17 +96,25 @@ public class AppController extends BaseController {
 		map.put("shinyForceFullReload", shinyProxySpecProvider.getShinyForceFullReload(appRequestInfo.getAppName()));
         if (spec.getParameters() != null) {
 			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-			AllowedParametersForUser allowedParametersForUser = parameterizedAppService.calculateAllowedParametersForUser(auth, spec);
+			AllowedParametersForUser allowedParametersForUser = parameterService.calculateAllowedParametersForUser(auth, spec);
             map.put("parameterAllowedCombinations", allowedParametersForUser.getAllowedCombinations());
             map.put("parameterValues", allowedParametersForUser.getValues());
             map.put("parameterDefinitions", spec.getParameters().getDefinitions());
             map.put("parameterIds", spec.getParameters().getIds());
+
+			if (spec.getParameters().getTemplate() != null) {
+				map.put("parameterFragment", renderParameterTemplate(spec.getParameters().getTemplate(), map));
+			} else {
+				map.put("parameterFragment", null);
+			}
+
         } else  {
             map.put("parameterAllowedCombinations", null);
             map.put("parameterValues", null);
             map.put("parameterDefinitions", null);
             map.put("parameterIds", null);
-        }
+			map.put("parameterFragment", null);
+		}
 
 		// operator specific
 		String spInstanceOverride = getSpInstanceOverride(request);
@@ -297,6 +308,19 @@ public class AppController extends BaseController {
 
 
 		return currentAmountOfInstances < maxInstances;
+	}
+
+	private String renderParameterTemplate(String template, ModelMap map) {
+		TemplateEngine templateEngine = new TemplateEngine();
+		StringTemplateResolver stringTemplateResolver = new StringTemplateResolver();
+		stringTemplateResolver.setTemplateMode(TemplateMode.HTML);
+		stringTemplateResolver.setCacheable(false);
+
+		templateEngine.setTemplateResolver(stringTemplateResolver);
+		templateEngine.setDialect(new SpringStandardDialect());
+
+		ExpressionContext context = new ExpressionContext(templateEngine.getConfiguration(), null, map);
+		return templateEngine.process(template, context);
 	}
 
     private static class AppBody {

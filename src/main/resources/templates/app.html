@@ -87,7 +87,8 @@
 		</div>
 	</div>
     <div id="parameterForm">
-        <div class="container">
+		<th:block th:if="${parameterFragment != null}" th:utext="${parameterFragment}"></th:block>
+        <div th:if="${parameterFragment == null}" class="container">
             <div class="row">
                 <h2>Choose the parameters for this app</h2>
             </div>
@@ -114,7 +115,7 @@
                     </div>
                 </form>
             </div>
-        </div>
+		</div>
     </div>
 
 	<div th:replace="fragments/modal :: modal"></div>

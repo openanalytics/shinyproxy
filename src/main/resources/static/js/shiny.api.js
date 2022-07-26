@@ -168,6 +168,10 @@ Shiny.api = {
         } else {
             try {
                 instances = await Shiny.api.getAllSpInstances();
+                // make sure this instance is above in the list
+                const index = instances.indexOf(Shiny.common.staticState.spInstance);
+                instances.splice(index, 1);
+                instances.unshift(Shiny.common.staticState.spInstance);
             } catch (e) {
                 console.log("Failure when getting operator metadata, limiting to current instance");
                 instances = [Shiny.common.staticState.spInstance];
@@ -185,11 +189,13 @@ Shiny.api = {
             if (instance === Shiny.common.staticState.spInstance) {
                 res.push({
                     displayName: "This server",
+                    spInstance: instance,
                     apps: response
                 });
             } else {
                 res.push({
                     displayName: instance,
+                    spInstance: instance,
                     apps: response
                 });
             }

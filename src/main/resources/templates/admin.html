@@ -55,10 +55,10 @@
 	<script type="text/javascript" th:inline="javascript">
 		$(window).on('load', function () {
 			window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]]);
-			window.Shiny.admin.init();
 			if ([[${operatorEnabled}]]) {
 				window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorShowTransferMessage}]]);
 			}
+			window.Shiny.admin.init();
 		});
 	</script>
 </body>

@@ -186,7 +186,7 @@ $(window).on('load', function () {
     $('#modal').on('hide.bs.modal', function () {
         Shiny.instances.eventHandlers.onClose();
         Shiny.common.onCloseMyApps();
-        Shiny.ui.hideModal();
+        $('#modal .modal-dialog').hide();
     });
 
     $('#parameterForm form').on('submit', function (e) {

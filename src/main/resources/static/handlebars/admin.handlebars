@@ -30,11 +30,11 @@
                 <td>
                     <div class="btn-group btn-group-xs" role="group">
                         <button type="button" class="btn btn-primary"
-                                onclick="Shiny.admin.showAppDetails('{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">
+                                onclick="Shiny.admin.showAppDetails('{{ instanceName }}', '{{ proxyId }}', '{{ ../spInstance }}');">
                             Details
                         </button>
                         <button type="button" class="btn btn-primary"
-                                onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">
+                                onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ instanceName }}', '{{ proxyId }}', '{{ ../spInstance }}');">
                             Stop
                         </button>
                     </div>

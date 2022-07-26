@@ -146,6 +146,7 @@ Shiny.ui = {
 
     hideModal: function() {
         $('#modal .modal-dialog').hide();
+        $('#modal').modal('hide');
     },
 
     showAppDetailsModal: function (currentModal) {

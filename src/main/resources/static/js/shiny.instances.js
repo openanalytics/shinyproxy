@@ -191,7 +191,7 @@ Shiny.instances = {
         $('#usedInstances').text(templateData['instances'].length);
 
         if (Shiny.common.runtimeState.switchInstanceApp.newTab) {
-            templateData['target'] = 'target="_blank"';
+            templateData['target'] = '_blank';
         } else {
             templateData['target'] = '';
         }

@@ -5,7 +5,7 @@
             <ul class="instance-list">
                 {{#each instances}}
                     <li class="app-instance">
-                        <a target="_blank" href="{{ url }}">{{ instanceName }}</a>
+                        <a href="{{ url }}">{{ instanceName }}</a>
                         <div class="btn-group btn-group-xs" role="group">
                             <button type="button" class="btn btn-primary"
                                     onclick="Shiny.common.showAppDetails('{{ name }}', '{{ proxyId }}', '{{ spInstance }}');">

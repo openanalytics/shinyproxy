@@ -31,6 +31,7 @@ public class ShinyForceFullReloadKey extends RuntimeValueKey<Boolean> {
                 false,
                 false,
                 false,
+                true,
                 false, Boolean.class);
     }
 

@@ -23,6 +23,16 @@
             {{ proxyId }}
         </td>
     </tr>
+    {{#if userId }}
+        <tr>
+            <td>
+                <b>Username</b>
+            </td>
+            <td>
+                {{ userId }}
+            </td>
+        </tr>
+    {{/if}}
     <tr>
         <td>
             <b>Status</b>
@@ -39,6 +49,36 @@
             {{ uptime }}
         </td>
     </tr>
+    {{#if lastHeartBeat }}
+        <tr>
+            <td>
+                <b>Last heartbeat</b>
+            </td>
+            <td>
+                {{ lastHeartBeat }}
+            </td>
+        </tr>
+    {{/if}}
+    {{#if imageName }}
+        <tr>
+            <td>
+                <b>Image</b>
+            </td>
+            <td>
+                {{ imageName }}
+            </td>
+        </tr>
+    {{/if}}
+    {{#if imageTag }}
+        <tr>
+            <td>
+                <b>Image tag</b>
+            </td>
+            <td>
+                {{ imageTag }}
+            </td>
+        </tr>
+    {{/if}}
     {{#if heartbeatTimeout }}
         <tr>
             <td>

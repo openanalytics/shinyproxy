@@ -30,6 +30,7 @@ public class PublicPathKey extends RuntimeValueKey<String>  {
                 false,
                 true, // include as annotation so that the value can be recovered
                 true,
+                true,
                 true, String.class);
     }
 

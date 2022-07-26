@@ -30,6 +30,7 @@ public class AppInstanceKey extends RuntimeValueKey<String>  {
                 false,
                 true, // include as annotation so that the value can be recovered
                 false,
+                true,
                 true, String.class);
     }
 

@@ -74,7 +74,7 @@ Shiny.instances = {
 
             if (confirm("Are you sure you want to stop instance \"" + appInstanceName + "\"?")) {
                 await Shiny.instances._deleteInstance(proxyId, spInstance);
-                if (proxyId === Shiny.app.staticState.proxyId) {
+                if (Shiny.app !== undefined && proxyId === Shiny.app.staticState.proxyId) {
                     await Shiny.instances._waitUntilInstanceDeleted(Shiny.app.staticState.proxyId, Shiny.common.staticState.spInstance);
                     Shiny.ui.showStoppedPage();
                 }
@@ -150,7 +150,7 @@ Shiny.instances = {
     },
 
     _deleteInstance: async function (proxyId, spInstance) {
-        if (proxyId === Shiny.app.staticState.proxyId) {
+        if (Shiny.app !== undefined && proxyId === Shiny.app.staticState.proxyId) {
             Shiny.app.runtimeState.appStopped = true;
             Shiny.ui.removeFrame();
         }

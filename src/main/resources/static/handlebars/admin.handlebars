@@ -11,21 +11,34 @@
         <th class="admin-proxy-heartbeat">Last heartbeat</th>
         <th>Image</th>
         <th>Image tag</th>
+        <th>Actions</th>
     </tr>
     {{#each instances }}
         {{#each apps }}
-            <tr class="admin-monospace">
-                <td class="admin-proxy-id">{{ ../displayName }}</td>
-                <td class="admin-proxy-id">{{ id }}</td>
-                <td class="admin-proxy-status">{{ status }}</td>
-                <td>{{ userId }}</td>
-                <td>{{ appName }}</td>
-                <td>{{ appInstanceName }}</td>
-                <td>{{ endpoint }}</td>
-                <td class="admin-proxy-uptime">{{ uptime }}</td>
-                <td class="admin-proxy-heartbeat">{{ lastHeartBeat }}</td>
-                <td>{{ imageName }}</td>
-                <td>{{ imageTag }}</td>
+            <tr>
+                <td class="admin-monospace admin-proxy-id">{{ ../displayName }}</td>
+                <td class="admin-monospace admin-proxy-id">{{ proxyId }}</td>
+                <td class="admin-monospace admin-proxy-status">{{ status }}</td>
+                <td class="admin-monospace">{{ userId }}</td>
+                <td class="admin-monospace">{{ appName }}</td>
+                <td class="admin-monospace">{{ instanceName }}</td>
+                <td class="admin-monospace">{{ endpoint }}</td>
+                <td class="admin-monospace admin-proxy-uptime">{{ uptime }}</td>
+                <td class="admin-monospace admin-proxy-heartbeat">{{ lastHeartBeat }}</td>
+                <td class="admin-monospace">{{ imageName }}</td>
+                <td class="admin-monospace">{{ imageTag }}</td>
+                <td>
+                    <div class="btn-group btn-group-xs" role="group">
+                        <button type="button" class="btn btn-primary"
+                                onclick="Shiny.admin.showAppDetails('{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">
+                            Details
+                        </button>
+                        <button type="button" class="btn btn-primary"
+                                onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">
+                            Stop
+                        </button>
+                    </div>
+                </td>
             </tr>
         {{/each}}
     {{/each}}

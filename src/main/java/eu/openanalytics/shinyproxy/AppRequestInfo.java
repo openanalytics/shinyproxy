@@ -20,7 +20,7 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import eu.openanalytics.containerproxy.model.runtime.ProvidedParameters;
+import eu.openanalytics.containerproxy.model.runtime.ParameterValues;
 import eu.openanalytics.containerproxy.util.BadRequestException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,7 +36,7 @@ public class AppRequestInfo {
     private final String appName;
     private final String appInstance;
     private final String subPath;
-    private ProvidedParameters providedParameters = null;
+    private ParameterValues providedParameters = null;
 
     public AppRequestInfo(String appName, String appInstance, String subPath) {
         this.appName = appName;
@@ -52,7 +52,7 @@ public class AppRequestInfo {
         return result;
     }
 
-    public static AppRequestInfo fromRequestOrException(HttpServletRequest request, ProvidedParameters providedParameters) {
+    public static AppRequestInfo fromRequestOrException(HttpServletRequest request, ParameterValues providedParameters) {
         AppRequestInfo result = fromRequestOrException(request);
         result.setProvidedParameters(providedParameters);
         return result;
@@ -126,11 +126,11 @@ public class AppRequestInfo {
         return subPath;
     }
 
-    public ProvidedParameters getProvidedParameters() {
+    public ParameterValues getProvidedParameters() {
         return providedParameters;
     }
 
-    private void setProvidedParameters(ProvidedParameters providedParameters) {
+    private void setProvidedParameters(ParameterValues providedParameters) {
         this.providedParameters = providedParameters;
     }
 

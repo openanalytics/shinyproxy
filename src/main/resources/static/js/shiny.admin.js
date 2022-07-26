@@ -21,9 +21,39 @@
 Shiny = window.Shiny || {};
 Shiny.admin = {
 
+    _adminData: null,
+
     async init() {
-        const adminData = await Shiny.api.getAdminData();
-        document.getElementById('allApps').innerHTML = Handlebars.templates.admin(adminData);
+        await Shiny.admin._refreshTable();
+        Shiny.instances._refreshIntervalId = setInterval(async function () {
+            if (!document.hidden) {
+                await Shiny.admin._refreshTable();
+            }
+        }, 2500);
+    },
+
+    async _refreshTable() {
+        this._adminData = await Shiny.api.getAdminData();
+        document.getElementById('allApps').innerHTML = Handlebars.templates.admin(this._adminData);
+    },
+
+    showAppDetails(appInstanceName, proxyId, spInstance) {
+        let appDetails = null;
+        for (const instance of this._adminData.instances) {
+            for (const app of instance.apps) {
+                // console.log(app);
+                if (app.proxyId === proxyId) {
+                    appDetails = app;
+                }
+            }
+        }
+        if (appDetails === null) {
+            console.log("Did not found details for app", appDetails);
+            return;
+        }
+
+        document.getElementById('appDetails').innerHTML = Handlebars.templates.app_details(appDetails);
+        Shiny.ui.showAppDetailsModal();
     },
 
 }

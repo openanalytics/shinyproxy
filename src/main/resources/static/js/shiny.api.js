@@ -184,7 +184,7 @@ Shiny.api = {
             const response = await request;
             if (instance === Shiny.common.staticState.spInstance) {
                 res.push({
-                    displayName: "This instance",
+                    displayName: "This server",
                     apps: response
                 });
             } else {

@@ -35,6 +35,7 @@
 	<script th:src="@{'/js/shiny.api.js' + ${resourceSuffix}}"></script>
 	<script th:src="@{'/js/shiny.ui.js' + ${resourceSuffix}}"></script>
 	<script th:src="@{'/js/shiny.common.js' + ${resourceSuffix}}"></script>
+	<script th:src="@{'/js/shiny.instances.js' + ${resourceSuffix}}"></script>
 	<script th:src="@{'/js/shiny.admin.js' + ${resourceSuffix}}"></script>
 	<script th:if="${operatorEnabled}" th:src="@{'/js/shiny.operator.js' + ${resourceSuffix}}"></script>
 	<script th:src="@{'/handlebars/precompiled.js' + ${resourceSuffix}}"></script>
@@ -48,6 +49,9 @@
 			<div id="allApps"></div>
 		</div>
 	</div>
+
+	<div th:replace="fragments/modal :: modal"></div>
+
 	<script type="text/javascript" th:inline="javascript">
 		$(window).on('load', function () {
 			window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]]);

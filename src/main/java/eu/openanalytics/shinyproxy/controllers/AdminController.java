@@ -29,6 +29,10 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import eu.openanalytics.containerproxy.model.runtime.ParameterNames;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.HeartbeatTimeoutKey;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.MaxLifetimeKey;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.ParameterNamesKey;
 import eu.openanalytics.containerproxy.service.hearbeat.ActiveProxiesService;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import org.springframework.http.MediaType;
@@ -62,22 +66,26 @@ public class AdminController extends BaseController {
 	public class ProxyInfo {
 	    public final String status;
 
-		public final String id;
+		public final String proxyId;
 		public final String userId;
 		public final String appName;
-		public final String appInstanceName;
+		public final String instanceName;
 		public final String endpoint;
 		public final String uptime;
 		public final String lastHeartBeat;
 		public final String imageName;
 		public final String imageTag;
+		public final String heartbeatTimeout;
+		public final String maxLifetime;
+
+		public final List<ParameterNames.ParameterName> parameters;
 
 		public ProxyInfo(Proxy proxy) {
 			status = proxy.getStatus().toString();
-			id = proxy.getId();
+			proxyId = proxy.getId();
 			userId = proxy.getUserId();
 			appName = proxy.getSpec().getId();
-			appInstanceName = getInstanceName(proxy);
+			instanceName = getInstanceName(proxy);
 			endpoint = proxy.getTargets().values().stream().map(URI::toString).findFirst().orElse("N/A"); // Shiny apps have only one endpoint
 
 			if (proxy.getStartupTimestamp() > 0) {
@@ -100,11 +108,36 @@ public class AdminController extends BaseController {
 			} else {
 				imageTag = "latest";
 			}
+
+			Long heartbeatTimeout = proxy.getRuntimeObject(HeartbeatTimeoutKey.inst);
+			if (heartbeatTimeout != -1) {
+				this.heartbeatTimeout = formatSeconds(heartbeatTimeout / 1000);
+			} else {
+				this.heartbeatTimeout = null;
+			}
+
+			Long maxLifetime = proxy.getRuntimeObject(MaxLifetimeKey.inst);
+			if (maxLifetime != -1) {
+				this.maxLifetime = formatSeconds(maxLifetime * 60);
+			} else {
+				this.maxLifetime = null;
+			}
+
+			ParameterNames providedParameters = proxy.getRuntimeObjectOrNull(ParameterNamesKey.inst);
+			if (providedParameters != null) {
+				parameters = providedParameters.getParametersNames();
+			} else {
+				parameters = null;
+			}
 		}
 
 		private String getTimeDelta(Long timestamp) {
-			long uptimeSec = (System.currentTimeMillis() - timestamp)/1000;
-			return String.format("%d:%02d:%02d", uptimeSec/3600, (uptimeSec%3600)/60, uptimeSec%60);
+			long seconds = (System.currentTimeMillis() - timestamp)/1000;
+			return formatSeconds(seconds);
+		}
+
+		private String formatSeconds(Long seconds) {
+			return String.format("%d:%02d:%02d", seconds/3600, (seconds%3600)/60, seconds%60);
 		}
 
 		private String getInstanceName(Proxy proxy) {

@@ -85,8 +85,8 @@ Shiny.common = {
         }
 
         let parameters = null;
-        if (proxy.runtimeValues.hasOwnProperty("SHINYPROXY_PARAMETERS")) {
-            parameters = JSON.parse(proxy.runtimeValues.SHINYPROXY_PARAMETERS);
+        if (proxy.runtimeValues.hasOwnProperty("SHINYPROXY_PARAMETER_NAMES")) {
+            parameters = JSON.parse(proxy.runtimeValues.SHINYPROXY_PARAMETER_NAMES);
         }
 
         const templateData = {

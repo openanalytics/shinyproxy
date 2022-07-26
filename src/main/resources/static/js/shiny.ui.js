@@ -64,7 +64,10 @@ Shiny.ui = {
      * Update the frame height.
      */
     setShinyFrameHeight: function () {
-        $('#shinyframe').css('height', ($(window).height()) + 'px');
+        // note: we use JS here instead of CSS in order to support custom navbars using any possible height.
+        let height = $(window).height() -  $('.navbar-height').height();
+        $('#shinyframe').css('height', height + 'px');
+        $('body').css('padding-top', $('.navbar-height').height() + 'px');
     },
 
     updateLoadingTxt: function () {
@@ -250,3 +253,11 @@ Shiny.ui = {
         return `${hours}:${minutes}:${seconds}`
     }
 }
+
+window.addEventListener("resize", function () {
+    Shiny.ui.setShinyFrameHeight();
+});
+
+$(window).on('load', function () {
+    Shiny.ui.setShinyFrameHeight();
+});

@@ -151,9 +151,6 @@ window.onbeforeunload = function () {
     window.Shiny.app.runtimeState.navigatingAway = true;
 };
 
-window.addEventListener("resize", function () {
-    Shiny.ui.setShinyFrameHeight();
-});
 
 $(window).on('load', function () {
     Shiny.ui.setShinyFrameHeight();

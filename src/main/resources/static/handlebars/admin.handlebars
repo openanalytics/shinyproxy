@@ -1,0 +1,32 @@
+<table class="table table-condensed">
+    <tr>
+        <th class="admin-proxy-id">Server</th>
+        <th class="admin-proxy-id">ID</th>
+        <th class="admin-proxy-status">Status</th>
+        <th>User</th>
+        <th>Appname</th>
+        <th>Instance</th>
+        <th>Endpoint</th>
+        <th class="admin-proxy-uptime">Uptime</th>
+        <th class="admin-proxy-heartbeat">Last heartbeat</th>
+        <th>Image</th>
+        <th>Image tag</th>
+    </tr>
+    {{#each instances }}
+        {{#each apps }}
+            <tr class="admin-monospace">
+                <td class="admin-proxy-id">{{ ../displayName }}</td>
+                <td class="admin-proxy-id">{{ id }}</td>
+                <td class="admin-proxy-status">{{ status }}</td>
+                <td>{{ userId }}</td>
+                <td>{{ appName }}</td>
+                <td>{{ appInstanceName }}</td>
+                <td>{{ endpoint }}</td>
+                <td class="admin-proxy-uptime">{{ uptime }}</td>
+                <td class="admin-proxy-heartbeat">{{ lastHeartBeat }}</td>
+                <td>{{ imageName }}</td>
+                <td>{{ imageTag }}</td>
+            </tr>
+        {{/each}}
+    {{/each}}
+</table>

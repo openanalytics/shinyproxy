@@ -30,7 +30,7 @@ Shiny.api = {
         return json.instances.map(i => i.hashOfSpec);
     },
     getProxiesOnAllSpInstances: async function () {
-        if (!Shiny.app.staticState.operatorEnabled) {
+        if (!Shiny.common.staticState.operatorEnabled) {
             return Shiny.api._groupByApp(await Shiny.api.getProxies());
         }
         let instances;
@@ -38,7 +38,7 @@ Shiny.api = {
             instances = await Shiny.api.getAllSpInstances();
         } catch (e) {
             console.log("Failure when getting operator metadata, limiting to current instance");
-            instances = [Shiny.app.staticState.spInstance];
+            instances = [Shiny.common.staticState.spInstance];
         }
         const requests = [];
         for (const instance of instances) {
@@ -151,6 +151,41 @@ Shiny.api = {
         }
 
         return templateData;
+    },
+    async getAdminData() {
+        let instances;
+        if (!Shiny.common.staticState.operatorEnabled) {
+            instances = [Shiny.common.staticState.spInstance];
+        } else {
+            try {
+                instances = await Shiny.api.getAllSpInstances();
+            } catch (e) {
+                console.log("Failure when getting operator metadata, limiting to current instance");
+                instances = [Shiny.common.staticState.spInstance];
+            }
+        }
+        const requests = {};
+        for (const instance of instances) {
+            requests[instance] = fetch(Shiny.api.buildURL("admin/data?sp_instance_override=" + instance, false))
+                .then(response => response.json())
+                .then(response => response.apps);
+        }
+        const res = [];
+        for (const [instance, request] of Object.entries(requests)) {
+            const response = await request;
+            if (instance === Shiny.common.staticState.spInstance) {
+                res.push({
+                    displayName: "This instance",
+                    apps: response
+                });
+            } else {
+                res.push({
+                    displayName: instance,
+                    apps: response
+                });
+            }
+        }
+        return {"instances": res};
     },
     buildURL(location, allowSpInstanceOverride = true) {
         const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);

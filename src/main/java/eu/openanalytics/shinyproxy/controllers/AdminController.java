@@ -21,20 +21,23 @@
 package eu.openanalytics.shinyproxy.controllers;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import eu.openanalytics.containerproxy.service.hearbeat.ActiveProxiesService;
-import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class AdminController extends BaseController {
@@ -45,15 +48,20 @@ public class AdminController extends BaseController {
 	@RequestMapping("/admin")
 	private String admin(ModelMap map, HttpServletRequest request) {
 		prepareMap(map, request);
-		
-		List<Proxy> proxies = proxyService.getProxies(null, false);
-		map.put("proxies", proxies.stream().map(ProxyInfo::new).collect(Collectors.toList()));
 
 		return "admin";
 	}
 
+    @RequestMapping(value = "/admin/data", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    private Map<String, List<ProxyInfo>> adminData() {
+        List<Proxy> proxies = proxyService.getProxies(null, false);
+        return Collections.singletonMap("apps", proxies.stream().map(ProxyInfo::new).collect(Collectors.toList()));
+    }
+
 	public class ProxyInfo {
 	    public final String status;
+
 		public final String id;
 		public final String userId;
 		public final String appName;

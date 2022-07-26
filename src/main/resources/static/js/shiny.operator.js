@@ -39,7 +39,7 @@ Shiny.operator = {
     init: function (forceTransfer, showTransferMessage) {
         Shiny.operator.staticState.forceTransfer = forceTransfer;
         Shiny.operator.staticState.showTransferMessage = showTransferMessage;
-        Shiny.app.staticState.operatorEnabled = true;
+        Shiny.common.staticState.operatorEnabled = true;
     },
 
     start: async function () {
@@ -109,4 +109,3 @@ Shiny.operator = {
     },
 
 }
-

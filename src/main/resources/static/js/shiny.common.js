@@ -25,6 +25,7 @@ Shiny.common = {
         contextPath: null,
         applicationName: null,
         spInstance: null,
+        operatorEnabled: false,
     },
     _refreshIntervalId: null,
 

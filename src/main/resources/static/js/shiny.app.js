@@ -34,9 +34,7 @@ Shiny.app = {
         maxReloadAttempts: 10,
         heartBeatRate: null,
         maxInstances: null,
-        spInstance: null,
         spInstanceOverride: null,
-        operatorEnabled: false,
     },
 
     runtimeState: {

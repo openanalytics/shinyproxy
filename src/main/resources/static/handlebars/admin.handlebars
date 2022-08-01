@@ -1,14 +1,14 @@
 <table class="table table-condensed">
     <tr>
-        <th class="admin-proxy-id">Server</th>
-        <th class="admin-proxy-id">ID</th>
-        <th class="admin-proxy-status">Status</th>
+        <th></th>Server</th>
+        <th>ID</th>
+        <th>Status</th>
         <th>User</th>
         <th>Appname</th>
         <th>Instance</th>
         <th>Endpoint</th>
-        <th class="admin-proxy-uptime">Uptime</th>
-        <th class="admin-proxy-heartbeat">Last heartbeat</th>
+        <th>Uptime</th>
+        <th>Last heartbeat</th>
         <th>Image</th>
         <th>Image tag</th>
         <th>Actions</th>
@@ -16,15 +16,15 @@
     {{#each instances }}
         {{#each apps }}
             <tr>
-                <td class="admin-monospace admin-proxy-id">{{ ../displayName }}</td>
-                <td class="admin-monospace admin-proxy-id">{{ proxyId }}</td>
-                <td class="admin-monospace admin-proxy-status">{{ status }}</td>
+                <td class="admin-monospace">{{ ../displayName }}</td>
+                <td class="admin-monospace">{{ proxyId }}</td>
+                <td class="admin-monospace">{{ status }}</td>
                 <td class="admin-monospace">{{ userId }}</td>
                 <td class="admin-monospace">{{ appName }}</td>
                 <td class="admin-monospace">{{ instanceName }}</td>
                 <td class="admin-monospace">{{ endpoint }}</td>
-                <td class="admin-monospace admin-proxy-uptime">{{ uptime }}</td>
-                <td class="admin-monospace admin-proxy-heartbeat">{{ lastHeartBeat }}</td>
+                <td class="admin-monospace">{{ uptime }}</td>
+                <td class="admin-monospace">{{ lastHeartBeat }}</td>
                 <td class="admin-monospace">{{ imageName }}</td>
                 <td class="admin-monospace">{{ imageTag }}</td>
                 <td>

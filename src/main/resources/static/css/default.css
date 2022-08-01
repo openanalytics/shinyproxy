@@ -212,10 +212,12 @@
 
 #appDetailsModal table {
 	width: 100%;
+	table-layout: fixed;
 }
 
 #appDetailsModal td {
 	width: 50%;
+	word-wrap: anywhere;
 }
 
 #appDetailsModal tr:first-child td {

@@ -8,11 +8,11 @@
                         <a href="{{ url }}">{{ instanceName }}</a>
                         <div class="btn-group btn-group-xs" role="group">
                             <button type="button" class="btn btn-primary"
-                                    onclick="Shiny.common.showAppDetails('{{ name }}', '{{ proxyId }}', '{{ spInstance }}');">
+                                    onclick="Shiny.common.showAppDetails('{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">
                                 Details
                             </button>
                             <button type="button" class="btn btn-primary"
-                                    onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ name }}', '{{ proxyId }}', '{{ spInstance }}');">
+                                    onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">
                                 Stop app
                             </button>
                         </div>

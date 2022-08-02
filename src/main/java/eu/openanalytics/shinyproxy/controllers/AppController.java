@@ -99,7 +99,8 @@ public class AppController extends BaseController {
 			AllowedParametersForUser allowedParametersForUser = parameterService.calculateAllowedParametersForUser(auth, spec);
             map.put("parameterAllowedCombinations", allowedParametersForUser.getAllowedCombinations());
             map.put("parameterValues", allowedParametersForUser.getValues());
-            map.put("parameterDefinitions", spec.getParameters().getDefinitions());
+			map.put("parameterDefaults", allowedParametersForUser.getDefaultValue());
+		 	map.put("parameterDefinitions", spec.getParameters().getDefinitions());
             map.put("parameterIds", spec.getParameters().getIds());
 
 			if (spec.getParameters().getTemplate() != null) {
@@ -111,6 +112,7 @@ public class AppController extends BaseController {
         } else  {
             map.put("parameterAllowedCombinations", null);
             map.put("parameterValues", null);
+			map.put("parameterDefaults", null);
             map.put("parameterDefinitions", null);
             map.put("parameterIds", null);
 			map.put("parameterFragment", null);

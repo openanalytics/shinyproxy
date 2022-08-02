@@ -181,7 +181,8 @@ Shiny.api = {
         for (const instance of instances) {
             requests[instance] = fetch(Shiny.api.buildURL("admin/data?sp_instance_override=" + instance, false))
                 .then(response => response.json())
-                .then(response => response.apps);
+                .then(response => response.apps)
+                .catch(e => console.log("Failed to get admin data for instances: ", instance, e));
         }
         const res = [];
         for (const [instance, request] of Object.entries(requests)) {

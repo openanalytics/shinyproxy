@@ -41,7 +41,6 @@ Shiny.admin = {
         let appDetails = null;
         for (const instance of this._adminData.instances) {
             for (const app of instance.apps) {
-                // console.log(app);
                 if (app.proxyId === proxyId) {
                     appDetails = app;
                 }

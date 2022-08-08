@@ -51,10 +51,12 @@ Shiny.instances = {
         },
         onClose: function () {
             clearInterval(Shiny.instances._refreshIntervalId);
+            clearInterval(Shiny.instances._detailsRefreshIntervalId); // just to be sure
         },
-        showAppDetails: function(appInstanceName, proxyId, spInstance) {
+        showAppDetails: function(appName, appInstanceName, proxyId, spInstance) {
             if (appInstanceName === undefined) {
                 // when no arguments provided -> show the current app
+                appName = Shiny.app.staticState.appName;
                 appInstanceName = Shiny.instances._toAppDisplayName(Shiny.app.staticState.appInstanceName);
                 proxyId = Shiny.app.staticState.proxyId;
                 spInstance = Shiny.common.staticState.spInstance;
@@ -62,7 +64,7 @@ Shiny.instances = {
             } else {
                 Shiny.ui.showAppDetailsModal($('#switchInstancesModal'));
             }
-            Shiny.common.loadAppDetails(appInstanceName, proxyId, spInstance);
+            Shiny.common.loadAppDetails(appName, appInstanceName, proxyId, spInstance);
         },
         onDeleteInstance: async function (appInstanceName, proxyId, spInstance) {
             if (appInstanceName === undefined) {

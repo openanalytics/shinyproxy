@@ -22,6 +22,7 @@ Shiny = window.Shiny || {};
 Shiny.admin = {
 
     _adminData: null,
+    _detailsRefreshIntervalId: null,
 
     async init() {
         await Shiny.admin._refreshTable();
@@ -33,26 +34,35 @@ Shiny.admin = {
     },
 
     async _refreshTable() {
-        this._adminData = await Shiny.api.getAdminData();
-        document.getElementById('allApps').innerHTML = Handlebars.templates.admin(this._adminData);
+        Shiny.admin._adminData = await Shiny.api.getAdminData();
+        document.getElementById('allApps').innerHTML = Handlebars.templates.admin(Shiny.admin._adminData);
     },
 
-    showAppDetails(appInstanceName, proxyId, spInstance) {
-        let appDetails = null;
-        for (const instance of this._adminData.instances) {
-            for (const app of instance.apps) {
-                if (app.proxyId === proxyId) {
-                    appDetails = app;
+    showAppDetails(appName, appInstanceName, proxyId, spInstance) {
+        function refresh() {
+            let appDetails = null;
+            for (const instance of Shiny.admin._adminData.instances) {
+                for (const app of instance.apps) {
+                    if (app.proxyId === proxyId) {
+                        appDetails = app;
+                    }
                 }
             }
-        }
-        if (appDetails === null) {
-            console.log("Did not found details for app", appDetails);
-            return;
+            if (appDetails === null) {
+                console.log("Did not found details for app", proxyId);
+                return;
+            }
+
+            document.getElementById('appDetails').innerHTML = Handlebars.templates.app_details(appDetails);
+            Shiny.ui.showAppDetailsModal();
         }
 
-        document.getElementById('appDetails').innerHTML = Handlebars.templates.app_details(appDetails);
-        Shiny.ui.showAppDetailsModal();
+        refresh();
+        Shiny.admin._detailsRefreshIntervalId = setInterval(function() {
+            if (!document.hidden) {
+                refresh();
+            }
+        }, 2500);
     },
 
 }

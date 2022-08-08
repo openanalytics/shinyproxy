@@ -24,6 +24,7 @@ import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.service.ProxyService;
 import eu.openanalytics.containerproxy.service.UserService;
+import eu.openanalytics.containerproxy.service.hearbeat.ActiveProxiesService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.inject.Inject;
 import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 public class HeartbeatController {
@@ -48,6 +50,9 @@ public class HeartbeatController {
 
     @Inject
     private UserService userService;
+
+    @Inject
+    private ActiveProxiesService activeProxiesService;
 
     /**
      * Endpoint used to force a heartbeat. This is used when an app cannot piggy-back heartbeats on other requests
@@ -75,6 +80,41 @@ public class HeartbeatController {
         return ResponseEntity.ok(new HashMap<String, String>() {{
             put("status", "success");
         }});
+    }
+
+
+    /**
+     * Provides info to about the heartbeat, max lifetime etc. of this app.
+     */
+    @RequestMapping(value = "/heartbeat/{proxyId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> getHeartbeatInfo(@PathVariable("proxyId") String proxyId) {
+        Proxy proxy = proxyService.getProxy(proxyId);
+
+        if (proxy == null || proxy.getStatus().equals(ProxyStatus.Stopping) || proxy.getStatus().equals(ProxyStatus.Stopped)) {
+            return ResponseEntity.status(410).body(new HashMap<String, String>() {{
+                put("status", "error");
+                put("message", "app_stopped_or_non_existent");
+            }});
+        }
+
+        if (!userService.isOwner(proxy) && !userService.isAdmin()) {
+            throw new AccessDeniedException(String.format("Access to roxy %s denied", proxyId));
+        }
+
+
+        Map<String, String> response = new HashMap<>();
+
+        Long heartBeat = activeProxiesService.getLastHeartBeat(proxy.getId());
+        if (heartBeat == null) {
+            response.put("lastHeartbeat", null);
+        } else {
+            response.put("lastHeartbeat", String.valueOf(heartBeat));
+        }
+
+        response.put("heartbeatRate", String.valueOf(heartbeatService.getHeartbeatRate()));
+
+        return ResponseEntity.ok(response);
     }
 
 }

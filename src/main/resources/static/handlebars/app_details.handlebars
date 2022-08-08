@@ -1,7 +1,7 @@
 <table class="table table-condensed">
     <tr>
         <td>
-            <b>App Name</b>
+            <b>App name</b>
         </td>
         <td>
             {{ appName }}
@@ -41,7 +41,8 @@
             {{ status }}
         </td>
     </tr>
-    <tr>
+    {{#if uptime }}
+        <tr>
         <td>
             <b>Uptime</b>
         </td>
@@ -49,6 +50,17 @@
             {{ uptime }}
         </td>
     </tr>
+    {{/if}}
+    {{#if isInUse }}
+        <tr>
+            <td>
+                <b>App is in use</b>
+            </td>
+            <td>
+                {{ isInUse }}
+            </td>
+        </tr>
+    {{/if}}
     {{#if lastHeartBeat }}
         <tr>
             <td>
@@ -56,6 +68,23 @@
             </td>
             <td>
                 {{ lastHeartBeat }}
+            </td>
+        </tr>
+    {{/if}}
+    {{#if heartbeatTimeout }}
+        <tr>
+            <td>
+                <b>Heartbeat timeout</b>
+                <span class="help-block">
+                The app is automatically stopped when it has not been used for this amount of time.
+            </span>
+            </td>
+            <td>
+                {{ heartbeatTimeout }}
+                {{#if heartbeatTimeoutRemaining}}
+                    <br>
+                    Remaining: {{ heartbeatTimeoutRemaining }}
+                {{/if}}
             </td>
         </tr>
     {{/if}}
@@ -79,19 +108,6 @@
             </td>
         </tr>
     {{/if}}
-    {{#if heartbeatTimeout }}
-        <tr>
-            <td>
-                <b>Heartbeat timeout</b>
-                <span class="help-block">
-                The app is automatically stopped when it has not been used for this amount of time.
-            </span>
-            </td>
-            <td>
-                {{ heartbeatTimeout }}
-            </td>
-        </tr>
-    {{/if}}
     {{#if maxLifetime}}
         <tr>
             <td>
@@ -102,6 +118,10 @@
             </td>
             <td>
                 {{ maxLifetime }}
+                {{#if maxLifetimeRemaining}}
+                    <br>
+                    Remaining: {{ maxLifetimeRemaining }}
+                {{/if}}
             </td>
         </tr>
     {{/if}}

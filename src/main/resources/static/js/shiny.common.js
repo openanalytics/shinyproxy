@@ -32,6 +32,7 @@ Shiny.common = {
         switchInstanceApp: null,
     },
     _refreshIntervalId: null,
+    _detailsRefreshIntervalId: null,
 
     init: function (contextPath, applicationName, spInstance, appMaxInstances) {
         Shiny.common.staticState.contextPath = contextPath;
@@ -58,48 +59,89 @@ Shiny.common = {
         clearInterval(Shiny.common._refreshIntervalId);
     },
 
-    showAppDetails: function (appInstanceName, proxyId, spInstance) {
+    showAppDetails: function (appName, appInstanceName, proxyId, spInstance) {
         Shiny.ui.showAppDetailsModal($('#myAppsModal'));
-        Shiny.common.loadAppDetails(appInstanceName, proxyId, spInstance);
+        Shiny.common.loadAppDetails(appName, appInstanceName, proxyId, spInstance);
     },
 
-    async loadAppDetails(appInstanceName, proxyId, spInstance) {
-        const proxy = await Shiny.api.getProxyByIdFromCache(proxyId, spInstance);
+    closeAppDetails: function() {
+        clearInterval(Shiny.common._detailsRefreshIntervalId);
+        if (Shiny.admin !== undefined) {
+            clearInterval(Shiny.admin._detailsRefreshIntervalId);
+        }
+    },
 
-        let uptime = null;
-        if (proxy.hasOwnProperty("startupTimestamp") && proxy.startupTimestamp > 0) {
+    loadAppDetails(appName, appInstanceName, proxyId, spInstance) {
+        async function refresh() {
+            const proxy = await Shiny.api.getProxyByIdFromCache(proxyId, spInstance);
+            const heartbeatInfo = await Shiny.api.getHeartBeatInfo(proxyId, spInstance);
+            if (proxy === null || heartbeatInfo == null || proxy.status === "Stopped" || proxy.status === "Stopping") {
+                const templateData = {
+                    appName: appName,
+                    proxyId: proxyId,
+                    status: "Stopped",
+                    instanceName: appInstanceName,
+                }
+                document.getElementById('appDetails').innerHTML = Handlebars.templates.app_details(templateData);
+                Shiny.common.closeAppDetails();
+                return;
+            }
+
             const uptimeSec = (Date.now() - proxy.startupTimestamp) / 1000;
-            uptime = Shiny.ui.formatSeconds(uptimeSec);
-        }
+            let uptime = Shiny.ui.formatSeconds(uptimeSec);
 
-        const timeoutSec = parseInt(proxy.runtimeValues.SHINYPROXY_HEARTBEAT_TIMEOUT, 10);
-        let heartbeatTimeout = null;
-        if (timeoutSec !== -1) {
-            heartbeatTimeout = Shiny.ui.formatSeconds(timeoutSec / 1000);
-        }
+            const timeoutMs = parseInt(proxy.runtimeValues.SHINYPROXY_HEARTBEAT_TIMEOUT, 10);
+            let heartbeatTimeout = null;
+            if (timeoutMs !== -1) {
+                heartbeatTimeout = Shiny.ui.formatSeconds(timeoutMs / 1000);
+            }
 
-        const maxLifetimeSec = parseInt(proxy.runtimeValues.SHINYPROXY_MAX_LIFETIME, 10);
-        let maxLifetime  = null;
-        if (maxLifetimeSec !== -1) {
-            maxLifetime = Shiny.ui.formatSeconds(maxLifetimeSec * 60);
-        }
+            const timeSinceLastHeartbeat = (Date.now() - heartbeatInfo.lastHeartbeat)
+            let isInUse;
+            let heartbeatTimeoutRemaining = null;
+            if (timeSinceLastHeartbeat <= (heartbeatInfo.heartbeatRate * 2)) {
+                isInUse = "Yes";
+            } else {
+                isInUse = "No";
+                const remaining = Math.max(0, (timeoutMs - timeSinceLastHeartbeat) / 1000);
+                heartbeatTimeoutRemaining = Shiny.ui.formatSeconds(remaining);
+            }
 
-        let parameters = null;
-        if (proxy.runtimeValues.hasOwnProperty("SHINYPROXY_PARAMETER_NAMES")) {
-            parameters = JSON.parse(proxy.runtimeValues.SHINYPROXY_PARAMETER_NAMES);
-        }
+            const maxLifetimeSec = parseInt(proxy.runtimeValues.SHINYPROXY_MAX_LIFETIME, 10) * 60;
+            let maxLifetime = null;
+            let maxLifetimeRemaining = null;
+            if (maxLifetimeSec > 0) {
+                maxLifetime = Shiny.ui.formatSeconds(maxLifetimeSec);
+                const remaining = Math.max(0, maxLifetimeSec - uptimeSec);
+                maxLifetimeRemaining = Shiny.ui.formatSeconds(remaining);
+            }
 
-        const templateData = {
-            appName: proxy.spec.id,
-            proxyId: proxy.id,
-            status: proxy.status,
-            instanceName: appInstanceName,
-            uptime: uptime,
-            heartbeatTimeout: heartbeatTimeout,
-            maxLifetime: maxLifetime,
-            parameters: parameters
+            let parameters = null;
+            if (proxy.runtimeValues.hasOwnProperty("SHINYPROXY_PARAMETER_NAMES")) {
+                parameters = JSON.parse(proxy.runtimeValues.SHINYPROXY_PARAMETER_NAMES);
+            }
+
+            const templateData = {
+                appName: proxy.spec.id,
+                proxyId: proxy.id,
+                status: proxy.status,
+                instanceName: appInstanceName,
+                uptime: uptime,
+                heartbeatTimeout: heartbeatTimeout,
+                maxLifetime: maxLifetime,
+                parameters: parameters,
+                isInUse: isInUse,
+                heartbeatTimeoutRemaining: heartbeatTimeoutRemaining,
+                maxLifetimeRemaining: maxLifetimeRemaining
+            }
+            document.getElementById('appDetails').innerHTML = Handlebars.templates.app_details(templateData);
         }
-        document.getElementById('appDetails').innerHTML = Handlebars.templates.app_details(templateData);
+        refresh();
+        Shiny.common._detailsRefreshIntervalId = setInterval(function() {
+            if (!document.hidden) {
+                refresh();
+            }
+        }, 2500);
     },
 
     async onStopAllApps() {

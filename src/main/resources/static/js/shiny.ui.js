@@ -159,6 +159,7 @@ Shiny.ui = {
             $('#appDetailsModal .close-button').one('click', function (e) {
                 $('#modal').modal('hide');
                 $('#appDetailsModal').hide();
+                Shiny.common.closeAppDetails();
             });
         } else {
             $(currentModal).hide();
@@ -166,6 +167,7 @@ Shiny.ui = {
             $('#appDetailsModal .close-button').one('click', function (e) {
                 $('#appDetailsModal').hide();
                 $(currentModal).show();
+                Shiny.common.closeAppDetails();
             });
         }
     },

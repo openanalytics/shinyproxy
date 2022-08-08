@@ -126,13 +126,8 @@ Shiny.api = {
 
                     let uptime = "N/A";
                     if (instance.hasOwnProperty("startupTimestamp") && instance.startupTimestamp > 0) {
-                        const uptimeSec = (Date.now() - instance.startupTimestamp) / 1000;
-                        const hours = Math.floor(uptimeSec / 3600);
-                        const minutes = Math.floor((uptimeSec % 3600) / 60).toString().padStart(2, '0');
-                        const seconds = Math.floor(uptimeSec % 60).toString().padStart(2, '0');
-                        uptime = `${hours}:${minutes}:${seconds}`
+                        uptime = Shiny.ui.formatSeconds((Date.now() - instance.startupTimestamp) / 1000);
                     }
-
 
                     const url = Shiny.instances._createUrlForProxy(instance);
                     res.push({
@@ -202,6 +197,15 @@ Shiny.api = {
             }
         }
         return {"instances": res};
+    },
+    getHeartBeatInfo: async function (proxyId, spInstance) {
+        return await fetch(Shiny.api.buildURLForInstance("heartbeat/" + proxyId, spInstance))
+            .then(async response => {
+                if (response.status === 200) {
+                    return await response.json();
+                }
+                return null;
+            });
     },
     buildURL(location, allowSpInstanceOverride = true) {
         const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);

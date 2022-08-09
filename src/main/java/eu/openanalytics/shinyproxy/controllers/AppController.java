@@ -20,17 +20,17 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
+import eu.openanalytics.containerproxy.model.runtime.AllowedParametersForUser;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.InvalidParametersException;
+import eu.openanalytics.containerproxy.service.ParametersService;
 import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.containerproxy.util.Retrying;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
-import eu.openanalytics.containerproxy.service.ParametersService;
-import eu.openanalytics.containerproxy.model.runtime.AllowedParametersForUser;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
@@ -242,9 +242,7 @@ public class AppController extends BaseController {
 		if (proxy.getStatus() == ProxyStatus.Stopping || proxy.getStatus() == ProxyStatus.Stopped) return false;
 		
 		int totalWaitMs = Integer.parseInt(environment.getProperty("proxy.container-wait-time", "20000"));
-		int waitMs = Math.min(500, totalWaitMs);
-		int maxTries = totalWaitMs / waitMs;
-		Retrying.retry(i -> proxy.getStatus() != ProxyStatus.Starting, maxTries, waitMs);
+		Retrying.retry((currentAttempt, maxAttempts) -> proxy.getStatus() != ProxyStatus.Starting, totalWaitMs);
 		
 		return (proxy.getStatus() == ProxyStatus.Up);
 	}

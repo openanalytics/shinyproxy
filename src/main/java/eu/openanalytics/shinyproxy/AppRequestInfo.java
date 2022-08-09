@@ -20,11 +20,10 @@
  */
 package eu.openanalytics.shinyproxy;
 
+import eu.openanalytics.containerproxy.model.runtime.ParameterValues;
 import eu.openanalytics.containerproxy.util.BadRequestException;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,19 +32,16 @@ public class AppRequestInfo {
     private static final Pattern APP_INSTANCE_PATTERN = Pattern.compile(".*?/(app_i|app_direct_i)/([^/]*)/([^/]*)(/?.*)");
     private static final Pattern APP_PATTERN = Pattern.compile(".*?/(app|app_direct)/([^/]*)(/?.*)");
     private static final Pattern INSTANCE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_.-]*$");
-    public static final String PROXY_HINT_PARAM = "shinyproxy_proxy_id_hint";
-    public static final String PROXY_HINT_HEADER = "X-ShinyProxy-Proxy-Id-Hint";
 
     private final String appName;
     private final String appInstance;
     private final String subPath;
-    private final String proxyIdHint;
+    private ParameterValues providedParameters = null;
 
-    public AppRequestInfo(String appName, String appInstance, String subPath, String proxyIdHint) {
+    public AppRequestInfo(String appName, String appInstance, String subPath) {
         this.appName = appName;
         this.appInstance = appInstance;
         this.subPath = subPath;
-        this.proxyIdHint = proxyIdHint;
     }
 
     public static AppRequestInfo fromRequestOrException(HttpServletRequest request) {
@@ -53,15 +49,15 @@ public class AppRequestInfo {
         if (result == null) {
             throw new BadRequestException("Error parsing URL.");
         }
-        // do not use request.getParam() here as it will inspect the request body and proxying the request will fail
-        List<String> param = ServletUriComponentsBuilder.fromRequest(request).build().getQueryParams().get(PROXY_HINT_PARAM);
-        if (param != null && param.size() > 0) {
-            result = new AppRequestInfo(result.appName, result.appInstance, result.subPath, param.get(0));
-        } else if (request.getHeader(PROXY_HINT_HEADER) != null)  {
-            result = new AppRequestInfo(result.appName, result.appInstance, result.subPath, request.getHeader(PROXY_HINT_HEADER));
-        }
         return result;
     }
+
+    public static AppRequestInfo fromRequestOrException(HttpServletRequest request, ParameterValues providedParameters) {
+        AppRequestInfo result = fromRequestOrException(request);
+        result.setProvidedParameters(providedParameters);
+        return result;
+    }
+
 
     public static AppRequestInfo fromURI(String uri) {
         Matcher appMatcher = APP_PATTERN.matcher(uri);
@@ -88,7 +84,7 @@ public class AppRequestInfo {
                 subPath = subPath.trim();
             }
 
-            return new AppRequestInfo(appName, appInstance, subPath, null);
+            return new AppRequestInfo(appName, appInstance, subPath);
         } else if (appMatcher.matches()) {
             String appName = appMatcher.group(2);
             if (appName == null || appName.trim().equals("")) {
@@ -104,11 +100,12 @@ public class AppRequestInfo {
                 subPath = subPath.trim();
             }
 
-            return new AppRequestInfo(appName, appInstance, subPath, null);
+            return new AppRequestInfo(appName, appInstance, subPath);
         } else {
             return null;
         }
     }
+
 
     public String getAppInstance() {
         return appInstance;
@@ -129,16 +126,12 @@ public class AppRequestInfo {
         return subPath;
     }
 
-    public String getProxyIdHint() {
-        return proxyIdHint;
+    public ParameterValues getProvidedParameters() {
+        return providedParameters;
     }
 
-    public Boolean isCssOrJsResource() {
-        if (subPath != null) {
-            String lowerSubPath = subPath.toLowerCase();
-            return lowerSubPath.endsWith(".js") || lowerSubPath.endsWith(".css");
-        }
-        return false;
+    private void setProvidedParameters(ParameterValues providedParameters) {
+        this.providedParameters = providedParameters;
     }
 
 }

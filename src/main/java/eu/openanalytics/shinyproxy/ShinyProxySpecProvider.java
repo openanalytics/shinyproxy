@@ -20,33 +20,31 @@
  */
 package eu.openanalytics.shinyproxy;
 
+import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
+import eu.openanalytics.containerproxy.model.spec.AccessControl;
+import eu.openanalytics.containerproxy.model.spec.ContainerSpec;
+import eu.openanalytics.containerproxy.model.spec.DockerSwarmSecret;
+import eu.openanalytics.containerproxy.model.spec.Parameters;
+import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
+import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
+import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
+import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
+import eu.openanalytics.shinyproxy.runtimevalues.WebsocketReconnectionMode;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Primary;
+import org.springframework.core.env.Environment;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-
-import eu.openanalytics.containerproxy.model.runtime.Proxy;
-import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
-import eu.openanalytics.containerproxy.model.spec.DockerSwarmSecret;
-import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
-import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
-import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
-import org.springframework.beans.factory.annotation.Autowired;
-import eu.openanalytics.shinyproxy.runtimevalues.WebsocketReconnectionMode;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Primary;
-import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
-
-
-import eu.openanalytics.containerproxy.model.spec.ContainerSpec;
-import eu.openanalytics.containerproxy.model.spec.ProxyAccessControl;
-import eu.openanalytics.containerproxy.model.spec.ProxySpec;
-import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
 
 /**
  * This component converts proxy specs from the 'ShinyProxy notation' into the 'ContainerProxy' notation.
@@ -61,12 +59,17 @@ import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
 public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 	private static final String PROP_DEFAULT_MAX_INSTANCES = "proxy.default-max-instances";
+	private static final String PROP_DEFAULT_ALWAYS_SWITCH_INSTANCE = "proxy.default-always-switch-instance";
 
 	private List<ProxySpec> specs = new ArrayList<>();
 	private Map<String, ShinyProxySpec> shinyProxySpecs = new HashMap<>();
 	private List<TemplateGroup> templateGroups = new ArrayList<>();
 
 	private static Environment environment;
+
+	private Integer defaultMaxInstances;
+
+	private Boolean defaultAlwaysSwitchInstance;
 
 	@Autowired
 	public void setEnvironment(Environment env){
@@ -78,6 +81,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		this.specs.stream().collect(Collectors.groupingBy(ProxySpec::getId)).forEach((id, duplicateSpecs) -> {
 			if (duplicateSpecs.size() > 1) throw new IllegalArgumentException(String.format("Configuration error: spec with id '%s' is defined multiple times", id));
 		});
+		defaultMaxInstances = environment.getProperty(PROP_DEFAULT_MAX_INSTANCES, Integer.class, 1);
+		defaultAlwaysSwitchInstance = environment.getProperty(PROP_DEFAULT_ALWAYS_SWITCH_INSTANCE, Boolean.class, false);
 	}
 
 	public List<ProxySpec> getSpecs() {
@@ -127,8 +132,9 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		}
 		to.setKubernetesAdditionalManifests(from.getKubernetesAdditionalManifests());
 		to.setKubernetesAdditionalPersistentManifests(from.getKubernetesAdditionalPersistentManifests());
+        to.setParameters(from.getParameters());
 
-		ProxyAccessControl acl = new ProxyAccessControl();
+		AccessControl acl = new AccessControl();
 		to.setAccessControl(acl);
 
 		if (from.getAccessGroups() != null && from.getAccessGroups().length > 0) {
@@ -200,12 +206,28 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		if (shinyProxySpec == null) {
 			return null;
 		}
-		Integer defaultMaxInstances = environment.getProperty(PROP_DEFAULT_MAX_INSTANCES, Integer.class, 1);
+		// TODO support SpEL
 		Integer maxInstances = shinyProxySpec.getMaxInstances();
 		if (maxInstances != null) {
             return shinyProxySpec.getMaxInstances();
 		}
 		return defaultMaxInstances;
+	}
+
+	public Map<String, Integer> getMaxInstances() {
+		Map<String, Integer> result = new HashMap<>();
+
+		// TODO support SpEL
+		for (ShinyProxySpec shinyProxySpec : shinyProxySpecs.values()) {
+			Integer maxInstances = shinyProxySpec.getMaxInstances();
+			if (maxInstances != null) {
+				result.put(shinyProxySpec.getId(), maxInstances);
+			} else {
+				result.put(shinyProxySpec.getId(), defaultMaxInstances);
+			}
+		}
+
+		return result;
 	}
 
 	public Boolean getShinyForceFullReload(String specId) {
@@ -229,6 +251,17 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		}
 		return false;
 	}
+	
+	public Boolean getAlwaysShowSwitchInstance(String specId) {
+		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
+		if (shinyProxySpec == null) {
+			return null;
+		}
+		if (shinyProxySpec.getAlwaysShowSwitchInstance() != null) {
+			return shinyProxySpec.getAlwaysShowSwitchInstance();
+		}
+		return defaultAlwaysSwitchInstance;
+	}
 
 	public String getTemplateGroupOfApp(String specId) {
 		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
@@ -237,7 +270,6 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		}
 		return shinyProxySpec.getTemplateGroup();
 	}
-
 	public void postProcessRecoveredProxy(Proxy proxy) {
 		proxy.addRuntimeValues(getRuntimeValues(proxy.getSpec()));
 	}
@@ -275,11 +307,12 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private Boolean shinyForceFullReload;
 		private Integer maxInstances;
 		private Boolean hideNavbarOnMainPageLink;
-		private Long maxLifetime;
+		private Boolean alwaysSwitchInstance;
+		private String maxLifetime;
 		private Boolean stopOnLogout;
-		private Long heartbeatTimeout;
+		private String heartbeatTimeout;
 
-		private Map<String,String> labels;
+		private Map<String,String> labels = new HashMap<>();
 
 		private int port;
 		private String[] accessGroups;
@@ -287,6 +320,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private String accessExpression;
 		private String templateGroup;
 		private Map<String, String> templateProperties = new HashMap<>();
+
+        private Parameters parameters;
 
 		public String getId() {
 			return id;
@@ -512,11 +547,19 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			this.hideNavbarOnMainPageLink = hideNavbarOnMainPageLink;
 		}
 
-		public Long getMaxLifetime() {
+		public void setAlwaysSwitchInstance(Boolean alwaysSwitchInstance) {
+			this.alwaysSwitchInstance = alwaysSwitchInstance;
+		}
+
+		public Boolean getAlwaysShowSwitchInstance() {
+			return alwaysSwitchInstance;
+		}
+
+		public String getMaxLifetime() {
 			return maxLifetime;
 		}
 
-		public void setMaxLifetime(Long maxLifetime) {
+		public void setMaxLifetime(String maxLifetime) {
 			this.maxLifetime = maxLifetime;
 		}
 
@@ -528,11 +571,11 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			this.stopOnLogout = stopOnLogout;
 		}
 
-		public void setHeartbeatTimeout(Long heartbeatTimeout) {
+		public void setHeartbeatTimeout(String heartbeatTimeout) {
 			this.heartbeatTimeout = heartbeatTimeout;
 		}
 
-		public Long getHeartbeatTimeout() {
+		public String getHeartbeatTimeout() {
 			return heartbeatTimeout;
 		}
 
@@ -599,6 +642,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		public void setDockerRegistryPassword(String dockerRegistryPassword) {
 			this.dockerRegistryPassword = dockerRegistryPassword;
 		}
+
+        public Parameters getParameters() {
+            return parameters;
+        }
+
+        public void setParameters(Parameters parameters) {
+            this.parameters = parameters;
+        }
 	}
 
 	public static class TemplateGroup {
@@ -622,5 +673,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			this.id = id;
 		}
 	}
+
+
 
 }

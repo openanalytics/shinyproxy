@@ -20,46 +20,210 @@
  */
 Shiny = window.Shiny || {};
 Shiny.api = {
-    getProxies: function (cb, cb_fail) {
-        $.get(Shiny.common.staticState.contextPath + "api/proxy?only_owned_proxies=true", function (proxies) {
-            cb(proxies);
-        }).fail(function (response) {
-            cb_fail(response);
+    _proxiesCache: null,
+    getProxies: async function () {
+        let resp = await fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true", false));
+        return await resp.json();
+    },
+    getAllSpInstances: async function () {
+        const resp = await fetch(Shiny.api.buildURL("operator/metadata", false));
+        const json = await resp.json();
+        return json.instances.map(i => i.hashOfSpec);
+    },
+    getProxiesOnAllSpInstances: async function () {
+        if (!Shiny.common.staticState.operatorEnabled) {
+            return Shiny.api._groupByApp(await Shiny.api.getProxies());
+        }
+        let instances;
+        try {
+            instances = await Shiny.api.getAllSpInstances();
+        } catch (e) {
+            console.log("Failure when getting operator metadata, limiting to current instance");
+            instances = [Shiny.common.staticState.spInstance];
+        }
+        const requests = [];
+        for (const instance of instances) {
+            requests.push(fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true&sp_instance_override=" + instance, false))
+                .then(response => response.json()));
+        }
+        const responses = await Promise.all(requests);
+        return Shiny.api._groupByApp(responses.flat());
+    },
+    deleteProxyById: async function (proxyId, spInstance) {
+        await fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId, spInstance), {
+            method: 'DELETE',
         });
     },
-    deleteProxyById: function (id, cb, cb_fail) {
-        $.ajax({
-            url: Shiny.common.staticState.contextPath + "api/proxy/" + id,
-            type: 'DELETE',
-            success: cb,
-            error: function (result) {
-                cb_fail(result);
-            }
-        });
+    getProxyById: async function (proxyId, spInstance) {
+        return await fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId, spInstance))
+            .then(async response => {
+                if (response.status === 200) {
+                    return await response.json();
+                }
+                return null;
+            });
     },
-    getProxyId: function (appName, instanceName, cb, cb_fail) {
-        Shiny.api.getProxies(function (proxies) {
-            for (var i = 0; i < proxies.length; i++) {
-                var proxy = proxies[i];
-                if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id') &&
-                    proxy.hasOwnProperty('runtimeValues') && proxy.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE')
-                    && proxy.spec.id === appName && proxy.runtimeValues.SHINYPROXY_APP_INSTANCE === instanceName) {
-                    cb(proxies[i].id);
-                    return;
+    getProxyByIdFromCache: async function (proxyId, spInstance) {
+        if (Shiny.api._proxiesCache === null) {
+            return await Shiny.api.getProxyById(proxyId, spInstance);
+        }
+        for (const [appName, instances] of Object.entries(Shiny.api._proxiesCache)) {
+            for (const instance of instances) {
+                if (instance.id === proxyId) {
+                    return instance;
                 }
             }
-            cb(null);
-        }, cb_fail);
+        }
+        return null;
     },
-    getProxyById: function(proxyId, cb, cb_fail) {
-        $.get(Shiny.common.staticState.contextPath + "api/proxy/" + proxyId, function (proxy) {
-            cb(true, proxy);
-        }).fail(function (response) {
-            if (response.status === 404) {
-                cb(false, null);
-                return;
+    _groupByApp: function (proxies) {
+        let handled = [];
+        let result = {};
+        for (const proxy of proxies) {
+            if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id')) {
+                if (!handled.includes(proxy.id)) {
+                    handled.push(proxy.id);
+                    proxies.push(proxy);
+                    if (!result.hasOwnProperty(proxy.spec.id)) {
+                        result[proxy.spec.id] = []
+                    }
+                    result[proxy.spec.id].push(proxy);
+                }
+            } else {
+                console.log("Received invalid proxy object from server.", proxy);
             }
-            cb_fail(response);
-        });
+        }
+        return result;
+    },
+    getProxiesAsTemplateData: async function () {
+        const proxies = await Shiny.api.getProxiesOnAllSpInstances();
+        Shiny.api._proxiesCache = proxies;
+        let templateData = {'apps': {}};
+
+        for (const [appName, instances] of Object.entries(proxies)) {
+            let displayName = null;
+            let processedInstances = instances.reduce( (res, instance) => {
+                if (instance.hasOwnProperty('spec') && instance.hasOwnProperty('id') &&
+                    instance.hasOwnProperty('runtimeValues') &&
+                    instance.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE') &&
+                    instance.runtimeValues.hasOwnProperty('SHINYPROXY_INSTANCE')
+                ) {
+
+                    let appInstance = instance.runtimeValues.SHINYPROXY_APP_INSTANCE;
+
+                    if (instance.status !== "Up" && instance.status !== "Starting" && instance.status !== "New") {
+                        return res;
+                    }
+
+                    if (displayName == null) {
+                        displayName = instance.spec.id;
+                        if (instance.spec.displayName !== null && instance.spec.displayName !== "") {
+                            displayName = instance.spec.displayName;
+                        }
+                    }
+
+                    let instanceName = Shiny.instances._toAppDisplayName(appInstance);
+
+                    let uptime = "N/A";
+                    if (instance.hasOwnProperty("startupTimestamp") && instance.startupTimestamp > 0) {
+                        uptime = Shiny.ui.formatSeconds((Date.now() - instance.startupTimestamp) / 1000);
+                    }
+
+                    const url = Shiny.instances._createUrlForProxy(instance);
+                    res.push({
+                        appName: instance.spec.id,
+                        instanceName: instanceName,
+                        displayName: displayName,
+                        url: url,
+                        spInstance: instance.runtimeValues.SHINYPROXY_INSTANCE,
+                        proxyId: instance.id,
+                        uptime: uptime,
+                    });
+                } else {
+                    console.log("Received invalid instance object from server.", instance);
+                }
+                return res;
+            }, []);
+
+            if (processedInstances.length > 0) {
+                processedInstances.sort(function (a, b) {
+                    return a.instanceName.toLowerCase() > b.instanceName.toLowerCase() ? 1 : -1
+                });
+
+                templateData.apps[appName] = {'instances': processedInstances, displayName: displayName};
+            }
+        }
+
+        return templateData;
+    },
+    async getAdminData() {
+        let instances;
+        if (!Shiny.common.staticState.operatorEnabled) {
+            instances = [Shiny.common.staticState.spInstance];
+        } else {
+            try {
+                instances = await Shiny.api.getAllSpInstances();
+                // make sure this instance is above in the list
+                const index = instances.indexOf(Shiny.common.staticState.spInstance);
+                instances.splice(index, 1);
+                instances.unshift(Shiny.common.staticState.spInstance);
+            } catch (e) {
+                console.log("Failure when getting operator metadata, limiting to current instance");
+                instances = [Shiny.common.staticState.spInstance];
+            }
+        }
+        const requests = {};
+        for (const instance of instances) {
+            requests[instance] = fetch(Shiny.api.buildURL("admin/data?sp_instance_override=" + instance, false))
+                .then(response => response.json())
+                .then(response => response.apps)
+                .catch(e => console.log("Failed to get admin data for instances: ", instance, e));
+        }
+        const res = [];
+        for (const [instance, request] of Object.entries(requests)) {
+            const response = await request;
+            if (instance === Shiny.common.staticState.spInstance) {
+                res.push({
+                    displayName: "This server",
+                    spInstance: instance,
+                    apps: response
+                });
+            } else {
+                res.push({
+                    displayName: instance,
+                    spInstance: instance,
+                    apps: response
+                });
+            }
+        }
+        return {"instances": res};
+    },
+    getHeartBeatInfo: async function (proxyId, spInstance) {
+        return await fetch(Shiny.api.buildURLForInstance("heartbeat/" + proxyId, spInstance))
+            .then(async response => {
+                if (response.status === 200) {
+                    return await response.json();
+                }
+                return null;
+            });
+    },
+    buildURL(location, allowSpInstanceOverride = true) {
+        const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
+        const url = new URL(location, baseURL);
+        if (!allowSpInstanceOverride || Shiny.app.staticState.spInstanceOverride === null) {
+            return url;
+        }
+        url.searchParams.set("sp_instance_override", Shiny.app.staticState.spInstanceOverride);
+        return url;
+    },
+    buildURLForInstance(location, spInstance) {
+        const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
+        const url = new URL(location, baseURL);
+        if (spInstance === Shiny.common.staticState.spInstance && Shiny.app.staticState.spInstanceOverride === null) {
+            // we are targeting the current instance, and we are not using the override system -> no need to include the override in the URL
+            return url;
+        }
+        url.searchParams.set("sp_instance_override", spInstance);
+        return url;
     }
 };

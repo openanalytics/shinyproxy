@@ -1,20 +1,27 @@
-<ul>
+<ul class="instance-list">
     {{#each instances}}
         {{#if active}}
-            <li>
-                <b>{{ name }}</b>
+            <li class="app-instance">
+                <b>{{ instanceName }}</b>
                 <div class="btn-group btn-group-xs" role="group">
-                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ name}}');">Stop app</button>
-                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onRestartInstance();">Restart app</button>
+                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.showAppDetails('{{ appName }}', '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Details</button>
+                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Stop app</button>
+                    <button type="button" class="btn btn-primary btn-restart-app" onclick="Shiny.instances.eventHandlers.onRestartInstance();">Restart app</button>
                 </div>
+                <span class="uptime">Uptime: {{ uptime }}</span>
             </li>
         {{else}}
-            <li>
-                <a target="_blank" href="{{ url }}">{{ name }}</a>
+            <li class="app-instance">
+                <a target="{{ ../target }}" href="{{ url }}">{{ instanceName }}</a>
                 <div class="btn-group btn-group-xs" role="group">
-                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ name}}');">Stop app</button>
+                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.showAppDetails('{{ appName }}', '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Details</button>
+                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Stop app</button>
                 </div>
+                <span class="uptime">Uptime: {{ uptime }}</span>
             </li>
         {{/if}}
     {{/each}}
 </ul>
+{{#unless instances}}
+    You don't have any instances of this app.<br>
+{{/unless}}

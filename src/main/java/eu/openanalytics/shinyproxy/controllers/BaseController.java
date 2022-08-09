@@ -34,9 +34,11 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
+import eu.openanalytics.containerproxy.service.IdentifierService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.OperatorService;
+import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -73,6 +75,12 @@ public abstract class BaseController {
 	@Inject
 	OperatorService operatorService;
 
+	@Inject
+	IdentifierService identifierService;
+
+	@Inject
+	protected ShinyProxySpecProvider shinyProxySpecProvider;
+
 	private static final Logger logger = LogManager.getLogger(BaseController.class);
 	private static final Map<String, String> imageCache = new HashMap<>();
 
@@ -81,10 +89,8 @@ public abstract class BaseController {
 		return (principal == null) ? request.getSession().getId() : principal.getName();
 	}
 	
-	protected String getAppTitle(AppRequestInfo appRequestInfo) {
-		String appName = appRequestInfo.getAppName();
-		ProxySpec spec = proxyService.getProxySpec(appName);
-		if (spec == null || spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) return appName;
+	protected String getAppTitle(ProxySpec spec) {
+		if (spec == null || spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) return spec.getId();
 		else return spec.getDisplayName();
 	}
 	
@@ -108,7 +114,7 @@ public abstract class BaseController {
 		if (proxy == null || proxy.getTargets().isEmpty()) return null;
 		return proxy.getTargets().keySet().iterator().next();
 	}
-	
+
 	protected void prepareMap(ModelMap map, HttpServletRequest request) {
         map.put("application_name", environment.getProperty("spring.application.name")); // name of ShinyProxy, ContainerProxy etc
 		map.put("title", environment.getProperty("proxy.title", "ShinyProxy"));
@@ -133,13 +139,16 @@ public abstract class BaseController {
 		map.put("isAdmin", userService.isAdmin(authentication));
 		map.put("isSupportEnabled", isLoggedIn && getSupportAddress() != null);
 		map.put("logoutUrl", authenticationBackend.getLogoutURL());
-		map.put("isAppPage", false); // defaults, used in navbar
+		map.put("page", ""); // defaults, used in navbar
 		map.put("maxInstances", 0); // defaults, used in navbar
 		map.put("contextPath", getContextPath());
+		map.put("resourceSuffix", "");
+		map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
 
 		// operator specific
 		map.put("operatorEnabled", operatorService.isEnabled());
 		map.put("operatorForceTransfer", operatorService.mustForceTransfer());
+		map.put("spInstance", identifierService.instanceId);
 	}
 	
 	protected String getSupportAddress() {

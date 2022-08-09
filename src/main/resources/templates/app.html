@@ -26,33 +26,38 @@
 <head lang="en">
 	<title th:text="${appTitle} + ' - ' + ${appInstanceDisplayName}"></title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link rel="stylesheet" media="screen" th:href="@{${bootstrapCss}}" />
-	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
-	<script th:src="@{${jqueryJs}}"></script>
-	<script th:src="@{${bootstrapJs}}"></script>
-	<script th:src="@{${handlebars}}"></script>
-	<script th:src="@{${cookieJs}}"></script>
-	<script th:src="@{/js/shiny.app.js}"></script>
-	<script th:src="@{/js/shiny.api.js}"></script>
-	<script th:src="@{/js/shiny.connections.js}"></script>
-	<script th:src="@{/js/shiny.instances.js}"></script>
-	<script th:src="@{/js/shiny.ui.js}"></script>
-	<script th:src="@{/js/shiny.common.js}"></script>
-	<script th:if="${operatorEnabled}" th:src="@{/js/shiny.operator.js}"></script>
-	<script th:src="@{/handlebars/precompiled.js}"></script>
+	<link rel="stylesheet" media="screen" th:href="@{${bootstrapCss} + ${resourceSuffix}}" />
+	<link rel="stylesheet" media="screen" th:href="@{'/css/default.css' + ${resourceSuffix}}"/>
+	<script th:src="@{${jqueryJs} + ${resourceSuffix}}"></script>
+	<script th:src="@{${bootstrapJs} + ${resourceSuffix}}"></script>
+	<script th:src="@{${handlebars} + ${resourceSuffix}}"></script>
+	<script th:src="@{${cookieJs} + ${resourceSuffix}}"></script>
+	<script th:src="@{'/js/shiny.app.js' + ${resourceSuffix}}"></script>
+	<script th:src="@{'/js/shiny.api.js' + ${resourceSuffix}}"></script>
+	<script th:src="@{'/js/shiny.connections.js' + ${resourceSuffix}}"></script>
+	<script th:src="@{'/js/shiny.instances.js' + ${resourceSuffix}}"></script>
+	<script th:src="@{'/js/shiny.ui.js' + ${resourceSuffix}}"></script>
+	<script th:src="@{'/js/shiny.common.js' + ${resourceSuffix}}"></script>
+	<script th:if="${operatorEnabled}" th:src="@{'/js/shiny.operator.js' + ${resourceSuffix}}"></script>
+	<script th:src="@{'/handlebars/precompiled.js' + ${resourceSuffix}}"></script>
+
 </head>
 <body id="appPage">
-	<div th:replace="../fragments/navbar :: navbar"></div>
+	<div th:replace="fragments/navbar :: navbar"></div>
 
     <div id="iframeinsert"></div>
 	<div id="new-version-banner" class="alert alert-info" role="alert" style="display:none;">
 		<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 		A new version of <span th:text="${application_name}"></span> is available <button id="new-version-btn" class="btn btn-default btn-sm" >Switch to new version!</button>
 	</div>
-    <div id="loading" class="loading loading-img"><div class="loading-txt">Launching <span th:text="${appTitle}"></span>...</div></div>
-	<div id="reconnecting" class="loading loading-img">
+    <div id="loading" class="loading">
+		<div class="loading-txt">Launching <span th:text="${appTitle}"></span>...</div>
+		<div class="loading-img"></div>
+	</div>
+	<div id="reconnecting" class="loading">
 		<div class="loading-txt">
 			Reconnecting to <span th:text="${appTitle}"></span>...
+			<div class="loading-img"></div>
 			<span class="retryingDetails">
 				<br>
 				Attempt <span class="reloadAttempts"></span>/<span class="maxReloadAttempts"></span>
@@ -61,7 +66,7 @@
 			</span>
 		</div>
 	</div>
-	<div id="reloadFailed" class="loading loading-img">
+	<div id="reloadFailed" class="loading">
 		<div class="loading-txt">
 			Failed to reload <span th:text="${appTitle}"></span><br><br>
 			<span class="refreshButton">
@@ -73,7 +78,7 @@
 		<div class="loading-txt">
 			This app has been stopped, you can now close this tab.<br><br>
 			<span class="refreshButton">
-				<button onClick="window.location.reload()" class="btn btn-default">Restart app</button>
+				<button onClick="window.location.reload()" class="btn btn-default btn-restart-app">Restart app</button>
 			</span>
 		</div>
 	</div>
@@ -85,38 +90,44 @@
 			</span>
 		</div>
 	</div>
+    <div id="parameterForm">
+		<th:block th:if="${parameterFragment != null}" th:utext="${parameterFragment}"></th:block>
+        <div th:if="${parameterFragment == null}" class="container">
+            <div class="row">
+                <h2>Choose the parameters for this app</h2>
+            </div>
+            <div class="row" id="selectAllWarning">
+                <div class="alert alert-danger" role="alert">Please select a value for each parameter before starting the app!</div>
+            </div>
+            <div class="row">
+                <form class="form-horizontal">
+                    <div class="form-group" th:each="parameterDefinition, paramIter : ${parameterDefinitions}">
+                        <label th:for="${'parameter-' + parameterDefinition.getId()}" class="col-sm-2 control-label" th:text="${parameterDefinition.getDisplayNameOrId()}"></label>
+                        <div class="col-sm-10">
+                            <select th:id="${'parameter-' + parameterDefinition.getId()}" th:name="${parameterDefinition.getId()}" class="form-control"
+									th:disabled="${paramIter.index > 0 && parameterDefaults.get(paramIter.index) == 0}" >
+                                <option disabled th:selected="${parameterDefaults.get(paramIter.index) == 0}">Select an option</option>
+                                <option th:each="value, iter : ${parameterValues.get(parameterDefinition.id)}" th:selected="${parameterDefaults.get(paramIter.index) == (iter.index+1)}" th:text="${value}"></option>
+                            </select>
+                            <span class="help-block" th:if="${parameterDefinition.getDescription() != null}" th:text="${parameterDefinition.getDescription()}"></span>
+                        </div>
+                    </div>
 
-	<div class="modal fade" id="switchInstancesModal" role="dialog">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-					<h4 class="modal-title">Switch instance</h4>
-				</div>
-				<div class="modal-body">
-					<div id="appInstances">
-					</div>
-					<form id="newInstanceForm" class="form-inline">
-						<div class="form-group">
-						<label for="instanceNameField"><span class="glyphicon glyphicon-chat"></span>Name of new instance:</label><br>
-						<div class="input-group">
-							<input class="form-control" id="instanceNameField" type="text">
-							<button type="submit" class="btn btn-default btn-success">Start</button>
-						</div>
-						</div>
-					</form>
-					Max instances: <span id="maxInstances"></span>, used: <span id="usedInstances"></span>
-				</div>
-				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-				</div>
-			</div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <button type="submit" class="btn btn-default btn-success">Start</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
 		</div>
-	</div>
+    </div>
+
+	<div th:replace="fragments/modal :: modal"></div>
 
 	<script type="text/javascript" th:inline="javascript">
 		$(window).on('load', function() {
-		    window.Shiny.common.init([[${contextPath}]], [[${application_name}]]);
+		    window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]], [[${appMaxInstances}]]);
 			if ([[${operatorEnabled}]]) {
 				window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorShowTransferMessage}]]);
 			}
@@ -127,8 +138,11 @@
 					[[${heartbeatRate}]],
 					[[${appName}]],
 					[[${appInstance}]],
-					[[${maxInstances}]],
 					[[${shinyForceFullReload}]],
+					[[${spInstanceOverride}]],
+                    [[${parameterAllowedCombinations}]],
+                    [[${parameterDefinitions}]],
+                    [[${parameterIds}]]
 			);
 		});
 	</script>

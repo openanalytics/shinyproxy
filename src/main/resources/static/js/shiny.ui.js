@@ -45,7 +45,7 @@ Shiny.ui = {
     /**
      * Shows the reconnecting page.
      */
-    showReconnecting: function() {
+    showReconnecting: function () {
         $('#appStopped').hide();
         $('#shinyframe').hide();
         $("#reconnecting").show();
@@ -64,7 +64,10 @@ Shiny.ui = {
      * Update the frame height.
      */
     setShinyFrameHeight: function () {
-        $('#shinyframe').css('height', ($(window).height()) + 'px');
+        // note: we use JS here instead of CSS in order to support custom navbars using any possible height.
+        let height = $(window).height() -  $('.navbar-height').height();
+        $('#shinyframe').css('height', height + 'px');
+        $('body').css('padding-top', $('.navbar-height').height() + 'px');
     },
 
     updateLoadingTxt: function () {
@@ -105,33 +108,158 @@ Shiny.ui = {
         $("#reloadFailed").show();
     },
 
-    showStoppedPage: function() {
+    showStoppedPage: function () {
         Shiny.app.runtimeState.appStopped = true;
         $('#shinyframe').remove();
         $("#loading").hide();
         $("#reconnecting").hide();
-        $('#switchInstancesModal').modal('hide')
+        $('#modal').modal('hide')
         $('#appStopped').show();
     },
 
-    showLoggedOutPage: function() {
+    showLoggedOutPage: function () {
         Shiny.app.runtimeState.appStopped = true;
         if (!Shiny.app.runtimeState.navigatingAway) {
             // only show it when not navigating away, e.g. when logging out in the current tab
             $('#shinyframe').remove();
             $("#loading").hide();
             $("#reconnecting").hide();
-            $('#switchInstancesModal').modal('hide')
+            $('#modal').modal('hide')
             $("#navbar").hide();
             $('#userLoggedOut').show();
         }
     },
 
-    hideInstanceModal: function() {
-        $('#switchInstancesModal').modal('hide');
+    showParameterForm: function () {
+        $('#parameterForm').show();
+    },
+
+    showInstanceModal: function () {
+        $('#switchInstancesModal').show();
+        $('#modal').modal('show');
+        setTimeout(function () {
+            $("#instanceNameField").focus();
+        }, 10);
+    },
+
+    showMyAppsModal: function () {
+        $('#myAppsModal').show();
+        $('#modal').modal('show');
+    },
+
+    hideModal: function() {
+        $('#modal .modal-dialog').hide();
+        $('#modal').modal('hide');
+    },
+
+    showAppDetailsModal: function (currentModal) {
+        if (currentModal === undefined) {
+            $('#appDetailsModal').show();
+            $('#modal').modal('show');
+            $('#appDetailsModal .close-button').one('click', function (e) {
+                $('#modal').modal('hide');
+                $('#appDetailsModal').hide();
+                Shiny.common.closeAppDetails();
+            });
+        } else {
+            $(currentModal).hide();
+            $('#appDetailsModal').show();
+            $('#appDetailsModal .close-button').one('click', function (e) {
+                $('#appDetailsModal').hide();
+                $(currentModal).show();
+                Shiny.common.closeAppDetails();
+            });
+        }
     },
 
     removeFrame() {
         $('#shinyframe').remove();
+    },
+
+    validateParameterForm() {
+        for (let i = 0; i < Shiny.app.staticState.parameters.ids.length; i++) {
+            const keyName = Shiny.app.staticState.parameters.ids[i];
+            let selected = $('select[name=' + keyName + ']').prop('selectedIndex');
+            if (selected === 0) {
+                $('#selectAllWarning').show();
+                return false;
+            }
+        }
+        $('#selectAllWarning').hide();
+        return true;
+    },
+
+    submitParameterForm() {
+        if (!Shiny.ui.validateParameterForm()) {
+            return;
+        }
+        const data = $('#parameterForm form').serializeArray();
+        const json = {};
+        for (const element of data) {
+            json[element.name] = element.value;
+        }
+        $('#parameterForm').hide();
+        Shiny.app.startAppWithParameters(json);
+    },
+
+    selectChange(target) {
+        $('#selectAllWarning').hide();
+        const equals = (a, b) =>
+            a.length === b.length &&
+            a.every((v, i) => v === b[i]);
+        const selectedValues = [];
+        const selectedIndex = target.selectedIndex;
+        const changedKey = $(target).prop('name');
+        const changedOptionIndex = Shiny.app.staticState.parameters.ids.indexOf(changedKey);
+        for (let i = 0; i < Shiny.app.staticState.parameters.ids.length; i++) {
+            const keyName = Shiny.app.staticState.parameters.ids[i];
+            if (i <= changedOptionIndex) {
+                let selected = $('select[name=' + keyName + ']').prop('selectedIndex');
+                selectedValues.push(selected);
+            } else {
+                if (i === changedOptionIndex + 1 && selectedIndex !== 0) {
+                    $('select[name=' + keyName + ']').prop("disabled", false);
+                } else {
+                    $('select[name=' + keyName + ']').prop("disabled", true);
+                }
+                const nextOptions = $('select[name=' + keyName + '] option');
+                nextOptions.first().prop("selected", true);
+            }
+        }
+
+        const allowedNextValues = [];
+        for (const allowedValue of Shiny.app.staticState.parameters.allowedCombinations) {
+            if (equals(allowedValue.slice(0, selectedValues.length), selectedValues)) {
+                allowedNextValues.push(allowedValue[selectedValues.length]);
+            }
+        }
+
+        const nextKey = Shiny.app.staticState.parameters.ids[selectedValues.length];
+        const nextOptions = $('select[name=' + nextKey + '] option');
+        for (const nextOption of nextOptions) {
+            if (nextOption.index === 0) {
+                continue;
+            }
+            if (allowedNextValues.includes(nextOption.index)) {
+                $(nextOption).show();
+            } else {
+                $(nextOption).hide();
+            }
+        }
+    },
+
+    formatSeconds(time) {
+        const hours = Math.floor(time / 3600);
+        const minutes = Math.floor((time % 3600) / 60).toString().padStart(2, '0');
+        const seconds = Math.floor(time % 60).toString().padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`
     }
 }
+
+window.addEventListener("resize", function () {
+    Shiny.ui.setShinyFrameHeight();
+});
+
+$(window).on('load', function () {
+    Shiny.ui.setShinyFrameHeight();
+});

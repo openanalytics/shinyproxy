@@ -43,6 +43,10 @@ public class Thymeleaf {
         return builder.toUriString();
     }
 
+    public boolean openSwitchInstanceInsteadOfApp(ProxySpec proxySpec) {
+        return shinyProxySpecProvider.getAlwaysShowSwitchInstance(proxySpec.getId());
+    }
+
     public String getTemplateProperty(String specId, String property) {
         ShinyProxySpecProvider.ShinyProxySpec shinyProxySpec = shinyProxySpecProvider.getShinyProxySpec(specId);
         if (shinyProxySpec == null) {

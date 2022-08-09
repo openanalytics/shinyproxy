@@ -82,6 +82,8 @@ public class IndexController extends BaseController {
 		map.put("groupedApps", groupedApps);
 		map.put("ungroupedApps", ungroupedApps);
 
+		// navbar
+		map.put("page", "index");
 
 		// operator specific
 		map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnMainPage());

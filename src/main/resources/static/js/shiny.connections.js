@@ -47,7 +47,7 @@ Shiny.connections = {
      */
     sendHeartBeat: function() {
         // contextPath is guaranteed to end with a slash
-        $.post(Shiny.common.staticState.contextPath + "heartbeat/" + Shiny.app.staticState.proxyId, function() {})
+        $.post(Shiny.api.buildURL("heartbeat/" + Shiny.app.staticState.proxyId), function() {})
             .fail(function (response) {
                 if (Shiny.app.runtimeState.appStopped) {
                     // if stopped in meantime -> ignore
@@ -106,7 +106,7 @@ Shiny.connections = {
                 Shiny.ui.showStoppedPage();
                 return;
             }
-            Shiny.ui.hideInstanceModal();
+            Shiny.ui.hideModal();
             if (Shiny.app.staticState.webSocketReconnectionMode === "Auto"
                 || (Shiny.app.staticState.webSocketReconnectionMode === "Confirm"
                     && confirm("Connection to server lost, try to reconnect to the application?"))
@@ -313,24 +313,6 @@ Shiny.connections = {
                 parent.fetch = function () {
                     window.__shinyProxyParent.app.runtimeState.lastHeartbeatTime = Date.now();
 
-                    // insert the Proxy-Hint_id header
-                    // see: https://developer.mozilla.org/en-US/docs/Web/API/fetch#parameters
-                    var arguments = Array.prototype.slice.call(arguments);
-                    if (arguments.length > 1) {
-                        if (arguments[1].hasOwnProperty("headers")) {
-                            var headers = arguments[1]["headers"];
-                            if (headers.constructor.name === "Headers") {
-                                headers.append("X-ShinyProxy-Proxy-Id-Hint", window.__shinyProxyParent.app.staticState.proxyId);
-                            } else {
-                                arguments[1]["headers"]["X-ShinyProxy-Proxy-Id-Hint"] = window.__shinyProxyParent.app.staticState.proxyId;
-                            }
-                        } else {
-                            arguments[1]["headers"] = {"X-ShinyProxy-Proxy-Id-Hint": window.__shinyProxyParent.app.staticState.proxyId};
-                        }
-                    } else {
-                        arguments.push({"headers": {"X-ShinyProxy-Proxy-Id-Hint": window.__shinyProxyParent.app.staticState.proxyId}});
-                    }
-
                     return new Promise((resolve, reject) => {
                         originalFetch.apply(this, arguments)
                             .then((response) => {
@@ -382,9 +364,7 @@ Shiny.connections = {
                     });
                     window.__shinyProxyParent.app.runtimeState.lastHeartbeatTime = Date.now();
 
-                    var res = originalOpen.apply(this, arguments);
-                    this.setRequestHeader("X-ShinyProxy-Proxy-Id-Hint", window.__shinyProxyParent.app.staticState.proxyId);
-                    return res;
+                    return originalOpen.apply(this, arguments);
                 }
             };
 
@@ -484,7 +464,7 @@ Shiny.connections = {
     _checkAppHasBeenStopped: function (cb) {
         $.ajax({
             method: 'POST',
-            url: Shiny.common.staticState.contextPath + "heartbeat/" + Shiny.app.staticState.proxyId,
+            url: Shiny.api.buildURL("heartbeat/" + Shiny.app.staticState.proxyId),
             timeout: 3000,
             success: function () {
                 cb(false);

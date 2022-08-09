@@ -31,26 +31,44 @@
     <script th:src="@{${jqueryJs}}"></script>
     <script th:src="@{${bootstrapJs}}"></script>
     <script th:src="@{${cookieJs}}"></script>
-    <script th:if="${operatorEnabled}" th:src="@{/js/shiny.operator.js}"></script>
-    <script th:src="@{/js/shiny.api.js}"></script>
-    <script th:src="@{/js/shiny.common.js}"></script>
+    <script th:src="@{${handlebars} + ${resourceSuffix}}"></script>
+    <script th:src="@{'/js/shiny.app.js' + ${resourceSuffix}}"></script>
+    <script th:src="@{'/js/shiny.api.js' + ${resourceSuffix}}"></script>
+    <script th:src="@{'/js/shiny.connections.js' + ${resourceSuffix}}"></script>
+    <script th:src="@{'/js/shiny.instances.js' + ${resourceSuffix}}"></script>
+    <script th:src="@{'/js/shiny.ui.js' + ${resourceSuffix}}"></script>
+    <script th:src="@{'/js/shiny.common.js' + ${resourceSuffix}}"></script>
+    <script th:if="${operatorEnabled}" th:src="@{'/js/shiny.operator.js' + ${resourceSuffix}}"></script>
+    <script th:src="@{'/handlebars/precompiled.js' + ${resourceSuffix}}"></script>
 </head>
 <body>
 <!-- navigation bar -->
-<div th:replace="../fragments/navbar :: navbar"></div>
+<div th:replace="fragments/navbar :: navbar"></div>
 
 <div id="new-version-banner" class="alert alert-info" role="alert" style="display:none;">
     A new version of <span th:text="${application_name}"></span> is available
     <button id="new-version-btn" class="btn btn-default btn-sm">Switch to new version!</button>
 </div>
 
+<th:block th:fragment="applink(app)">
+    <th:block  th:if="${app!= null}">
+        <a th:unless="${@thymeleaf.openSwitchInstanceInsteadOfApp(app)}"
+           th:href="${@thymeleaf.getAppUrl(app)}"
+           th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
+
+        <a th:if="${@thymeleaf.openSwitchInstanceInsteadOfApp(app)}"
+           class="app-link"
+           th:data-app-id="${app.id}"
+           th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
+    </th:block>
+</th:block>
+
 <!-- This is a fragment used to display a single app. -->
 <!-- Modify this in order to change how a single app looks. -->
 <th:block th:fragment="app(app)">
     <th:block th:if="${app != null}">
         <li th:if="${!displayAppLogos}">
-            <a th:href="${@thymeleaf.getAppUrl(app)}"
-               th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
+            <th:block th:replace=":: applink(${app})"/>
             <br th:if="${app.description != null}"/>
             <span th:if="${app.description != null}" th:utext="${app.description}"></span>
         </li>
@@ -61,8 +79,7 @@
                         <img th:if="${appLogos.get(app) != null}" th:src="${appLogos.get(app)}"></img>
                     </div>
                     <div class="media-body">
-                        <a th:href="${@thymeleaf.getAppUrl(app)}"
-                           th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
+                        <th:block th:replace=":: applink(${app})"/>
                         <br th:if="${app.description != null}"/>
                         <span th:if="${app.description != null}" th:utext="${app.description}"></span>
                     </div>
@@ -113,12 +130,15 @@
     </th:block>
 </div>
 
+<div th:replace="fragments/modal :: modal"></div>
 
-<script th:if="${operatorEnabled}" type="text/javascript" th:inline="javascript">
+<script type="text/javascript" th:inline="javascript">
     $(window).on('load', function () {
-        window.Shiny.common.init([[${contextPath}]], [[${application_name}]]);
-        window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorShowTransferMessage}]]);
-        window.Shiny.operator.start();
+        window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]], [[${appMaxInstances}]]);
+        if ([[${operatorEnabled}]]) {
+            window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorShowTransferMessage}]]);
+            window.Shiny.operator.start();
+        }
     });
 </script>
 </body>

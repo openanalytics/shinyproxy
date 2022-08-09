@@ -31,6 +31,7 @@ import javax.annotation.PostConstruct;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
+import eu.openanalytics.containerproxy.model.spec.DockerSwarmSecret;
 import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
 import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
@@ -158,6 +159,10 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		cSpec.setPrivileged(from.isContainerPrivileged());
 		cSpec.setLabels(from.getLabels());
 		cSpec.setTargetPath(from.getTargetPath());
+		cSpec.setDockerSwarmSecrets(from.getDockerSwarmSecrets());
+		cSpec.setDockerRegistryDomain(from.getDockerRegistryDomain());
+		cSpec.setDockerRegistryUsername(from.getDockerRegistryUsername());
+		cSpec.setDockerRegistryPassword(from.getDockerRegistryPassword());
 
 		Map<String, Integer> portMapping = new HashMap<>();
 		if (from.getPort() > 0) {
@@ -260,6 +265,10 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private String kubernetesPodPatches;
 		private List<String> kubernetesAdditionalManifests = new ArrayList<>();
 		private List<String> kubernetesAdditionalPersistentManifests = new ArrayList<>();
+		private List<DockerSwarmSecret> dockerSwarmSecrets = new ArrayList<>();
+		private String dockerRegistryDomain;
+		private String dockerRegistryUsername;
+		private String dockerRegistryPassword;
 
 		private String targetPath;
 		private WebsocketReconnectionMode websocketReconnectionMode;
@@ -557,6 +566,38 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 		public void setAccessExpression(String accessExpression) {
 			this.accessExpression = accessExpression;
+		}
+
+		public List<DockerSwarmSecret> getDockerSwarmSecrets() {
+			return dockerSwarmSecrets;
+		}
+
+		public void setDockerSwarmSecrets(List<DockerSwarmSecret> dockerSwarmSecrets) {
+			this.dockerSwarmSecrets = dockerSwarmSecrets;
+		}
+
+		public String getDockerRegistryDomain() {
+			return dockerRegistryDomain;
+		}
+
+		public void setDockerRegistryDomain(String dockerRegistryDomain) {
+			this.dockerRegistryDomain = dockerRegistryDomain;
+		}
+
+		public String getDockerRegistryUsername() {
+			return dockerRegistryUsername;
+		}
+
+		public void setDockerRegistryUsername(String dockerRegistryUsername) {
+			this.dockerRegistryUsername = dockerRegistryUsername;
+		}
+
+		public String getDockerRegistryPassword() {
+			return dockerRegistryPassword;
+		}
+
+		public void setDockerRegistryPassword(String dockerRegistryPassword) {
+			this.dockerRegistryPassword = dockerRegistryPassword;
 		}
 	}
 

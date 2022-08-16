@@ -26,7 +26,7 @@ Shiny.admin = {
 
     async init() {
         await Shiny.admin._refreshTable();
-        Shiny.instances._refreshIntervalId = setInterval(async function () {
+        Shiny.admin._refreshIntervalId = setInterval(async function () {
             if (!document.hidden) {
                 await Shiny.admin._refreshTable();
             }

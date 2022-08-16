@@ -180,11 +180,6 @@ $(window).on('load', function () {
         Shiny.common.onShowMyApps();
     });
 
-    $('#modal').on('hide.bs.modal', function () {
-        Shiny.instances.eventHandlers.onClose();
-        Shiny.common.onCloseMyApps();
-        $('#modal .modal-dialog').hide();
-    });
 
     $('#parameterForm form').on('submit', function (e) {
         e.preventDefault();

@@ -65,7 +65,7 @@ Shiny.ui = {
      */
     setShinyFrameHeight: function () {
         // note: we use JS here instead of CSS in order to support custom navbars using any possible height.
-        let height = $(window).height() -  $('.navbar-height').height();
+        let height = $(window).height() - $('.navbar-height').height();
         $('#shinyframe').css('height', height + 'px');
         $('body').css('padding-top', $('.navbar-height').height() + 'px');
     },
@@ -147,7 +147,7 @@ Shiny.ui = {
         $('#modal').modal('show');
     },
 
-    hideModal: function() {
+    hideModal: function () {
         $('#modal .modal-dialog').hide();
         $('#modal').modal('hide');
     },
@@ -262,4 +262,12 @@ window.addEventListener("resize", function () {
 
 $(window).on('load', function () {
     Shiny.ui.setShinyFrameHeight();
+
+    $('#modal').on('hide.bs.modal', function () {
+        Shiny.instances.eventHandlers.onClose();
+        Shiny.common.onCloseMyApps();
+        Shiny.common.closeAppDetails();
+        $('#modal .modal-dialog').hide();
+    });
+
 });

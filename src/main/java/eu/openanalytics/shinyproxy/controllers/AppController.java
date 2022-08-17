@@ -64,6 +64,8 @@ import java.util.UUID;
 @Controller
 public class AppController extends BaseController {
 
+	private static int PROXY_ID_LENGTH = 36;
+
 	@Inject
 	private ProxyMappingManager mappingManager;
 
@@ -88,6 +90,7 @@ public class AppController extends BaseController {
 		map.put("appName", appRequestInfo.getAppName());
 		map.put("appInstance", appRequestInfo.getAppInstance());
 		map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
+		map.put("appStatus", (proxy == null) ? null : proxy.getStatus());
 		map.put("containerPath", (proxy == null) ? "" : buildContainerPath(request, proxy, appRequestInfo));
 		map.put("proxyId", (proxy == null) ? "" : proxy.getId());
 		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
@@ -185,11 +188,19 @@ public class AppController extends BaseController {
 
 	@RequestMapping(value="/app_proxy/**")
 	public void appProxy(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		String requestUrl = request.getRequestURI().substring(getBasePublicPath().length());
-		String proxyId = mappingManager.getProxyId(requestUrl);
+		String requestUrl = request.getRequestURI().substring(getBasePublicPath().length()); // TODO cache
+		// in ShinyProxy, proxy ids are used in the urls and these have a fixed length
+		// therefore we can simply extract it from the URL
+		String proxyId = requestUrl.substring(0, PROXY_ID_LENGTH);
+
+		if (proxyId.length() != 36) {
+			response.setStatus(400);
+			response.getWriter().write("{\"status\":\"error\", \"message\":\"invalid_request\"}");
+			return;
+		}
 
 		Proxy proxy = proxyService.getProxy(proxyId);
-		if (proxy == null) {
+		if (proxy == null || proxy.getStatus() == ProxyStatus.Stopping || proxy.getStatus() == ProxyStatus.Stopped) {
 			response.setStatus(410);
 			response.getWriter().write("{\"status\":\"error\", \"message\":\"app_stopped_or_non_existent\"}");
 			return;
@@ -197,6 +208,11 @@ public class AppController extends BaseController {
 		if (!userService.isOwner(proxy)) {
 			response.setStatus(401);
 			response.getWriter().write("{\"status\":\"error\", \"message\":\"shinyproxy_authentication_required\"}");
+			return;
+		}
+		if (proxy.getStatus() == ProxyStatus.Paused) {
+			response.setStatus(400); // TODO
+			response.getWriter().write("{\"status\":\"error\", \"message\":\"app_paused\"}");
 			return;
 		}
 		if (requestUrl.equals(proxyId)) {

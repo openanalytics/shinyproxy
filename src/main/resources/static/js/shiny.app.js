@@ -68,8 +68,9 @@ Shiny.app = {
      * @param parameterAllowedCombinations
      * @param parameterDefinitions
      * @param parametersIds
+     * @param appStatus
      */
-    start: async function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, shinyForceFullReload, isSpOverrideActive, parameterAllowedCombinations, parameterDefinitions, parametersIds) {
+    start: async function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, shinyForceFullReload, isSpOverrideActive, parameterAllowedCombinations, parameterDefinitions, parametersIds, appStatus) {
         Shiny.app.staticState.heartBeatRate = heartBeatRate;
         Shiny.app.staticState.appName = appName;
         Shiny.app.staticState.appInstanceName = appInstanceName;
@@ -79,7 +80,23 @@ Shiny.app = {
         Shiny.app.staticState.parameters.names = parameterDefinitions;
         Shiny.app.staticState.parameters.ids = parametersIds;
 
-        if (containerPath !== "") {
+        if (appStatus === "Paused") {
+            Shiny.ui.setShinyFrameHeight();
+            Shiny.ui.showLoading();
+
+            // TODO
+            await fetch(Shiny.api.buildURL("api/proxy/" + proxyId + "/pause"), {
+                method: 'POST',
+            });
+
+            Shiny.app.staticState.containerPath = containerPath;
+            Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;
+            Shiny.app.staticState.proxyId = proxyId;
+            Shiny.ui.setupIframe();
+            Shiny.ui.showFrame();
+            Shiny.connections.startHeartBeats();
+
+        } else if (containerPath !== "") {
             Shiny.app.staticState.containerPath = containerPath;
             Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;
             Shiny.app.staticState.proxyId = proxyId;

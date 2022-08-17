@@ -56,6 +56,11 @@ Shiny.api = {
             method: 'DELETE',
         });
     },
+    async pauseProxyById(proxyId, spInstance) {
+        await fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId + "/pause", spInstance), {
+            method: 'POST',
+        });
+    },
     getProxyById: async function (proxyId, spInstance) {
         return await fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId, spInstance))
             .then(async response => {

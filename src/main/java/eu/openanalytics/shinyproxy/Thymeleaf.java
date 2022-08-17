@@ -36,7 +36,7 @@ public class Thymeleaf {
     public String getAppUrl(ProxySpec proxySpec) {
         UriComponentsBuilder builder = ServletUriComponentsBuilder.fromCurrentContextPath().pathSegment("app", proxySpec.getId());
 
-        if (shinyProxySpecProvider.getHideNavbarOnMainPageLink(proxySpec.getId())) {
+        if (shinyProxySpecProvider.getHideNavbarOnMainPageLink(proxySpec)) {
             builder.queryParam("sp_hide_navbar", "true");
         }
 
@@ -44,15 +44,15 @@ public class Thymeleaf {
     }
 
     public boolean openSwitchInstanceInsteadOfApp(ProxySpec proxySpec) {
-        return shinyProxySpecProvider.getAlwaysShowSwitchInstance(proxySpec.getId());
+        return shinyProxySpecProvider.getAlwaysShowSwitchInstance(proxySpec);
     }
 
     public String getTemplateProperty(String specId, String property) {
-        ShinyProxySpecProvider.ShinyProxySpec shinyProxySpec = shinyProxySpecProvider.getShinyProxySpec(specId);
-        if (shinyProxySpec == null) {
+        ProxySpec proxySpec = shinyProxySpecProvider.getSpec(specId);
+        if (proxySpec == null) {
             return null;
         }
-        return shinyProxySpec.getTemplateProperties().get(property);
+        return proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getTemplateProperties().get(property);
     }
 
     public String getTemplateProperty(String specId, String property, String defaultValue) {

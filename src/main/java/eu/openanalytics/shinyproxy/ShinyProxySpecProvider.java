@@ -62,7 +62,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 	private static final String PROP_DEFAULT_ALWAYS_SWITCH_INSTANCE = "proxy.default-always-switch-instance";
 
 	private List<ProxySpec> specs = new ArrayList<>();
-	private Map<String, ShinyProxySpec> shinyProxySpecs = new HashMap<>();
+
 	private List<TemplateGroup> templateGroups = new ArrayList<>();
 
 	private static Environment environment;
@@ -94,15 +94,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		return specs.stream().filter(s -> id.equals(s.getId())).findAny().orElse(null);
 	}
 
-	public ShinyProxySpec getShinyProxySpec(String specId) {
-		return shinyProxySpecs.get(specId);
-	}
-
 	public void setSpecs(List<ShinyProxySpec> specs) {
-		this.specs = specs.stream().map(s -> {
-			shinyProxySpecs.put(s.getId(), s);
-			return ShinyProxySpecProvider.convert(s);
-		}).collect(Collectors.toList());
+		this.specs = specs.stream().map(ShinyProxySpec::getProxySpec).collect(Collectors.toList());
 	}
 
 	public void setTemplateGroups(List<TemplateGroup> templateGroups) {
@@ -113,103 +106,27 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		return templateGroups;
 	}
 
-	private static ProxySpec convert(ShinyProxySpec from) {
-		ProxySpec to = new ProxySpec();
-		to.setId(from.getId());
-		to.setDisplayName(from.getDisplayName());
-		to.setDescription(from.getDescription());
-		to.setLogoURL(from.getLogoURL());
-		to.setMaxLifeTime(from.getMaxLifetime());
-		to.setStopOnLogout(from.getStopOnLogout());
-		to.setHeartbeatTimeout(from.getHeartbeatTimeout());
-
-		if (from.getKubernetesPodPatches() != null) {
-			try {
-				to.setKubernetesPodPatches(from.getKubernetesPodPatches());
-			} catch (Exception e) {
-				throw new IllegalArgumentException(String.format("Configuration error: spec with id '%s' has invalid kubernetes-pod-patches", from.getId()));
-			}
-		}
-		to.setKubernetesAdditionalManifests(from.getKubernetesAdditionalManifests());
-		to.setKubernetesAdditionalPersistentManifests(from.getKubernetesAdditionalPersistentManifests());
-        to.setParameters(from.getParameters());
-
-		AccessControl acl = new AccessControl();
-		to.setAccessControl(acl);
-
-		if (from.getAccessGroups() != null && from.getAccessGroups().length > 0) {
-			acl.setGroups(from.getAccessGroups());
-		}
-
-		if (from.getAccessUsers() != null && from.getAccessUsers().length > 0) {
-			acl.setUsers(from.getAccessUsers());
-		}
-
-		if (from.getAccessExpression() != null && from.getAccessExpression().length() > 0) {
-			acl.setExpression(from.getAccessExpression());
-		}
-
-		ContainerSpec cSpec = new ContainerSpec();
-		cSpec.setImage(from.getContainerImage());
-		cSpec.setCmd(from.getContainerCmd());
-		cSpec.setEnv(from.getContainerEnv());
-		cSpec.setEnvFile(from.getContainerEnvFile());
-		cSpec.setNetwork(from.getContainerNetwork());
-		cSpec.setNetworkConnections(from.getContainerNetworkConnections());
-		cSpec.setDns(from.getContainerDns());
-		cSpec.setVolumes(from.getContainerVolumes());
-		cSpec.setMemoryRequest(from.getContainerMemoryRequest());
-		cSpec.setMemoryLimit(from.getContainerMemoryLimit());
-		cSpec.setCpuRequest(from.getContainerCpuRequest());
-		cSpec.setCpuLimit(from.getContainerCpuLimit());
-		cSpec.setPrivileged(from.isContainerPrivileged());
-		cSpec.setLabels(from.getLabels());
-		cSpec.setTargetPath(from.getTargetPath());
-		cSpec.setDockerSwarmSecrets(from.getDockerSwarmSecrets());
-		cSpec.setDockerRegistryDomain(from.getDockerRegistryDomain());
-		cSpec.setDockerRegistryUsername(from.getDockerRegistryUsername());
-		cSpec.setDockerRegistryPassword(from.getDockerRegistryPassword());
-
-		Map<String, Integer> portMapping = new HashMap<>();
-		if (from.getPort() > 0) {
-			portMapping.put("default", from.getPort());
-		} else {
-			portMapping.put("default", 3838);
-		}
-		cSpec.setPortMapping(portMapping);
-
-		to.setContainerSpecs(Collections.singletonList(cSpec));
-
-		return to;
-	}
-
-
 	public List<RuntimeValue> getRuntimeValues(ProxySpec proxy) {
 		List<RuntimeValue> runtimeValues = new ArrayList<>();
-		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(proxy.getId());
 
-		WebsocketReconnectionMode webSocketReconnectionMode = shinyProxySpec.getWebsocketReconnectionMode();
+		WebsocketReconnectionMode webSocketReconnectionMode = proxy.getSpecExtension(ShinyProxySpecExtension.class).getWebsocketReconnectionMode();
 		if (webSocketReconnectionMode == null) {
 			runtimeValues.add(new RuntimeValue(WebSocketReconnectionModeKey.inst, environment.getProperty("proxy.default-websocket-reconnection-mode", WebsocketReconnectionMode.class, WebsocketReconnectionMode.None)));
 		} else {
 			runtimeValues.add(new RuntimeValue(WebSocketReconnectionModeKey.inst, webSocketReconnectionMode));
 		}
 
-		runtimeValues.add(new RuntimeValue(MaxInstancesKey.inst, getMaxInstancesForSpec(proxy.getId())));
-		runtimeValues.add(new RuntimeValue(ShinyForceFullReloadKey.inst, getShinyForceFullReload(proxy.getId())));
+		runtimeValues.add(new RuntimeValue(MaxInstancesKey.inst, getMaxInstancesForSpec(proxy)));
+		runtimeValues.add(new RuntimeValue(ShinyForceFullReloadKey.inst, getShinyForceFullReload(proxy)));
 
 		return runtimeValues;
 	}
 
-	public Integer getMaxInstancesForSpec(String specId) {
-		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
-		if (shinyProxySpec == null) {
-			return null;
-		}
+	public Integer getMaxInstancesForSpec(ProxySpec proxySpec) {
 		// TODO support SpEL
-		Integer maxInstances = shinyProxySpec.getMaxInstances();
+		Integer maxInstances = proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getMaxInstances();
 		if (maxInstances != null) {
-            return shinyProxySpec.getMaxInstances();
+            return maxInstances;
 		}
 		return defaultMaxInstances;
 	}
@@ -218,438 +135,319 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		Map<String, Integer> result = new HashMap<>();
 
 		// TODO support SpEL
-		for (ShinyProxySpec shinyProxySpec : shinyProxySpecs.values()) {
-			Integer maxInstances = shinyProxySpec.getMaxInstances();
+		for (ProxySpec proxySpec: getSpecs()) {
+			Integer maxInstances = proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getMaxInstances();
 			if (maxInstances != null) {
-				result.put(shinyProxySpec.getId(), maxInstances);
+				result.put(proxySpec.getId(), maxInstances);
 			} else {
-				result.put(shinyProxySpec.getId(), defaultMaxInstances);
+				result.put(proxySpec.getId(), defaultMaxInstances);
 			}
 		}
 
 		return result;
 	}
 
-	public Boolean getShinyForceFullReload(String specId) {
-		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
-		if (shinyProxySpec == null) {
-			return null;
-		}
-		if (shinyProxySpec.getShinyForceFullReload() != null) {
-			return shinyProxySpec.getShinyForceFullReload();
+	public Boolean getShinyForceFullReload(ProxySpec proxySpec) {
+		Boolean shinyProxyForceFullReload = proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getShinyForceFullReload();
+		if (shinyProxyForceFullReload != null) {
+			return shinyProxyForceFullReload;
 		}
 		return false;
 	}
 
-	public Boolean getHideNavbarOnMainPageLink(String specId) {
-		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
-		if (shinyProxySpec == null) {
-			return null;
-		}
-		if (shinyProxySpec.getHideNavbarOnMainPageLink() != null) {
-			return shinyProxySpec.getHideNavbarOnMainPageLink();
+	public Boolean getShinyForceFullReload(String specId) {
+		return getShinyForceFullReload(getSpec(specId));
+	}
+
+	public Boolean getHideNavbarOnMainPageLink(ProxySpec proxySpec) {
+		Boolean hideNavbarOnMainPageLink = proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getHideNavbarOnMainPageLink();
+		if (hideNavbarOnMainPageLink != null) {
+			return hideNavbarOnMainPageLink;
 		}
 		return false;
 	}
 	
-	public Boolean getAlwaysShowSwitchInstance(String specId) {
-		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
-		if (shinyProxySpec == null) {
-			return null;
-		}
-		if (shinyProxySpec.getAlwaysShowSwitchInstance() != null) {
-			return shinyProxySpec.getAlwaysShowSwitchInstance();
+	public Boolean getAlwaysShowSwitchInstance(ProxySpec proxySpec) {
+		Boolean alwaysShowSwitchInstance = proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getAlwaysShowSwitchInstance();
+		if (alwaysShowSwitchInstance != null) {
+			return alwaysShowSwitchInstance;
 		}
 		return defaultAlwaysSwitchInstance;
 	}
 
-	public String getTemplateGroupOfApp(String specId) {
-		ShinyProxySpec shinyProxySpec = shinyProxySpecs.get(specId);
-		if (shinyProxySpec == null) {
-			return null;
-		}
-		return shinyProxySpec.getTemplateGroup();
-	}
 	public void postProcessRecoveredProxy(Proxy proxy) {
 		proxy.addRuntimeValues(getRuntimeValues(proxy.getSpec()));
 	}
 
 	public static class ShinyProxySpec {
 
-		private String id;
-		private String displayName;
-		private String description;
-		private String logoURL;
+		private final ProxySpec proxySpec;
+		private final ContainerSpec containerSpec;
+		private final AccessControl accessControl;
 
-		private String containerImage;
-		private String[] containerCmd;
-		private Map<String,String> containerEnv;
-		private String containerEnvFile;
-		private String containerNetwork;
-		private String[] containerNetworkConnections;
-		private String[] containerDns;
-		private String[] containerVolumes;
-		private String containerMemoryRequest;
-		private String containerMemoryLimit;
-		private String containerCpuRequest;
-		private String containerCpuLimit;
-		private boolean containerPrivileged;
-		private String kubernetesPodPatches;
-		private List<String> kubernetesAdditionalManifests = new ArrayList<>();
-		private List<String> kubernetesAdditionalPersistentManifests = new ArrayList<>();
-		private List<DockerSwarmSecret> dockerSwarmSecrets = new ArrayList<>();
-		private String dockerRegistryDomain;
-		private String dockerRegistryUsername;
-		private String dockerRegistryPassword;
+		public ShinyProxySpec() {
+			proxySpec = new ProxySpec();
+			containerSpec = new ContainerSpec();
+			accessControl = new AccessControl();
 
-		private String targetPath;
-		private WebsocketReconnectionMode websocketReconnectionMode;
-		private Boolean shinyForceFullReload;
-		private Integer maxInstances;
-		private Boolean hideNavbarOnMainPageLink;
-		private Boolean alwaysSwitchInstance;
-		private String maxLifetime;
-		private Boolean stopOnLogout;
-		private String heartbeatTimeout;
-
-		private Map<String,String> labels = new HashMap<>();
-
-		private int port;
-		private String[] accessGroups;
-		private String[] accessUsers;
-		private String accessExpression;
-		private String templateGroup;
-		private Map<String, String> templateProperties = new HashMap<>();
-
-        private Parameters parameters;
+			Map<String, Integer> portMapping = new HashMap<>();
+			portMapping.put("default", 3838);
+			containerSpec.setPortMapping(portMapping);
+			proxySpec.setContainerSpecs(Collections.singletonList(containerSpec));
+			proxySpec.setAccessControl(accessControl);
+		}
 
 		public String getId() {
-			return id;
+			return proxySpec.getId();
 		}
 
 		public void setId(String id) {
-			this.id = id;
+			proxySpec.setId(id);
 		}
 
 		public String getDisplayName() {
-			return displayName;
+			return proxySpec.getDisplayName();
 		}
 
 		public void setDisplayName(String displayName) {
-			this.displayName = displayName;
+			proxySpec.setDisplayName(displayName);
 		}
 
 		public String getDescription() {
-			return description;
+			return proxySpec.getDescription();
 		}
 
 		public void setDescription(String description) {
-			this.description = description;
+			proxySpec.setDescription(description);
 		}
 
 		public String getLogoURL() {
-			return logoURL;
+			return proxySpec.getLogoURL();
 		}
 
 		public void setLogoURL(String logoURL) {
-			this.logoURL = logoURL;
+			proxySpec.setLogoURL(logoURL);
 		}
 
 		public String getContainerImage() {
-			return containerImage;
+			return containerSpec.getImage();
 		}
 
 		public void setContainerImage(String containerImage) {
-			this.containerImage = containerImage;
+			containerSpec.setImage(containerImage);
 		}
 
 		public String[] getContainerCmd() {
-			return containerCmd;
+			return containerSpec.getCmd();
 		}
 
 		public void setContainerCmd(String[] containerCmd) {
-			this.containerCmd = containerCmd;
+			containerSpec.setCmd(containerCmd);
 		}
 
 		public Map<String, String> getContainerEnv() {
-			return containerEnv;
+			return containerSpec.getEnv();
 		}
 
 		public void setContainerEnv(Map<String, String> containerEnv) {
-			this.containerEnv = containerEnv;
+			containerSpec.setEnv(containerEnv);
 		}
 
 		public String getContainerEnvFile() {
-			return containerEnvFile;
+			return containerSpec.getEnvFile();
 		}
 
 		public void setContainerEnvFile(String containerEnvFile) {
-			this.containerEnvFile = containerEnvFile;
+			containerSpec.setEnvFile(containerEnvFile);
 		}
 
 		public String getContainerNetwork() {
-			return containerNetwork;
+			return containerSpec.getNetwork();
 		}
 
 		public void setContainerNetwork(String containerNetwork) {
-			this.containerNetwork = containerNetwork;
+			containerSpec.setNetwork(containerNetwork);
 		}
 
 		public String[] getContainerNetworkConnections() {
-			return containerNetworkConnections;
+			return containerSpec.getNetworkConnections();
 		}
 
 		public void setContainerNetworkConnections(String[] containerNetworkConnections) {
-			this.containerNetworkConnections = containerNetworkConnections;
+			containerSpec.setNetworkConnections(containerNetworkConnections);
 		}
 
 		public String[] getContainerDns() {
-			return containerDns;
+			return containerSpec.getDns();
 		}
 
 		public void setContainerDns(String[] containerDns) {
-			this.containerDns = containerDns;
+			containerSpec.setDns(containerDns);
 		}
 
 		public String[] getContainerVolumes() {
-			return containerVolumes;
+			return containerSpec.getVolumes();
 		}
 
 		public void setContainerVolumes(String[] containerVolumes) {
-			this.containerVolumes = containerVolumes;
+			containerSpec.setVolumes(containerVolumes);
 		}
 
 		public String getContainerMemoryRequest() {
-			return containerMemoryRequest;
+			return containerSpec.getMemoryRequest();
 		}
 
 		public void setContainerMemoryRequest(String containerMemoryRequest) {
-			this.containerMemoryRequest = containerMemoryRequest;
+			containerSpec.setMemoryRequest(containerMemoryRequest);
 		}
 
 		public String getContainerMemoryLimit() {
-			return containerMemoryLimit;
+			return containerSpec.getMemoryLimit();
 		}
 
 		public void setContainerMemoryLimit(String containerMemoryLimit) {
-			this.containerMemoryLimit = containerMemoryLimit;
+			containerSpec.setMemoryLimit(containerMemoryLimit);
 		}
 
 		public String getContainerCpuRequest() {
-			return containerCpuRequest;
+			return containerSpec.getCpuRequest();
 		}
 
 		public void setContainerCpuRequest(String containerCpuRequest) {
-			this.containerCpuRequest = containerCpuRequest;
+			containerSpec.setCpuRequest(containerCpuRequest);
 		}
 
 		public String getContainerCpuLimit() {
-			return containerCpuLimit;
+			return containerSpec.getCpuLimit();
 		}
 
 		public void setContainerCpuLimit(String containerCpuLimit) {
-			this.containerCpuLimit = containerCpuLimit;
+			containerSpec.setCpuLimit(containerCpuLimit);
 		}
 
 		public boolean isContainerPrivileged() {
-			return containerPrivileged;
+			return containerSpec.isPrivileged();
 		}
 
 		public void setContainerPrivileged(boolean containerPrivileged) {
-			this.containerPrivileged = containerPrivileged;
+			containerSpec.setPrivileged(containerPrivileged);
 		}
 
 		public Map<String, String> getLabels() {
-			return labels;
+			return containerSpec.getLabels();
 		}
 
 		public void setLabels(Map<String, String> labels) {
-			this.labels = labels;
+			containerSpec.setLabels(labels);
 		}
 
 		public int getPort() {
-			return port;
+			return containerSpec.getPortMapping().get("default");
 		}
 
 		public void setPort(int port) {
-			this.port = port;
+			containerSpec.getPortMapping().put("default", port);
 		}
 
 		public String[] getAccessGroups() {
-			return accessGroups;
+			return accessControl.getGroups();
 		}
 
 		public void setAccessGroups(String[] accessGroups) {
-			this.accessGroups = accessGroups;
+			accessControl.setGroups(accessGroups);
 		}
-
-		public String getKubernetesPodPatches() {
-			return kubernetesPodPatches;
-		}
-
-		public void setKubernetesPodPatches(String kubernetesPodPatches) {
-			this.kubernetesPodPatches = kubernetesPodPatches;
-		}
-
-		public void setKubernetesAdditionalManifests(List<String> manifests) {
-			this.kubernetesAdditionalManifests = manifests;
-		}
-
-		public List<String> getKubernetesAdditionalManifests() {
-			return kubernetesAdditionalManifests;
-		}
-
-		public void setKubernetesAdditionalPersistentManifests(List<String> manifests) {
-			this.kubernetesAdditionalPersistentManifests = manifests;
-		}
-
-		public List<String> getKubernetesAdditionalPersistentManifests() {
-			return kubernetesAdditionalPersistentManifests;
-                }
 
 		public String getTargetPath() {
-			return targetPath;
+			return containerSpec.getTargetPath();
 		}
 
 		public void setTargetPath(String targetPath) {
-			this.targetPath = targetPath;
-		}
-
-		public WebsocketReconnectionMode getWebsocketReconnectionMode() {
-			return websocketReconnectionMode;
-		}
-
-		public void setWebsocketReconnectionMode(WebsocketReconnectionMode websocketReconnectionMode) {
-			this.websocketReconnectionMode = websocketReconnectionMode;
-		}
-
-		public Boolean getShinyForceFullReload() {
-			return shinyForceFullReload;
-		}
-
-		public void setShinyForceFullReload(Boolean shinyForceFullReload) {
-			this.shinyForceFullReload = shinyForceFullReload;
-		}
-
-		public Integer getMaxInstances() {
-			return maxInstances;
-		}
-
-		public void setMaxInstances(Integer maxInstances) {
-			this.maxInstances = maxInstances;
-		}
-
-		public Boolean getHideNavbarOnMainPageLink() {
-			return hideNavbarOnMainPageLink;
-		}
-
-		public void setHideNavbarOnMainPageLink(Boolean hideNavbarOnMainPageLink) {
-			this.hideNavbarOnMainPageLink = hideNavbarOnMainPageLink;
-		}
-
-		public void setAlwaysSwitchInstance(Boolean alwaysSwitchInstance) {
-			this.alwaysSwitchInstance = alwaysSwitchInstance;
-		}
-
-		public Boolean getAlwaysShowSwitchInstance() {
-			return alwaysSwitchInstance;
-		}
-
-		public String getMaxLifetime() {
-			return maxLifetime;
-		}
-
-		public void setMaxLifetime(String maxLifetime) {
-			this.maxLifetime = maxLifetime;
-		}
-
-		public Boolean getStopOnLogout() {
-			return stopOnLogout;
-		}
-
-		public void setStopOnLogout(Boolean stopOnLogout) {
-			this.stopOnLogout = stopOnLogout;
-		}
-
-		public void setHeartbeatTimeout(String heartbeatTimeout) {
-			this.heartbeatTimeout = heartbeatTimeout;
-		}
-
-		public String getHeartbeatTimeout() {
-			return heartbeatTimeout;
-		}
-
-		public void setTemplateGroup(String templateGroup) {
-			this.templateGroup = templateGroup;
-		}
-
-		public String getTemplateGroup() {
-			return templateGroup;
-		}
-
-		public void setTemplateProperties(Map<String, String> templateProperties) {
-			this.templateProperties = templateProperties;
-		}
-
-		public Map<String, String> getTemplateProperties() {
-			return templateProperties;
+			containerSpec.setTargetPath(targetPath);
 		}
 
 		public String[] getAccessUsers() {
-			return accessUsers;
+			return accessControl.getUsers();
 		}
 
 		public void setAccessUsers(String[] accessUsers) {
-			this.accessUsers = accessUsers;
+			accessControl.setUsers(accessUsers);
 		}
 
 		public String getAccessExpression() {
-			return accessExpression;
+			return accessControl.getExpression();
 		}
 
 		public void setAccessExpression(String accessExpression) {
-			this.accessExpression = accessExpression;
+			accessControl.setExpression(accessExpression);
 		}
 
 		public List<DockerSwarmSecret> getDockerSwarmSecrets() {
-			return dockerSwarmSecrets;
+			return containerSpec.getDockerSwarmSecrets();
 		}
 
 		public void setDockerSwarmSecrets(List<DockerSwarmSecret> dockerSwarmSecrets) {
-			this.dockerSwarmSecrets = dockerSwarmSecrets;
+			containerSpec.setDockerSwarmSecrets(dockerSwarmSecrets);
 		}
 
 		public String getDockerRegistryDomain() {
-			return dockerRegistryDomain;
+			return containerSpec.getDockerRegistryDomain();
 		}
 
 		public void setDockerRegistryDomain(String dockerRegistryDomain) {
-			this.dockerRegistryDomain = dockerRegistryDomain;
+			containerSpec.setDockerRegistryDomain(dockerRegistryDomain);
 		}
 
 		public String getDockerRegistryUsername() {
-			return dockerRegistryUsername;
+			return containerSpec.getDockerRegistryUsername();
 		}
 
 		public void setDockerRegistryUsername(String dockerRegistryUsername) {
-			this.dockerRegistryUsername = dockerRegistryUsername;
+			containerSpec.setDockerRegistryUsername(dockerRegistryUsername);
 		}
 
 		public String getDockerRegistryPassword() {
-			return dockerRegistryPassword;
+			return containerSpec.getDockerRegistryPassword();
 		}
 
 		public void setDockerRegistryPassword(String dockerRegistryPassword) {
-			this.dockerRegistryPassword = dockerRegistryPassword;
+			containerSpec.setDockerRegistryPassword(dockerRegistryPassword);
 		}
 
         public Parameters getParameters() {
-            return parameters;
+            return proxySpec.getParameters();
         }
 
         public void setParameters(Parameters parameters) {
-            this.parameters = parameters;
+			proxySpec.setParameters(parameters);
         }
+
+		public String getMaxLifetime() {
+			return proxySpec.getMaxLifeTime();
+		}
+
+		public void setMaxLifetime(String maxLifetime) {
+			proxySpec.setMaxLifeTime(maxLifetime);
+		}
+
+		public Boolean getStopOnLogout() {
+			return proxySpec.stopOnLogout();
+		}
+
+		public void setStopOnLogout(Boolean stopOnLogout) {
+			proxySpec.setStopOnLogout(stopOnLogout);
+		}
+
+		public String getHeartbeatTimeout() {
+			return proxySpec.getHeartbeatTimeout();
+		}
+
+		public void setHeartbeatTimeout(String heartbeatTimeout) {
+			proxySpec.setHeartbeatTimeout(heartbeatTimeout);
+		}
+
+		public ProxySpec getProxySpec() {
+			return proxySpec;
+		}
 	}
 
 	public static class TemplateGroup {
@@ -673,7 +471,5 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			this.id = id;
 		}
 	}
-
-
 
 }

@@ -21,6 +21,7 @@
 package eu.openanalytics.shinyproxy.controllers;
 
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.shinyproxy.ShinyProxySpecExtension;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
@@ -80,7 +81,7 @@ public class IndexController extends BaseController {
 		List<ProxySpec> ungroupedApps = new ArrayList<>();
 
 		for (ProxySpec app: apps) {
-			String groupId = shinyProxySpecProvider.getTemplateGroupOfApp(app.getId());
+			String groupId = app.getSpecExtension(ShinyProxySpecExtension.class).getTemplateGroup();
 			if (groupId != null) {
 				groupedApps.putIfAbsent(groupId, new ArrayList<>());
 				groupedApps.get(groupId).add(app);

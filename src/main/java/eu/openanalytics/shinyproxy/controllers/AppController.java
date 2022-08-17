@@ -299,7 +299,7 @@ public class AppController extends BaseController {
 	 * Validates whether a proxy should be allowed to start.
 	 */
 	private boolean validateProxyStart(ProxySpec spec) {
-		Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec.getId());
+		Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec);
 
 		if (maxInstances == -1) {
 		    return true;

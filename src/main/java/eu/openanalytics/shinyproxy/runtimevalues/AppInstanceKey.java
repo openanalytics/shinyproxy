@@ -36,4 +36,9 @@ public class AppInstanceKey extends RuntimeValueKey<String>  {
 
     public static AppInstanceKey inst = new AppInstanceKey();
 
+    @Override
+    public String fromString(String value) {
+        return value;
+    }
+
 }

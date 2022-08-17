@@ -37,4 +37,8 @@ public class ShinyForceFullReloadKey extends RuntimeValueKey<Boolean> {
 
     public static ShinyForceFullReloadKey inst = new ShinyForceFullReloadKey();
 
+    @Override
+    public Boolean fromString(String value) {
+        return Boolean.valueOf(value);
+    }
 }

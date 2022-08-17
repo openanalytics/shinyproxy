@@ -36,5 +36,9 @@ public class MaxInstancesKey extends RuntimeValueKey<Integer> {
 
     public static MaxInstancesKey inst = new MaxInstancesKey();
 
+    @Override
+    public Integer fromString(String value) {
+        return Integer.parseInt(value);
+    }
 
 }

@@ -204,7 +204,8 @@ Shiny.instances = {
         const appName = proxy.spec.id;
         const appInstance = proxy.runtimeValues.SHINYPROXY_APP_INSTANCE;
         const appSpInstance = proxy.runtimeValues.SHINYPROXY_INSTANCE;
-        if (appSpInstance !== Shiny.common.staticState.spInstance) {
+        if (appSpInstance !== Shiny.common.staticState.spInstance ||
+            (Shiny.app !== undefined && Shiny.app.staticState.spInstanceOverride !== null)) {
             return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/?sp_instance_override=" + appSpInstance;
         } else {
             return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/";

@@ -104,7 +104,7 @@ public abstract class BaseController {
 	
 	protected Proxy findUserProxy(AppRequestInfo appRequestInfo) {
 		return proxyService.findProxy(p ->
-				p.getSpec().getId().equals(appRequestInfo.getAppName())
+				p.getSpecId().equals(appRequestInfo.getAppName())
 				&& p.getRuntimeValue(AppInstanceKey.inst).equals(appRequestInfo.getAppInstance())
 				&& userService.isOwner(p),
 				false);

@@ -90,7 +90,7 @@ public class AdminController extends BaseController {
 			status = proxy.getStatus().toString();
 			proxyId = proxy.getId();
 			userId = proxy.getUserId();
-			appName = proxy.getSpec().getId();
+			appName = proxy.getSpecId();
 			instanceName = getInstanceName(proxy);
 			endpoint = proxy.getTargets().values().stream().map(URI::toString).findFirst().orElse("N/A"); // Shiny apps have only one endpoint
 

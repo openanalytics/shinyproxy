@@ -28,6 +28,7 @@ import eu.openanalytics.containerproxy.model.spec.DockerSwarmSecret;
 import eu.openanalytics.containerproxy.model.spec.Parameters;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
+import eu.openanalytics.containerproxy.spec.expression.SpelField;
 import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
 import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
@@ -83,6 +84,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		});
 		defaultMaxInstances = environment.getProperty(PROP_DEFAULT_MAX_INSTANCES, Integer.class, 1);
 		defaultAlwaysSwitchInstance = environment.getProperty(PROP_DEFAULT_ALWAYS_SWITCH_INSTANCE, Boolean.class, false);
+		specs.forEach(ProxySpec::setContainerIndex);
 	}
 
 	public List<ProxySpec> getSpecs() {
@@ -175,178 +177,182 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		return defaultAlwaysSwitchInstance;
 	}
 
+	@Override
 	public void postProcessRecoveredProxy(Proxy proxy) {
-		proxy.addRuntimeValues(getRuntimeValues(proxy.getSpec()));
+		// we retrieve the spec here, therefore after AppRecovery this uses the updated values of the spec
+		ProxySpec proxySpec = getSpec(proxy.getSpecId());
+		proxy.addRuntimeValues(getRuntimeValues(proxySpec));
 	}
 
 	public static class ShinyProxySpec {
 
-		private final ProxySpec proxySpec;
-		private final ContainerSpec containerSpec;
+		private final ProxySpec.ProxySpecBuilder proxySpec;
+		private final ContainerSpec.ContainerSpecBuilder containerSpec;
 		private final AccessControl accessControl;
 
 		public ShinyProxySpec() {
-			proxySpec = new ProxySpec();
-			containerSpec = new ContainerSpec();
+			proxySpec = ProxySpec.builder();
+			containerSpec = ContainerSpec.builder();
 			accessControl = new AccessControl();
 
 			Map<String, Integer> portMapping = new HashMap<>();
 			portMapping.put("default", 3838);
-			containerSpec.setPortMapping(portMapping);
-			proxySpec.setContainerSpecs(Collections.singletonList(containerSpec));
-			proxySpec.setAccessControl(accessControl);
+			containerSpec.portMapping(portMapping);
+			proxySpec.accessControl(accessControl);
 		}
 
 		public String getId() {
-			return proxySpec.getId();
+			return proxySpec.build().getId();
 		}
 
 		public void setId(String id) {
-			proxySpec.setId(id);
+			proxySpec.id(id);
 		}
 
 		public String getDisplayName() {
-			return proxySpec.getDisplayName();
+			return proxySpec.build().getDisplayName();
 		}
 
 		public void setDisplayName(String displayName) {
-			proxySpec.setDisplayName(displayName);
+			proxySpec.displayName(displayName);
 		}
 
 		public String getDescription() {
-			return proxySpec.getDescription();
+			return proxySpec.build().getDescription();
 		}
 
 		public void setDescription(String description) {
-			proxySpec.setDescription(description);
+			proxySpec.description(description);
 		}
 
 		public String getLogoURL() {
-			return proxySpec.getLogoURL();
+			return proxySpec.build().getLogoURL();
 		}
 
 		public void setLogoURL(String logoURL) {
-			proxySpec.setLogoURL(logoURL);
+			proxySpec.logoURL(logoURL);
 		}
 
-		public String getContainerImage() {
-			return containerSpec.getImage();
+		public SpelField.String getContainerImage() {
+			return containerSpec.build().getImage();
 		}
 
-		public void setContainerImage(String containerImage) {
-			containerSpec.setImage(containerImage);
+		public void setContainerImage(SpelField.String containerImage) {
+			containerSpec.image(containerImage);
 		}
 
-		public String[] getContainerCmd() {
-			return containerSpec.getCmd();
+		public SpelField.StringList getContainerCmd() {
+			return containerSpec.build().getCmd();
 		}
 
-		public void setContainerCmd(String[] containerCmd) {
-			containerSpec.setCmd(containerCmd);
+		public void setContainerCmd(List<String> containerCmd) {
+			containerSpec.cmd(new SpelField.StringList(containerCmd));
 		}
 
-		public Map<String, String> getContainerEnv() {
-			return containerSpec.getEnv();
+		public SpelField.StringMap getContainerEnv() {
+			return containerSpec.build().getEnv();
 		}
 
 		public void setContainerEnv(Map<String, String> containerEnv) {
-			containerSpec.setEnv(containerEnv);
+			containerSpec.env(new SpelField.StringMap(containerEnv));
 		}
 
-		public String getContainerEnvFile() {
-			return containerSpec.getEnvFile();
+		public SpelField.String getContainerEnvFile() {
+			return containerSpec.build().getEnvFile();
 		}
 
-		public void setContainerEnvFile(String containerEnvFile) {
-			containerSpec.setEnvFile(containerEnvFile);
+		public void setContainerEnvFile(SpelField.String containerEnvFile) {
+			containerSpec.envFile(containerEnvFile);
 		}
 
-		public String getContainerNetwork() {
-			return containerSpec.getNetwork();
+		public SpelField.String getContainerNetwork() {
+			return containerSpec.build().getNetwork();
 		}
 
-		public void setContainerNetwork(String containerNetwork) {
-			containerSpec.setNetwork(containerNetwork);
+		public void setContainerNetwork(SpelField.String containerNetwork) {
+			containerSpec.network(containerNetwork);
 		}
 
-		public String[] getContainerNetworkConnections() {
-			return containerSpec.getNetworkConnections();
+		public SpelField.StringList getContainerNetworkConnections() {
+			return containerSpec.build().getNetworkConnections();
 		}
 
-		public void setContainerNetworkConnections(String[] containerNetworkConnections) {
-			containerSpec.setNetworkConnections(containerNetworkConnections);
+		public void setContainerNetworkConnections(List<String> containerNetworkConnections) {
+			containerSpec.networkConnections(new SpelField.StringList(containerNetworkConnections));
 		}
 
-		public String[] getContainerDns() {
-			return containerSpec.getDns();
+		public SpelField.StringList getContainerDns() {
+			return containerSpec.build().getDns();
 		}
 
-		public void setContainerDns(String[] containerDns) {
-			containerSpec.setDns(containerDns);
+		public void setContainerDns(List<String> containerDns) {
+			containerSpec.dns(new SpelField.StringList(containerDns));
 		}
 
-		public String[] getContainerVolumes() {
-			return containerSpec.getVolumes();
+		public SpelField.StringList getContainerVolumes() {
+			return containerSpec.build().getVolumes();
 		}
 
-		public void setContainerVolumes(String[] containerVolumes) {
-			containerSpec.setVolumes(containerVolumes);
+		public void setContainerVolumes(List<String> containerVolumes) {
+			containerSpec.volumes(new SpelField.StringList(containerVolumes));
 		}
 
-		public String getContainerMemoryRequest() {
-			return containerSpec.getMemoryRequest();
+		public SpelField.String getContainerMemoryRequest() {
+			return containerSpec.build().getMemoryRequest();
 		}
 
-		public void setContainerMemoryRequest(String containerMemoryRequest) {
-			containerSpec.setMemoryRequest(containerMemoryRequest);
+		public void setContainerMemoryRequest(SpelField.String containerMemoryRequest) {
+			containerSpec.memoryRequest(containerMemoryRequest);
 		}
 
-		public String getContainerMemoryLimit() {
-			return containerSpec.getMemoryLimit();
+		public SpelField.String getContainerMemoryLimit() {
+			return containerSpec.build().getMemoryLimit();
 		}
 
-		public void setContainerMemoryLimit(String containerMemoryLimit) {
-			containerSpec.setMemoryLimit(containerMemoryLimit);
+		public void setContainerMemoryLimit(SpelField.String containerMemoryLimit) {
+			containerSpec.memoryLimit(containerMemoryLimit);
 		}
 
-		public String getContainerCpuRequest() {
-			return containerSpec.getCpuRequest();
+		public SpelField.String getContainerCpuRequest() {
+			return containerSpec.build().getCpuRequest();
 		}
 
-		public void setContainerCpuRequest(String containerCpuRequest) {
-			containerSpec.setCpuRequest(containerCpuRequest);
+		public void setContainerCpuRequest(SpelField.String containerCpuRequest) {
+			containerSpec.cpuRequest(containerCpuRequest);
 		}
 
-		public String getContainerCpuLimit() {
-			return containerSpec.getCpuLimit();
+		public SpelField.String getContainerCpuLimit() {
+			return containerSpec.build().getCpuLimit();
 		}
 
-		public void setContainerCpuLimit(String containerCpuLimit) {
-			containerSpec.setCpuLimit(containerCpuLimit);
+		public void setContainerCpuLimit(SpelField.String containerCpuLimit) {
+			containerSpec.cpuLimit(containerCpuLimit);
 		}
 
 		public boolean isContainerPrivileged() {
-			return containerSpec.isPrivileged();
+			return containerSpec.build().isPrivileged();
 		}
 
 		public void setContainerPrivileged(boolean containerPrivileged) {
-			containerSpec.setPrivileged(containerPrivileged);
+			containerSpec.privileged(containerPrivileged);
 		}
 
-		public Map<String, String> getLabels() {
-			return containerSpec.getLabels();
+		public SpelField.StringMap getLabels() {
+			return containerSpec.build().getLabels();
 		}
 
 		public void setLabels(Map<String, String> labels) {
-			containerSpec.setLabels(labels);
+			containerSpec.labels(new SpelField.StringMap(labels));
 		}
 
 		public int getPort() {
-			return containerSpec.getPortMapping().get("default");
+			return containerSpec.build().getPortMapping().get("default");
 		}
 
 		public void setPort(int port) {
-			containerSpec.getPortMapping().put("default", port);
+			Map<String, Integer> portMapping = new HashMap<>();
+			portMapping.put("default", port);
+			containerSpec.portMapping(portMapping);
 		}
 
 		public String[] getAccessGroups() {
@@ -357,12 +363,12 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			accessControl.setGroups(accessGroups);
 		}
 
-		public String getTargetPath() {
-			return containerSpec.getTargetPath();
+		public SpelField.String getTargetPath() {
+			return containerSpec.build().getTargetPath();
 		}
 
-		public void setTargetPath(String targetPath) {
-			containerSpec.setTargetPath(targetPath);
+		public void setTargetPath(SpelField.String targetPath) {
+			containerSpec.targetPath(targetPath);
 		}
 
 		public String[] getAccessUsers() {
@@ -382,71 +388,72 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		}
 
 		public List<DockerSwarmSecret> getDockerSwarmSecrets() {
-			return containerSpec.getDockerSwarmSecrets();
+			return containerSpec.build().getDockerSwarmSecrets();
 		}
 
 		public void setDockerSwarmSecrets(List<DockerSwarmSecret> dockerSwarmSecrets) {
-			containerSpec.setDockerSwarmSecrets(dockerSwarmSecrets);
+			containerSpec.dockerSwarmSecrets(dockerSwarmSecrets);
 		}
 
 		public String getDockerRegistryDomain() {
-			return containerSpec.getDockerRegistryDomain();
+			return containerSpec.build().getDockerRegistryDomain();
 		}
 
 		public void setDockerRegistryDomain(String dockerRegistryDomain) {
-			containerSpec.setDockerRegistryDomain(dockerRegistryDomain);
+			containerSpec.dockerRegistryDomain(dockerRegistryDomain);
 		}
 
 		public String getDockerRegistryUsername() {
-			return containerSpec.getDockerRegistryUsername();
+			return containerSpec.build().getDockerRegistryUsername();
 		}
 
 		public void setDockerRegistryUsername(String dockerRegistryUsername) {
-			containerSpec.setDockerRegistryUsername(dockerRegistryUsername);
+			containerSpec.dockerRegistryUsername(dockerRegistryUsername);
 		}
 
 		public String getDockerRegistryPassword() {
-			return containerSpec.getDockerRegistryPassword();
+			return containerSpec.build().getDockerRegistryPassword();
 		}
 
 		public void setDockerRegistryPassword(String dockerRegistryPassword) {
-			containerSpec.setDockerRegistryPassword(dockerRegistryPassword);
+			containerSpec.dockerRegistryPassword(dockerRegistryPassword);
 		}
 
         public Parameters getParameters() {
-            return proxySpec.getParameters();
+            return proxySpec.build().getParameters();
         }
 
         public void setParameters(Parameters parameters) {
-			proxySpec.setParameters(parameters);
+			proxySpec.parameters(parameters);
         }
 
-		public String getMaxLifetime() {
-			return proxySpec.getMaxLifeTime();
+		public SpelField.Long getMaxLifetime() {
+			return proxySpec.build().getMaxLifeTime();
 		}
 
-		public void setMaxLifetime(String maxLifetime) {
-			proxySpec.setMaxLifeTime(maxLifetime);
+		public void setMaxLifetime(SpelField.Long maxLifetime) {
+			proxySpec.maxLifeTime(maxLifetime);
 		}
 
 		public Boolean getStopOnLogout() {
-			return proxySpec.stopOnLogout();
+			return proxySpec.build().getStopOnLogout();
 		}
 
 		public void setStopOnLogout(Boolean stopOnLogout) {
-			proxySpec.setStopOnLogout(stopOnLogout);
+			proxySpec.stopOnLogout(stopOnLogout);
 		}
 
-		public String getHeartbeatTimeout() {
-			return proxySpec.getHeartbeatTimeout();
+		public SpelField.Long getHeartbeatTimeout() {
+			return proxySpec.build().getHeartbeatTimeout();
 		}
 
-		public void setHeartbeatTimeout(String heartbeatTimeout) {
-			proxySpec.setHeartbeatTimeout(heartbeatTimeout);
+		public void setHeartbeatTimeout(SpelField.Long heartbeatTimeout) {
+			proxySpec.heartbeatTimeout(heartbeatTimeout);
 		}
 
 		public ProxySpec getProxySpec() {
-			return proxySpec;
+			proxySpec.containerSpecs(Collections.singletonList(containerSpec.build()));
+			return proxySpec.build();
 		}
 	}
 

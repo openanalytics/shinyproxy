@@ -62,7 +62,7 @@ public class IssueController extends BaseController {
 		
 		Proxy activeProxy = null;
 		for (Proxy proxy: proxyService.getProxies(null, false)) {
-			if (proxy.getUserId().equals(form.getUserName()) && proxy.getSpec().getId().equals(form.getAppName())) {
+			if (proxy.getUserId().equals(form.getUserName()) && proxy.getSpecId().equals(form.getAppName())) {
 				activeProxy = proxy;
 				break;
 			}

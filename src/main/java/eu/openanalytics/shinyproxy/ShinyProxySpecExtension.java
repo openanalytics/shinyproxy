@@ -21,6 +21,8 @@
 package eu.openanalytics.shinyproxy;
 
 import eu.openanalytics.containerproxy.model.spec.AbstractSpecExtension;
+import eu.openanalytics.containerproxy.spec.expression.SpecExpressionContext;
+import eu.openanalytics.containerproxy.spec.expression.SpecExpressionResolver;
 import eu.openanalytics.shinyproxy.runtimevalues.WebsocketReconnectionMode;
 
 import java.util.ArrayList;
@@ -101,5 +103,8 @@ public class ShinyProxySpecExtension extends AbstractSpecExtension {
         return templateProperties;
     }
 
-
+    @Override
+    public ShinyProxySpecExtension resolve(SpecExpressionResolver resolver, SpecExpressionContext context) {
+        return this;
+    }
 }

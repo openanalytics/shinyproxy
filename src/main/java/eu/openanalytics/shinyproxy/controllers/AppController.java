@@ -315,7 +315,7 @@ public class AppController extends BaseController {
 		// -> the user has three proxies running.
 		// Because of chance that this happens is small and that the consequences are low, we accept this risk.
 		int currentAmountOfInstances = proxyService.getProxies(
-				p -> p.getSpec().getId().equals(spec.getId())
+				p -> p.getSpecId().equals(spec.getId())
 						&& userService.isOwner(p),
 				false).size();
 

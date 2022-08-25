@@ -32,7 +32,9 @@ public class ShinyForceFullReloadKey extends RuntimeValueKey<Boolean> {
                 false,
                 false,
                 true,
-                false, Boolean.class);
+                false,
+                false,
+                Boolean.class);
     }
 
     public static ShinyForceFullReloadKey inst = new ShinyForceFullReloadKey();

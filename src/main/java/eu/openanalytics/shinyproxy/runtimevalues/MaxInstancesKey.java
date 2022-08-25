@@ -31,7 +31,9 @@ public class MaxInstancesKey extends RuntimeValueKey<Integer> {
                 false,
                 false,
                 true,
-                false, Integer.class);
+                false,
+                false,
+                Integer.class);
     }
 
     public static MaxInstancesKey inst = new MaxInstancesKey();

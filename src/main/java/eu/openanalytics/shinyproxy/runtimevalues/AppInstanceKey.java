@@ -31,7 +31,9 @@ public class AppInstanceKey extends RuntimeValueKey<String>  {
                 true, // include as annotation so that the value can be recovered
                 false,
                 true,
-                true, String.class);
+                true,
+                false,
+                String.class);
     }
 
     public static AppInstanceKey inst = new AppInstanceKey();

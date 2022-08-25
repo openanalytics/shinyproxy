@@ -31,7 +31,9 @@ public class PublicPathKey extends RuntimeValueKey<String>  {
                 true, // include as annotation so that the value can be recovered
                 true,
                 true,
-                true, String.class);
+                true,
+                false,
+                String.class);
     }
 
     public static PublicPathKey inst = new PublicPathKey();

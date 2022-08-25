@@ -32,7 +32,9 @@ public class WebSocketReconnectionModeKey extends RuntimeValueKey<WebsocketRecon
                 false,
                 false,
                 true,
-                false, WebsocketReconnectionMode.class);
+                false,
+                false,
+                WebsocketReconnectionMode.class);
     }
 
     public static WebSocketReconnectionModeKey inst = new WebSocketReconnectionModeKey();

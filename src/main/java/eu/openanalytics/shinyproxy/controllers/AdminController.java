@@ -105,12 +105,17 @@ public class AdminController extends BaseController {
 				lastHeartBeat = getTimeDelta(heartBeat);
 			}
 
-			String[] parts = containerBackend.getContainerImage(proxy.getContainers().get(0)).split(":");
-			imageName = parts[0];
-			if (parts.length > 1) {
-				imageTag = parts[1];
+			if (!proxy.getContainers().isEmpty()) {
+				String[] parts = containerBackend.getContainerImage(proxy.getContainers().get(0)).split(":");
+				imageName = parts[0];
+				if (parts.length > 1) {
+					imageTag = parts[1];
+				} else {
+					imageTag = "latest";
+				}
 			} else {
-				imageTag = "latest";
+				imageName = "N/A";
+				imageTag = "N/A";
 			}
 
 			Long heartbeatTimeout = proxy.getRuntimeObject(HeartbeatTimeoutKey.inst);

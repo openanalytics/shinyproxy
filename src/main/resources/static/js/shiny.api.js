@@ -87,14 +87,14 @@ Shiny.api = {
         let handled = [];
         let result = {};
         for (const proxy of proxies) {
-            if (proxy.hasOwnProperty('spec') && proxy.spec.hasOwnProperty('id')) {
+            if (proxy.hasOwnProperty('specId')) {
                 if (!handled.includes(proxy.id)) {
                     handled.push(proxy.id);
                     proxies.push(proxy);
-                    if (!result.hasOwnProperty(proxy.spec.id)) {
-                        result[proxy.spec.id] = []
+                    if (!result.hasOwnProperty(proxy.specId)) {
+                        result[proxy.specId] = []
                     }
-                    result[proxy.spec.id].push(proxy);
+                    result[proxy.specId].push(proxy);
                 }
             } else {
                 console.log("Received invalid proxy object from server.", proxy);
@@ -110,7 +110,7 @@ Shiny.api = {
         for (const [appName, instances] of Object.entries(proxies)) {
             let displayName = null;
             let processedInstances = instances.reduce( (res, instance) => {
-                if (instance.hasOwnProperty('spec') && instance.hasOwnProperty('id') &&
+                if (instance.hasOwnProperty('specId') &&
                     instance.hasOwnProperty('runtimeValues') &&
                     instance.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE') &&
                     instance.runtimeValues.hasOwnProperty('SHINYPROXY_INSTANCE')
@@ -122,13 +122,7 @@ Shiny.api = {
                         return res;
                     }
 
-                    if (displayName == null) {
-                        displayName = instance.spec.id;
-                        if (instance.spec.displayName !== null && instance.spec.displayName !== "") {
-                            displayName = instance.spec.displayName;
-                        }
-                    }
-
+                    displayName = instance.displayName;
                     let instanceName = Shiny.instances._toAppDisplayName(appInstance);
 
                     let uptime = "N/A";
@@ -138,7 +132,7 @@ Shiny.api = {
 
                     const url = Shiny.api._buildURLForApp(instance);
                     res.push({
-                        appName: instance.spec.id,
+                        appName: instance.specId,
                         instanceName: instanceName,
                         displayName: displayName,
                         url: url,
@@ -236,7 +230,7 @@ Shiny.api = {
         return url;
     },
     _buildURLForApp: function (app) {
-        const appName = app.spec.id;
+        const appName = app.specId;
         const appInstance = app.runtimeValues.SHINYPROXY_APP_INSTANCE;
         const appSpInstance = app.runtimeValues.SHINYPROXY_INSTANCE;
         if (Shiny.common.staticState.operatorEnabled) {

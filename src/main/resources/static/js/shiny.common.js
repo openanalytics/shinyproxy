@@ -131,7 +131,7 @@ Shiny.common = {
             }
 
             const templateData = {
-                appName: proxy.spec.id,
+                appName: proxy.specId,
                 proxyId: proxy.id,
                 status: proxy.status,
                 instanceName: appInstanceName,

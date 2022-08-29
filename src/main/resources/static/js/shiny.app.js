@@ -95,7 +95,7 @@ Shiny.app = {
             Shiny.ui.setupIframe();
             Shiny.ui.showFrame();
             Shiny.connections.startHeartBeats();
-
+            Shiny.app.setUpOverride();
         } else if (containerPath !== "") {
             Shiny.app.staticState.containerPath = containerPath;
             Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;

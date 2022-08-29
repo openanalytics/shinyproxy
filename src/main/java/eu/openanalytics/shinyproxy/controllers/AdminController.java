@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import eu.openanalytics.containerproxy.backend.IContainerBackend;
 import eu.openanalytics.containerproxy.model.runtime.ParameterNames;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.ContainerImageKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.HeartbeatTimeoutKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.InstanceIdKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.MaxLifetimeKey;
@@ -50,9 +51,6 @@ public class AdminController extends BaseController {
 
 	@Inject
 	private ActiveProxiesService activeProxiesService;
-
-	@Inject
-	private IContainerBackend containerBackend;
 
 	@RequestMapping("/admin")
 	private String admin(ModelMap map, HttpServletRequest request) {
@@ -108,12 +106,12 @@ public class AdminController extends BaseController {
 			}
 
 			if (!proxy.getContainers().isEmpty()) {
-				String[] parts = containerBackend.getContainerImage(proxy.getContainers().get(0)).split(":");
+				String[] parts = proxy.getContainers().get(0).getRuntimeValue(ContainerImageKey.inst).split(":");
 				imageName = parts[0];
 				if (parts.length > 1) {
 					imageTag = parts[1];
 				} else {
-					imageTag = "latest";
+					imageTag = "N/A";
 				}
 			} else {
 				imageName = "N/A";

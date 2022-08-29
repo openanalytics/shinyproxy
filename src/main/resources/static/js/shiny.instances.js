@@ -105,6 +105,7 @@ Shiny.instances = {
                 }
             }
         },
+        // TODO rename to onRestartApp?
         onRestartInstance: async function (event) {
             if (event) {
                 event.preventDefault();

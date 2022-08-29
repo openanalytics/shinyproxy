@@ -219,7 +219,8 @@ Shiny.api = {
     buildURLForInstance(location, spInstance) {
         const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
         const url = new URL(location, baseURL);
-        if (spInstance === Shiny.common.staticState.spInstance && Shiny.app.staticState.spInstanceOverride === null) {
+        if (spInstance === Shiny.common.staticState.spInstance
+            && Shiny.app !== undefined && Shiny.app.staticState.spInstanceOverride === null) {
             // we are targeting the current instance, and we are not using the override system -> no need to include the override in the URL
             return url;
         }

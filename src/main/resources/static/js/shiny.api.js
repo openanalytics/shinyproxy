@@ -234,9 +234,13 @@ Shiny.api = {
         return url;
     },
     _buildURLForApp: function (app) {
-        const appName = app.specId;
+        const appName = app.spec.id;
         const appInstance = app.runtimeValues.SHINYPROXY_APP_INSTANCE;
         const appSpInstance = app.runtimeValues.SHINYPROXY_INSTANCE;
-        return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/?sp_instance_override=" + appSpInstance;
+        if (Shiny.common.staticState.operatorEnabled) {
+            return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/?sp_instance_override=" + appSpInstance;
+        } else {
+            return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/";
+        }
     },
 };

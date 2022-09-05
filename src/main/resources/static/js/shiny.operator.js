@@ -57,7 +57,7 @@ Shiny.operator = {
             }
         });
         if (Shiny.operator.newInstanceAvailable()) {
-            if (Shiny.app !== undefined && Shiny.app.staticState.spInstanceOverride) {
+            if (Shiny.app !== undefined && Shiny.app.staticState.isSpOverrideActive) {
                 return true;
             }
             // check amount of apps running

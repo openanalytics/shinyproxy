@@ -119,13 +119,15 @@ public class AppController extends BaseController {
 		}
 
 		// operator specific
-		String spInstanceOverride = getSpInstanceOverride(request);
-		map.put("spInstanceOverride", spInstanceOverride);
-		if (spInstanceOverride != null) {
-			map.put("resourceSuffix", "?sp_instance_override=" + spInstanceOverride);
+		if (operatorService.isEnabled()) {
+			map.put("isSpOverrideActive", getIsSpOverrideActive(request));
+			map.put("resourceSuffix", "?sp_instance_override=" + identifierService.instanceId);
+			map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnAppPage());
+		} else {
+			map.put("isSpOverrideActive", false);
+			map.put("resourceSuffix", "");
+			map.put("operatorShowTransferMessage", false);
 		}
-
-		map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnAppPage());
 
 		return "app";
 	}
@@ -255,23 +257,17 @@ public class AppController extends BaseController {
 		return getPublicPath(proxy.getId()) + queryString;
 	}
 
-	private String getSpInstanceOverride(HttpServletRequest request) {
+	private boolean getIsSpOverrideActive(HttpServletRequest request) {
 		String override = request.getParameter("sp_instance_override");
-		if (override == null) {
-			for (Cookie cookie : request.getCookies()) {
-				if (cookie.getName().equals("sp-instance-override")) {
-					override = cookie.getValue();
-				}
+		if (override != null) {
+			return true;
+		}
+		for (Cookie cookie : request.getCookies()) {
+			if (cookie.getName().equals("sp-instance-override")) {
+				return true;
 			}
 		}
-		if (override == null) {
-			return null;
-		} else if (override.equals(identifierService.instanceId)) {
-			return override;
-		} else {
-			logger.warn("Received request for instanceId \"{}\" but current id is \"{}\"", override, identifierService.instanceId);
-			return null;
-		}
+		return false;
 	}
 
 	private String getPublicPath(String proxyId) {

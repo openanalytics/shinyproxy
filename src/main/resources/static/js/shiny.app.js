@@ -34,8 +34,7 @@ Shiny.app = {
         maxReloadAttempts: 10,
         heartBeatRate: null,
         maxInstances: null,
-        spInstanceOverride: null,
-        operatorEnabled: false,
+        isSpOverrideActive: null,
         parameters: {
             allowedCombinations: null,
             names: null,
@@ -65,17 +64,17 @@ Shiny.app = {
      * @param appName
      * @param appInstanceName
      * @param shinyForceFullReload
-     * @param spInstanceOverride
+     * @param isSpOverrideActive
      * @param parameterAllowedCombinations
      * @param parameterDefinitions
      * @param parametersIds
      */
-    start: async function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, shinyForceFullReload, spInstanceOverride, parameterAllowedCombinations, parameterDefinitions, parametersIds) {
+    start: async function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, shinyForceFullReload, isSpOverrideActive, parameterAllowedCombinations, parameterDefinitions, parametersIds) {
         Shiny.app.staticState.heartBeatRate = heartBeatRate;
         Shiny.app.staticState.appName = appName;
         Shiny.app.staticState.appInstanceName = appInstanceName;
         Shiny.app.staticState.shinyForceFullReload = shinyForceFullReload;
-        Shiny.app.staticState.spInstanceOverride = spInstanceOverride;
+        Shiny.app.staticState.isSpOverrideActive = isSpOverrideActive;
         Shiny.app.staticState.parameters.allowedCombinations = parameterAllowedCombinations;
         Shiny.app.staticState.parameters.names = parameterDefinitions;
         Shiny.app.staticState.parameters.ids = parametersIds;
@@ -98,7 +97,7 @@ Shiny.app = {
     },
     async startAppWithParameters(parameters) {
         if (Shiny.operator === undefined || await Shiny.operator.start()) {
-            if (Shiny.app.staticState.spInstanceOverride !== null) {
+            if (Shiny.app.staticState.isSpOverrideActive) {
                 // do not start new apps on old SP instances -> redirect to same page but without override
                 const overrideUrl = new URL(window.location);
                 overrideUrl.searchParams.delete("sp_instance_override");
@@ -140,12 +139,14 @@ Shiny.app = {
         }
     },
     setUpOverride() {
-        var parsedUrl = new URL(Shiny.app.staticState.containerPath, window.location.origin);
-        Cookies.set('sp-instance-override', Shiny.common.staticState.spInstance, {path: parsedUrl.pathname});
+        if (Shiny.common.staticState.operatorEnabled) {
+            var parsedUrl = new URL(Shiny.app.staticState.containerPath, window.location.origin);
+            Cookies.set('sp-instance-override', Shiny.common.staticState.spInstance, {path: parsedUrl.pathname});
 
-        const overrideUrl = new URL(window.location);
-        overrideUrl.searchParams.set("sp_instance_override", Shiny.common.staticState.spInstance);
-        history.replaceState(null, '', overrideUrl);
+            const overrideUrl = new URL(window.location);
+            overrideUrl.searchParams.set("sp_instance_override", Shiny.common.staticState.spInstance);
+            history.replaceState(null, '', overrideUrl);
+        }
     }
 }
 

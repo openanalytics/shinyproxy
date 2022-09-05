@@ -148,6 +148,7 @@ public abstract class BaseController {
 		// operator specific
 		map.put("operatorEnabled", operatorService.isEnabled());
 		map.put("operatorForceTransfer", operatorService.mustForceTransfer());
+		map.put("operatorForceTransferWithActiveApps", operatorService.mustForceTransferWithActiveApps());
 		map.put("spInstance", identifierService.instanceId);
 	}
 	

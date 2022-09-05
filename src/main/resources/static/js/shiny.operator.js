@@ -27,6 +27,7 @@ Shiny.operator = {
 
     staticState: {
         forceTransfer: null,
+        forceTransferWithActiveApps: null,
         showTransferMessage: null,
     },
 
@@ -36,8 +37,9 @@ Shiny.operator = {
      * @param showTransferMessage whether a message/popup should be shown when the user is using an old server and they
      * have at least one app running.
      */
-    init: function (forceTransfer, showTransferMessage) {
+    init: function (forceTransfer, forceTransferWithActiveApps, showTransferMessage) {
         Shiny.operator.staticState.forceTransfer = forceTransfer;
+        Shiny.operator.staticState.forceTransferWithActiveApps = forceTransferWithActiveApps;
         Shiny.operator.staticState.showTransferMessage = showTransferMessage;
         Shiny.common.staticState.operatorEnabled = true;
     },
@@ -62,7 +64,7 @@ Shiny.operator = {
             if (Shiny.operator.staticState.forceTransfer) {
                 try {
                     const proxies = await Shiny.api.getProxies();
-                    if (proxies.length === 0) {
+                    if (proxies.length === 0 || Shiny.operator.staticState.forceTransferWithActiveApps) {
                         // force transfer
                         Shiny.operator.transferToNewInstance();
                         return false;

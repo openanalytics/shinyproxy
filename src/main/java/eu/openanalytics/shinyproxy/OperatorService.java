@@ -40,6 +40,8 @@ public class OperatorService {
 
     private Boolean mustForceTransfer;
 
+    private Boolean mustForceTransferWithActiveApps;
+
     private Boolean showTransferMessageOnMainPage;
 
     private Boolean showTransferMessageOnAppPage;
@@ -48,6 +50,7 @@ public class OperatorService {
     public void init() {
         isEnabled = identifierService.realmId != null;
         mustForceTransfer = environment.getProperty("proxy.operator.force-transfer", Boolean.class, false);
+        mustForceTransferWithActiveApps = environment.getProperty("proxy.operator.force-transfer-with-active-apps", Boolean.class, false);
         showTransferMessageOnAppPage = environment.getProperty("proxy.operator.show-transfer-message-app-page", Boolean.class, true);
         showTransferMessageOnMainPage = environment.getProperty("proxy.operator.show-transfer-message-main-page", Boolean.class, true);
     }
@@ -65,6 +68,14 @@ public class OperatorService {
      */
     public Boolean mustForceTransfer() {
         return mustForceTransfer;
+    }
+
+    /**
+     * @return whether to force transferring the user to the latest instance even if apps are running (and if the user
+     * is authenticated, this is unrelated to transferring the user before logging in and after logging out)
+     */
+    public Boolean mustForceTransferWithActiveApps() {
+        return mustForceTransferWithActiveApps;
     }
 
     /**

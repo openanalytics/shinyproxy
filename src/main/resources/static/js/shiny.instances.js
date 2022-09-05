@@ -83,18 +83,20 @@ Shiny.instances = {
             }
         },
         onRestartInstance: async function () {
-            if (confirm("Are you sure you want to restart the current instance?")) {
+            const overrideUrl = new URL(window.location);
+            overrideUrl.searchParams.delete("sp_instance_override");
+
+            if (Shiny.app.runtimeState.appStopped) {
+                window.location = overrideUrl;
+                return;
+            } else if (confirm("Are you sure you want to restart the current instance?")) {
                 Shiny.ui.hideModal();
                 Shiny.ui.showLoading();
 
-                if (Shiny.app.runtimeState.appStopped) {
-                    window.location.reload(false);
-                    return;
-                }
-
                 await Shiny.instances._deleteInstance(Shiny.app.staticState.proxyId, Shiny.common.staticState.spInstance);
                 await Shiny.instances._waitUntilInstanceDeleted(Shiny.app.staticState.proxyId, Shiny.common.staticState.spInstance);
-                window.location.reload(false);
+
+                window.location = overrideUrl;
             }
         },
         onNewInstance: async function () {
@@ -200,21 +202,10 @@ Shiny.instances = {
 
         document.getElementById('appInstances').innerHTML = Handlebars.templates.switch_instances(templateData);
     },
-    _createUrlForProxy: function (proxy) {
-        const appName = proxy.spec.id;
-        const appInstance = proxy.runtimeValues.SHINYPROXY_APP_INSTANCE;
-        const appSpInstance = proxy.runtimeValues.SHINYPROXY_INSTANCE;
-        if (appSpInstance !== Shiny.common.staticState.spInstance ||
-            (Shiny.app !== undefined && Shiny.app.staticState.spInstanceOverride !== null)) {
-            return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/?sp_instance_override=" + appSpInstance;
-        } else {
-            return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/";
-        }
-    },
     _toAppDisplayName(appInstanceName) {
         if (appInstanceName === "_") {
             return "Default";
         }
         return appInstanceName;
-    },
+    }
 };

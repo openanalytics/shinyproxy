@@ -22,11 +22,13 @@ Shiny = window.Shiny || {};
 Shiny.api = {
     _proxiesCache: null,
     getProxies: async function () {
-        let resp = await fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true", false));
+        let resp = await fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true"));
         return await resp.json();
     },
     getAllSpInstances: async function () {
-        const resp = await fetch(Shiny.api.buildURL("operator/metadata", false));
+        const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
+        const url = new URL("operator/metadata", baseURL);
+        const resp = await fetch(url);
         const json = await resp.json();
         return json.instances.map(i => i.hashOfSpec);
     },
@@ -43,7 +45,7 @@ Shiny.api = {
         }
         const requests = [];
         for (const instance of instances) {
-            requests.push(fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true&sp_instance_override=" + instance, false))
+            requests.push(fetch(Shiny.api.buildURLForInstance("api/proxy?only_owned_proxies=true", instance))
                 .then(response => response.json()));
         }
         const responses = await Promise.all(requests);
@@ -129,7 +131,7 @@ Shiny.api = {
                         uptime = Shiny.ui.formatSeconds((Date.now() - instance.startupTimestamp) / 1000);
                     }
 
-                    const url = Shiny.instances._createUrlForProxy(instance);
+                    const url = Shiny.api._buildURLForApp(instance);
                     res.push({
                         appName: instance.spec.id,
                         instanceName: instanceName,
@@ -174,7 +176,7 @@ Shiny.api = {
         }
         const requests = {};
         for (const instance of instances) {
-            requests[instance] = fetch(Shiny.api.buildURL("admin/data?sp_instance_override=" + instance, false))
+            requests[instance] = fetch(Shiny.api.buildURLForInstance("admin/data", instance))
                 .then(response => response.json())
                 .then(response => response.apps)
                 .catch(e => console.log("Failed to get admin data for instances: ", instance, e));
@@ -207,24 +209,34 @@ Shiny.api = {
                 return null;
             });
     },
-    buildURL(location, allowSpInstanceOverride = true) {
+    buildURL(location) {
         const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
         const url = new URL(location, baseURL);
-        if (!allowSpInstanceOverride || Shiny.app.staticState.spInstanceOverride === null) {
+
+        if (!Shiny.common.staticState.operatorEnabled) {
             return url;
         }
-        url.searchParams.set("sp_instance_override", Shiny.app.staticState.spInstanceOverride);
+
+        url.searchParams.set("sp_instance_override", Shiny.common.staticState.spInstance);
         return url;
     },
     buildURLForInstance(location, spInstance) {
         const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
         const url = new URL(location, baseURL);
-        if (spInstance === Shiny.common.staticState.spInstance
-            && Shiny.app !== undefined && Shiny.app.staticState.spInstanceOverride === null) {
-            // we are targeting the current instance, and we are not using the override system -> no need to include the override in the URL
+
+        if (!Shiny.common.staticState.operatorEnabled) {
             return url;
         }
+
+        // always include the override instance, even if the page was loaded without override active or if we are targeting the current instance
+        // in the meantime an override could have become active
         url.searchParams.set("sp_instance_override", spInstance);
         return url;
-    }
+    },
+    _buildURLForApp: function (app) {
+        const appName = app.specId;
+        const appInstance = app.runtimeValues.SHINYPROXY_APP_INSTANCE;
+        const appSpInstance = app.runtimeValues.SHINYPROXY_INSTANCE;
+        return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/?sp_instance_override=" + appSpInstance;
+    },
 };

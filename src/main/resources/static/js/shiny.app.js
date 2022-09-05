@@ -80,22 +80,14 @@ Shiny.app = {
         Shiny.app.staticState.parameters.names = parameterDefinitions;
         Shiny.app.staticState.parameters.ids = parametersIds;
 
-        if (spInstanceOverride !== null) {
-            $('body').addClass('sp-override-active');
-        }
-
         if (containerPath !== "") {
             Shiny.app.staticState.containerPath = containerPath;
             Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;
             Shiny.app.staticState.proxyId = proxyId;
-            if (Shiny.app.staticState.spInstanceOverride != null) {
-                // get only the path part of the containerPath for the cookie (without query string, hash etc)
-                var parsedUrl = new URL(Shiny.app.staticState.containerPath, window.location.origin);
-                Cookies.set('sp-instance-override', Shiny.app.staticState.spInstanceOverride, {path: parsedUrl.pathname});
-            }
             Shiny.ui.setupIframe();
             Shiny.ui.showFrame();
             Shiny.connections.startHeartBeats();
+            Shiny.app.setUpOverride();
         } else {
             if (parameterDefinitions !== null) {
                 Shiny.ui.showParameterForm();
@@ -107,8 +99,10 @@ Shiny.app = {
     async startAppWithParameters(parameters) {
         if (Shiny.operator === undefined || await Shiny.operator.start()) {
             if (Shiny.app.staticState.spInstanceOverride !== null) {
-                // do not start new apps on old SP instances
-                window.location.href = Shiny.api.buildURL("", false);
+                // do not start new apps on old SP instances -> redirect to same page but without override
+                const overrideUrl = new URL(window.location);
+                overrideUrl.searchParams.delete("sp_instance_override");
+                window.location = overrideUrl;
                 return;
             }
             Shiny.ui.setShinyFrameHeight();
@@ -142,8 +136,17 @@ Shiny.app = {
             Shiny.ui.setupIframe();
             Shiny.ui.showFrame();
             Shiny.connections.startHeartBeats();
+            Shiny.app.setUpOverride();
         }
     },
+    setUpOverride() {
+        var parsedUrl = new URL(Shiny.app.staticState.containerPath, window.location.origin);
+        Cookies.set('sp-instance-override', Shiny.common.staticState.spInstance, {path: parsedUrl.pathname});
+
+        const overrideUrl = new URL(window.location);
+        overrideUrl.searchParams.set("sp_instance_override", Shiny.common.staticState.spInstance);
+        history.replaceState(null, '', overrideUrl);
+    }
 }
 
 

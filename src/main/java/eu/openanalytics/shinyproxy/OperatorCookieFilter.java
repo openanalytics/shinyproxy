@@ -21,8 +21,6 @@
 package eu.openanalytics.shinyproxy;
 
 
-import org.apache.commons.lang3.tuple.ImmutableTriple;
-import org.springframework.data.util.Pair;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -126,4 +124,3 @@ public class OperatorCookieFilter extends GenericFilterBean {
     }
 
 }
-

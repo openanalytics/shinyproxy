@@ -26,6 +26,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
+		<maven.compiler.source>8</maven.compiler.source>
+		<maven.compiler.target>8</maven.compiler.target>
 		<containerproxy.version>0.9.0-SNAPSHOT</containerproxy.version>
 		<resource.delimiter>&amp;</resource.delimiter>
 	</properties>
@@ -69,11 +71,6 @@
 			<version>${containerproxy.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>eu.openanalytics</groupId>
-			<artifactId>ec2proxy</artifactId>
-			<version>1.0-SNAPSHOT</version>
-		</dependency>
-		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr353</artifactId>
 			<version>2.11.2</version>
@@ -82,6 +79,7 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
+			<version>2.5.12</version>
 		</dependency>
 		<dependency>
 			<groupId>org.webjars</groupId>
@@ -185,6 +183,7 @@
 							<goal>repackage</goal>
 						</goals>
 						<configuration>
+							<classifier>exec</classifier>
 							<mainClass>eu.openanalytics.containerproxy.ContainerProxyApplication</mainClass>
 						</configuration>
 					</execution>
@@ -201,7 +200,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>rpm-maven-plugin</artifactId>

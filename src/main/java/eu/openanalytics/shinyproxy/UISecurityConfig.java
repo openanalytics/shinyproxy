@@ -56,6 +56,8 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 
 			// Limit access to the admin pages
 			http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminGroups());
+
+			http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
 		}
 
 		if (operatorService.isEnabled()) {

@@ -174,31 +174,25 @@ Shiny.api = {
                 instances = [Shiny.common.staticState.spInstance];
             }
         }
-        const requests = {};
-        for (const instance of instances) {
-            requests[instance] = fetch(Shiny.api.buildURLForInstance("admin/data", instance))
+        let apps = [];
+
+        await Promise.all(instances.map(instance =>
+            fetch(Shiny.api.buildURLForInstance("admin/data", instance))
                 .then(response => response.json())
-                .then(response => response.apps)
-                .catch(e => console.log("Failed to get admin data for instances: ", instance, e));
-        }
-        const res = [];
-        for (const [instance, request] of Object.entries(requests)) {
-            const response = await request;
-            if (instance === Shiny.common.staticState.spInstance) {
-                res.push({
-                    displayName: "This server",
-                    spInstance: instance,
-                    apps: response
-                });
-            } else {
-                res.push({
-                    displayName: instance,
-                    spInstance: instance,
-                    apps: response
-                });
-            }
-        }
-        return {"instances": res};
+                .then(response => {
+                    response.apps.forEach(app => {
+                        if (instance === Shiny.common.staticState.spInstance) {
+                            app['server'] = "This server";
+                        } else {
+                            app['server'] = instance;
+                        }
+                        apps.push(app);
+                        app['spInstance'] = instance;
+                    });
+                })
+                .catch(e => console.log("Failed to get admin data for instances: ", instance, e))));
+
+        return apps;
     },
     getHeartBeatInfo: async function (proxyId, spInstance) {
         return await fetch(Shiny.api.buildURLForInstance("heartbeat/" + proxyId, spInstance))

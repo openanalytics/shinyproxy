@@ -44,10 +44,15 @@
 
 #admin {
 	margin-left: 10px;
+	margin-right: 10px;
 }
 
 #admin th, td {
 	padding: 5px;
+}
+
+#admin #allApps {
+	width: 100%;
 }
 
 #error {

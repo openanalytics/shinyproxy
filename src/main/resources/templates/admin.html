@@ -28,6 +28,9 @@
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 	<link rel="stylesheet" media="screen" th:href="@{${bootstrapCss}}" />
 	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
+	<link rel="stylesheet" media="screen" href="/webjars/datatables/1.12.1/css/dataTables.bootstrap.min.css"/>
+	<link rel="stylesheet" media="screen" href="/webjars/datatables-buttons/2.2.2/css/buttons.bootstrap.min.css">
+	<link rel="stylesheet" media="screen" href="/webjars/datatables-responsive/2.2.7/css/responsive.bootstrap.min.css">
 	<script th:src="@{${jqueryJs}}"></script>
 	<script th:src="@{${bootstrapJs}}"></script>
 	<script th:src="@{${cookieJs}}"></script>
@@ -47,11 +50,41 @@
 	<div class="container-fluid">
 		<div id="admin">
 			<h3>Active Proxies</h3>
-			<div id="allApps"></div>
+			<div id="allApps">
+				<table class="table table-condensed dt-responsive nowrap" style="width:100%">
+				<thead>
+					<tr>
+						<th data-priority="100">Server</th>
+						<th data-priority="100">ID</th>
+						<th>Status</th>
+						<th>User</th>
+						<th>Appname</th>
+						<th>Instance</th>
+						<th>Endpoint</th>
+						<th>Uptime</th>
+						<th>Last heartbeat</th>
+						<th>Image</th>
+						<th>Image tag</th>
+						<th data-priority="100" >Actions</th>
+					</tr>
+					</thead>
+					<tbody>
+
+					</tbody>
+				</table>
+			</div>
 		</div>
 	</div>
 
 	<div th:replace="fragments/modal :: modal"></div>
+
+	<script src="/webjars/datatables/1.12.1/js/jquery.dataTables.min.js"></script>
+	<script src="/webjars/datatables/1.12.1/js/dataTables.bootstrap.min.js"></script>
+	<script src="/webjars/datatables-buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+	<script src="/webjars/datatables-buttons/2.2.2/js/buttons.bootstrap.min.js"></script>
+	<script src="/webjars/datatables-buttons/2.2.2/js/buttons.html5.min.js"></script>
+	<script src="/webjars/datatables-responsive/2.2.7/js/dataTables.responsive.min.js"></script>
+	<script src="/webjars/datatables-responsive/2.2.7/js/responsive.bootstrap.min.js"></script>
 
 	<script type="text/javascript" th:inline="javascript">
 		$(window).on('load', function () {

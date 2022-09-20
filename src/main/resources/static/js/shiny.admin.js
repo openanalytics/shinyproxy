@@ -25,7 +25,90 @@ Shiny.admin = {
     _detailsRefreshIntervalId: null,
 
     async init() {
-        await Shiny.admin._refreshTable();
+        Shiny.admin._adminData = await Shiny.api.getAdminData();
+        const table = $('.table').DataTable({
+            data: Shiny.admin._adminData,
+            paging: false,
+            lengthChange: false,
+            buttons: [{extend: 'csv'}, 'colvis'],
+            responsive: {
+                details: false
+            },
+            columns: [
+                {
+                    data: 'server',
+                    className: 'admin-monospace',
+                },
+                {
+                    data: 'proxyId',
+                    className: 'admin-monospace',
+                },
+                {
+                    data: 'status',
+                    className: 'admin-monospace',
+                },
+                {
+                    data: 'userId',
+                    className: 'admin-monospace',
+                },
+                {
+                    data: 'appName',
+                    className: 'admin-monospace',
+                },
+                {
+                    data: 'instanceName',
+                    className: 'admin-monospace',
+                },
+                {
+                    data: 'endpoint',
+                    className: 'admin-monospace',
+                },
+                {
+                    data: 'uptime',
+                    className: 'admin-monospace',
+                },
+                {
+                    data: 'lastHeartBeat',
+                    className: 'admin-monospace',
+                },
+                {
+                    data: 'imageName',
+                    className: 'admin-monospace',
+                },
+                {
+                    data: 'imageTag',
+                    className: 'admin-monospace',
+                },
+                {
+                    data: null,
+                    render: function (data, type) {
+                        if (type === 'display') {
+                            return `
+                               <div class="btn-group btn-group-xs" style="width: 100px; display:block;" role="group">
+                                    <button type="button" class="btn btn-primary"
+                                            onclick="Shiny.admin.showAppDetails('${data.displayName}', '${data.instanceName}', '${data.proxyId}', '${data.spInstance}');">
+                                        Details
+                                    </button>
+                                    <button type="button" class="btn btn-primary"
+                                            onclick="Shiny.instances.eventHandlers.onDeleteInstance('${data.instanceName}', '${data.proxyId}', '${data.spInstance}');">
+                                        Stop
+                                    </button>
+                                </div>
+                            `;
+                        }
+                        return data;
+                    },
+                },
+            ]
+        });
+        table.buttons().container().prependTo('#allApps');
+
+        window.addEventListener("resize", function () {
+            table.columns.adjust();
+            table.responsive.rebuild();
+            table.responsive.recalc();
+        });
+
         Shiny.admin._refreshIntervalId = setInterval(async function () {
             if (!document.hidden) {
                 await Shiny.admin._refreshTable();
@@ -35,17 +118,16 @@ Shiny.admin = {
 
     async _refreshTable() {
         Shiny.admin._adminData = await Shiny.api.getAdminData();
-        document.getElementById('allApps').innerHTML = Handlebars.templates.admin(Shiny.admin._adminData);
+        $('.table').DataTable().clear().rows.add(Shiny.admin._adminData).draw();
     },
 
     showAppDetails(appName, appInstanceName, proxyId, spInstance) {
         function refresh() {
             let appDetails = null;
-            for (const instance of Shiny.admin._adminData.instances) {
-                for (const app of instance.apps) {
-                    if (app.proxyId === proxyId) {
-                        appDetails = app;
-                    }
+            for (const app of Shiny.admin._adminData) {
+                if (app.proxyId === proxyId) {
+                    appDetails = app;
+                    break;
                 }
             }
             if (appDetails === null) {
@@ -58,7 +140,7 @@ Shiny.admin = {
         }
 
         refresh();
-        Shiny.admin._detailsRefreshIntervalId = setInterval(function() {
+        Shiny.admin._detailsRefreshIntervalId = setInterval(function () {
             if (!document.hidden) {
                 refresh();
             }

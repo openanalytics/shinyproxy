@@ -117,26 +117,31 @@
 	width: 100px;
 }
 
-.apps-modal .btn-group {
-	float: right;
-}
-
-.apps-modal .app-instance {
-	height: 50px;
-}
-
-.apps-modal .uptime {
-	clear: both;
+.myApps .btn-group {
 	float: left;
+	margin-left: 15px;
+	display: block;
+	height: 20px
 }
 
-.apps-modal .app-list {
-	list-style: none;
+.myApps ul {
 	padding-left: 0;
 }
 
-.apps-modal .instance-list {
-	list-style: disc;
+.myApps a {
+	float: left;
+	display: block;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	width: calc(100% - 130px);
+}
+
+@media (min-width: 1200px) {
+	.myApps-inline {
+		max-width: 760px;
+		float: right;
+	}
 }
 
 .admin-proxy-id {
@@ -227,4 +232,26 @@
 
 #appDetailsModal .help-block {
 	margin-bottom: 0;
+}
+
+.myAapps-title {
+	border-bottom: 1px solid rgba(0,0,0,.2);
+	margin-right: 30px;
+	margin-top: 30px;
+	margin-left: 30px;
+}
+
+.myApps-inline #myApps {
+	margin-right: 30px;
+	margin-left: 30px;
+	margin-top: 30px;
+}
+
+.myApps-footer {
+	margin-top: 30px;
+	margin-left: 30px;
+}
+
+#stop-all-apps-btn {
+	display: none;
 }

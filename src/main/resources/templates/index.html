@@ -90,51 +90,73 @@
 </th:block>
 <!--End of the template.-->
 
-<!-- Part that shows a list when none of the apps contain a logo -->
-<div th:if="${!displayAppLogos}" id="applist">
-    <th:block th:each="group: ${templateGroups}">
-        <h2 th:text="${group.properties.get('display-name')}"></h2>
-        <ul>
-            <th:block th:each="app: ${groupedApps.get(group.id)}" th:include="index :: app(${app})"/>
-        </ul>
-        <br>
-    </th:block>
-    <th:block th:if="${ungroupedApps.size() > 0}">
-        <!-- Only show the "Other" header if there are other groups with apps -->
-        <h2 th:if="${groupedApps.size() > 0}">Other</h2>
-        <ul>
-            <th:block th:each="app: ${ungroupedApps}" th:include="index :: app(${app})"/>
-        </ul>
-    </th:block>
-</div>
+<div class="container-fluid">
+    <div class="row">
+        <div th:class="${myAppsMode == 'Inline' ? 'col-md-7 col-lg-8' : 'col-lg-12'}">
 
-<!-- Part that shows a list when the apps contain a logo -->
-<div th:if="${displayAppLogos}" class="container" id="applist">
-    <th:block th:each="group: ${templateGroups}">
-        <div class="row" style="margin-top:20px;">
-            <div class="col-md-6 col-md-offset-3">
-                <h2 th:text="${group.properties.get('display-name')}"></h2>
+            <!-- Part that shows a list when none of the apps contain a logo -->
+            <div th:if="${!displayAppLogos}" id="applist">
+                <th:block th:each="group: ${templateGroups}">
+                    <h2 th:text="${group.properties.get('display-name')}"></h2>
+                    <ul>
+                        <th:block th:each="app: ${groupedApps.get(group.id)}" th:include="index :: app(${app})"/>
+                    </ul>
+                    <br>
+                </th:block>
+                <th:block th:if="${ungroupedApps.size() > 0}">
+                    <!-- Only show the "Other" header if there are other groups with apps -->
+                    <h2 th:if="${groupedApps.size() > 0}">Other</h2>
+                    <ul>
+                        <th:block th:each="app: ${ungroupedApps}" th:include="index :: app(${app})"/>
+                    </ul>
+                </th:block>
+            </div>
+
+            <!-- Part that shows a list when the apps contain a logo -->
+            <div th:if="${displayAppLogos}" class="container" id="applist">
+                <th:block th:each="group: ${templateGroups}">
+                    <div class="row" style="margin-top:20px;">
+                        <div class="col-md-6 col-md-offset-3">
+                            <h2 th:text="${group.properties.get('display-name')}"></h2>
+                        </div>
+                    </div>
+                    <th:block th:each="app: ${groupedApps.get(group.id)}" th:include="index :: app(${app})"/>
+                    <br>
+                </th:block>
+                <th:block th:if="${ungroupedApps.size() > 0}">
+                    <div class="row" style="margin-top:20px;">
+                        <div class="col-md-6 col-md-offset-3">
+                            <!-- Only show the "Other" header if there are other groups with apps -->
+                            <h2 th:if="${groupedApps.size() > 0}">Other</h2>
+                        </div>
+                    </div>
+                    <th:block th:each="app: ${ungroupedApps}" th:include="index :: app(${app})"/>
+                </th:block>
             </div>
         </div>
-        <th:block th:each="app: ${groupedApps.get(group.id)}" th:include="index :: app(${app})"/>
-        <br>
-    </th:block>
-    <th:block th:if="${ungroupedApps.size() > 0}">
-        <div class="row" style="margin-top:20px;">
-            <div class="col-md-6 col-md-offset-3">
-                <!-- Only show the "Other" header if there are other groups with apps -->
-                <h2 th:if="${groupedApps.size() > 0}">Other</h2>
+        <div th:if="${myAppsMode == 'Inline'}" class="col-md-5 col-lg-4 myApps myApps-inline">
+            <div class="myAapps-title">
+                <h4>My apps</h4>
+            </div>
+            <div id="myApps">
+            </div>
+            <div class="myApps-footer">
+                <button onclick="Shiny.common.onStopAllApps();" id="stop-all-apps-btn" type="button"
+                        class="btn pull-left btn-danger">Stop all apps
+                </button>
+                <button type="button" disabled class="btn pull-left btn-danger" id="stopping-all-apps-btn">Stopping
+                    all apps...
+                </button>
             </div>
         </div>
-        <th:block th:each="app: ${ungroupedApps}" th:include="index :: app(${app})"/>
-    </th:block>
+    </div>
 </div>
 
 <div th:replace="fragments/modal :: modal"></div>
 
 <script type="text/javascript" th:inline="javascript">
     $(window).on('load', function () {
-        window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]], [[${appMaxInstances}]]);
+        window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]], [[${appMaxInstances}]], [[${myAppsMode}]]);
         if ([[${operatorEnabled}]]) {
             window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorForceTransferWithActiveApps}]], [[${operatorShowTransferMessage}]]);
             window.Shiny.operator.start();

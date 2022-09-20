@@ -22,11 +22,13 @@ package eu.openanalytics.shinyproxy.controllers;
 
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.view.RedirectView;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -39,7 +41,17 @@ import java.util.stream.Collectors;
 public class IndexController extends BaseController {
 
 	@Inject
-	ShinyProxySpecProvider shinyProxySpecProvider;
+	private ShinyProxySpecProvider shinyProxySpecProvider;
+
+	@Inject
+	private Environment environment;
+
+	private MyAppsMode myAppsMode;
+
+	@PostConstruct
+	public void init() {
+		myAppsMode = environment.getProperty("proxy.my-apps-mode", MyAppsMode.class, MyAppsMode.None);
+	}
 
 	@RequestMapping("/")
     private Object index(ModelMap map, HttpServletRequest request) {
@@ -85,10 +97,17 @@ public class IndexController extends BaseController {
 		// navbar
 		map.put("page", "index");
 
+		map.put("myAppsMode", myAppsMode.toString());
 		// operator specific
 		map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnMainPage());
 
 		return "index";
     }
+
+	public enum MyAppsMode {
+		Inline,
+		Modal,
+		None
+	}
 
 }

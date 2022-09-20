@@ -54,14 +54,14 @@
                 </div>
             </div>
         </div>
-        <div class="modal-dialog apps-modal" id="myAppsModal">
+        <div th:if="${myAppsMode == 'Modal'}" class="modal-dialog apps-modal" id="myAppsModal">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     <h4 class="modal-title">My apps</h4>
                 </div>
                 <div class="modal-body">
-                    <div id="myApps">
+                    <div id="myApps" class="myApps">
                     </div>
                 </div>
                 <div class="modal-footer">

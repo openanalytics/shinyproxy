@@ -47,7 +47,7 @@
 					   th:if="${page == 'app' && appMaxInstances.get(appName) == 1}" >Stop app</a>
 
 					<a role="button" class="btn btn-primary btn-sm" id="myAppsModal-btn"
-					   th:if="${page == 'index'}" >My apps</a>
+					   th:if="${page == 'index' && myAppsMode == 'Modal'}" >My apps</a>
 
 					<a role="button" class="btn btn-primary btn-sm" th:if="${isSupportEnabled}"
 						data-toggle="modal" data-target="#reportIssueModal">Report Issue</a>

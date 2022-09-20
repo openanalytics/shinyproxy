@@ -27,6 +27,7 @@ Shiny.common = {
         spInstance: null,
         operatorEnabled: false,
         appMaxInstances: null, // max instances per app
+        myAppsMode: null,
     },
     runtimeState: {
         switchInstanceApp: null,
@@ -34,11 +35,15 @@ Shiny.common = {
     _refreshIntervalId: null,
     _detailsRefreshIntervalId: null,
 
-    init: function (contextPath, applicationName, spInstance, appMaxInstances) {
+    init: function (contextPath, applicationName, spInstance, appMaxInstances, myAppsMode) {
         Shiny.common.staticState.contextPath = contextPath;
         Shiny.common.staticState.applicationName = applicationName;
         Shiny.common.staticState.spInstance = spInstance;
         Shiny.common.staticState.appMaxInstances = appMaxInstances;
+        Shiny.common.staticState.myAppsMode = myAppsMode;
+        if (myAppsMode === 'Inline') {
+            Shiny.common.onShowMyApps();
+        }
     },
 
     sleep: function (ms) {
@@ -56,11 +61,17 @@ Shiny.common = {
     },
 
     onCloseMyApps: function () {
-        clearInterval(Shiny.common._refreshIntervalId);
+        if (Shiny.common.staticState.myAppsMode === 'Modal') {
+            clearInterval(Shiny.common._refreshIntervalId);
+        }
     },
 
     showAppDetails: function (appName, appInstanceName, proxyId, spInstance) {
-        Shiny.ui.showAppDetailsModal($('#myAppsModal'));
+        if (Shiny.common.staticState.myAppsMode === 'Modal') {
+            Shiny.ui.showAppDetailsModal($('#myAppsModal'));
+        } else {
+            Shiny.ui.showAppDetailsModal();
+        }
         Shiny.common.loadAppDetails(appName, appInstanceName, proxyId, spInstance);
     },
 
@@ -145,6 +156,7 @@ Shiny.common = {
     },
 
     async onStopAllApps() {
+        // TODO confirm
         $('#stop-all-apps-btn').hide();
         $('#stopping-all-apps-btn').show();
         const proxies = await Shiny.api.getProxiesAsTemplateData()
@@ -160,7 +172,6 @@ Shiny.common = {
             await Shiny.common.sleep(500);
         }
         await Shiny.common._refreshModal();
-        $('#stop-all-apps-btn').show();
         $('#stopping-all-apps-btn').hide();
     },
 
@@ -183,6 +194,12 @@ Shiny.common = {
             return a.displayName.toLowerCase() > b.displayName.toLowerCase() ? 1 : -1
         });
         document.getElementById('myApps').innerHTML = Handlebars.templates.my_apps(templateData);
+        if (templateData.apps.length === 0 ) {
+            $('#stop-all-apps-btn').hide();
+        } else if ($("#stopping-all-apps-btn").is(":hidden")) {
+            // only show it if we are not stopping all apps
+            $('#stop-all-apps-btn').show();
+        }
     },
 
 }

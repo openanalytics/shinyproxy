@@ -28,14 +28,14 @@
 <body>
 <th:block th:fragment="modal">
     <div class="modal fade" id="modal" role="dialog">
-        <div class="modal-dialog apps-modal" id="switchInstancesModal">
+        <div class="modal-dialog" id="switchInstancesModal">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
                     <h4 class="modal-title">Switch instance</h4>
                 </div>
                 <div class="modal-body">
-                    <div id="appInstances">
+                    <div id="appInstances" class="myApps">
                     </div>
                     <form id="newInstanceForm" class="form-inline">
                         <div class="form-group">
@@ -54,7 +54,7 @@
                 </div>
             </div>
         </div>
-        <div th:if="${myAppsMode == 'Modal'}" class="modal-dialog apps-modal" id="myAppsModal">
+        <div th:if="${myAppsMode == 'Modal'}" class="modal-dialog" id="myAppsModal">
             <div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>

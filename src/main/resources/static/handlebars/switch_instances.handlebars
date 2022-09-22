@@ -1,27 +1,27 @@
-<ul class="instance-list">
+<div class="list-group">
     {{#each instances}}
         {{#if active}}
-            <li class="app-instance">
-                <b>{{ instanceName }}</b>
+            <div class="app-instance list-group-item">
+                <b class="active-app-instance-title">{{ instanceName }}</b>
                 <div class="btn-group btn-group-xs" role="group">
-                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.showAppDetails('{{ appName }}', '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Details</button>
+                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.showAppDetails(event, '{{ appName }}', '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Details</button>
                     <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Stop app</button>
-                    <button type="button" class="btn btn-primary btn-restart-app" onclick="Shiny.instances.eventHandlers.onRestartInstance();">Restart app</button>
+                    <button type="button" class="btn btn-primary btn-restart-app" onclick="Shiny.instances.eventHandlers.onRestartInstance(event);">Restart app</button>
                 </div>
-                <span class="uptime">Uptime: {{ uptime }}</span>
-            </li>
+                <span>Uptime: {{ uptime }}</span>
+            </div>
         {{else}}
-            <li class="app-instance">
-                <a target="{{ ../target }}" href="{{ url }}">{{ instanceName }}</a>
+            <a target="{{ ../target }}" href="{{ url }}" class="app-instance list-group-item">
+                <span class="app-instance-title">{{ instanceName }}</span>
                 <div class="btn-group btn-group-xs" role="group">
-                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.showAppDetails('{{ appName }}', '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Details</button>
+                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.showAppDetails(event, '{{ appName }}', '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Details</button>
                     <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Stop app</button>
                 </div>
-                <span class="uptime">Uptime: {{ uptime }}</span>
-            </li>
+                <span>Uptime: {{ uptime }}</span>
+            </a>
         {{/if}}
     {{/each}}
-</ul>
+</div>
 {{#unless instances}}
     You don't have any instances of this app.<br>
 {{/unless}}

@@ -3,7 +3,7 @@
     <div class="list-group">
         {{#each instances}}
             <a href="{{ url }}" class="app-instance list-group-item">
-                <span class="myApps-title">{{ instanceName }}</span>
+                <span class="app-instance-title">{{ instanceName }}</span>
                 <div class="btn-group btn-group-xs" role="group">
                     <button type="button" class="btn btn-primary"
                             onclick="Shiny.common.showAppDetails(event, '{{ displayName }}', '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">
@@ -14,7 +14,7 @@
                         Stop app
                     </button>
                 </div>
-                <span class="uptime">Uptime: {{ uptime }}</span>
+                <span>Uptime: {{ uptime }}</span>
             </a>
         {{/each}}
     </div>

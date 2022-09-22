@@ -124,7 +124,7 @@
 	height: 20px
 }
 
-.myApps-title {
+.app-instance-title {
 	color: #337ab7;
 	text-decoration: none;
 	float: left;
@@ -135,7 +135,16 @@
 	width: calc(100% - 130px);
 }
 
-.app-instance:hover .myApps-title {
+.active-app-instance-title {
+	float: left;
+	display: block;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	width: calc(100% - 205px);
+}
+
+.app-instance:hover .app-instance-title {
 	color: #23527c;
 	text-decoration: underline;
 }

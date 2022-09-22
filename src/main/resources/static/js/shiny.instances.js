@@ -53,7 +53,10 @@ Shiny.instances = {
             clearInterval(Shiny.instances._refreshIntervalId);
             clearInterval(Shiny.instances._detailsRefreshIntervalId); // just to be sure
         },
-        showAppDetails: function(appName, appInstanceName, proxyId, spInstance) {
+        showAppDetails: function(event, appName, appInstanceName, proxyId, spInstance) {
+            if (event) {
+                event.preventDefault();
+            }
             if (appInstanceName === undefined) {
                 // when no arguments provided -> show the current app
                 appName = Shiny.app.staticState.appName;
@@ -85,7 +88,10 @@ Shiny.instances = {
                 }
             }
         },
-        onRestartInstance: async function () {
+        onRestartInstance: async function (event) {
+            if (event) {
+                event.preventDefault();
+            }
             const overrideUrl = new URL(window.location);
             overrideUrl.searchParams.delete("sp_instance_override");
 

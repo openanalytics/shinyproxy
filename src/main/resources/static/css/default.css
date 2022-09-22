@@ -246,6 +246,14 @@
 	margin-bottom: 0;
 }
 
+
+@media (max-width: 992px) {
+	.myAapps-title, .myApps-inline #myApps, .myApps-footer {
+		margin-left: 0 !important;
+		margin-right: 0 !important;
+	}
+}
+
 .myAapps-title {
 	border-bottom: 1px solid rgba(0,0,0,.2);
 	margin-right: 30px;

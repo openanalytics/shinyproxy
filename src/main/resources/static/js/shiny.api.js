@@ -165,29 +165,32 @@ Shiny.api = {
         } else {
             try {
                 instances = await Shiny.api.getAllSpInstances();
-                // make sure this instance is above in the list
-                const index = instances.indexOf(Shiny.common.staticState.spInstance);
-                instances.splice(index, 1);
-                instances.unshift(Shiny.common.staticState.spInstance);
             } catch (e) {
                 console.log("Failure when getting operator metadata, limiting to current instance");
                 instances = [Shiny.common.staticState.spInstance];
             }
         }
         let apps = [];
+        let handled = []; // handled apps, required for de-duplication
 
         await Promise.all(instances.map(instance =>
             fetch(Shiny.api.buildURLForInstance("admin/data", instance))
                 .then(response => response.json())
                 .then(response => {
                     response.apps.forEach(app => {
-                        if (instance === Shiny.common.staticState.spInstance) {
-                            app['server'] = "This server";
-                        } else {
-                            app['server'] = instance;
+                        if (!handled.includes(app.proxyId)) {
+                            if (!app.hasOwnProperty("spInstance")) { // TODO can be removed before release
+                                app.spInstance = instance;
+                            }
+                            if (app.spInstance === Shiny.common.staticState.spInstance) {
+                                app['server'] = "This server";
+                                apps.unshift(app); // ensure "This server" is front of the list
+                            } else {
+                                app['server'] = instance;
+                                apps.push(app);
+                            }
+                            handled.push(app.proxyId);
                         }
-                        apps.push(app);
-                        app['spInstance'] = instance;
                     });
                 })
                 .catch(e => console.log("Failed to get admin data for instances: ", instance, e))));

@@ -32,6 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 import eu.openanalytics.containerproxy.backend.IContainerBackend;
 import eu.openanalytics.containerproxy.model.runtime.ParameterNames;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.HeartbeatTimeoutKey;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.InstanceIdKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.MaxLifetimeKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.ParameterNamesKey;
 import eu.openanalytics.containerproxy.service.hearbeat.ActiveProxiesService;
@@ -82,6 +83,7 @@ public class AdminController extends BaseController {
 		public final String heartbeatTimeout;
 		public final String maxLifetime;
 
+		public final String spInstance;
 		public final List<ParameterNames.ParameterName> parameters;
 
 		public ProxyInfo(Proxy proxy) {
@@ -138,6 +140,7 @@ public class AdminController extends BaseController {
 			} else {
 				parameters = null;
 			}
+			spInstance = proxy.getRuntimeValue(InstanceIdKey.inst);
 		}
 
 		private String getTimeDelta(Long timestamp) {

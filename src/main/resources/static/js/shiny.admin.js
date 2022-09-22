@@ -29,9 +29,10 @@ Shiny.admin = {
         Shiny.admin._adminData = await Shiny.api.getAdminData();
         Shiny.admin._table = $('.table').DataTable({
             data: Shiny.admin._adminData,
+            aaSorting: [], // apply no sort by default
             paging: false,
             lengthChange: false,
-            buttons: [{extend: 'csv'}, 'colvis'],
+            buttons: [{extend: 'csv'}],
             responsive: {
                 details: false
             },

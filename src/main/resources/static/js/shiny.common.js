@@ -157,23 +157,24 @@ Shiny.common = {
     },
 
     async onStopAllApps() {
-        // TODO confirm
-        $('#stop-all-apps-btn').hide();
-        $('#stopping-all-apps-btn').show();
-        const proxies = await Shiny.api.getProxiesAsTemplateData()
-        const proxyIds = [];
-        for (const app of Object.values(proxies.apps)) {
-            for (const proxy of app.instances) {
-                Shiny.api.deleteProxyById(proxy.proxyId, proxy.spInstance)
-                proxyIds.push(proxy.proxyId);
+        if (confirm("Are you sure you want to stop all your apps?")) {
+            $('#stop-all-apps-btn').hide();
+            $('#stopping-all-apps-btn').show();
+            const proxies = await Shiny.api.getProxiesAsTemplateData()
+            const proxyIds = [];
+            for (const app of Object.values(proxies.apps)) {
+                for (const proxy of app.instances) {
+                    Shiny.api.deleteProxyById(proxy.proxyId, proxy.spInstance)
+                    proxyIds.push(proxy.proxyId);
+                }
             }
+            // wait for all proxies to be stopped
+            while (!await Shiny.common._areAllProxiesDeleted(proxyIds)) {
+                await Shiny.common.sleep(500);
+            }
+            await Shiny.common._refreshModal();
+            $('#stopping-all-apps-btn').hide();
         }
-        // wait for all proxies to be stopped
-        while (!await Shiny.common._areAllProxiesDeleted(proxyIds)) {
-            await Shiny.common.sleep(500);
-        }
-        await Shiny.common._refreshModal();
-        $('#stopping-all-apps-btn').hide();
     },
 
     async _areAllProxiesDeleted(proxyIds) {

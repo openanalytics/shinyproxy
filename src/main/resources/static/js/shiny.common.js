@@ -41,9 +41,6 @@ Shiny.common = {
         Shiny.common.staticState.spInstance = spInstance;
         Shiny.common.staticState.appMaxInstances = appMaxInstances;
         Shiny.common.staticState.myAppsMode = myAppsMode;
-        if (myAppsMode === 'Inline') {
-            Shiny.common.onShowMyApps();
-        }
     },
 
     sleep: function (ms) {
@@ -204,4 +201,14 @@ Shiny.common = {
         }
     },
 
+    async startIndex() {
+        if (Shiny.common.staticState.operatorEnabled) {
+            if (!await window.Shiny.operator.start()) {
+                return;
+            }
+        }
+        if (Shiny.common.staticState.myAppsMode === 'Inline') {
+            Shiny.common.onShowMyApps();
+        }
+    }
 }

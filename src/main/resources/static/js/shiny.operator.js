@@ -90,7 +90,10 @@ Shiny.operator = {
         // only show the message if the option is enabled
         if (Shiny.operator.staticState.showTransferMessage) {
             document.getElementById('new-version-banner').style.display = "block";
-            document.getElementById('loading').style.top = "200px";
+            const loading = document.getElementById('loading');
+            if (loading !== null) {
+                loading.style.top = "200px";
+            }
         }
     },
 
@@ -99,7 +102,7 @@ Shiny.operator = {
     },
 
     transferToNewInstance: function () {
-        $('#loading,#reconnecting,#reloadFailed,#appStopped,#shinyframe').remove();
+        $('#loading,#reconnecting,#reloadFailed,#appStopped,#shinyframe,.myApps-inline').remove();
 
         $('#applist,#iframeinsert').replaceWith(
             "<div id='server-transfer-message' class='container'>" +

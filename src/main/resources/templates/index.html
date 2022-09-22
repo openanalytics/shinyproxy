@@ -152,8 +152,8 @@
         window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]], [[${appMaxInstances}]], [[${myAppsMode}]]);
         if ([[${operatorEnabled}]]) {
             window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorForceTransferWithActiveApps}]], [[${operatorShowTransferMessage}]]);
-            window.Shiny.operator.start();
         }
+        window.Shiny.common.startIndex();
     });
 </script>
 </body>

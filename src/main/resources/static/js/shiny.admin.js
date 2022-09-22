@@ -23,10 +23,11 @@ Shiny.admin = {
 
     _adminData: null,
     _detailsRefreshIntervalId: null,
+    _table: null,
 
     async init() {
         Shiny.admin._adminData = await Shiny.api.getAdminData();
-        const table = $('.table').DataTable({
+        Shiny.admin._table = $('.table').DataTable({
             data: Shiny.admin._adminData,
             paging: false,
             lengthChange: false,
@@ -90,7 +91,7 @@ Shiny.admin = {
                                         Details
                                     </button>
                                     <button type="button" class="btn btn-primary"
-                                            onclick="Shiny.instances.eventHandlers.onDeleteInstance('${data.instanceName}', '${data.proxyId}', '${data.spInstance}');">
+                                            onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '${data.instanceName}', '${data.proxyId}', '${data.spInstance}');">
                                         Stop
                                     </button>
                                 </div>
@@ -101,12 +102,12 @@ Shiny.admin = {
                 },
             ]
         });
-        table.buttons().container().prependTo('#allApps');
+        Shiny.admin._table.buttons().container().prependTo('#allApps');
 
         window.addEventListener("resize", function () {
-            table.columns.adjust();
-            table.responsive.rebuild();
-            table.responsive.recalc();
+            Shiny.admin._table.columns.adjust();
+            Shiny.admin._table.responsive.rebuild();
+            Shiny.admin._table.responsive.recalc();
         });
 
         Shiny.admin._refreshIntervalId = setInterval(async function () {
@@ -118,7 +119,7 @@ Shiny.admin = {
 
     async _refreshTable() {
         Shiny.admin._adminData = await Shiny.api.getAdminData();
-        $('.table').DataTable().clear().rows.add(Shiny.admin._adminData).draw();
+        Shiny.admin._table.clear().rows.add(Shiny.admin._adminData).draw();
     },
 
     showAppDetails(appName, appInstanceName, proxyId, spInstance) {

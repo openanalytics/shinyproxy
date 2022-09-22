@@ -193,7 +193,7 @@ Shiny.instances = {
 
             // put active item in front of the list
             const index = templateData.instances.findIndex(instance => instance.active);
-            if (index > 0) { // list may not contain any active instance·
+            if (index > 0) { // list may not contain any active instance
                 const active = templateData.instances[index];
                 templateData.instances.splice(index, 1);
                 templateData.instances.unshift(active);

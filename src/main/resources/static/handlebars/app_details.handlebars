@@ -125,6 +125,16 @@
             </td>
         </tr>
     {{/if}}
+    {{#if backendContainerName }}
+        <tr>
+            <td>
+                <b>Name of container in backend</b>
+            </td>
+            <td>
+                {{ backendContainerName }}
+            </td>
+        </tr>
+    {{/if}}
     {{#if parameters}}
         {{#each parameters}}
             <tr>

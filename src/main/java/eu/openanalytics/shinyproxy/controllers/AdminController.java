@@ -82,8 +82,8 @@ public class AdminController extends BaseController {
 		public final String imageTag;
 		public final String heartbeatTimeout;
 		public final String maxLifetime;
-
 		public final String spInstance;
+		public final String backendContainerName;
 		public final List<ParameterNames.ParameterName> parameters;
 
 		public ProxyInfo(Proxy proxy) {
@@ -141,6 +141,7 @@ public class AdminController extends BaseController {
 				parameters = null;
 			}
 			spInstance = proxy.getRuntimeValue(InstanceIdKey.inst);
+			backendContainerName = containerBackend.getBackendContainerName(proxy.getContainers().get(0));
 		}
 
 		private String getTimeDelta(Long timestamp) {

@@ -191,6 +191,11 @@ Shiny.instances = {
                     && instance.instanceName === Shiny.instances._toAppDisplayName(Shiny.app.staticState.appInstanceName)
             });
 
+            // put active item in front of the list
+            const index = templateData.instances.findIndex(instance => instance.active);
+            const active = templateData.instances[index];
+            templateData.instances.splice(index, 1);
+            templateData.instances.unshift(active);
         } else {
             templateData = {"instances": []};
         }

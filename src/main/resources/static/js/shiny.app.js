@@ -88,55 +88,55 @@ Shiny.app = {
             Shiny.connections.startHeartBeats();
             Shiny.app.setUpOverride();
         } else {
-            if (parameterDefinitions !== null) {
-                Shiny.ui.showParameterForm();
-            } else {
-                Shiny.app.startAppWithParameters(null);
+            if (Shiny.operator === undefined || await Shiny.operator.start()) {
+                if (Shiny.app.staticState.isSpOverrideActive) {
+                    // do not start new apps on old SP instances -> redirect to same page but without override
+                    const overrideUrl = new URL(window.location);
+                    overrideUrl.searchParams.delete("sp_instance_override");
+                    window.location = overrideUrl;
+                    return;
+                }
+                if (parameterDefinitions !== null) {
+                    Shiny.ui.showParameterForm();
+                } else {
+                    Shiny.app.startAppWithParameters(null);
+                }
             }
         }
     },
     async startAppWithParameters(parameters) {
-        if (Shiny.operator === undefined || await Shiny.operator.start()) {
-            if (Shiny.app.staticState.isSpOverrideActive) {
-                // do not start new apps on old SP instances -> redirect to same page but without override
-                const overrideUrl = new URL(window.location);
-                overrideUrl.searchParams.delete("sp_instance_override");
-                window.location = overrideUrl;
+        Shiny.ui.setShinyFrameHeight();
+        Shiny.ui.showLoading();
+        let response;
+        if (parameters !== null) {
+            response = await fetch(window.location.pathname + window.location.search, {
+                method: 'POST',
+                body:  JSON.stringify({parameters}),
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            });
+        } else {
+            response = await fetch(window.location.pathname + window.location.search, {
+                method: 'POST'
+            });
+        }
+        if (response.status !== 200) {
+            if (!Shiny.app.runtimeState.navigatingAway && !Shiny.app.runtimeState.appStopped) {
+                var newDoc = document.open("text/html", "replace");
+                newDoc.write(await response.text());
+                newDoc.close();
                 return;
             }
-            Shiny.ui.setShinyFrameHeight();
-            Shiny.ui.showLoading();
-            let response;
-            if (parameters !== null) {
-                response = await fetch(window.location.pathname + window.location.search, {
-                    method: 'POST',
-                    body:  JSON.stringify({parameters}),
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                });
-            } else {
-                response = await fetch(window.location.pathname + window.location.search, {
-                    method: 'POST'
-                });
-            }
-            if (response.status !== 200) {
-                if (!Shiny.app.runtimeState.navigatingAway && !Shiny.app.runtimeState.appStopped) {
-                    var newDoc = document.open("text/html", "replace");
-                    newDoc.write(await response.text());
-                    newDoc.close();
-                    return;
-                }
-            }
-            response = await response.json();
-            Shiny.app.staticState.containerPath = response.containerPath;
-            Shiny.app.staticState.webSocketReconnectionMode = response.webSocketReconnectionMode;
-            Shiny.app.staticState.proxyId = response.proxyId;
-            Shiny.ui.setupIframe();
-            Shiny.ui.showFrame();
-            Shiny.connections.startHeartBeats();
-            Shiny.app.setUpOverride();
         }
+        response = await response.json();
+        Shiny.app.staticState.containerPath = response.containerPath;
+        Shiny.app.staticState.webSocketReconnectionMode = response.webSocketReconnectionMode;
+        Shiny.app.staticState.proxyId = response.proxyId;
+        Shiny.ui.setupIframe();
+        Shiny.ui.showFrame();
+        Shiny.connections.startHeartBeats();
+        Shiny.app.setUpOverride();
     },
     setUpOverride() {
         if (Shiny.common.staticState.operatorEnabled) {

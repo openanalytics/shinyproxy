@@ -66,7 +66,10 @@ Shiny.instances = {
             }
             Shiny.common.loadAppDetails(appName, appInstanceName, proxyId, spInstance);
         },
-        onDeleteInstance: async function (appInstanceName, proxyId, spInstance) {
+        onDeleteInstance: async function (event, appInstanceName, proxyId, spInstance) {
+            if (event) {
+                event.preventDefault();
+            }
             if (appInstanceName === undefined) {
                 // when no arguments provided -> stop the current app
                 appInstanceName = Shiny.instances._toAppDisplayName(Shiny.app.staticState.appInstanceName);

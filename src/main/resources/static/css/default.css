@@ -124,17 +124,20 @@
 	height: 20px
 }
 
-.myApps ul {
-	padding-left: 0;
-}
-
-.myApps a {
+.myApps-title {
+	color: #337ab7;
+	text-decoration: none;
 	float: left;
 	display: block;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	width: calc(100% - 130px);
+}
+
+.app-instance:hover .myApps-title {
+	color: #23527c;
+	text-decoration: underline;
 }
 
 @media (min-width: 1200px) {

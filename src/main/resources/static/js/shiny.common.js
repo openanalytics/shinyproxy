@@ -66,7 +66,8 @@ Shiny.common = {
         }
     },
 
-    showAppDetails: function (appName, appInstanceName, proxyId, spInstance) {
+    showAppDetails: function (event, appName, appInstanceName, proxyId, spInstance) {
+        event.preventDefault();
         if (Shiny.common.staticState.myAppsMode === 'Modal') {
             Shiny.ui.showAppDetailsModal($('#myAppsModal'));
         } else {

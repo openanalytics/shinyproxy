@@ -1,23 +1,23 @@
 {{#each apps}}
     <h5>{{ displayName }}</h5>
-    <ul class="list-group">
+    <div class="list-group">
         {{#each instances}}
-            <li class="app-instance list-group-item">
-                <a href="{{ url }}">{{ instanceName }}</a>
+            <a href="{{ url }}" class="app-instance list-group-item">
+                <span class="myApps-title">{{ instanceName }}</span>
                 <div class="btn-group btn-group-xs" role="group">
                     <button type="button" class="btn btn-primary"
-                            onclick="Shiny.common.showAppDetails('{{ displayName }}', '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">
+                            onclick="Shiny.common.showAppDetails(event, '{{ displayName }}', '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">
                         Details
                     </button>
                     <button type="button" class="btn btn-primary"
-                            onclick="Shiny.instances.eventHandlers.onDeleteInstance('{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">
+                            onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">
                         Stop app
                     </button>
                 </div>
                 <span class="uptime">Uptime: {{ uptime }}</span>
-            </li>
+            </a>
         {{/each}}
-    </ul>
+    </div>
 {{/each}}
 {{#unless apps}}
     You don't have any running apps.<br>

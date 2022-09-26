@@ -8,7 +8,7 @@
                     <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Stop app</button>
                     <button type="button" class="btn btn-primary btn-restart-app" onclick="Shiny.instances.eventHandlers.onRestartInstance(event);">Restart app</button>
                 </div>
-                <span>Uptime: {{ uptime }}</span>
+                <span>Uptime: {{ uptime }} {{formatStatus status }}</span>
             </div>
         {{else}}
             <a target="{{ ../target }}" href="{{ url }}" class="app-instance list-group-item">
@@ -17,7 +17,7 @@
                     <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.showAppDetails(event, '{{ appName }}', '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Details</button>
                     <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Stop app</button>
                 </div>
-                <span>Uptime: {{ uptime }}</span>
+                <span>Uptime: {{ uptime }} {{formatStatus status }}</span>
             </a>
         {{/if}}
     {{/each}}

@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import eu.openanalytics.containerproxy.backend.IContainerBackend;
 import eu.openanalytics.containerproxy.model.runtime.ParameterNames;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.BackendContainerNameKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.ContainerImageKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.HeartbeatTimeoutKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.InstanceIdKey;
@@ -139,7 +140,7 @@ public class AdminController extends BaseController {
 				parameters = null;
 			}
 			spInstance = proxy.getRuntimeValue(InstanceIdKey.inst);
-			backendContainerName = containerBackend.getBackendContainerName(proxy.getContainers().get(0));
+			backendContainerName = proxy.getContainers().get(0).getRuntimeValue(BackendContainerNameKey.inst);
 		}
 
 		private String getTimeDelta(Long timestamp) {

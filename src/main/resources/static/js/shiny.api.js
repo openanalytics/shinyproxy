@@ -22,7 +22,7 @@ Shiny = window.Shiny || {};
 Shiny.api = {
     _proxiesCache: null,
     getProxies: async function () {
-        let resp = await fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true"));
+        let resp = await Shiny.api._fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true"));
         return await resp.json();
     },
     getAllSpInstances: async function () {
@@ -45,7 +45,7 @@ Shiny.api = {
         }
         const requests = [];
         for (const instance of instances) {
-            requests.push(fetch(Shiny.api.buildURLForInstance("api/proxy?only_owned_proxies=true", instance))
+            requests.push(Shiny.api._fetch(Shiny.api.buildURLForInstance("api/proxy?only_owned_proxies=true", instance))
                 .then(response => response.json()));
         }
         const responses = await Promise.all(requests);
@@ -57,7 +57,7 @@ Shiny.api = {
         });
     },
     getProxyById: async function (proxyId, spInstance) {
-        return await fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId, spInstance))
+        return await Shiny.api._fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId, spInstance))
             .then(async response => {
                 if (response.status === 200) {
                     return await response.json();
@@ -174,7 +174,7 @@ Shiny.api = {
         let handled = []; // handled apps, required for de-duplication
 
         await Promise.all(instances.map(instance =>
-            fetch(Shiny.api.buildURLForInstance("admin/data", instance))
+            Shiny.api._fetch(Shiny.api.buildURLForInstance("admin/data", instance))
                 .then(response => response.json())
                 .then(response => {
                     response.apps.forEach(app => {
@@ -198,7 +198,7 @@ Shiny.api = {
         return apps;
     },
     getHeartBeatInfo: async function (proxyId, spInstance) {
-        return await fetch(Shiny.api.buildURLForInstance("heartbeat/" + proxyId, spInstance))
+        return await Shiny.api._fetch(Shiny.api.buildURLForInstance("heartbeat/" + proxyId, spInstance))
             .then(async response => {
                 if (response.status === 200) {
                     return await response.json();
@@ -240,4 +240,12 @@ Shiny.api = {
             return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/";
         }
     },
+    _fetch: async function(url) {
+        let resp = await fetch(url);
+        if (resp.status === 401) {
+            const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
+            window.location = new URL("logout-success", baseURL);
+        }
+        return resp;
+    }
 };

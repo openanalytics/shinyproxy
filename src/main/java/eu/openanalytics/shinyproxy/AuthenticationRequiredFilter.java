@@ -46,6 +46,9 @@ import java.io.IOException;
  * These endpoints are:
  * - /app_proxy/** (without spaces), i.e. any subpath on the app_direct endpoint (thus not the page that loads the app)
  * - /heartbeat/* , i.e. heartbeat requests
+ * - /api/**
+ * - /admin/data
+ * - /operator/metadata
  *
  * When the filter detects that a user is not authenticated when requesting one of these endpoints, it returns the response:
  * {"status":"error", "message":"shinyproxy_authentication_required"} with status code 401.
@@ -61,7 +64,11 @@ public class AuthenticationRequiredFilter extends GenericFilterBean {
 
     private static final RequestMatcher REQUEST_MATCHER = new OrRequestMatcher(
             new AntPathRequestMatcher("/app_proxy/**"),
-            new AntPathRequestMatcher("/heartbeat/*"));
+            new AntPathRequestMatcher("/heartbeat/*"),
+            new AntPathRequestMatcher("/api/**"),
+            new AntPathRequestMatcher("/admin/data"),
+            new AntPathRequestMatcher("/operator/metadata")
+            );
 
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;

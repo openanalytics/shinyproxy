@@ -26,6 +26,7 @@ import eu.openanalytics.containerproxy.model.spec.AccessControl;
 import eu.openanalytics.containerproxy.model.spec.ContainerSpec;
 import eu.openanalytics.containerproxy.model.spec.DockerSwarmSecret;
 import eu.openanalytics.containerproxy.model.spec.Parameters;
+import eu.openanalytics.containerproxy.model.spec.PortMapping;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
 import eu.openanalytics.containerproxy.spec.expression.SpelField;
@@ -189,15 +190,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		private final ProxySpec.ProxySpecBuilder proxySpec;
 		private final ContainerSpec.ContainerSpecBuilder containerSpec;
 		private final AccessControl accessControl;
+		private final PortMapping.PortMappingBuilder defaultPortMapping;
+		private List<PortMapping> additionalPortMappings = new ArrayList<>();
 
 		public ShinyProxySpec() {
 			proxySpec = ProxySpec.builder();
 			containerSpec = ContainerSpec.builder();
 			accessControl = new AccessControl();
-
-			Map<String, Integer> portMapping = new HashMap<>();
-			portMapping.put("default", 3838);
-			containerSpec.portMapping(portMapping);
+			defaultPortMapping = PortMapping.builder().name("default").port(3838);
 			proxySpec.accessControl(accessControl);
 		}
 
@@ -346,13 +346,11 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		}
 
 		public int getPort() {
-			return containerSpec.build().getPortMapping().get("default");
+			return defaultPortMapping.build().getPort();
 		}
 
 		public void setPort(int port) {
-			Map<String, Integer> portMapping = new HashMap<>();
-			portMapping.put("default", port);
-			containerSpec.portMapping(portMapping);
+			defaultPortMapping.port(port);
 		}
 
 		public String[] getAccessGroups() {
@@ -364,11 +362,11 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		}
 
 		public SpelField.String getTargetPath() {
-			return containerSpec.build().getTargetPath();
+			return defaultPortMapping.build().getTargetPath();
 		}
 
 		public void setTargetPath(SpelField.String targetPath) {
-			containerSpec.targetPath(targetPath);
+			defaultPortMapping.targetPath(targetPath);
 		}
 
 		public String[] getAccessUsers() {
@@ -451,7 +449,17 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			proxySpec.heartbeatTimeout(heartbeatTimeout);
 		}
 
+		public List<PortMapping> getAdditionalPortMappings() {
+			return additionalPortMappings;
+		}
+
+		public void setAdditionalPortMappings(List<PortMapping> additionalPortMappings) {
+			this.additionalPortMappings = additionalPortMappings;
+		}
+
 		public ProxySpec getProxySpec() {
+			additionalPortMappings.add(defaultPortMapping.build());
+			containerSpec.portMapping(additionalPortMappings);
 			proxySpec.containerSpecs(Collections.singletonList(containerSpec.build()));
 			return proxySpec.build();
 		}

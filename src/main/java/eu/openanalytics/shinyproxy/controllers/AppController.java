@@ -342,7 +342,13 @@ public class AppController extends BaseController {
 		}
         // if sub-path is just the mapping -> no ending slash and redirect required
         String mapping = appRequestInfo.getSubPath().substring(1);
-        return spec.getContainerSpecs().get(0).getPortMapping().containsKey(mapping);
+		if (mapping.contains("/")) {
+			return false;
+		}
+		return spec.getContainerSpecs().get(0)
+				.getPortMapping()
+				.stream()
+				.anyMatch(it -> it.getName().equals(mapping));
     }
 
 	private RedirectView redirectWithEndingSlash(HttpServletRequest request) {

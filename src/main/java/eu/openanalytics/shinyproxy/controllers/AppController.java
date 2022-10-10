@@ -44,7 +44,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.servlet.view.RedirectView;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.ExpressionContext;
 import org.thymeleaf.spring5.dialect.SpringStandardDialect;
@@ -75,8 +78,8 @@ public class AppController extends BaseController {
 
 	private final Logger logger = LogManager.getLogger(getClass());
 
-	@RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.GET)
-	public String app(ModelMap map, HttpServletRequest request) {
+	@RequestMapping(value={"/app_i/*/**", "/app/**"}, method=RequestMethod.GET)
+	public ModelAndView app(ModelMap map, HttpServletRequest request, HttpServletResponse response) {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
 
 		prepareMap(map, request);
@@ -85,6 +88,10 @@ public class AppController extends BaseController {
 		awaitReady(proxy);
 
         ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
+
+		if (redirectRequired(appRequestInfo, spec)) {
+			return new ModelAndView(redirectWithEndingSlash(request));
+		}
 
 		map.put("appTitle", getAppTitle(spec));
 		map.put("appName", appRequestInfo.getAppName());
@@ -132,9 +139,9 @@ public class AppController extends BaseController {
 			map.put("operatorShowTransferMessage", false);
 		}
 
-		return "app";
+		return new ModelAndView("app", map);
 	}
-	
+
 	@RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.POST)
 	@ResponseBody
 	public Map<String,String> startApp(HttpServletRequest request) throws InvalidParametersException {
@@ -169,7 +176,7 @@ public class AppController extends BaseController {
 		awaitReady(proxy);
 
 		String mapping = getProxyEndpoint(proxy);
-		
+
 		if (appRequestInfo.getSubPath() == null) {
 			try {
 				response.sendRedirect(request.getRequestURI() + "/");
@@ -178,7 +185,7 @@ public class AppController extends BaseController {
 			}
 			return;
 		}
-		
+
 		try {
 			mappingManager.dispatchAsync(mapping + appRequestInfo.getSubPath(), request, response);
 		} catch (Exception e) {
@@ -259,19 +266,24 @@ public class AppController extends BaseController {
 		if (proxy == null) return false;
 		if (proxy.getStatus() == ProxyStatus.Up) return true;
 		if (proxy.getStatus() == ProxyStatus.Stopping || proxy.getStatus() == ProxyStatus.Stopped) return false;
-		
+
 		int totalWaitMs = Integer.parseInt(environment.getProperty("proxy.container-wait-time", "20000"));
 		Retrying.retry((currentAttempt, maxAttempts) -> proxy.getStatus() != ProxyStatus.Starting, totalWaitMs);
-		
+
 		return (proxy.getStatus() == ProxyStatus.Up);
 	}
-	
-	private String buildContainerPath(HttpServletRequest request, Proxy proxy, AppRequestInfo appRequestInfo) {
-		String queryString = ServletUriComponentsBuilder.fromRequest(request).replaceQueryParam("sp_hide_navbar").build().getQuery();
 
-		queryString = (queryString == null) ? "" : "?" + queryString;
-		
-		return getPublicPath(proxy.getId()) + queryString;
+	private String buildContainerPath(HttpServletRequest request, Proxy proxy, AppRequestInfo appRequestInfo) {
+		String queryString = ServletUriComponentsBuilder.fromRequest(request)
+				.replaceQueryParam("sp_hide_navbar")
+				.replaceQueryParam("sp_instance_override")
+				.build().getQuery();
+
+		return UriComponentsBuilder
+				.fromPath(getPublicPath(proxy.getId()))
+				.path(appRequestInfo.getSubPath())
+				.query(queryString)
+				.toUriString();
 	}
 
 	private boolean getIsSpOverrideActive(HttpServletRequest request) {
@@ -321,6 +333,24 @@ public class AppController extends BaseController {
 
 
 		return currentAmountOfInstances < maxInstances;
+	}
+
+	private boolean redirectRequired(AppRequestInfo appRequestInfo, ProxySpec spec) {
+        // if sub-path is empty -> no ending slash -> no ending slash and redirect required
+		if (appRequestInfo.getSubPath() == null) {
+			return true;
+		}
+        // if sub-path is just the mapping -> no ending slash and redirect required
+        String mapping = appRequestInfo.getSubPath().substring(1);
+        return spec.getContainerSpecs().get(0).getPortMapping().containsKey(mapping);
+    }
+
+	private RedirectView redirectWithEndingSlash(HttpServletRequest request) {
+		String uri = ServletUriComponentsBuilder.fromRequest(request)
+				.path("/")
+				.build()
+				.toUriString();
+		return new RedirectView(uri);
 	}
 
 	private String renderParameterTemplate(String template, ModelMap map) {

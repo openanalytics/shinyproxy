@@ -36,11 +36,13 @@ public class AppRequestInfo {
     private final String appName;
     private final String appInstance;
     private final String subPath;
+    private final String appPath;
     private ParameterValues providedParameters = null;
 
-    public AppRequestInfo(String appName, String appInstance, String subPath) {
+    public AppRequestInfo(String appName, String appInstance, String appPath, String subPath) {
         this.appName = appName;
         this.appInstance = appInstance;
+        this.appPath = appPath;
         this.subPath = subPath;
     }
 
@@ -78,13 +80,16 @@ public class AppRequestInfo {
             }
 
             String subPath = appInstanceMatcher.group(4);
+            String appPath;
             if (subPath == null || subPath.trim().equals("")) {
                 subPath = null;
+                appPath = uri;
             } else {
                 subPath = subPath.trim();
+                appPath = uri.substring(0, uri.length() - subPath.length());
             }
 
-            return new AppRequestInfo(appName, appInstance, subPath);
+            return new AppRequestInfo(appName, appInstance, appPath, subPath);
         } else if (appMatcher.matches()) {
             String appName = appMatcher.group(2);
             if (appName == null || appName.trim().equals("")) {
@@ -94,13 +99,16 @@ public class AppRequestInfo {
             String appInstance = "_";
 
             String subPath = appMatcher.group(3);
+            String appPath;
             if (subPath == null || subPath.trim().equals("")) {
                 subPath = null;
+                appPath = uri;
             } else {
                 subPath = subPath.trim();
+                appPath = uri.substring(0, uri.length() - subPath.length());
             }
 
-            return new AppRequestInfo(appName, appInstance, subPath);
+            return new AppRequestInfo(appName, appInstance, appPath, subPath);
         } else {
             return null;
         }
@@ -124,6 +132,10 @@ public class AppRequestInfo {
 
     public String getSubPath() {
         return subPath;
+    }
+
+    public String getAppPath() {
+        return appPath;
     }
 
     public ParameterValues getProvidedParameters() {

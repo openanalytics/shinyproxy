@@ -62,6 +62,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Controller
@@ -87,10 +88,10 @@ public class AppController extends BaseController {
 		Proxy proxy = findUserProxy(appRequestInfo);
 		awaitReady(proxy);
 
-        ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
-
-		if (redirectRequired(appRequestInfo, spec)) {
-			return new ModelAndView(redirectWithEndingSlash(request));
+		ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
+		Optional<RedirectView> redirect =  createRedirectIfRequired(request, appRequestInfo, proxy, spec);
+		if (redirect.isPresent()) {
+			return new ModelAndView(redirect.get());
 		}
 
 		map.put("appTitle", getAppTitle(spec));
@@ -335,28 +336,41 @@ public class AppController extends BaseController {
 		return currentAmountOfInstances < maxInstances;
 	}
 
-	private boolean redirectRequired(AppRequestInfo appRequestInfo, ProxySpec spec) {
-        // if sub-path is empty -> no ending slash -> no ending slash and redirect required
-		if (appRequestInfo.getSubPath() == null) {
-			return true;
+	private Optional<RedirectView> createRedirectIfRequired(HttpServletRequest request, AppRequestInfo appRequestInfo, Proxy proxy, ProxySpec spec) {
+		// if sub-path is empty -> no ending slash -> no ending slash and redirect required
+		if (appRequestInfo.getSubPath() == null || appRequestInfo.getSubPath().equals("/")) {
+			return Optional.empty();
 		}
-        // if sub-path is just the mapping -> no ending slash and redirect required
-        String mapping = appRequestInfo.getSubPath().substring(1);
+
+		if (proxy == null) {
+			// sub-path is non-empty, but proxy does not yet exist -> redirect to root path
+			String uri = ServletUriComponentsBuilder.fromRequest(request)
+					.replacePath(appRequestInfo.getAppPath())
+					.query(null)
+					.build()
+					.toUriString();
+			return Optional.of(new RedirectView(uri));
+		}
+
+		// if sub-path is just the mapping -> no ending slash and redirect required
+		String mapping = appRequestInfo.getSubPath().substring(1);
 		if (mapping.contains("/")) {
-			return false;
+			return Optional.empty();
 		}
-		return spec.getContainerSpecs().get(0)
+
+		boolean mappingWithoutSlash = spec.getContainerSpecs().get(0)
 				.getPortMapping()
 				.stream()
 				.anyMatch(it -> it.getName().equals(mapping));
-    }
+		if (mappingWithoutSlash) {
+			String uri = ServletUriComponentsBuilder.fromRequest(request)
+					.path("/")
+					.build()
+					.toUriString();
+			return Optional.of(new RedirectView(uri));
+		}
 
-	private RedirectView redirectWithEndingSlash(HttpServletRequest request) {
-		String uri = ServletUriComponentsBuilder.fromRequest(request)
-				.path("/")
-				.build()
-				.toUriString();
-		return new RedirectView(uri);
+		return Optional.empty();
 	}
 
 	private String renderParameterTemplate(String template, ModelMap map) {

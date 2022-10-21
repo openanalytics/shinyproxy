@@ -179,10 +179,12 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 	}
 
 	@Override
-	public void postProcessRecoveredProxy(Proxy proxy) {
+	public Proxy postProcessRecoveredProxy(Proxy proxy) {
 		// we retrieve the spec here, therefore after AppRecovery this uses the updated values of the spec
 		ProxySpec proxySpec = getSpec(proxy.getSpecId());
-		proxy.addRuntimeValues(getRuntimeValues(proxySpec));
+		return proxy.toBuilder()
+				.addRuntimeValues(getRuntimeValues(proxySpec))
+				.build();
 	}
 
 	public static class ShinyProxySpec {

@@ -39,7 +39,12 @@ public class PublicPathKey extends RuntimeValueKey<String>  {
     public static PublicPathKey inst = new PublicPathKey();
 
     @Override
-    public String fromString(String value) {
+    public String deserializeFromString(String value) {
+        return value;
+    }
+
+    @Override
+    public String serializeToString(String value) {
         return value;
     }
 

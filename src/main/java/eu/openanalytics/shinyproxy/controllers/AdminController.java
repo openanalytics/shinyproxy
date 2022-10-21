@@ -91,7 +91,6 @@ public class AdminController extends BaseController {
 			userId = proxy.getUserId();
 			appName = proxy.getSpecId();
 			instanceName = getInstanceName(proxy);
-			endpoint = proxy.getTargets().values().stream().map(URI::toString).findFirst().orElse("N/A"); // Shiny apps have only one endpoint
 
 			if (proxy.getStartupTimestamp() > 0) {
 				uptime = getTimeDelta(proxy.getStartupTimestamp());
@@ -114,9 +113,11 @@ public class AdminController extends BaseController {
 				} else {
 					imageTag = "N/A";
 				}
+				endpoint = proxy.getContainers().get(0).getTargets().values().stream().map(URI::toString).findFirst().orElse("N/A"); // TODO Shiny apps have only one endpoint
 			} else {
 				imageName = "N/A";
 				imageTag = "N/A";
+				endpoint = "N/A";
 			}
 
 			Long heartbeatTimeout = proxy.getRuntimeObject(HeartbeatTimeoutKey.inst);

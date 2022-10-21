@@ -111,8 +111,8 @@ public abstract class BaseController {
 	}
 	
 	protected String getProxyEndpoint(Proxy proxy) {
-		if (proxy == null || proxy.getTargets().isEmpty()) return null;
-		return proxy.getTargets().keySet().iterator().next();
+		if (proxy == null || proxy.getContainers().get(0).getTargets().isEmpty()) return null;
+		return proxy.getContainers().get(0).getTargets().keySet().iterator().next();
 	}
 
 	protected void prepareMap(ModelMap map, HttpServletRequest request) {

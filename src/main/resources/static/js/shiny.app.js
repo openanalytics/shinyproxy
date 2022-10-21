@@ -160,9 +160,9 @@ Shiny.app = {
             var parsedUrl = new URL(Shiny.app.staticState.containerPath, window.location.origin);
             Cookies.set('sp-instance-override', Shiny.common.staticState.spInstance, {path: parsedUrl.pathname});
 
-            const overrideUrl = new URL(window.location);
-            overrideUrl.searchParams.set("sp_instance_override", Shiny.common.staticState.spInstance);
-            history.replaceState(null, '', overrideUrl);
+            // const overrideUrl = new URL(window.location);
+            // overrideUrl.searchParams.set("sp_instance_override", Shiny.common.staticState.spInstance);
+            // history.replaceState(null, '', overrideUrl); // TODO
         }
     }
 }

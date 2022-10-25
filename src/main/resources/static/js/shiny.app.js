@@ -157,12 +157,9 @@ Shiny.app = {
     },
     setUpOverride() {
         if (Shiny.common.staticState.operatorEnabled) {
-            var parsedUrl = new URL(Shiny.app.staticState.containerPath, window.location.origin);
-            Cookies.set('sp-instance-override', Shiny.common.staticState.spInstance, {path: parsedUrl.pathname});
-
-            // const overrideUrl = new URL(window.location);
-            // overrideUrl.searchParams.set("sp_instance_override", Shiny.common.staticState.spInstance);
-            // history.replaceState(null, '', overrideUrl); // TODO
+            const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
+            const url = new URL("app_proxy/" + Shiny.app.staticState.proxyId + "/", baseURL);
+            Cookies.set('sp-instance-override', Shiny.common.staticState.spInstance, {path: url.pathname});
         }
     }
 }

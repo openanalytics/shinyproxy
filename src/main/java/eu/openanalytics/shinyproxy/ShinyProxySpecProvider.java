@@ -158,9 +158,6 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		return false;
 	}
 
-	public Boolean getShinyForceFullReload(String specId) {
-		return getShinyForceFullReload(getSpec(specId));
-	}
 
 	public Boolean getHideNavbarOnMainPageLink(ProxySpec proxySpec) {
 		Boolean hideNavbarOnMainPageLink = proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getHideNavbarOnMainPageLink();

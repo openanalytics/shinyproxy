@@ -34,6 +34,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.DisplayNameKey;
 import eu.openanalytics.containerproxy.service.IdentifierService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
@@ -89,8 +90,11 @@ public abstract class BaseController {
 		return (principal == null) ? request.getSession().getId() : principal.getName();
 	}
 	
-	protected String getAppTitle(ProxySpec spec) {
-		if (spec == null || spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) return spec.getId();
+	protected String getAppTitle(Proxy proxy, ProxySpec spec) {
+		if (proxy != null) {
+			return proxy.getRuntimeObject(DisplayNameKey.inst);
+		}
+		if (spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) return spec.getId();
 		else return spec.getDisplayName();
 	}
 	

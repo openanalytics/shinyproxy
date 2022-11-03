@@ -31,8 +31,10 @@ import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.containerproxy.util.Retrying;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.shinyproxy.ShinyProxySpecExtension;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
+import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -89,12 +91,12 @@ public class AppController extends BaseController {
 		awaitReady(proxy);
 
 		ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
-		Optional<RedirectView> redirect =  createRedirectIfRequired(request, appRequestInfo, proxy, spec);
+		Optional<RedirectView> redirect = createRedirectIfRequired(request, appRequestInfo, proxy, spec);
 		if (redirect.isPresent()) {
 			return new ModelAndView(redirect.get());
 		}
 
-		map.put("appTitle", getAppTitle(spec));
+		map.put("appTitle", getAppTitle(proxy, spec));
 		map.put("appName", appRequestInfo.getAppName());
 		map.put("appInstance", appRequestInfo.getAppInstance());
 		map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
@@ -104,8 +106,8 @@ public class AppController extends BaseController {
 		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
 		map.put("heartbeatRate", getHeartbeatRate());
 		map.put("page", "app");
-		map.put("shinyForceFullReload", shinyProxySpecProvider.getShinyForceFullReload(appRequestInfo.getAppName()));
-        if (spec.getParameters() != null) {
+		map.put("shinyForceFullReload", getShinyForceFullReload(proxy, spec));
+        if (proxy == null && spec.getParameters() != null) {
 			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 			AllowedParametersForUser allowedParametersForUser = parameterService.calculateAllowedParametersForUser(auth, spec);
             map.put("parameterAllowedCombinations", allowedParametersForUser.getAllowedCombinations());
@@ -306,6 +308,17 @@ public class AppController extends BaseController {
 
 	private String getBasePublicPath() {
 		return getContextPath() + "app_proxy/";
+	}
+
+	public Boolean getShinyForceFullReload(Proxy proxy, ProxySpec proxySpec) {
+		if (proxy != null) {
+			return proxy.getRuntimeObject(ShinyForceFullReloadKey.inst);
+		}
+		Boolean shinyProxyForceFullReload = proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getShinyForceFullReload();
+		if (shinyProxyForceFullReload != null) {
+			return shinyProxyForceFullReload;
+		}
+		return false;
 	}
 
 	/**

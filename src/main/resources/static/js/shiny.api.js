@@ -233,11 +233,6 @@ Shiny.api = {
     _buildURLForApp: function (app) {
         const appName = app.specId;
         const appInstance = app.runtimeValues.SHINYPROXY_APP_INSTANCE;
-        const appSpInstance = app.runtimeValues.SHINYPROXY_INSTANCE;
-        if (Shiny.common.staticState.operatorEnabled) {
-            return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/?sp_instance_override=" + appSpInstance;
-        } else {
-            return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/";
-        }
+        return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/";
     },
 };

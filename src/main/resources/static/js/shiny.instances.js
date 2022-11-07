@@ -223,9 +223,7 @@ Shiny.instances = {
             templateData = templateData.apps[appName];
 
             templateData.instances.forEach(instance => {
-                instance.active = instance.spInstance === Shiny.common.staticState.spInstance
-                    && instance.appName === appName
-                    && instance.instanceName === Shiny.instances._toAppDisplayName(Shiny.app.staticState.appInstanceName)
+                instance.active = instance.proxyId === Shiny.app.staticState.proxyId
             });
 
             // put active item in front of the list

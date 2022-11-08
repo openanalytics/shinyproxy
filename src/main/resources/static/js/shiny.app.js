@@ -26,11 +26,8 @@ Shiny = window.Shiny || {};
 Shiny.app = {
 
     staticState: {
-        proxyId: null,
         appName: null,
         appInstanceName: null,
-        containerPath: null,
-        webSocketReconnectionMode: null,
         maxReloadAttempts: 10,
         heartBeatRate: null,
         maxInstances: null,
@@ -39,10 +36,16 @@ Shiny.app = {
             allowedCombinations: null,
             names: null,
             ids: null
-        }
+        },
+        containerSubPath: null
     },
 
     runtimeState: {
+        /**
+         * @type {?{id: string, runtimeValues: {SHINYPROXY_PUBLIC_PATH: string, SHINYPROXY_FORCE_FULL_RELOAD: boolean}}}
+         */
+        proxy: null,
+        containerPath: null,
         navigatingAway: false,
         reloaded: false,
         injectorIntervalId: null,
@@ -57,108 +60,102 @@ Shiny.app = {
 
     /**
      * Start the Shiny Application.
-     * @param containerPath
-     * @param webSocketReconnectionMode
-     * @param proxyId
+     * @param proxy
      * @param heartBeatRate
      * @param appName
      * @param appInstanceName
-     * @param shinyForceFullReload
      * @param isSpOverrideActive
      * @param parameterAllowedCombinations
      * @param parameterDefinitions
      * @param parametersIds
-     * @param appStatus
      */
-    start: async function (containerPath, webSocketReconnectionMode, proxyId, heartBeatRate, appName, appInstanceName, shinyForceFullReload, isSpOverrideActive, parameterAllowedCombinations, parameterDefinitions, parametersIds, appStatus) {
+    start: async function (proxy, heartBeatRate, appName, appInstanceName, isSpOverrideActive, parameterAllowedCombinations, parameterDefinitions, parametersIds, containerSubPath) {
         Shiny.app.staticState.heartBeatRate = heartBeatRate;
         Shiny.app.staticState.appName = appName;
         Shiny.app.staticState.appInstanceName = appInstanceName;
-        Shiny.app.staticState.shinyForceFullReload = shinyForceFullReload;
+        Shiny.app.staticState.containerSubPath = containerSubPath;
         Shiny.app.staticState.isSpOverrideActive = isSpOverrideActive;
         Shiny.app.staticState.parameters.allowedCombinations = parameterAllowedCombinations;
         Shiny.app.staticState.parameters.names = parameterDefinitions;
         Shiny.app.staticState.parameters.ids = parametersIds;
-
-        if (appStatus === "Paused") {
+        Shiny.app.runtimeState.proxy = proxy;
+        Shiny.app.loadApp();
+    },
+    async loadApp() {
+        if (Shiny.app.runtimeState.proxy === null) {
+            // TODO operator
+            // TODO is new app message still shown on app page?
+            // if (Shiny.operator === undefined || await Shiny.operator.start()) {
+            // if (Shiny.app.staticState.isSpOverrideActive) { // TODO
+            //     // do not start new apps on old SP instances -> redirect to same page but without override
+            //     const overrideUrl = new URL(window.location);
+            //     overrideUrl.searchParams.delete("sp_instance_override");
+            //     window.location = overrideUrl;
+            //     return;
+            // }
+            if (Shiny.app.staticState.parameters.names !== null) {
+                Shiny.ui.showParameterForm();
+            } else {
+                Shiny.app.startAppWithParameters(null);
+            }
+        } else if (Shiny.app.runtimeState.proxy.status === "Paused") {
             Shiny.ui.setShinyFrameHeight();
             Shiny.ui.showLoading();
-
-            // TODO
-            await fetch(Shiny.api.buildURL("api/proxy/" + proxyId + "/pause"), {
-                method: 'POST',
-            });
-
-            Shiny.app.staticState.containerPath = containerPath;
-            Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;
-            Shiny.app.staticState.proxyId = proxyId;
-            Shiny.ui.setupIframe();
-            Shiny.ui.showFrame();
-            Shiny.connections.startHeartBeats();
-            Shiny.app.setUpOverride();
-        } else if (containerPath !== "") {
-            Shiny.app.staticState.containerPath = containerPath;
-            Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;
-            Shiny.app.staticState.proxyId = proxyId;
+            await Shiny.api.changeProxyStatus(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance, 'Resuming')
+            await Shiny.app.waitForAppStart();
+            Shiny.app.loadApp();
+        } else if (Shiny.app.runtimeState.proxy.status === "Up") {
+            Shiny.app.runtimeState.containerPath = Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH + Shiny.app.staticState.containerSubPath;
             Shiny.ui.setupIframe();
             Shiny.ui.showFrame();
             Shiny.connections.startHeartBeats();
             Shiny.app.setUpOverride();
         } else {
-            if (Shiny.operator === undefined || await Shiny.operator.start()) {
-                if (Shiny.app.staticState.isSpOverrideActive) {
-                    // do not start new apps on old SP instances -> redirect to same page but without override
-                    const overrideUrl = new URL(window.location);
-                    overrideUrl.searchParams.delete("sp_instance_override");
-                    window.location = overrideUrl;
-                    return;
-                }
-                if (parameterDefinitions !== null) {
-                    Shiny.ui.showParameterForm();
-                } else {
-                    Shiny.app.startAppWithParameters(null);
-                }
-            }
+            Shiny.app.startupFailed();
+        }
+    },
+    async waitForAppStart() {
+        const proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance);
+        if (proxy !== null && proxy.status !== "Stopped") {
+            Shiny.app.runtimeState.proxy = proxy;
+        } else {
+            Shiny.app.startupFailed();
         }
     },
     async startAppWithParameters(parameters) {
         Shiny.ui.setShinyFrameHeight();
         Shiny.ui.showLoading();
-        let response;
-        if (parameters !== null) {
-            response = await fetch(window.location.pathname + window.location.search, {
-                method: 'POST',
-                body:  JSON.stringify({parameters}),
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-            });
-        } else {
-            response = await fetch(window.location.pathname + window.location.search, {
-                method: 'POST'
-            });
+        if (parameters === null) {
+            parameters = {}
         }
+        let url = Shiny.api.buildURL('app_i/' + Shiny.app.staticState.appName + '/' + Shiny.app.staticState.appInstanceName);
+        let response = await fetch(url, {
+            method: 'POST',
+            body:  JSON.stringify({parameters}),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
         if (response.status !== 200) {
-            if (!Shiny.app.runtimeState.navigatingAway && !Shiny.app.runtimeState.appStopped) {
-                var newDoc = document.open("text/html", "replace");
-                newDoc.write(await response.text());
-                newDoc.close();
-                return;
-            }
+            Shiny.app.startupFailed();
+            return;
         }
         response = await response.json();
-        Shiny.app.staticState.containerPath = response.containerPath;
-        Shiny.app.staticState.webSocketReconnectionMode = response.webSocketReconnectionMode;
-        Shiny.app.staticState.proxyId = response.proxyId;
-        Shiny.ui.setupIframe();
-        Shiny.ui.showFrame();
-        Shiny.connections.startHeartBeats();
-        Shiny.app.setUpOverride();
+        if (response.status !== "success") {
+            Shiny.app.startupFailed();
+            return;
+        }
+        Shiny.app.runtimeState.proxy = response.data;
+        await Shiny.app.waitForAppStart();
+        Shiny.app.loadApp();
+    },
+    startupFailed() {
+        Shiny.ui.showStartFailedPage();
     },
     setUpOverride() {
         if (Shiny.common.staticState.operatorEnabled) {
             const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
-            const url = new URL("app_proxy/" + Shiny.app.staticState.proxyId + "/", baseURL);
+            const url = new URL("app_proxy/" + Shiny.app.runtimeState.proxy.id + "/", baseURL);
             Cookies.set('sp-instance-override', Shiny.common.staticState.spInstance, {path: url.pathname});
         }
     }

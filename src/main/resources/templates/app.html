@@ -74,6 +74,14 @@
 			</span>
 		</div>
 	</div>
+	<div id="startFailed" class="loading">
+		<div class="loading-txt">
+			Failed to start application <span th:text="${appTitle}"></span><br><br>
+			<span class="refreshButton">
+				<button onClick="window.location.reload()" class="btn btn-default">Try again</button>
+			</span>
+		</div>
+	</div>
 	<div id="appStopped" class="loading">
 		<div class="loading-txt">
 			This app has been stopped, you can now close this tab.<br><br>
@@ -132,18 +140,15 @@
 				window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorForceTransferWithActiveApps}]], [[${operatorShowTransferMessage}]]);
 			}
 			window.Shiny.app.start(
-					[[${containerPath}]],
-					[[${webSocketReconnectionMode}]],
-					[[${proxyId}]],
+					[[${proxy}]],
 					[[${heartbeatRate}]],
 					[[${appName}]],
 					[[${appInstance}]],
-					[[${shinyForceFullReload}]],
 					[[${isSpOverrideActive}]],
                     [[${parameterAllowedCombinations}]],
                     [[${parameterDefinitions}]],
                     [[${parameterIds}]],
-					[[${appStatus}]]
+					[[${containerSubPath}]],
 			);
 		});
 	</script>

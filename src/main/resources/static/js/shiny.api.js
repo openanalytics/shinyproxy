@@ -51,15 +51,40 @@ Shiny.api = {
         const responses = await Promise.all(requests);
         return Shiny.api._groupByApp(responses.flat());
     },
-    deleteProxyById: async function (proxyId, spInstance) {
-        await fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId, spInstance), {
-            method: 'DELETE',
+    async changeProxyStatus(proxyId, spInstance, desiredState) {
+        let response = await fetch(Shiny.api.buildURLForInstance("api/" + proxyId + '/status', spInstance), {
+            method: 'PUT',
+            body:  JSON.stringify({"desiredState": desiredState}),
+            headers: {
+                'Content-Type': 'application/json'
+            },
         });
+        if (response.status !== 200) {
+            console.log(response);
+        }
     },
-    async pauseProxyById(proxyId, spInstance) {
-        await fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId + "/pause", spInstance), {
-            method: 'POST',
-        });
+    async waitForStatusChange(proxyId, spInstance) {
+        while (true) {
+            let url = Shiny.api.buildURLForInstance('api/' + proxyId + "/status?watch=true&timeout=10", spInstance);
+            try {
+                let response = await fetch(url);
+                if (response.status !== 200) {
+                    console.log(response);
+                    return null; // error -> return
+                }
+                response = await response.json();
+                if (response.status === "error" || response.status === "fail") {
+                    console.log(response);
+                    return null;
+                }
+                if (response.data.status === "Up" || response.data.status === "Stopped" || response.data.status === "Paused" ) {
+                    return response.data;
+                }
+            } catch (e) {
+                console.log(e);
+                return null; // error -> return
+            }
+        }
     },
     getProxyById: async function (proxyId, spInstance) {
         return await fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId, spInstance))

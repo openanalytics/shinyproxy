@@ -35,7 +35,7 @@ Shiny.connections = {
             }
             if (!Shiny.connections._webSocketConnectionIsOpen()) {
                 var lastHeartbeat = Date.now() - Shiny.app.runtimeState.lastHeartbeatTime;
-                if (lastHeartbeat > Shiny.app.staticState.heartBeatRate && Shiny.app.staticState.proxyId !== null) {
+                if (lastHeartbeat > Shiny.app.staticState.heartBeatRate && Shiny.app.runtimeState.proxy !== null) {
                     Shiny.connections.sendHeartBeat();
                 }
             }
@@ -47,7 +47,7 @@ Shiny.connections = {
      */
     sendHeartBeat: function() {
         // contextPath is guaranteed to end with a slash
-        $.post(Shiny.api.buildURL("heartbeat/" + Shiny.app.staticState.proxyId), function() {})
+        $.post(Shiny.api.buildURL("heartbeat/" + Shiny.app.runtimeState.proxy.id), function() {})
             .fail(function (response) {
                 if (Shiny.app.runtimeState.appStopped) {
                     // if stopped in meantime -> ignore
@@ -129,7 +129,7 @@ Shiny.connections = {
                 typeof _shinyFrame.contentWindow.Shiny.shinyapp !== 'undefined' &&
                 typeof _shinyFrame.contentWindow.Shiny.shinyapp.reconnect === 'function') {
 
-                if (Shiny.app.staticState.shinyForceFullReload) {
+                if (Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_FORCE_FULL_RELOAD) {
                     // this is a Shiny app, but the forceFullReload option is set -> handle it as a non-Shiny app.
                     return false;
                 }
@@ -464,7 +464,7 @@ Shiny.connections = {
     _checkAppHasBeenStopped: function (cb) {
         $.ajax({
             method: 'POST',
-            url: Shiny.api.buildURL("heartbeat/" + Shiny.app.staticState.proxyId),
+            url: Shiny.api.buildURL("heartbeat/" + Shiny.app.runtimeState.proxy.id),
             timeout: 3000,
             success: function () {
                 cb(false);

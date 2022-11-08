@@ -161,7 +161,7 @@ Shiny.common = {
             const proxyIds = [];
             for (const app of Object.values(proxies.apps)) {
                 for (const proxy of app.instances) {
-                    Shiny.api.deleteProxyById(proxy.proxyId, proxy.spInstance)
+                    Shiny.api.changeProxyStatus(proxy.proxyId, proxy.spInstance, 'Stopping');
                     proxyIds.push(proxy.proxyId);
                 }
             }

@@ -61,7 +61,7 @@ Shiny.instances = {
                 // when no arguments provided -> show the current app
                 appName = Shiny.app.staticState.appName;
                 appInstanceName = Shiny.instances._toAppDisplayName(Shiny.app.staticState.appInstanceName);
-                proxyId = Shiny.app.staticState.proxyId;
+                proxyId = Shiny.app.runtimeState.proxy.id;
                 spInstance = Shiny.common.staticState.spInstance;
                 Shiny.ui.showAppDetailsModal();
             } else {
@@ -77,14 +77,14 @@ Shiny.instances = {
             if (appInstanceName === undefined) {
                 // when no arguments provided -> stop the current app
                 appInstanceName = Shiny.instances._toAppDisplayName(Shiny.app.staticState.appInstanceName);
-                proxyId = Shiny.app.staticState.proxyId;
+                proxyId = Shiny.app.runtimeState.proxy.id;
                 spInstance = Shiny.common.staticState.spInstance;
             }
 
             if (confirm("Are you sure you want to stop instance \"" + appInstanceName + "\"?")) {
                 await Shiny.instances._deleteInstance(proxyId, spInstance);
-                if (Shiny.app !== undefined && proxyId === Shiny.app.staticState.proxyId) {
-                    await Shiny.instances._waitUntilInstanceDeleted(Shiny.app.staticState.proxyId, Shiny.common.staticState.spInstance);
+                if (Shiny.app !== undefined && proxyId === Shiny.app.runtimeState.proxy.id) {
+                    await Shiny.api.waitForStatusChange(proxyId, spInstance);
                     Shiny.ui.showStoppedPage();
                 }
             }
@@ -93,14 +93,15 @@ Shiny.instances = {
             if (appInstanceName === undefined) {
                 // when no arguments provided -> pause the current app
                 appInstanceName = Shiny.instances._toAppDisplayName(Shiny.app.staticState.appInstanceName);
-                proxyId = Shiny.app.staticState.proxyId;
+                proxyId = Shiny.app.runtimeState.proxy.id;
                 spInstance = Shiny.common.staticState.spInstance;
             }
 
             if (confirm("Are you sure you want to pause instance \"" + appInstanceName + "\"?")) {
                 await Shiny.instances._pauseInstance(proxyId, spInstance);
-                if (Shiny.app !== undefined && proxyId === Shiny.app.staticState.proxyId) {
-                    await Shiny.instances._waitUntilInstancePause(Shiny.app.staticState.proxyId, Shiny.common.staticState.spInstance);
+                if (Shiny.app !== undefined && proxyId === Shiny.app.runtimeState.proxy.id) {
+                    await Shiny.instances._pauseInstance(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance);
+                    await Shiny.api.waitForStatusChange(proxyId, spInstance);
                     Shiny.ui.showStoppedPage(); // TODO dedicated page
                 }
             }
@@ -120,8 +121,8 @@ Shiny.instances = {
                 Shiny.ui.hideModal();
                 Shiny.ui.showLoading();
 
-                await Shiny.instances._deleteInstance(Shiny.app.staticState.proxyId, Shiny.common.staticState.spInstance);
-                await Shiny.instances._waitUntilInstanceDeleted(Shiny.app.staticState.proxyId, Shiny.common.staticState.spInstance);
+                await Shiny.instances._deleteInstance(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance);
+                await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance)
 
                 window.location = overrideUrl;
             }
@@ -181,39 +182,25 @@ Shiny.instances = {
     },
 
     _deleteInstance: async function (proxyId, spInstance) {
-        if (Shiny.app !== undefined && proxyId === Shiny.app.staticState.proxyId) {
+        if (Shiny.app !== undefined && proxyId === Shiny.app.runtimeState.proxy.id) {
             Shiny.app.runtimeState.appStopped = true;
             Shiny.ui.removeFrame();
         }
         try {
-            await Shiny.api.deleteProxyById(proxyId, spInstance);
+            await Shiny.api.changeProxyStatus(proxyId, spInstance, 'Stopping');
         } catch (e) {
             alert("Error stopping proxy, please try again.")
-        }
-    },
-    _waitUntilInstanceDeleted: async function (proxyId, spInstance) {
-        while (await Shiny.api.getProxyById(proxyId, spInstance) != null) {
-            await Shiny.common.sleep(500);
         }
     },
     async _pauseInstance(proxyId, spInstance) {
-        if (Shiny.app !== undefined && proxyId === Shiny.app.staticState.proxyId) {
+        if (Shiny.app !== undefined && proxyId === Shiny.app.runtimeState.proxy.id) {
             Shiny.app.runtimeState.appStopped = true;
             Shiny.ui.removeFrame();
         }
         try {
-            await Shiny.api.pauseProxyById(proxyId, spInstance);
+            await Shiny.api.changeProxyStatus(proxyId, spInstance, 'Pausing');
         } catch (e) {
             alert("Error stopping proxy, please try again.")
-        }
-    },
-    _waitUntilInstancePause: async function (proxyId, spInstance) {
-        while (true) {
-            const proxy = await Shiny.api.getProxyById(proxyId, spInstance)
-            if (proxy.status === "Paused") {
-                return;
-            }
-            await Shiny.common.sleep(500);
         }
     },
     _refreshModal: async function () {
@@ -223,7 +210,7 @@ Shiny.instances = {
             templateData = templateData.apps[appName];
 
             templateData.instances.forEach(instance => {
-                instance.active = instance.proxyId === Shiny.app.staticState.proxyId
+                instance.active = instance.proxyId === Shiny.app.runtimeState.proxy.id
             });
 
             // put active item in front of the list

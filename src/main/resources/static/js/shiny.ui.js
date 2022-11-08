@@ -28,7 +28,7 @@ Shiny.ui = {
         // IMPORTANT: start the injector before setting the `src` property of the iframe
         // This is required to ensure that the polling catches all events and therefore the injector works properly.
         Shiny.connections.startInjector();
-        $iframe.attr("src", Shiny.app.staticState.containerPath);
+        $iframe.attr("src", Shiny.app.runtimeState.containerPath);
         $('#iframeinsert').before($iframe); // insert the iframe into the HTML.
         Shiny.ui.setShinyFrameHeight();
     },
@@ -106,6 +106,13 @@ Shiny.ui = {
         $("#loading").hide();
         $("#reconnecting").hide();
         $("#reloadFailed").show();
+    },
+
+   showStartFailedPage: function () {
+        $('#shinyframe').hide();
+        $("#loading").hide();
+        $("#reconnecting").hide();
+        $("#startFailed").show();
     },
 
     showStoppedPage: function () {

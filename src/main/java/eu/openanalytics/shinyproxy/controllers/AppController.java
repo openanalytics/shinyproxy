@@ -20,28 +20,33 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
+import com.fasterxml.jackson.annotation.JsonView;
+import eu.openanalytics.containerproxy.api.dto.ApiResponse;
+import eu.openanalytics.containerproxy.model.Views;
 import eu.openanalytics.containerproxy.model.runtime.AllowedParametersForUser;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.DisplayNameKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.service.AsyncProxyService;
 import eu.openanalytics.containerproxy.service.InvalidParametersException;
 import eu.openanalytics.containerproxy.service.ParametersService;
 import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.containerproxy.util.Retrying;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
-import eu.openanalytics.shinyproxy.ShinyProxySpecExtension;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
-import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
-import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -61,7 +66,6 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -75,6 +79,8 @@ public class AppController extends BaseController {
 	@Inject
 	private ProxyMappingManager mappingManager;
 
+	@Inject
+	private AsyncProxyService asyncProxyService;
 
     @Inject
     private ParametersService parameterService;
@@ -82,13 +88,9 @@ public class AppController extends BaseController {
 	private final Logger logger = LogManager.getLogger(getClass());
 
 	@RequestMapping(value={"/app_i/*/**", "/app/**"}, method=RequestMethod.GET)
-	public ModelAndView app(ModelMap map, HttpServletRequest request, HttpServletResponse response) {
+	public ModelAndView app(ModelMap map, HttpServletRequest request) {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
-
-		prepareMap(map, request);
-
 		Proxy proxy = findUserProxy(appRequestInfo);
-		awaitReady(proxy);
 
 		ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
 		Optional<RedirectView> redirect = createRedirectIfRequired(request, appRequestInfo, proxy, spec);
@@ -96,41 +98,50 @@ public class AppController extends BaseController {
 			return new ModelAndView(redirect.get());
 		}
 
-		map.put("appTitle", getAppTitle(proxy, spec));
+		prepareMap(map, request);
+		map.put("heartbeatRate", getHeartbeatRate());
+		map.put("page", "app");
 		map.put("appName", appRequestInfo.getAppName());
 		map.put("appInstance", appRequestInfo.getAppInstance());
 		map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
-		map.put("appStatus", (proxy == null) ? null : proxy.getStatus());
-		map.put("containerPath", (proxy == null) ? "" : buildContainerPath(request, proxy, appRequestInfo));
-		map.put("proxyId", (proxy == null) ? "" : proxy.getId());
-		map.put("webSocketReconnectionMode", (proxy == null) ? "" : proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
-		map.put("heartbeatRate", getHeartbeatRate());
-		map.put("page", "app");
-		map.put("shinyForceFullReload", getShinyForceFullReload(proxy, spec));
-        if (proxy == null && spec.getParameters() != null) {
-			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-			AllowedParametersForUser allowedParametersForUser = parameterService.calculateAllowedParametersForUser(auth, spec);
-            map.put("parameterAllowedCombinations", allowedParametersForUser.getAllowedCombinations());
-            map.put("parameterValues", allowedParametersForUser.getValues());
-			map.put("parameterDefaults", allowedParametersForUser.getDefaultValue());
-		 	map.put("parameterDefinitions", spec.getParameters().getDefinitions());
-            map.put("parameterIds", spec.getParameters().getIds());
-
-			if (spec.getParameters().getTemplate() != null) {
-				map.put("parameterFragment", renderParameterTemplate(spec.getParameters().getTemplate(), map));
+		map.put("containerSubPath", buildContainerSubPath(request, appRequestInfo));
+		if (proxy == null) {
+			if (spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) {
+				map.put("appTitle", spec.getId());
 			} else {
+				map.put("appTitle", spec.getDisplayName());
+			}
+			map.put("proxy", null);
+			map.put("parameterValues", null);
+			map.put("parameterDefaults", null);
+			map.put("parameterDefinitions", null);
+			map.put("parameterIds", null);
+			map.put("parameterFragment", null);
+		} else {
+			map.put("appTitle", proxy.getRuntimeValue(DisplayNameKey.inst));
+			map.put("proxy", proxy);
+			if (spec.getParameters() != null) {
+				Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+				AllowedParametersForUser allowedParametersForUser = parameterService.calculateAllowedParametersForUser(auth, spec);
+				map.put("parameterAllowedCombinations", allowedParametersForUser.getAllowedCombinations());
+				map.put("parameterValues", allowedParametersForUser.getValues());
+				map.put("parameterDefaults", allowedParametersForUser.getDefaultValue());
+				map.put("parameterDefinitions", spec.getParameters().getDefinitions());
+				map.put("parameterIds", spec.getParameters().getIds());
+
+				if (spec.getParameters().getTemplate() != null) {
+					map.put("parameterFragment", renderParameterTemplate(spec.getParameters().getTemplate(), map));
+				} else {
+					map.put("parameterFragment", null);
+				}
+			} else {
+				map.put("parameterValues", null);
+				map.put("parameterDefaults", null);
+				map.put("parameterDefinitions", null);
+				map.put("parameterIds", null);
 				map.put("parameterFragment", null);
 			}
-
-        } else  {
-            map.put("parameterAllowedCombinations", null);
-            map.put("parameterValues", null);
-			map.put("parameterDefaults", null);
-            map.put("parameterDefinitions", null);
-            map.put("parameterIds", null);
-			map.put("parameterFragment", null);
 		}
-
 		// operator specific
 		if (operatorService.isEnabled()) {
 			map.put("isSpOverrideActive", getIsSpOverrideActive(request));
@@ -145,30 +156,30 @@ public class AppController extends BaseController {
 		return new ModelAndView("app", map);
 	}
 
-	@RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.POST)
 	@ResponseBody
-	public Map<String,String> startApp(HttpServletRequest request) throws InvalidParametersException {
-        return startApp(request, null);
+	@JsonView(Views.UserApi.class)
+	@RequestMapping(value = "/app_i/{specId}/{appInstanceName}", method = RequestMethod.POST)
+	public ResponseEntity<ApiResponse<Proxy>> startApp(@PathVariable String specId, @PathVariable String appInstanceName, @RequestBody(required = false) AppBody appBody) throws InvalidParametersException {
+		ProxySpec spec = proxyService.getProxySpec(specId);
+		if (!userService.canAccess(spec)) {
+			throw new AccessDeniedException(String.format("Cannot start proxy %s: access denied", spec.getId()));
+		}
+		Proxy proxy = findUserProxy(specId, appInstanceName);
+		if (proxy != null) {
+			return ApiResponse.fail("You already have an instance of this app with the given name");
+		}
+
+		List<RuntimeValue> runtimeValues = shinyProxySpecProvider.getRuntimeValues(spec);
+		String id = UUID.randomUUID().toString();
+		runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(id)));
+		runtimeValues.add(new RuntimeValue(AppInstanceKey.inst, appInstanceName));
+
+        if (!validateProxyStart(spec)) {
+            throw new BadRequestException("Cannot start new proxy because the maximum amount of instances of this proxy has been reached");
+        }
+
+		return ApiResponse.success(asyncProxyService.startProxy(spec, runtimeValues, id, (appBody != null) ? appBody.getParameters() : null));
 	}
-
-    @RequestMapping(value={"/app_i/*/*", "/app/*"}, method=RequestMethod.POST, consumes = "application/json")
-    @ResponseBody
-    public Map<String,String> startAppWithParameters(HttpServletRequest request, @RequestBody AppBody appBody) throws InvalidParametersException {
-        return startApp(request, appBody.getParameters());
-    }
-
-    private Map<String,String> startApp(HttpServletRequest request, Map<String, String> parameters) throws InvalidParametersException {
-        AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
-
-        Proxy proxy = getOrStart(appRequestInfo, parameters);
-        String containerPath = buildContainerPath(request, proxy, appRequestInfo);
-
-        Map<String,String> response = new HashMap<>();
-        response.put("containerPath", containerPath);
-        response.put("proxyId", proxy.getId());
-        response.put("webSocketReconnectionMode", proxy.getRuntimeValue(WebSocketReconnectionModeKey.inst));
-        return response;
-    }
 
 
     @RequestMapping(value={"/app_direct_i/**", "/app_direct/**"})
@@ -244,7 +255,6 @@ public class AppController extends BaseController {
 
 	private Proxy getOrStart(AppRequestInfo appRequestInfo, Map<String, String> parameters) throws InvalidParametersException {
 		Proxy proxy = findUserProxy(appRequestInfo);
-		// TODO Pausing
 		if (proxy == null || proxy.getStatus().equals(ProxyStatus.Paused)) {
 			ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
 
@@ -259,7 +269,8 @@ public class AppController extends BaseController {
 				throw new BadRequestException("Cannot start new proxy because the maximum amount of instances of this proxy has been reached");
 			}
 
-			proxy = proxyService.startProxy(spec, false, runtimeValues, id, parameters);
+			proxyService.startProxy(userService.getCurrentAuth(), spec, runtimeValues, id, parameters).run();
+			proxy = proxyService.getProxy(id);
 		}
 		return proxy;
 	}
@@ -276,17 +287,21 @@ public class AppController extends BaseController {
 		return (proxy.getStatus() == ProxyStatus.Up);
 	}
 
-	private String buildContainerPath(HttpServletRequest request, Proxy proxy, AppRequestInfo appRequestInfo) {
+	private String buildContainerSubPath(HttpServletRequest request, AppRequestInfo appRequestInfo) {
 		String queryString = ServletUriComponentsBuilder.fromRequest(request)
 				.replaceQueryParam("sp_hide_navbar")
 				.replaceQueryParam("sp_instance_override")
 				.build().getQuery();
 
-		return UriComponentsBuilder
-				.fromPath(getPublicPath(proxy.getId()))
-				.path(appRequestInfo.getSubPath())
+		String res = UriComponentsBuilder
+				.fromPath(appRequestInfo.getSubPath())
 				.query(queryString)
 				.toUriString();
+
+		if (res.startsWith("/")) {
+			return res.substring(1);
+		}
+		return res;
 	}
 
 	private boolean getIsSpOverrideActive(HttpServletRequest request) {
@@ -308,17 +323,6 @@ public class AppController extends BaseController {
 
 	private String getBasePublicPath() {
 		return getContextPath() + "app_proxy/";
-	}
-
-	public Boolean getShinyForceFullReload(Proxy proxy, ProxySpec proxySpec) {
-		if (proxy != null) {
-			return proxy.getRuntimeObject(ShinyForceFullReloadKey.inst);
-		}
-		Boolean shinyProxyForceFullReload = proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getShinyForceFullReload();
-		if (shinyProxyForceFullReload != null) {
-			return shinyProxyForceFullReload;
-		}
-		return false;
 	}
 
 	/**

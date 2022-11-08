@@ -90,14 +90,6 @@ public abstract class BaseController {
 		return (principal == null) ? request.getSession().getId() : principal.getName();
 	}
 	
-	protected String getAppTitle(Proxy proxy, ProxySpec spec) {
-		if (proxy != null) {
-			return proxy.getRuntimeObject(DisplayNameKey.inst);
-		}
-		if (spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) return spec.getId();
-		else return spec.getDisplayName();
-	}
-	
 	protected String getContextPath() {
 		return SessionHelper.getContextPath(environment, true);
 	}
@@ -107,13 +99,17 @@ public abstract class BaseController {
 	}
 	
 	protected Proxy findUserProxy(AppRequestInfo appRequestInfo) {
+		return findUserProxy(appRequestInfo.getAppName(), appRequestInfo.getAppInstance());
+	}
+
+	protected Proxy findUserProxy(String appname, String appInstance) {
 		return proxyService.findProxy(p ->
-				p.getSpecId().equals(appRequestInfo.getAppName())
-				&& p.getRuntimeValue(AppInstanceKey.inst).equals(appRequestInfo.getAppInstance())
-				&& userService.isOwner(p),
+						p.getSpecId().equals(appname)
+								&& p.getRuntimeValue(AppInstanceKey.inst).equals(appInstance)
+								&& userService.isOwner(p),
 				false);
 	}
-	
+
 	protected String getProxyEndpoint(Proxy proxy) {
 		if (proxy == null || proxy.getContainers().get(0).getTargets().isEmpty()) return null;
 		return proxy.getContainers().get(0).getTargets().keySet().iterator().next();

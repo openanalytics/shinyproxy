@@ -130,9 +130,8 @@ Shiny.ui = {
     },
 
     showFailedToReloadPage: function () {
-        $('#shinyframe').hide();
-        $("#loading").hide();
-        $("#reconnecting").hide();
+        $('#shinyframe').remove();
+        $('.loading').hide();
         $("#reloadFailed").show();
     },
 

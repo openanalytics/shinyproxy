@@ -164,7 +164,9 @@ Shiny.app = {
         Shiny.app.loadApp();
     },
     startupFailed() {
-        Shiny.ui.showStartFailedPage();
+        if (!Shiny.app.runtimeState.appStopped) {
+            Shiny.ui.showStartFailedPage();
+        }
     },
     setUpOverride() {
         if (Shiny.common.staticState.operatorEnabled) {

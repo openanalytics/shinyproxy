@@ -100,7 +100,7 @@ Shiny.app = {
             }
         } else if (Shiny.app.runtimeState.proxy.status === "Paused") {
             Shiny.ui.setShinyFrameHeight();
-            Shiny.ui.showLoading();
+            Shiny.ui.showResumingPage();
             await Shiny.api.changeProxyStatus(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance, 'Resuming')
             await Shiny.app.waitForAppStart();
             Shiny.app.loadApp();

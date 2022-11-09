@@ -57,6 +57,7 @@ Shiny.ui = {
     showFrame: function () {
         $('#shinyframe').show();
         $("#loading").fadeOut("slow");
+        $("#resumingApp").fadeOut("slow");
         $("#reconnecting").fadeOut("slow");
     },
 
@@ -101,6 +102,33 @@ Shiny.ui = {
         }, 1000);
     },
 
+    showResumingPage: function () {
+        $('.loading').hide();
+        $('#shinyframe').hide();
+        $("#resumingApp").show();
+    },
+
+    showStoppingPage: function () {
+        $('.loading').hide();
+        $('#shinyframe').hide();
+        $('#modal').modal('hide')
+        $("#stoppingApp").show();
+    },
+
+    showPausingPage: function () {
+        $('.loading').hide();
+        $('#shinyframe').hide();
+        $('#modal').modal('hide')
+        $("#pausingApp").show();
+    },
+
+    showPausedAppPage: function () {
+        $('#shinyframe').remove();
+        $('.loading').hide();
+        $('#modal').modal('hide')
+        $('#appPaused').show();
+    },
+
     showFailedToReloadPage: function () {
         $('#shinyframe').hide();
         $("#loading").hide();
@@ -118,8 +146,7 @@ Shiny.ui = {
     showStoppedPage: function () {
         Shiny.app.runtimeState.appStopped = true;
         $('#shinyframe').remove();
-        $("#loading").hide();
-        $("#reconnecting").hide();
+        $('.loading').hide();
         $('#modal').modal('hide')
         $('#appStopped').show();
     },

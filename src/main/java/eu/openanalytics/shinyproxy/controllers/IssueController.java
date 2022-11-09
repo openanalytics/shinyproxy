@@ -28,6 +28,7 @@ import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import eu.openanalytics.containerproxy.log.LogPaths;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

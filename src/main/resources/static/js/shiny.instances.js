@@ -82,8 +82,13 @@ Shiny.instances = {
             }
 
             if (confirm("Are you sure you want to stop instance \"" + appInstanceName + "\"?")) {
-                await Shiny.instances._deleteInstance(proxyId, spInstance);
-                if (Shiny.app !== undefined && proxyId === Shiny.app.runtimeState.proxy.id) {
+                if (Shiny.instances._isOpenedApp(proxyId)) {
+                    Shiny.app.runtimeState.appStopped = true;
+                    Shiny.ui.removeFrame();
+                    Shiny.ui.showStoppingPage();
+                }
+                await Shiny.api.changeProxyStatus(proxyId, spInstance, 'Stopping');
+                if (Shiny.instances._isOpenedApp(proxyId)) {
                     await Shiny.api.waitForStatusChange(proxyId, spInstance);
                     Shiny.ui.showStoppedPage();
                 }
@@ -98,11 +103,15 @@ Shiny.instances = {
             }
 
             if (confirm("Are you sure you want to pause instance \"" + appInstanceName + "\"?")) {
-                await Shiny.instances._pauseInstance(proxyId, spInstance);
-                if (Shiny.app !== undefined && proxyId === Shiny.app.runtimeState.proxy.id) {
-                    await Shiny.instances._pauseInstance(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance);
+                if (Shiny.instances._isOpenedApp(proxyId)) {
+                    Shiny.app.runtimeState.appStopped = true;
+                    Shiny.ui.removeFrame();
+                    Shiny.ui.showPausingPage();
+                }
+                await Shiny.api.changeProxyStatus(proxyId, spInstance, 'Pausing');
+                if (Shiny.instances._isOpenedApp(proxyId)) {
                     await Shiny.api.waitForStatusChange(proxyId, spInstance);
-                    Shiny.ui.showStoppedPage(); // TODO dedicated page
+                    Shiny.ui.showPausedAppPage();
                 }
             }
         },
@@ -118,10 +127,11 @@ Shiny.instances = {
                 window.location = overrideUrl;
                 return;
             } else if (confirm("Are you sure you want to restart the current instance?")) {
-                Shiny.ui.hideModal();
-                Shiny.ui.showLoading();
+                Shiny.app.runtimeState.appStopped = true;
+                Shiny.ui.removeFrame();
+                Shiny.ui.showStoppingPage();
 
-                await Shiny.instances._deleteInstance(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance);
+                await Shiny.api.changeProxyStatus(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance, 'Stopping');
                 await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance)
 
                 window.location = overrideUrl;
@@ -176,32 +186,8 @@ Shiny.instances = {
 
         },
     },
-
     _createUrlForInstance: function (instance) {
         return Shiny.common.staticState.contextPath + "app_i/" + Shiny.common.runtimeState.switchInstanceApp.appName + "/" + instance + "/";
-    },
-
-    _deleteInstance: async function (proxyId, spInstance) {
-        if (Shiny.app !== undefined && proxyId === Shiny.app.runtimeState.proxy.id) {
-            Shiny.app.runtimeState.appStopped = true;
-            Shiny.ui.removeFrame();
-        }
-        try {
-            await Shiny.api.changeProxyStatus(proxyId, spInstance, 'Stopping');
-        } catch (e) {
-            alert("Error stopping proxy, please try again.")
-        }
-    },
-    async _pauseInstance(proxyId, spInstance) {
-        if (Shiny.app !== undefined && proxyId === Shiny.app.runtimeState.proxy.id) {
-            Shiny.app.runtimeState.appStopped = true;
-            Shiny.ui.removeFrame();
-        }
-        try {
-            await Shiny.api.changeProxyStatus(proxyId, spInstance, 'Pausing');
-        } catch (e) {
-            alert("Error stopping proxy, please try again.")
-        }
     },
     _refreshModal: async function () {
         let templateData = await Shiny.api.getProxiesAsTemplateData();
@@ -245,5 +231,10 @@ Shiny.instances = {
             return "Default";
         }
         return appInstanceName;
+    },
+    _isOpenedApp(proxyId) {
+        return Shiny.app !== undefined
+            && Shiny.app.runtimeState.proxy != null
+            && Shiny.app.runtimeState.proxy.id === proxyId;
     }
 };

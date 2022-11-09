@@ -54,6 +54,34 @@
 		<div class="loading-txt">Launching <span th:text="${appTitle}"></span>...</div>
 		<div class="loading-img"></div>
 	</div>
+	<div id="resumingApp" class="loading">
+		<div class="loading-txt">Resuming this app...</div>
+		<div class="loading-img"></div>
+	</div>
+	<div id="stoppingApp" class="loading">
+		<div class="loading-txt">Stopping this app...</div>
+		<div class="loading-img"></div>
+	</div>
+	<div id="pausingApp" class="loading">
+		<div class="loading-txt">Pausing this app...</div>
+		<div class="loading-img"></div>
+	</div>
+	<div id="appStopped" class="loading">
+		<div class="loading-txt">
+			This app has been stopped, you can now close this tab.<br><br>
+			<span class="refreshButton">
+				<button onClick="Shiny.instances.eventHandlers.onRestartInstance()" class="btn btn-default btn-restart-app">Restart app</button>
+			</span>
+		</div>
+	</div>
+	<div id="appPaused" class="loading">
+		<div class="loading-txt">
+			This app has been pause, you can now close this tab.<br><br>
+			<span class="refreshButton">
+				<button onClick="Shiny.instances.eventHandlers.onRestartInstance()" class="btn btn-default btn-restart-app">Resume app</button>
+			</span>
+		</div>
+	</div>
 	<div id="reconnecting" class="loading">
 		<div class="loading-txt">
 			Reconnecting to <span th:text="${appTitle}"></span>...
@@ -76,17 +104,9 @@
 	</div>
 	<div id="startFailed" class="loading">
 		<div class="loading-txt">
-			Failed to start application <span th:text="${appTitle}"></span><br><br>
+			Failed to start app <span th:text="${appTitle}"></span><br><br>
 			<span class="refreshButton">
 				<button onClick="window.location.reload()" class="btn btn-default">Try again</button>
-			</span>
-		</div>
-	</div>
-	<div id="appStopped" class="loading">
-		<div class="loading-txt">
-			This app has been stopped, you can now close this tab.<br><br>
-			<span class="refreshButton">
-				<button onClick="Shiny.instances.eventHandlers.onRestartInstance()" class="btn btn-default btn-restart-app">Restart app</button>
 			</span>
 		</div>
 	</div>

@@ -105,7 +105,7 @@ public class AppController extends BaseController {
 		map.put("appInstance", appRequestInfo.getAppInstance());
 		map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
 		map.put("containerSubPath", buildContainerSubPath(request, appRequestInfo));
-		if (proxy == null) {
+		if (proxy == null || proxy.getRuntimeObjectOrNull(DisplayNameKey.inst) == null) {
 			if (spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) {
 				map.put("appTitle", spec.getId());
 			} else {
@@ -114,8 +114,8 @@ public class AppController extends BaseController {
 			map.put("proxy", null);
 		} else {
 			map.put("appTitle", proxy.getRuntimeValue(DisplayNameKey.inst));
-			map.put("proxy", proxy);
 		}
+		map.put("proxy", proxy);
 		if (spec.getParameters() != null) {
 			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 			AllowedParametersForUser allowedParametersForUser = parameterService.calculateAllowedParametersForUser(auth, spec);

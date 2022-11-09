@@ -98,6 +98,10 @@ Shiny.app = {
             } else {
                 Shiny.app.startAppWithParameters(null);
             }
+        } else if (Shiny.app.runtimeState.proxy.status === "New") {
+            Shiny.ui.setShinyFrameHeight();
+            Shiny.ui.showLoading();
+            await Shiny.app.waitForAppStart();
         } else if (Shiny.app.runtimeState.proxy.status === "Paused") {
             if (Shiny.app.staticState.parameters.names !== null) {
                 Shiny.ui.showParameterForm();
@@ -116,10 +120,11 @@ Shiny.app = {
     },
     async waitForAppStart() {
         const proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance);
-        if (proxy !== null && proxy.status !== "Stopped") {
-            Shiny.app.runtimeState.proxy = proxy;
-        } else {
+        Shiny.app.runtimeState.proxy = proxy;
+        if (proxy === null || proxy.status !== "Stopped") {
             Shiny.app.startupFailed();
+        } else {
+            Shiny.app.loadApp();
         }
     },
     submitParameters(parameters) {
@@ -134,7 +139,6 @@ Shiny.app = {
         Shiny.ui.showResumingPage();
         await Shiny.api.changeProxyStatus(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance, 'Resuming', parameters)
         await Shiny.app.waitForAppStart();
-        Shiny.app.loadApp();
     },
     async startAppWithParameters(parameters) {
         Shiny.ui.setShinyFrameHeight();
@@ -161,10 +165,9 @@ Shiny.app = {
         }
         Shiny.app.runtimeState.proxy = response.data;
         await Shiny.app.waitForAppStart();
-        Shiny.app.loadApp();
     },
     startupFailed() {
-        if (!Shiny.app.runtimeState.appStopped) {
+        if (!Shiny.app.runtimeState.appStopped && !Shiny.app.runtimeState.navigatingAway) {
             Shiny.ui.showStartFailedPage();
         }
     },

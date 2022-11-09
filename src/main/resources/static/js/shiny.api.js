@@ -51,10 +51,13 @@ Shiny.api = {
         const responses = await Promise.all(requests);
         return Shiny.api._groupByApp(responses.flat());
     },
-    async changeProxyStatus(proxyId, spInstance, desiredState) {
+    async changeProxyStatus(proxyId, spInstance, desiredState, parameters) {
+        if (parameters === null) {
+            parameters = {};
+        }
         let response = await fetch(Shiny.api.buildURLForInstance("api/" + proxyId + '/status', spInstance), {
             method: 'PUT',
-            body:  JSON.stringify({"desiredState": desiredState}),
+            body:  JSON.stringify({"desiredState": desiredState, "parameters": parameters}),
             headers: {
                 'Content-Type': 'application/json'
             },

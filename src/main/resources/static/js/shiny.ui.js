@@ -233,7 +233,7 @@ Shiny.ui = {
             json[element.name] = element.value;
         }
         $('#parameterForm').hide();
-        Shiny.app.startAppWithParameters(json);
+        Shiny.app.submitParameters(json);
     },
 
     selectChange(target) {

@@ -112,35 +112,30 @@ public class AppController extends BaseController {
 				map.put("appTitle", spec.getDisplayName());
 			}
 			map.put("proxy", null);
+		} else {
+			map.put("appTitle", proxy.getRuntimeValue(DisplayNameKey.inst));
+			map.put("proxy", proxy);
+		}
+		if (spec.getParameters() != null) {
+			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+			AllowedParametersForUser allowedParametersForUser = parameterService.calculateAllowedParametersForUser(auth, spec);
+			map.put("parameterAllowedCombinations", allowedParametersForUser.getAllowedCombinations());
+			map.put("parameterValues", allowedParametersForUser.getValues());
+			map.put("parameterDefaults", allowedParametersForUser.getDefaultValue());
+			map.put("parameterDefinitions", spec.getParameters().getDefinitions());
+			map.put("parameterIds", spec.getParameters().getIds());
+
+			if (spec.getParameters().getTemplate() != null) {
+				map.put("parameterFragment", renderParameterTemplate(spec.getParameters().getTemplate(), map));
+			} else {
+				map.put("parameterFragment", null);
+			}
+		} else {
 			map.put("parameterValues", null);
 			map.put("parameterDefaults", null);
 			map.put("parameterDefinitions", null);
 			map.put("parameterIds", null);
 			map.put("parameterFragment", null);
-		} else {
-			map.put("appTitle", proxy.getRuntimeValue(DisplayNameKey.inst));
-			map.put("proxy", proxy);
-			if (spec.getParameters() != null) {
-				Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-				AllowedParametersForUser allowedParametersForUser = parameterService.calculateAllowedParametersForUser(auth, spec);
-				map.put("parameterAllowedCombinations", allowedParametersForUser.getAllowedCombinations());
-				map.put("parameterValues", allowedParametersForUser.getValues());
-				map.put("parameterDefaults", allowedParametersForUser.getDefaultValue());
-				map.put("parameterDefinitions", spec.getParameters().getDefinitions());
-				map.put("parameterIds", spec.getParameters().getIds());
-
-				if (spec.getParameters().getTemplate() != null) {
-					map.put("parameterFragment", renderParameterTemplate(spec.getParameters().getTemplate(), map));
-				} else {
-					map.put("parameterFragment", null);
-				}
-			} else {
-				map.put("parameterValues", null);
-				map.put("parameterDefaults", null);
-				map.put("parameterDefinitions", null);
-				map.put("parameterIds", null);
-				map.put("parameterFragment", null);
-			}
 		}
 		// operator specific
 		if (operatorService.isEnabled()) {
@@ -159,7 +154,7 @@ public class AppController extends BaseController {
 	@ResponseBody
 	@JsonView(Views.UserApi.class)
 	@RequestMapping(value = "/app_i/{specId}/{appInstanceName}", method = RequestMethod.POST)
-	public ResponseEntity<ApiResponse<Proxy>> startApp(@PathVariable String specId, @PathVariable String appInstanceName, @RequestBody(required = false) AppBody appBody) throws InvalidParametersException {
+	public ResponseEntity<ApiResponse<Proxy>> startApp(@PathVariable String specId, @PathVariable String appInstanceName, @RequestBody(required = false) AppBody appBody) {
 		ProxySpec spec = proxyService.getProxySpec(specId);
 		if (!userService.canAccess(spec)) {
 			throw new AccessDeniedException(String.format("Cannot start proxy %s: access denied", spec.getId()));
@@ -178,7 +173,11 @@ public class AppController extends BaseController {
             throw new BadRequestException("Cannot start new proxy because the maximum amount of instances of this proxy has been reached");
         }
 
-		return ApiResponse.success(asyncProxyService.startProxy(spec, runtimeValues, id, (appBody != null) ? appBody.getParameters() : null));
+		try {
+			return ApiResponse.success(asyncProxyService.startProxy(spec, runtimeValues, id, (appBody != null) ? appBody.getParameters() : null));
+		} catch (InvalidParametersException ex) {
+			return ApiResponse.fail(ex.getMessage());
+		}
 	}
 
 

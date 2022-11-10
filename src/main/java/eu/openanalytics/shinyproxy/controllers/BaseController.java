@@ -20,23 +20,14 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
-import java.security.Principal;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
-import eu.openanalytics.containerproxy.model.runtime.runtimevalues.DisplayNameKey;
+import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.IdentifierService;
+import eu.openanalytics.containerproxy.service.ProxyService;
+import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
+import eu.openanalytics.containerproxy.util.SessionHelper;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.OperatorService;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
@@ -50,11 +41,17 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.ModelMap;
 import org.springframework.util.StreamUtils;
 
-import eu.openanalytics.containerproxy.model.runtime.Proxy;
-import eu.openanalytics.containerproxy.model.spec.ProxySpec;
-import eu.openanalytics.containerproxy.service.ProxyService;
-import eu.openanalytics.containerproxy.service.UserService;
-import eu.openanalytics.containerproxy.util.SessionHelper;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.security.Principal;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public abstract class BaseController {
 
@@ -177,6 +174,34 @@ public abstract class BaseController {
 		}
 		imageCache.put(resourceURI, resolvedValue);
 		return resolvedValue;
+	}
+
+	/**
+	 * Validates whether a proxy should be allowed to start.
+	 */
+	protected boolean validateProxyStart(ProxySpec spec) {
+		Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec);
+
+		if (maxInstances == -1) {
+			return true;
+		}
+
+		// note: there is a very small change that the user is able to start more instances than allowed, if the user
+		// starts many proxies at once. E.g. in the following scenario:
+		// - max proxies = 2
+		// - user starts a proxy
+		// - user sends a start proxy request -> this function is called and returns true
+		// - just before this new proxy is added to the list of active proxies, the user sends a new start proxy request
+		// - again this new proxy is allowed, because there is still only one proxy in the list of active proxies
+		// -> the user has three proxies running.
+		// Because of chance that this happens is small and that the consequences are low, we accept this risk.
+		int currentAmountOfInstances = proxyService.getProxies(
+				p -> p.getSpecId().equals(spec.getId())
+						&& userService.isOwner(p),
+				false).size();
+
+
+		return currentAmountOfInstances < maxInstances;
 	}
 
 }

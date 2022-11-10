@@ -25,7 +25,6 @@ import eu.openanalytics.containerproxy.api.dto.ApiResponse;
 import eu.openanalytics.containerproxy.model.Views;
 import eu.openanalytics.containerproxy.model.runtime.AllowedParametersForUser;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
-import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.DisplayNameKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
@@ -34,7 +33,6 @@ import eu.openanalytics.containerproxy.service.InvalidParametersException;
 import eu.openanalytics.containerproxy.service.ParametersService;
 import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
-import eu.openanalytics.containerproxy.util.Retrying;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
@@ -164,14 +162,14 @@ public class AppController extends BaseController {
 			return ApiResponse.fail("You already have an instance of this app with the given name");
 		}
 
+		if (!validateProxyStart(spec)) {
+			throw new BadRequestException("Cannot start new proxy because the maximum amount of instances of this proxy has been reached");
+		}
+
 		List<RuntimeValue> runtimeValues = shinyProxySpecProvider.getRuntimeValues(spec);
 		String id = UUID.randomUUID().toString();
 		runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(id)));
 		runtimeValues.add(new RuntimeValue(AppInstanceKey.inst, appInstanceName));
-
-        if (!validateProxyStart(spec)) {
-            throw new BadRequestException("Cannot start new proxy because the maximum amount of instances of this proxy has been reached");
-        }
 
 		try {
 			return ApiResponse.success(asyncProxyService.startProxy(spec, runtimeValues, id, (appBody != null) ? appBody.getParameters() : null));
@@ -180,31 +178,6 @@ public class AppController extends BaseController {
 		}
 	}
 
-
-    @RequestMapping(value={"/app_direct_i/**", "/app_direct/**"})
-	public void appDirect(HttpServletRequest request, HttpServletResponse response) throws IOException, InvalidParametersException {
-		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
-
-		Proxy proxy = getOrStart(appRequestInfo, null);
-		awaitReady(proxy);
-
-		String mapping = getProxyEndpoint(proxy);
-
-		if (appRequestInfo.getSubPath() == null) {
-			try {
-				response.sendRedirect(request.getRequestURI() + "/");
-			} catch (Exception e) {
-				throw new RuntimeException("Error redirecting proxy request", e);
-			}
-			return;
-		}
-
-		try {
-			mappingManager.dispatchAsync(mapping + appRequestInfo.getSubPath(), request, response);
-		} catch (Exception e) {
-			throw new RuntimeException("Error routing proxy request", e);
-		}
-	}
 
 	@RequestMapping(value="/app_proxy/**")
 	public void appProxy(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -247,40 +220,6 @@ public class AppController extends BaseController {
 		}
 	}
 
-	private Proxy getOrStart(AppRequestInfo appRequestInfo, Map<String, String> parameters) throws InvalidParametersException {
-		Proxy proxy = findUserProxy(appRequestInfo);
-		if (proxy == null || proxy.getStatus().equals(ProxyStatus.Paused)) {
-			ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
-
-			if (spec == null) throw new BadRequestException("Unknown proxy spec: " + appRequestInfo.getAppName());
-
-			List<RuntimeValue> runtimeValues = shinyProxySpecProvider.getRuntimeValues(spec);
-			String id = UUID.randomUUID().toString();
-			runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(id)));
-			runtimeValues.add(new RuntimeValue(AppInstanceKey.inst, appRequestInfo.getAppInstance()));
-
-			if (!validateProxyStart(spec)) {
-				throw new BadRequestException("Cannot start new proxy because the maximum amount of instances of this proxy has been reached");
-			}
-
-			proxyService.startProxy(userService.getCurrentAuth(), spec, runtimeValues, id, parameters).run();
-			proxy = proxyService.getProxy(id);
-		}
-		return proxy;
-	}
-
-
-	private boolean awaitReady(Proxy proxy) {
-		if (proxy == null) return false;
-		if (proxy.getStatus() == ProxyStatus.Up) return true;
-		if (proxy.getStatus() == ProxyStatus.Stopping || proxy.getStatus() == ProxyStatus.Stopped) return false;
-
-		int totalWaitMs = Integer.parseInt(environment.getProperty("proxy.container-wait-time", "20000"));
-		Retrying.retry((currentAttempt, maxAttempts) -> proxy.getStatus() != ProxyStatus.Starting, totalWaitMs);
-
-		return (proxy.getStatus() == ProxyStatus.Up);
-	}
-
 	private String buildContainerSubPath(HttpServletRequest request, AppRequestInfo appRequestInfo) {
 		String queryString = ServletUriComponentsBuilder.fromRequest(request)
 				.replaceQueryParam("sp_hide_navbar")
@@ -319,33 +258,6 @@ public class AppController extends BaseController {
 		return getContextPath() + "app_proxy/";
 	}
 
-	/**
-	 * Validates whether a proxy should be allowed to start.
-	 */
-	private boolean validateProxyStart(ProxySpec spec) {
-		Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec);
-
-		if (maxInstances == -1) {
-		    return true;
-		}
-
-		// note: there is a very small change that the user is able to start more instances than allowed, if the user
-		// starts many proxies at once. E.g. in the following scenario:
-		// - max proxies = 2
-		// - user starts a proxy
-		// - user sends a start proxy request -> this function is called and returns true
-		// - just before this new proxy is added to the list of active proxies, the user sends a new start proxy request
-		// - again this new proxy is allowed, because there is still only one proxy in the list of active proxies
-		// -> the user has three proxies running.
-		// Because of chance that this happens is small and that the consequences are low, we accept this risk.
-		int currentAmountOfInstances = proxyService.getProxies(
-				p -> p.getSpecId().equals(spec.getId())
-						&& userService.isOwner(p),
-				false).size();
-
-
-		return currentAmountOfInstances < maxInstances;
-	}
 
 	private Optional<RedirectView> createRedirectIfRequired(HttpServletRequest request, AppRequestInfo appRequestInfo, Proxy proxy, ProxySpec spec) {
 		// if sub-path is empty -> no ending slash -> no ending slash and redirect required

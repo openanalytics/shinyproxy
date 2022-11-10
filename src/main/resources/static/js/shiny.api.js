@@ -62,9 +62,13 @@ Shiny.api = {
                 'Content-Type': 'application/json'
             },
         });
-        if (response.status !== 200) {
+        if (response.status === 400) {
+            return false;
+        } else if (response.status !== 200) {
             console.log(response);
+            return false;
         }
+        return true;
     },
     async waitForStatusChange(proxyId, spInstance) {
         while (true) {

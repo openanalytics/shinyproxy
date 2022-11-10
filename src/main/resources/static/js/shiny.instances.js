@@ -82,13 +82,14 @@ Shiny.instances = {
             }
 
             if (confirm("Are you sure you want to stop instance \"" + appInstanceName + "\"?")) {
+                if (!await Shiny.api.changeProxyStatus(proxyId, spInstance, 'Stopping')) {
+                    alert("Cannot stop this app now, please try again later");
+                    return;
+                }
                 if (Shiny.instances._isOpenedApp(proxyId)) {
                     Shiny.app.runtimeState.appStopped = true;
                     Shiny.ui.removeFrame();
                     Shiny.ui.showStoppingPage();
-                }
-                await Shiny.api.changeProxyStatus(proxyId, spInstance, 'Stopping');
-                if (Shiny.instances._isOpenedApp(proxyId)) {
                     await Shiny.api.waitForStatusChange(proxyId, spInstance);
                     Shiny.ui.showStoppedPage();
                 }
@@ -103,13 +104,14 @@ Shiny.instances = {
             }
 
             if (confirm("Are you sure you want to pause instance \"" + appInstanceName + "\"?")) {
+                if (!await Shiny.api.changeProxyStatus(proxyId, spInstance, 'Pausing')) {
+                    alert("Cannot pause this app now, please try again later");
+                    return;
+                }
                 if (Shiny.instances._isOpenedApp(proxyId)) {
                     Shiny.app.runtimeState.appStopped = true;
                     Shiny.ui.removeFrame();
                     Shiny.ui.showPausingPage();
-                }
-                await Shiny.api.changeProxyStatus(proxyId, spInstance, 'Pausing');
-                if (Shiny.instances._isOpenedApp(proxyId)) {
                     await Shiny.api.waitForStatusChange(proxyId, spInstance);
                     Shiny.ui.showPausedAppPage();
                 }
@@ -123,7 +125,9 @@ Shiny.instances = {
             const overrideUrl = new URL(window.location);
             overrideUrl.searchParams.delete("sp_instance_override");
 
-            if (Shiny.app.runtimeState.appStopped) {
+            if (Shiny.app.runtimeState.appStopped
+                || Shiny.app.runtimeState.proxy.status === "Stopped"
+                || Shiny.app.runtimeState.proxy.status === "Paused") {
                 window.location = overrideUrl;
                 return;
             } else if (confirm("Are you sure you want to restart the current instance?")) {

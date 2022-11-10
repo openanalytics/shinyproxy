@@ -42,7 +42,7 @@ Shiny.app = {
 
     runtimeState: {
         /**
-         * @type {?{id: string, runtimeValues: {SHINYPROXY_PUBLIC_PATH: string, SHINYPROXY_FORCE_FULL_RELOAD: boolean}}}
+         * @type {?{id: string, status: string, runtimeValues: {SHINYPROXY_PUBLIC_PATH: string, SHINYPROXY_FORCE_FULL_RELOAD: boolean}}}
          */
         proxy: null,
         containerPath: null,
@@ -98,7 +98,9 @@ Shiny.app = {
             } else {
                 Shiny.app.startAppWithParameters(null);
             }
-        } else if (Shiny.app.runtimeState.proxy.status === "New") {
+        } else if (Shiny.app.runtimeState.proxy.status === "New"
+            || Shiny.app.runtimeState.proxy.status === "Starting"
+            || Shiny.app.runtimeState.proxy.status === "Resuming") {
             Shiny.ui.setShinyFrameHeight();
             Shiny.ui.showLoading();
             await Shiny.app.waitForAppStart();
@@ -114,6 +116,18 @@ Shiny.app = {
             Shiny.ui.showFrame();
             Shiny.connections.startHeartBeats();
             Shiny.app.setUpOverride();
+        } else if (Shiny.app.runtimeState.proxy.status === "Stopping") {
+            Shiny.ui.showStoppingPage();
+            Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance);
+            if (Shiny.app.runtimeState.proxy !== null) {
+                Shiny.ui.showStoppedPage();
+            }
+        } else if (Shiny.app.runtimeState.proxy.status === "Pausing") {
+            Shiny.ui.showPausingPage();
+            Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance);
+            if (Shiny.app.runtimeState.proxy !== null) {
+                Shiny.ui.showPausedAppPage();
+            }
         } else {
             Shiny.app.startupFailed();
         }
@@ -121,7 +135,7 @@ Shiny.app = {
     async waitForAppStart() {
         const proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance);
         Shiny.app.runtimeState.proxy = proxy;
-        if (proxy === null || proxy.status !== "Stopped") {
+        if (proxy === null || proxy.status === "Stopped") {
             Shiny.app.startupFailed();
         } else {
             Shiny.app.loadApp();

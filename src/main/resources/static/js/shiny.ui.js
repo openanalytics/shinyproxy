@@ -137,8 +137,7 @@ Shiny.ui = {
 
    showStartFailedPage: function () {
         $('#shinyframe').hide();
-        $("#loading").hide();
-        $("#reconnecting").hide();
+        $('.loading').hide();
         $("#startFailed").show();
     },
 

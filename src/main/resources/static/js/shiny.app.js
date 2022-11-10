@@ -99,7 +99,6 @@ Shiny.app = {
                 Shiny.app.startAppWithParameters(null);
             }
         } else if (Shiny.app.runtimeState.proxy.status === "New"
-            || Shiny.app.runtimeState.proxy.status === "Starting"
             || Shiny.app.runtimeState.proxy.status === "Resuming") {
             Shiny.ui.setShinyFrameHeight();
             Shiny.ui.showLoading();

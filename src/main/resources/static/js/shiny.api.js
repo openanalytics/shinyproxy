@@ -150,7 +150,7 @@ Shiny.api = {
 
                     let appInstance = instance.runtimeValues.SHINYPROXY_APP_INSTANCE;
 
-                    if (instance.status !== "Up" && instance.status !== "Starting" && instance.status !== "New" && instance.status !== "Paused" && instance.status !== "Pausing") {
+                    if (instance.status !== "Up" && instance.status !== "New" && instance.status !== "Paused" && instance.status !== "Pausing") {
                         return res;
                     }
 

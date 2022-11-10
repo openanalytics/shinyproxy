@@ -220,7 +220,7 @@ public class AppController extends BaseController {
 		}
 
 		Proxy proxy = proxyService.getProxy(proxyId);
-		if (proxy == null || proxy.getStatus() == ProxyStatus.Stopping || proxy.getStatus() == ProxyStatus.Stopped) {
+		if (proxy == null || proxy.getStatus().isUnavailable()) {
 			response.setStatus(410);
 			response.getWriter().write("{\"status\":\"error\", \"message\":\"app_stopped_or_non_existent\"}");
 			return;
@@ -228,11 +228,6 @@ public class AppController extends BaseController {
 		if (!userService.isOwner(proxy)) {
 			response.setStatus(401);
 			response.getWriter().write("{\"status\":\"error\", \"message\":\"shinyproxy_authentication_required\"}");
-			return;
-		}
-		if (proxy.getStatus() == ProxyStatus.Paused) {
-			response.setStatus(400); // TODO
-			response.getWriter().write("{\"status\":\"error\", \"message\":\"app_paused\"}");
 			return;
 		}
 		if (requestUrl.equals(proxyId)) {

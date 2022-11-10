@@ -60,7 +60,7 @@ public class ShinyProxyTestStrategy implements IProxyTestStrategy {
 
 		return Retrying.retry((currentAttempt, maxAttempts) -> {
 			try {
-				if (proxy.getStatus() == ProxyStatus.Stopping || proxy.getStatus() == ProxyStatus.Stopped) {
+				if (proxy.getStatus().isUnavailable()) {
 					// proxy got stopped while loading -> no need to try to connect it since the container will already be deleted
 					return true;
 				}

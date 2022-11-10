@@ -64,7 +64,7 @@ public class HeartbeatController {
     public ResponseEntity<HashMap<String, String>> heartbeat(@PathVariable("proxyId") String proxyId) {
         Proxy proxy = proxyService.getProxy(proxyId);
 
-        if (proxy == null || proxy.getStatus().equals(ProxyStatus.Stopping) || proxy.getStatus().equals(ProxyStatus.Stopped)) {
+        if (proxy == null || proxy.getStatus().isUnavailable()) {
             return ResponseEntity.status(410).body(new HashMap<String, String>() {{
                 put("status", "error");
                 put("message", "app_stopped_or_non_existent");
@@ -91,7 +91,7 @@ public class HeartbeatController {
     public ResponseEntity<Map<String, String>> getHeartbeatInfo(@PathVariable("proxyId") String proxyId) {
         Proxy proxy = proxyService.getProxy(proxyId);
 
-        if (proxy == null || proxy.getStatus().equals(ProxyStatus.Stopping) || proxy.getStatus().equals(ProxyStatus.Stopped)) {
+        if (proxy == null || proxy.getStatus().isUnavailable()) {
             return ResponseEntity.status(410).body(new HashMap<String, String>() {{
                 put("status", "error");
                 put("message", "app_stopped_or_non_existent");

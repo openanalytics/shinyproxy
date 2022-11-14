@@ -135,7 +135,7 @@ Shiny.ui = {
         $("#reloadFailed").show();
     },
 
-   showStartFailedPage: function () {
+    showStartFailedPage: function () {
         $('#shinyframe').hide();
         $('.loading').hide();
         $("#startFailed").show();
@@ -285,6 +285,31 @@ Shiny.ui = {
         const minutes = Math.floor((time % 3600) / 60).toString().padStart(2, '0');
         const seconds = Math.floor(time % 60).toString().padStart(2, '0');
         return `${hours}:${minutes}:${seconds}`
+    },
+
+    formatStatus(status) {
+        if (status === "Up") {
+            return `<span class="label status-label label-success">Up</span>`;
+        }
+        if (status === "New") {
+            return `<span class="label status-label label-warning">New</span>`;
+        }
+        if (status === "Resuming") {
+            return `<span class="label status-label label-warning">Resuming</span>`;
+        }
+        if (status === "Pausing") {
+            return `<span class="label status-label label-warning">Pausing</span>`;
+        }
+        if (status === "Paused") {
+            return `<span class="label status-label label-default">Paused</span>`;
+        }
+        if (status === "Stopping") {
+            return `<span class="label status-label label-danger">Stopping</span>`;
+        }
+        if (status === "Stopped") {
+            return `<span class="label status-label label-danger">Stopped</span>`;
+        }
+        return "";
     }
 }
 
@@ -301,5 +326,8 @@ $(window).on('load', function () {
         Shiny.common.closeAppDetails();
         $('#modal .modal-dialog').hide();
     });
+});
 
+Handlebars.registerHelper('formatStatus', function (status) {
+    return Shiny.ui.formatStatus(status);
 });

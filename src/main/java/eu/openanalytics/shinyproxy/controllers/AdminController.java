@@ -113,22 +113,28 @@ public class AdminController extends BaseController {
 				} else {
 					imageTag = "N/A";
 				}
-				endpoint = proxy.getContainers().get(0).getTargets().values().stream().map(URI::toString).findFirst().orElse("N/A"); // TODO Shiny apps have only one endpoint
+				if (proxy.getContainers().get(0).getTargets().containsKey("default")) {
+					endpoint = proxy.getContainers().get(0).getTargets().get("default").toString();
+				} else {
+					endpoint = "N/A";
+				}
+				backendContainerName = proxy.getContainers().get(0).getRuntimeObjectOrDefault(BackendContainerNameKey.inst, "N/A");
 			} else {
 				imageName = "N/A";
 				imageTag = "N/A";
 				endpoint = "N/A";
+				backendContainerName = "N/A";
 			}
 
-			Long heartbeatTimeout = proxy.getRuntimeObject(HeartbeatTimeoutKey.inst);
-			if (heartbeatTimeout != -1) {
+			Long heartbeatTimeout = proxy.getRuntimeObjectOrNull(HeartbeatTimeoutKey.inst); // TODO NPE
+			if (heartbeatTimeout != null && heartbeatTimeout != -1) {
 				this.heartbeatTimeout = formatSeconds(heartbeatTimeout / 1000);
 			} else {
 				this.heartbeatTimeout = null;
 			}
 
-			Long maxLifetime = proxy.getRuntimeObject(MaxLifetimeKey.inst);
-			if (maxLifetime != -1) {
+			Long maxLifetime = proxy.getRuntimeObjectOrNull(MaxLifetimeKey.inst);
+			if (maxLifetime != null && maxLifetime != -1) {
 				this.maxLifetime = formatSeconds(maxLifetime * 60);
 			} else {
 				this.maxLifetime = null;
@@ -140,8 +146,7 @@ public class AdminController extends BaseController {
 			} else {
 				parameters = null;
 			}
-			spInstance = proxy.getRuntimeValue(InstanceIdKey.inst);
-			backendContainerName = proxy.getContainers().get(0).getRuntimeValue(BackendContainerNameKey.inst);
+			spInstance = proxy.getRuntimeObjectOrDefault(InstanceIdKey.inst, "N/A");
 		}
 
 		private String getTimeDelta(Long timestamp) {

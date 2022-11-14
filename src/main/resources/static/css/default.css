@@ -276,3 +276,9 @@
 #stop-all-apps-btn {
 	display: none;
 }
+
+.status-label {
+	display: inline-block;
+	width: 70px;
+	line-height: inherit;
+}

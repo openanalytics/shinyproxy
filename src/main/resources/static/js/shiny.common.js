@@ -213,12 +213,5 @@ Shiny.common = {
         if (Shiny.common.staticState.myAppsMode === 'Inline') {
             Shiny.common.onShowMyApps();
         }
-    }
+    },
 }
-
-Handlebars.registerHelper('formatStatus', function (status) {
-    if (status === "Up") {
-        return "";
-    }
-    return "Status: " + status;
-});

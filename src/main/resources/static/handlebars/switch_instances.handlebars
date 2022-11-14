@@ -11,7 +11,7 @@
                         <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onPauseApp(event, '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Pause</button>
                     {{/if}}
                 </div>
-                <span>Uptime: {{ uptime }} {{formatStatus status }}</span>
+                <span>{{{formatStatus status }}} Uptime: {{ uptime }}</span>
             </div>
         {{else}}
             <a target="{{ ../target }}" href="{{ url }}" class="app-instance list-group-item">
@@ -23,7 +23,7 @@
                         <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onPauseApp(event, '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Pause</button>
                     {{/if}}
                 </div>
-                <span>Uptime: {{ uptime }} {{formatStatus status }}</span>
+                <span>{{{formatStatus status }}} Uptime: {{ uptime }}</span>
             </a>
         {{/if}}
     {{/each}}

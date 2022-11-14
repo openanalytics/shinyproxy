@@ -144,15 +144,9 @@ Shiny.api = {
             let processedInstances = instances.reduce( (res, instance) => {
                 if (instance.hasOwnProperty('specId') &&
                     instance.hasOwnProperty('runtimeValues') &&
-                    instance.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE') &&
-                    instance.runtimeValues.hasOwnProperty('SHINYPROXY_INSTANCE')
-                ) {
+                    instance.runtimeValues.hasOwnProperty('SHINYPROXY_APP_INSTANCE')) {
 
                     let appInstance = instance.runtimeValues.SHINYPROXY_APP_INSTANCE;
-
-                    if (instance.status !== "Up" && instance.status !== "New" && instance.status !== "Paused" && instance.status !== "Pausing") {
-                        return res;
-                    }
 
                     displayName = instance.displayName;
                     let instanceName = Shiny.instances._toAppDisplayName(appInstance);
@@ -162,13 +156,18 @@ Shiny.api = {
                         uptime = Shiny.ui.formatSeconds((Date.now() - instance.startupTimestamp) / 1000);
                     }
 
+                    let spInstance = null;
+                    if (instance.runtimeValues.hasOwnProperty('SHINYPROXY_INSTANCE')) {
+                        spInstance = instance.runtimeValues.SHINYPROXY_INSTANCE;
+                    }
+
                     const url = Shiny.api._buildURLForApp(instance);
                     res.push({
                         appName: instance.specId,
                         instanceName: instanceName,
                         displayName: displayName,
                         url: url,
-                        spInstance: instance.runtimeValues.SHINYPROXY_INSTANCE,
+                        spInstance: spInstance,
                         proxyId: instance.id,
                         uptime: uptime,
                         status: instance.status

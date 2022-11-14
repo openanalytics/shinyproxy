@@ -46,8 +46,13 @@ Shiny.admin = {
                     className: 'admin-monospace',
                 },
                 {
-                    data: 'status',
-                    className: 'admin-monospace',
+                    data: null,
+                    render: function (data, type) {
+                        if (type === 'display') {
+                            return Shiny.ui.formatStatus(data.status);
+                        }
+                        return data;
+                    }
                 },
                 {
                     data: 'userId',

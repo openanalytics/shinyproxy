@@ -155,7 +155,7 @@
 
 	<script type="text/javascript" th:inline="javascript">
 		$(window).on('load', function() {
-		    window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]], [[${appMaxInstances}]]);
+			window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]], [[${appMaxInstances}]], [[${myAppsMode}]], [[${pauseSupported}]]);
 			if ([[${operatorEnabled}]]) {
 				window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorForceTransferWithActiveApps}]], [[${operatorShowTransferMessage}]]);
 			}

@@ -21,6 +21,7 @@
 package eu.openanalytics.shinyproxy.controllers;
 
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
+import eu.openanalytics.containerproxy.backend.IContainerBackend;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.IdentifierService;
@@ -78,6 +79,9 @@ public abstract class BaseController {
 
 	@Inject
 	protected ShinyProxySpecProvider shinyProxySpecProvider;
+
+	@Inject
+	private IContainerBackend backend;
 
 	private static final Logger logger = LogManager.getLogger(BaseController.class);
 	private static final Map<String, String> imageCache = new HashMap<>();
@@ -141,6 +145,7 @@ public abstract class BaseController {
 		map.put("contextPath", getContextPath());
 		map.put("resourceSuffix", "");
 		map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
+		map.put("pauseSupported", backend.supportsPause());
 
 		// operator specific
 		map.put("operatorEnabled", operatorService.isEnabled());

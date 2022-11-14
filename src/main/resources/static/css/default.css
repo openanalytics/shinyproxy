@@ -118,7 +118,7 @@
 }
 
 .myApps .btn-group {
-	float: left;
+	float:right;
 	margin-left: 15px;
 	display: block;
 	height: 20px
@@ -132,7 +132,7 @@
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	width: calc(100% - 130px);
+	width: calc(100% - 150px);
 }
 
 .active-app-instance-title {

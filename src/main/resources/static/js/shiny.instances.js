@@ -95,7 +95,10 @@ Shiny.instances = {
                 }
             }
         },
-        async onPauseApp(appInstanceName, proxyId, spInstance) {
+        async onPauseApp(event, appInstanceName, proxyId, spInstance) {
+            if (event) {
+                event.preventDefault();
+            }
             if (appInstanceName === undefined) {
                 // when no arguments provided -> pause the current app
                 appInstanceName = Shiny.instances._toAppDisplayName(Shiny.app.staticState.appInstanceName);
@@ -227,6 +230,8 @@ Shiny.instances = {
         } else {
             templateData['target'] = '';
         }
+
+        templateData['pauseSupported'] = Shiny.common.staticState.pauseSupported;
 
         document.getElementById('appInstances').innerHTML = Handlebars.templates.switch_instances(templateData);
     },

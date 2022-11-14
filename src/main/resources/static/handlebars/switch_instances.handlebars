@@ -5,8 +5,11 @@
                 <b class="active-app-instance-title">{{ instanceName }}</b>
                 <div class="btn-group btn-group-xs" role="group">
                     <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.showAppDetails(event, '{{ appName }}', '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Details</button>
-                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Stop app</button>
-                    <button type="button" class="btn btn-primary btn-restart-app" onclick="Shiny.instances.eventHandlers.onRestartInstance(event);">Restart app</button>
+                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Stop</button>
+                    <button type="button" class="btn btn-primary btn-restart-app" onclick="Shiny.instances.eventHandlers.onRestartInstance(event);">Restart</button>
+                    {{#if ../pauseSupported}}
+                        <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onPauseApp(event, '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Pause</button>
+                    {{/if}}
                 </div>
                 <span>Uptime: {{ uptime }} {{formatStatus status }}</span>
             </div>
@@ -15,7 +18,10 @@
                 <span class="app-instance-title">{{ instanceName }}</span>
                 <div class="btn-group btn-group-xs" role="group">
                     <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.showAppDetails(event, '{{ appName }}', '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Details</button>
-                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Stop app</button>
+                    <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Stop</button>
+                    {{#if ../pauseSupported}}
+                        <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onPauseApp(event, '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Pause</button>
+                    {{/if}}
                 </div>
                 <span>Uptime: {{ uptime }} {{formatStatus status }}</span>
             </a>

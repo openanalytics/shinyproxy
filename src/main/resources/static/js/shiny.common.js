@@ -28,6 +28,7 @@ Shiny.common = {
         operatorEnabled: false,
         appMaxInstances: null, // max instances per app
         myAppsMode: null,
+        pauseSupported: null,
     },
     runtimeState: {
         switchInstanceApp: null,
@@ -35,12 +36,13 @@ Shiny.common = {
     _refreshIntervalId: null,
     _detailsRefreshIntervalId: null,
 
-    init: function (contextPath, applicationName, spInstance, appMaxInstances, myAppsMode) {
+    init: function (contextPath, applicationName, spInstance, appMaxInstances, myAppsMode, pauseSupported) {
         Shiny.common.staticState.contextPath = contextPath;
         Shiny.common.staticState.applicationName = applicationName;
         Shiny.common.staticState.spInstance = spInstance;
         Shiny.common.staticState.appMaxInstances = appMaxInstances;
         Shiny.common.staticState.myAppsMode = myAppsMode;
+        Shiny.common.staticState.pauseSupported = pauseSupported;
     },
 
     sleep: function (ms) {
@@ -192,6 +194,7 @@ Shiny.common = {
         templateData.apps.sort(function (a, b) {
             return a.displayName.toLowerCase() > b.displayName.toLowerCase() ? 1 : -1
         });
+        templateData['pauseSupported'] = Shiny.common.staticState.pauseSupported;
         document.getElementById('myApps').innerHTML = Handlebars.templates.my_apps(templateData);
         if (templateData.apps.length === 0 ) {
             $('#stop-all-apps-btn').hide();

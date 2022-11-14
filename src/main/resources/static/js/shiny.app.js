@@ -37,7 +37,7 @@ Shiny.app = {
             names: null,
             ids: null
         },
-        containerSubPath: null
+        containerSubPath: null,
     },
 
     runtimeState: {

@@ -87,7 +87,7 @@
 
 	<script type="text/javascript" th:inline="javascript">
 		$(window).on('load', function () {
-			window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]]);
+			window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]], [[${pauseSupported}]]);
 			if ([[${operatorEnabled}]]) {
 				window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorForceTransferWithActiveApps}]], [[${operatorShowTransferMessage}]]);
 			}

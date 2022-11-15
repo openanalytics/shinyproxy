@@ -24,8 +24,10 @@ import com.fasterxml.jackson.annotation.JsonView;
 import eu.openanalytics.containerproxy.api.dto.ApiResponse;
 import eu.openanalytics.containerproxy.model.Views;
 import eu.openanalytics.containerproxy.model.runtime.AllowedParametersForUser;
+import eu.openanalytics.containerproxy.model.runtime.ParameterValues;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.DisplayNameKey;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.ParameterValuesKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.AsyncProxyService;
@@ -103,6 +105,7 @@ public class AppController extends BaseController {
 		map.put("appInstance", appRequestInfo.getAppInstance());
 		map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
 		map.put("containerSubPath", buildContainerSubPath(request, appRequestInfo));
+		ParameterValues previousParameters = null;
 		if (proxy == null || proxy.getRuntimeObjectOrNull(DisplayNameKey.inst) == null) {
 			if (spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) {
 				map.put("appTitle", spec.getId());
@@ -112,11 +115,12 @@ public class AppController extends BaseController {
 			map.put("proxy", null);
 		} else {
 			map.put("appTitle", proxy.getRuntimeValue(DisplayNameKey.inst));
+			previousParameters = proxy.getRuntimeObjectOrNull(ParameterValuesKey.inst);
 		}
 		map.put("proxy", proxy);
 		if (spec.getParameters() != null) {
 			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-			AllowedParametersForUser allowedParametersForUser = parameterService.calculateAllowedParametersForUser(auth, spec);
+			AllowedParametersForUser allowedParametersForUser = parameterService.calculateAllowedParametersForUser(auth, spec, previousParameters);
 			map.put("parameterAllowedCombinations", allowedParametersForUser.getAllowedCombinations());
 			map.put("parameterValues", allowedParametersForUser.getValues());
 			map.put("parameterDefaults", allowedParametersForUser.getDefaultValue());

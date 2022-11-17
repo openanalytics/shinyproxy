@@ -20,10 +20,10 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import eu.openanalytics.shinyproxy.controllers.AppController;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.ClientAuthorizationRequiredException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.util.ThrowableAnalyzer;
@@ -91,12 +91,16 @@ public class AuthenticationRequiredFilter extends GenericFilterBean {
      */
     private boolean isAuthException(Exception ex) {
         Throwable[] causeChain = throwableAnalyzer.determineCauseChain(ex);
-        RuntimeException ase = (AuthenticationException) throwableAnalyzer.getFirstThrowableOfType(AuthenticationException.class, causeChain);
-        if (ase != null) {
+        Throwable type = throwableAnalyzer.getFirstThrowableOfType(AuthenticationException.class, causeChain);
+        if (type != null) {
             return true;
         }
-        ase = (AccessDeniedException) throwableAnalyzer.getFirstThrowableOfType(AccessDeniedException.class, causeChain);
-        return ase != null;
+        type = throwableAnalyzer.getFirstThrowableOfType(ClientAuthorizationRequiredException.class, causeChain);
+        if (type != null) {
+            return true;
+        }
+        type = throwableAnalyzer.getFirstThrowableOfType(AccessDeniedException.class, causeChain);
+        return type != null;
     }
 
     /**

@@ -83,6 +83,9 @@ Shiny.app = {
             Shiny.app.staticState.containerPath = containerPath;
             Shiny.app.staticState.webSocketReconnectionMode = webSocketReconnectionMode;
             Shiny.app.staticState.proxyId = proxyId;
+            if (!(await Shiny.app.checkAppHealth())) {
+                return;
+            }
             Shiny.ui.setupIframe();
             Shiny.ui.showFrame();
             Shiny.connections.startHeartBeats();
@@ -147,6 +150,23 @@ Shiny.app = {
             overrideUrl.searchParams.set("sp_instance_override", Shiny.common.staticState.spInstance);
             history.replaceState(null, '', overrideUrl);
         }
+    },
+    async checkAppHealth() {
+        // check that the app endpoint is still accessible
+        const response = await fetch(Shiny.app.staticState.containerPath);
+        if (response.status !== 503) {
+            return true;
+        }
+        const json = await response.json();
+        if (json.status === "error" && json.message === "app_stopped_or_non_existent") {
+            Shiny.ui.showStoppedPage();
+            return false;
+        }
+        if (json.status === "error" && json.message === "app_crashed") {
+            Shiny.ui.showCrashedPage();
+            return false;
+        }
+        return true;
     }
 }
 

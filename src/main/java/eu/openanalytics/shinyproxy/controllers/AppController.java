@@ -177,7 +177,7 @@ public class AppController extends BaseController {
 		}
 		
 		try {
-			mappingManager.dispatchAsync(mapping + appRequestInfo.getSubPath(), request, response);
+			mappingManager.dispatchAsync(proxy.getId(), mapping + appRequestInfo.getSubPath(), request, response);
 		} catch (Exception e) {
 			throw new RuntimeException("Error routing proxy request", e);
 		}
@@ -210,7 +210,7 @@ public class AppController extends BaseController {
 			return;
 		}
 		try {
-			mappingManager.dispatchAsync(requestUrl, request, response);
+			mappingManager.dispatchAsync(proxy.getId(), requestUrl, request, response);
 		} catch (Exception e) {
 			throw new RuntimeException("Error routing proxy request", e);
 		}

@@ -132,7 +132,7 @@ public abstract class BaseController {
 		map.put("bootstrapJs", "/webjars/bootstrap/3.4.1/js/bootstrap.min.js");
 		map.put("jqueryJs", "/webjars/jquery/3.5.1/jquery.min.js");
 		map.put("cookieJs", "/webjars/js-cookie/2.2.1/js.cookie.min.js");
-		map.put("handlebars", "/webjars/handlebars/4.7.6/handlebars.runtime.min.js");
+		map.put("handlebars", "/webjars/handlebars/4.7.7/handlebars.runtime.min.js");
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		boolean isLoggedIn = authentication != null && !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated();

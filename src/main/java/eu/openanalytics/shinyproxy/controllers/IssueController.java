@@ -100,17 +100,20 @@ public class IssueController extends BaseController {
 
 			// Attachments (only if container-logging is enabled)
 			if (proxy != null) {
-				String[] filePaths = logService.getLogs(proxy);
+				LogPaths filePaths = logService.getLogs(proxy);
 				
-				if (filePaths != null && filePaths.length > 1) {
-					if (new File(filePaths[0]).exists()) {
-						for (String p: filePaths) {
-							File f = new File(p);
-							helper.addAttachment(f.getName(), f);
+				if (filePaths != null) {
+					File stdout = filePaths.getStdout().toFile();
+					if (stdout.exists()) {
+						helper.addAttachment(stdout.getName(), stdout);
+						// if stderr exists add it as well (stdout may exists without stderr)
+						File stderr = filePaths.getStderr().toFile();
+						if (stderr.exists()) {
+							helper.addAttachment(stderr.getName(), stderr);
 						}
 					} else {
-						body.append(String.format("Log (stdout): %s%s", filePaths[0], lineSep));
-						body.append(String.format("Log (stderr): %s%s", filePaths[1], lineSep));
+						body.append(String.format("Log (stdout): %s%s", filePaths.getStdout().toString(), lineSep));
+						body.append(String.format("Log (stderr): %s%s", filePaths.getStderr().toString(), lineSep));
 					}
 				}
 			}

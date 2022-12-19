@@ -89,13 +89,14 @@
     </suppress>
 
 
-    <!--
-        https://nvd.nist.gov/vuln/detail/CVE-2021-29425
-        Only applies to Apache Commons IO before 2.7, but we are using 2.7. (however somewhere this version is referred).
-    -->
     <suppress>
-        <sha1>7e39112810f6096061c43504188d18edc7d7eece</sha1>
+        <!--
+            https://nvd.nist.gov/vuln/detail/CVE-2021-29425
+            Only applies to Apache Commons IO before 2.7, but we are using 2.7. (however somewhere this version is referred).
+        -->
         <cve>CVE-2021-29425</cve>
+        <!-- Applies to commons-net, but this is not used -->
+        <cve>CVE-2021-37533</cve>
     </suppress>
 
 
@@ -110,6 +111,7 @@
     <!-- Only applies to old Undertow/Jboss versions -->
     <suppress>
         <cve>CVE-2016-7046</cve>
+        <cve>CVE-2016-6311</cve>
     </suppress>
 
     <!-- H2: not relevant -->
@@ -120,5 +122,10 @@
     <!-- xercesImpl: not related to xercesImpl-->
     <suppress>
         <cve>CVE-2017-10355</cve>
+    </suppress>
+
+    <suppress>
+        <!-- Related to nim lang, not Java-->
+        <cve>CVE-2020-23171</cve>
     </suppress>
 </suppressions>

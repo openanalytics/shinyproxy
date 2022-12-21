@@ -44,8 +44,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
-import org.springframework.security.oauth2.client.annotation.RegisteredOAuth2AuthorizedClient;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -76,7 +74,7 @@ import java.util.UUID;
 @Controller
 public class AppController extends BaseController {
 
-	private static int PROXY_ID_LENGTH = 36;
+	private static final int PROXY_ID_LENGTH = 36;
 
 	@Inject
 	private ProxyMappingManager mappingManager;
@@ -190,13 +188,12 @@ public class AppController extends BaseController {
 		String requestUrl = request.getRequestURI().substring(getBasePublicPath().length()); // TODO cache
 		// in ShinyProxy, proxy ids are used in the urls and these have a fixed length
 		// therefore we can simply extract it from the URL
-		String proxyId = requestUrl.substring(0, PROXY_ID_LENGTH);
-
-		if (proxyId.length() != 36) {
+		if (requestUrl.length() < 36) {
 			response.setStatus(400);
 			response.getWriter().write("{\"status\":\"error\", \"message\":\"invalid_request\"}");
 			return;
 		}
+		String proxyId = requestUrl.substring(0, PROXY_ID_LENGTH);
 
 		Proxy proxy = proxyService.getProxy(proxyId);
 		if (proxy == null || proxy.getStatus().isUnavailable()) {

@@ -20,6 +20,8 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
+import eu.openanalytics.containerproxy.api.dto.ApiResponse;
+import eu.openanalytics.containerproxy.model.runtime.Container;
 import eu.openanalytics.containerproxy.model.runtime.ParameterNames;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.BackendContainerNameKey;
@@ -30,17 +32,22 @@ import eu.openanalytics.containerproxy.model.runtime.runtimevalues.MaxLifetimeKe
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.ParameterNamesKey;
 import eu.openanalytics.containerproxy.service.hearbeat.ActiveProxiesService;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
@@ -56,15 +63,39 @@ public class AdminController extends BaseController {
 		return "admin";
 	}
 
-    @RequestMapping(value = "/admin/data", produces = MediaType.APPLICATION_JSON_VALUE)
+	@Operation(summary = "Get active proxies of all users.", tags = "ShinyProxy")
+	@ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(
+					responseCode = "200",
+					description = "Active proxies are returned.",
+					content = {
+							@Content(
+									mediaType = "application/json",
+									schema = @Schema(implementation = ProxyInfoResponse.class),
+									examples = {
+											@ExampleObject(value = "{\"status\": \"success\", \"data\": [{\"status\": \"Up\", \"proxyId\": \"9cd90bbb-ae9c-4016-9b9c-d2852b3a0bf6\", \"userId\": \"jack\", \"appName\": \"01_hello\", " +
+													"\"instanceName\": \"Default\", \"endpoint\": \"N/A\", \"uptime\": \"0:00:39\", \"lastHeartBeat\": \"0:00:05\", \"imageName\": \"openanalytics/shinyproxy-demo\", \"imageTag\": \"N/A\", " +
+													"\"heartbeatTimeout\": null, \"maxLifetime\": \"0:02:00\", \"spInstance\": \"9bec0d32754eab6a036bf1ee032bca82f98df0c5\", \"backendContainerName\": " +
+													"\"900b4f35b283401946db1d7cb8fe31ad5e6209d921b3cb9fd668ed6b9cbf7aa5\", \"parameters\": null}, {\"status\": \"Up\", \"proxyId\": \"b34d416e-ce6e-4351-a126-8836c88f2200\", \"userId\": " +
+													"\"jack\", \"appName\": \"06_tabsets\", \"instanceName\": \"Default\", \"endpoint\": \"N/A\", \"uptime\": \"0:00:18\", \"lastHeartBeat\": \"0:00:02\", \"imageName\": " +
+													"\"openanalytics/shinyproxy-demo\", \"imageTag\": \"N/A\", \"heartbeatTimeout\": null, \"maxLifetime\": \"0:02:00\", \"spInstance\": \"9bec0d32754eab6a036bf1ee032bca82f98df0c5\", " +
+													"\"backendContainerName\": \"2158b5b49c4138a9d0d6313fc4b62eba074b359473143be1d98102ab06c74bf8\", \"parameters\": null}]}")
+									}
+							)
+					}),
+	})
+    @RequestMapping(value = "/admin/data", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
     @ResponseBody
-    private Map<String, List<ProxyInfo>> adminData() {
+    private ResponseEntity<ApiResponse<List<ProxyInfo>>> adminData() {
         List<Proxy> proxies = proxyService.getProxies(null, false);
-        return Collections.singletonMap("apps", proxies.stream().map(ProxyInfo::new).collect(Collectors.toList()));
+		List<ProxyInfo> proxyInfos = proxies.stream().map(ProxyInfo::new).collect(Collectors.toList());
+		return ApiResponse.success(proxyInfos);
     }
 
 	public class ProxyInfo {
-	    public final String status;
+
+		@Schema(allowableValues = {"New", "Up", "Stopping", "Pausing", "Paused", "Resuming", "Stopped"})
+		public final String status;
 
 		public final String proxyId;
 		public final String userId;
@@ -102,19 +133,20 @@ public class AdminController extends BaseController {
 			}
 
 			if (!proxy.getContainers().isEmpty()) {
-				String[] parts = proxy.getContainers().get(0).getRuntimeValue(ContainerImageKey.inst).split(":");
+				Container container = proxy.getContainers().get(0);
+				String[] parts = container.getRuntimeValue(ContainerImageKey.inst).split(":");
 				imageName = parts[0];
 				if (parts.length > 1) {
 					imageTag = parts[1];
 				} else {
 					imageTag = "N/A";
 				}
-				if (proxy.getContainers().get(0).getTargets().containsKey("default")) {
-					endpoint = proxy.getContainers().get(0).getTargets().get("default").toString();
+				if (container.getTargets().containsKey("default")) {
+					endpoint = container.getTargets().get("default").toString();
 				} else {
 					endpoint = "N/A";
 				}
-				backendContainerName = proxy.getContainers().get(0).getRuntimeObjectOrDefault(BackendContainerNameKey.inst, "N/A");
+				backendContainerName = container.getRuntimeObjectOrDefault(BackendContainerNameKey.inst, "N/A");
 			} else {
 				imageName = "N/A";
 				imageTag = "N/A";
@@ -122,7 +154,7 @@ public class AdminController extends BaseController {
 				backendContainerName = "N/A";
 			}
 
-			Long heartbeatTimeout = proxy.getRuntimeObjectOrNull(HeartbeatTimeoutKey.inst); // TODO NPE
+			Long heartbeatTimeout = proxy.getRuntimeObjectOrNull(HeartbeatTimeoutKey.inst);
 			if (heartbeatTimeout != null && heartbeatTimeout != -1) {
 				this.heartbeatTimeout = formatSeconds(heartbeatTimeout / 1000);
 			} else {
@@ -162,6 +194,11 @@ public class AdminController extends BaseController {
 			return appInstanceName;
 		}
 
+	}
+
+	public static class ProxyInfoResponse {
+		public String status = "success";
+		public List<ProxyInfo> data;
 	}
 
 }

@@ -202,9 +202,12 @@ Shiny.api = {
 
         await Promise.all(instances.map(instance =>
             fetch(Shiny.api.buildURLForInstance("admin/data", instance))
-                .then(response => response.json())
-                .then(response => {
-                    response.apps.forEach(app => {
+                .then(resp => Shiny.api._getResponseJson(resp))
+                .then(json =>  {
+                    if (json === null) {
+                        return;
+                    }
+                    json.data.forEach(app => {
                         if (!handled.includes(app.proxyId)) {
                             if (!app.hasOwnProperty("spInstance")) { // TODO can be removed before release
                                 app.spInstance = instance;

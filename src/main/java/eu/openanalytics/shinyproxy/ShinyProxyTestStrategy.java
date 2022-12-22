@@ -22,7 +22,6 @@ package eu.openanalytics.shinyproxy;
 
 import eu.openanalytics.containerproxy.backend.strategy.IProxyTestStrategy;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
-import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.util.Retrying;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

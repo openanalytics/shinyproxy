@@ -31,6 +31,10 @@ import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -46,6 +50,7 @@ public class AppDirectController extends BaseController {
     @Inject
     private ProxyMappingManager mappingManager;
 
+    @Operation(summary = "Proxy request to app. Starts the app if it does not yet exists. Can be used directly or for embedding.", tags = "ShinyProxy")
     @RequestMapping(value = {"/app_direct_i/**", "/app_direct/**"})
     public void appDirect(HttpServletRequest request, HttpServletResponse response) throws InvalidParametersException {
         // note: app_direct does not support parameters and resume

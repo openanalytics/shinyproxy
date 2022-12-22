@@ -25,9 +25,7 @@ import eu.openanalytics.containerproxy.spec.expression.SpecExpressionContext;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionResolver;
 import eu.openanalytics.shinyproxy.runtimevalues.WebsocketReconnectionMode;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class ShinyProxySpecExtension extends AbstractSpecExtension {

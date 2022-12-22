@@ -19,7 +19,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.5.12</version>
+		<version>2.7.6</version>
 		<relativePath />
 	</parent>
 
@@ -49,7 +49,6 @@
 		<repository>
 			<id>oa-nexus-snapshots</id>
 			<name>OpenAnalytics Snapshots Repository</name>
-<!-- 			<url>http://nexus.openanalytics.eu/nexus/content/repositories/snapshots</url> -->
 			<url>https://nexus.openanalytics.eu/repository/snapshots</url>
 			<snapshots><enabled>true</enabled></snapshots>
 			<releases><enabled>false</enabled></releases>
@@ -57,7 +56,6 @@
 		<repository>
 			<id>oa-nexus-releases</id>
 			<name>OpenAnalytics Snapshots Repository</name>
-<!-- 			<url>http://nexus.openanalytics.eu/nexus/content/repositories/releases</url> -->
 			<url>https://nexus.openanalytics.eu/repository/releases</url>
 			<snapshots><enabled>false</enabled></snapshots>
 			<releases><enabled>true</enabled></releases>
@@ -71,15 +69,9 @@
 			<version>${containerproxy.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.fasterxml.jackson.datatype</groupId>
-			<artifactId>jackson-datatype-jsr353</artifactId>
-			<version>2.11.2</version>
-			<!-- We need a higher version than shipped by Spring to have all functionality (namely JsonPatch support) -->
-		</dependency>
-		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
-			<version>2.5.12</version>
+			<version>2.7.6</version>
 		</dependency>
 		<dependency>
 			<groupId>org.webjars</groupId>
@@ -104,58 +96,99 @@
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>handlebars</artifactId>
-			<version>4.7.6</version>
+			<version>4.7.7</version>
 		</dependency>
 		<dependency>
 			<groupId>io.undertow</groupId>
 			<artifactId>undertow-core</artifactId>
-			<version>2.2.8.Final</version>
+			<version>2.2.21.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>io.undertow</groupId>
 			<artifactId>undertow-servlet</artifactId>
-			<version>2.2.8.Final</version>
+			<version>2.2.21.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>io.undertow</groupId>
 			<artifactId>undertow-websockets-jsr</artifactId>
-			<version>2.2.8.Final</version>
+			<version>2.2.21.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.xnio</groupId>
 			<artifactId>xnio-nio</artifactId>
-			<version>3.8.4.Final</version>
+			<version>3.8.8.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.xnio</groupId>
 			<artifactId>xnio-api</artifactId>
-			<version>3.8.4.Final</version>
+			<version>3.8.8.Final</version>
 		</dependency>
-		<!-- Jersey, a dependency of docker-client with wonky version constraints -->
+
 		<dependency>
-			<groupId>org.glassfish.jersey.core</groupId>
-			<artifactId>jersey-client</artifactId>
-			<version>2.22</version>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.core</groupId>
-			<artifactId>jersey-common</artifactId>
-			<version>2.22</version>
+			<!-- Dependency of lettuce - > update to fix security issue -->
+			<groupId>io.netty</groupId>
+			<artifactId>netty-common</artifactId>
+			<version>4.1.86.Final</version>
 		</dependency>
 		<dependency>
-			<groupId>org.glassfish.jersey.connectors</groupId>
-			<artifactId>jersey-apache-connector</artifactId>
-			<version>2.22</version>
+			<!-- Dependency of lettuce - > update to fix security issue -->
+			<groupId>io.netty</groupId>
+			<artifactId>netty-handler</artifactId>
+			<version>4.1.86.Final</version>
 		</dependency>
 		<dependency>
-			<groupId>org.glassfish.jersey.media</groupId>
-			<artifactId>jersey-media-json-jackson</artifactId>
-			<version>2.22</version>
+			<!-- Dependency of lettuce - > update to fix security issue -->
+			<groupId>io.netty</groupId>
+			<artifactId>netty-resolver</artifactId>
+			<version>4.1.86.Final</version>
 		</dependency>
 		<dependency>
-			<groupId>org.glassfish.hk2</groupId>
-			<artifactId>hk2-api</artifactId>
-			<version>2.4.0-b31</version>
+			<!-- Dependency of lettuce - > update to fix security issue -->
+			<groupId>io.netty</groupId>
+			<artifactId>netty-buffer</artifactId>
+			<version>4.1.86.Final</version>
+		</dependency>
+		<dependency>
+			<!-- Dependency of lettuce - > update to fix security issue -->
+			<groupId>io.netty</groupId>
+			<artifactId>netty-transport-native-unix-common</artifactId>
+			<version>4.1.86.Final</version>
+		</dependency>
+		<dependency>
+			<!-- Dependency of lettuce - > update to fix security issue -->
+			<groupId>io.netty</groupId>
+			<artifactId>netty-codec</artifactId>
+			<version>4.1.86.Final</version>
+		</dependency>
+		<dependency>
+			<!-- Dependency of lettuce - > update to fix security issue -->
+			<groupId>io.netty</groupId>
+			<artifactId>netty-transport</artifactId>
+			<version>4.1.86.Final</version>
+		</dependency>
+		<dependency>
+			<!-- Dependency of aws sdk- > update to fix security issue -->
+			<groupId>io.netty</groupId>
+			<artifactId>netty-codec-http</artifactId>
+			<version>4.1.86.Final</version>
+		</dependency>
+		<dependency>
+			<!-- Dependency of aws sdk- > update to fix security issue -->
+			<groupId>io.netty</groupId>
+			<artifactId>netty-codec-http2</artifactId>
+			<version>4.1.86.Final</version>
+		</dependency>
+		<dependency>
+			<!-- Dependency of aws sdk- > update to fix security issue -->
+			<groupId>io.netty</groupId>
+			<artifactId>netty-transport-classes-epoll</artifactId>
+			<version>4.1.86.Final</version>
+		</dependency>
+		<dependency>
+			<!-- Dependency of Spring -->
+			<groupId>org.yaml</groupId>
+			<artifactId>snakeyaml</artifactId>
+			<version>1.33</version>
 		</dependency>
 	</dependencies>
 

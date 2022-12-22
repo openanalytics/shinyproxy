@@ -90,7 +90,7 @@ public class IndexController extends BaseController {
 			}
 		}
 
-		List<ShinyProxySpecProvider.TemplateGroup> templateGroups = shinyProxySpecProvider.getTemplateGroups().stream().filter((g) -> groupedApps.containsKey(g.getId())).collect(Collectors.toList());;
+		List<ShinyProxySpecProvider.TemplateGroup> templateGroups = shinyProxySpecProvider.getTemplateGroups().stream().filter((g) -> groupedApps.containsKey(g.getId())).collect(Collectors.toList());
 		map.put("templateGroups", templateGroups);
 		map.put("groupedApps", groupedApps);
 		map.put("ungroupedApps", ungroupedApps);

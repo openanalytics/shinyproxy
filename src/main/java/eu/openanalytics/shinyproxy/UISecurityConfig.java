@@ -24,6 +24,7 @@ import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
 import eu.openanalytics.containerproxy.security.ICustomSecurityConfig;
 import eu.openanalytics.containerproxy.service.UserService;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.stereotype.Component;
@@ -56,7 +57,7 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 			http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminGroups());
 			http.authorizeRequests().antMatchers("/admin/data").hasAnyRole(userService.getAdminGroups());
 
-			http.addFilterBefore(new AuthenticationRequiredFilter(), UsernamePasswordAuthenticationFilter.class);
+			http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
 		}
 
 		if (operatorService.isEnabled()) {

@@ -21,13 +21,19 @@
 package eu.openanalytics.shinyproxy.controllers;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.api.dto.ApiResponse;
 import eu.openanalytics.containerproxy.service.ProxyService;
 import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.ActiveProxiesService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
+import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,8 +41,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.inject.Inject;
-import java.util.HashMap;
-import java.util.Map;
 
 @Controller
 public class HeartbeatController {
@@ -56,64 +60,132 @@ public class HeartbeatController {
     /**
      * Endpoint used to force a heartbeat. This is used when an app cannot piggy-back heartbeats on other requests
      * or on a WebSocket connection.
-     * @return
      */
+    @Operation(summary = "Force an heartbeat for an app.", tags = "ShinyProxy")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Heartbeat sent.",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    examples = {
+                                            @ExampleObject(value = "{\"status\":\"success\", \"data\": null}")
+                                    }
+                            )
+                    }),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "User is not authenticated.",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    examples = {
+                                            @ExampleObject(value = "{\"message\":\"shinyproxy_authentication_required\",\"status\":\"fail\"}")
+                                    }
+                            )
+                    }),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "410",
+                    description = "App has been stopped or the app never existed or the user has no access to the app.",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    examples = {
+                                            @ExampleObject(value = "{\"message\":\"app_stopped_or_non_existent\",\"status\":\"fail\"}")
+                                    }
+                            )
+                    }),
+    })
     @RequestMapping(value = "/heartbeat/{proxyId}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<HashMap<String, String>> heartbeat(@PathVariable("proxyId") String proxyId) {
+    public ResponseEntity<ApiResponse<Object>> heartbeat(@PathVariable("proxyId") String proxyId) {
         Proxy proxy = proxyService.getProxy(proxyId);
 
-        if (proxy == null || proxy.getStatus().isUnavailable()) {
-            return ResponseEntity.status(410).body(new HashMap<String, String>() {{
-                put("status", "error");
-                put("message", "app_stopped_or_non_existent");
-            }});
-        }
-
-        if (!userService.isOwner(proxy)) {
-            throw new AccessDeniedException(String.format("Cannot register heartbeat for proxy %s: access denied", proxyId));
+        if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
+            return ShinyProxyApiResponse.appStoppedOrNonExistent();
         }
 
         heartbeatService.heartbeatReceived(HeartbeatService.HeartbeatSource.FALLBACK, proxy.getId(), null);
 
-        return ResponseEntity.ok(new HashMap<String, String>() {{
-            put("status", "success");
-        }});
+        return ApiResponse.success();
     }
 
 
     /**
      * Provides info to about the heartbeat, max lifetime etc. of this app.
      */
-    @RequestMapping(value = "/heartbeat/{proxyId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Get heartbeat information for an app.", tags = "ShinyProxy")
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Heartbeat info returned.",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    schema = @Schema(implementation = HeartBeatInfoDto.class),
+                                    examples = {
+                                            @ExampleObject(value = "{\"status\":\"success\"}")
+                                    }
+                            )
+                    }),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "User is not authenticated.",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    examples = {
+                                            @ExampleObject(value = "{\"message\":\"shinyproxy_authentication_required\",\"status\":\"fail\"}")
+                                    }
+                            )
+                    }),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "410",
+                    description = "App has been stopped or the app never existed or the user has no access to the app.",
+                    content = {
+                            @Content(
+                                    mediaType = "application/json",
+                                    examples = {
+                                            @ExampleObject(value = "{\"message\":\"app_stopped_or_non_existent\",\"status\":\"fail\"}")
+                                    }
+                            )
+                    }),
+    })
+    @RequestMapping(value = "/heartbeat/{proxyId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ResponseEntity<Map<String, String>> getHeartbeatInfo(@PathVariable("proxyId") String proxyId) {
+    public ResponseEntity<ApiResponse<HeartBeatInfoDto>> getHeartbeatInfo(@PathVariable("proxyId") String proxyId) {
         Proxy proxy = proxyService.getProxy(proxyId);
 
-        if (proxy == null || proxy.getStatus().isUnavailable()) {
-            return ResponseEntity.status(410).body(new HashMap<String, String>() {{
-                put("status", "error");
-                put("message", "app_stopped_or_non_existent");
-            }});
+        if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
+            return ShinyProxyApiResponse.appStoppedOrNonExistent();
         }
 
-        if (!userService.isOwner(proxy) && !userService.isAdmin()) {
-            throw new AccessDeniedException(String.format("Access to roxy %s denied", proxyId));
+        Long lastHeartbeat = activeProxiesService.getLastHeartBeat(proxy.getId());
+
+        HeartBeatInfoDto resp = new HeartBeatInfoDto(lastHeartbeat, heartbeatService.getHeartbeatRate());
+
+        return ApiResponse.success(resp);
+    }
+
+
+    private static class HeartBeatInfoDto {
+
+        private final Long lastHeartbeat;
+        private final Long heartbeatRate;
+
+        private HeartBeatInfoDto(Long lastHeartbeat, Long heartbeatRate) {
+            this.lastHeartbeat = lastHeartbeat;
+            this.heartbeatRate = heartbeatRate;
         }
 
-
-        Map<String, String> response = new HashMap<>();
-
-        Long heartBeat = activeProxiesService.getLastHeartBeat(proxy.getId());
-        if (heartBeat == null) {
-            response.put("lastHeartbeat", null);
-        } else {
-            response.put("lastHeartbeat", String.valueOf(heartBeat));
+        public Long getHeartbeatRate() {
+            return heartbeatRate;
         }
 
-        response.put("heartbeatRate", String.valueOf(heartbeatService.getHeartbeatRate()));
-
-        return ResponseEntity.ok(response);
+        public Long getLastHeartbeat() {
+            return lastHeartbeat;
+        }
     }
 
 }

@@ -22,6 +22,8 @@ package eu.openanalytics.shinyproxy.controllers;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import eu.openanalytics.containerproxy.api.dto.ApiResponse;
+import eu.openanalytics.containerproxy.api.dto.ChangeProxyStatusDto;
+import eu.openanalytics.containerproxy.api.dto.SwaggerDto;
 import eu.openanalytics.containerproxy.model.Views;
 import eu.openanalytics.containerproxy.model.runtime.AllowedParametersForUser;
 import eu.openanalytics.containerproxy.model.runtime.ParameterValues;
@@ -33,15 +35,17 @@ import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.AsyncProxyService;
 import eu.openanalytics.containerproxy.service.InvalidParametersException;
 import eu.openanalytics.containerproxy.service.ParametersService;
-import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -74,8 +78,6 @@ import java.util.UUID;
 @Controller
 public class AppController extends BaseController {
 
-	private static final int PROXY_ID_LENGTH = 36;
-
 	@Inject
 	private ProxyMappingManager mappingManager;
 
@@ -84,8 +86,6 @@ public class AppController extends BaseController {
 
     @Inject
     private ParametersService parameterService;
-
-	private final Logger logger = LogManager.getLogger(getClass());
 
 	@RequestMapping(value={"/app_i/*/**", "/app/**"}, method=RequestMethod.GET)
 	public ModelAndView app(ModelMap map, HttpServletRequest request) {
@@ -153,13 +153,74 @@ public class AppController extends BaseController {
 		return new ModelAndView("app", map);
 	}
 
+	@Operation(summary = "Start an app.", tags = "ShinyProxy",
+			requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+					content = @Content(
+							mediaType = "application/json",
+							schema = @Schema(implementation = ChangeProxyStatusDto.class),
+							examples = {
+									@ExampleObject(name = "With parameters", value = "{\"parameters\":{\"resources\":\"2 CPU cores - 8G RAM\",\"other_parameter\":\"example\"}}")
+							}
+					)
+			)
+	)
+	@ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(
+					responseCode = "200",
+					description = "The proxy has been created.",
+					content = {
+							@Content(
+									mediaType = "application/json",
+									schema = @Schema(implementation = SwaggerDto.ProxyResponse.class),
+									examples = {
+											@ExampleObject(value = "{\"status\":\"success\",\"data\":{\"id\":\"cdaa8056-4f96-428e-91e8-bc13518d8987\",\"status\":\"New\",\"startupTimestamp\":0,\"createdTimestamp\":1671707875757," +
+													"\"userId\":\"jack\",\"specId\":\"01_hello\",\"displayName\":\"Hello Application\",\"containers\":[],\"runtimeValues\":{\"SHINYPROXY_FORCE_FULL_RELOAD\":false," +
+													"\"SHINYPROXY_WEBSOCKET_RECONNECTION_MODE\":\"None\",\"SHINYPROXY_MAX_INSTANCES\":100,\"SHINYPROXY_PUBLIC_PATH\":\"/app_proxy/cdaa8056-4f96-428e-91e8-bc13518d8987/\"," +
+													"\"SHINYPROXY_APP_INSTANCE\":\"default\"}}}\n")
+									}
+							)
+					}),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(
+					responseCode = "400",
+					description = "Invalid request, app not started.",
+					content = {
+							@Content(
+									mediaType = "application/json",
+									examples = {
+											@ExampleObject(name = "Max instances reached", value = "{\"status\":\"fail\",\"data\":\"Cannot start new proxy because the maximum amount of instances of this proxy has been reached\"}"),
+											@ExampleObject(name = "Instance already exists", value = "{\"status\":\"fail\",\"data\":\"You already have an instance of this app with the given name\"}"),
+											@ExampleObject(name = "Parameters required", value = "{\"status\":\"fail\",\"data\":\"No parameters provided, but proxy spec expects parameters\"}"),
+											@ExampleObject(name = "Missing parameter", value = "{\"status\":\"fail\",\"data\":\"Missing value for parameter example\"}"),
+											@ExampleObject(name = "Invalid parameter value", value = "{\"status\":\"fail\",\"data\":\"Provided parameter values are not allowed\"}")
+									}
+							)
+					}),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(
+					responseCode = "403",
+					description = "Proxy spec not found or no permission to use this proxy spec.",
+					content = {
+							@Content(
+									mediaType = "application/json",
+									examples = {@ExampleObject(value = "{\"status\": \"fail\", \"data\": \"forbidden\"}")}
+							)
+					}),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(
+					responseCode = "500",
+					description = "Failed to start proxy.",
+					content = {
+							@Content(
+									mediaType = "application/json",
+									examples = {@ExampleObject(value = "{\"status\": \"fail\", \"data\": \"Failed to start proxy\"}")}
+							)
+					}),
+	})
 	@ResponseBody
 	@JsonView(Views.UserApi.class)
 	@RequestMapping(value = "/app_i/{specId}/{appInstanceName}", method = RequestMethod.POST)
 	public ResponseEntity<ApiResponse<Proxy>> startApp(@PathVariable String specId, @PathVariable String appInstanceName, @RequestBody(required = false) AppBody appBody) {
 		ProxySpec spec = proxyService.getProxySpec(specId);
 		if (!userService.canAccess(spec)) {
-			throw new AccessDeniedException(String.format("Cannot start proxy %s: access denied", spec.getId()));
+			return ApiResponse.failForbidden();
 		}
 		Proxy proxy = findUserProxy(specId, appInstanceName);
 		if (proxy != null) {
@@ -167,7 +228,7 @@ public class AppController extends BaseController {
 		}
 
 		if (!validateProxyStart(spec)) {
-			throw new BadRequestException("Cannot start new proxy because the maximum amount of instances of this proxy has been reached");
+			return ApiResponse.fail("Cannot start new app because the maximum amount of instances of this app has been reached");
 		}
 
 		List<RuntimeValue> runtimeValues = shinyProxySpecProvider.getRuntimeValues(spec);
@@ -179,47 +240,49 @@ public class AppController extends BaseController {
 			return ApiResponse.success(asyncProxyService.startProxy(spec, runtimeValues, id, (appBody != null) ? appBody.getParameters() : null));
 		} catch (InvalidParametersException ex) {
 			return ApiResponse.fail(ex.getMessage());
+		} catch (Throwable t ) {
+			return ApiResponse.error("Failed to start proxy");
 		}
 	}
 
-
-	@RequestMapping(value="/app_proxy/**")
-	public void appProxy(HttpServletRequest request, HttpServletResponse response) throws IOException {
+	@Operation(summary = "Proxy request to app. This endpoint is used to serve the iframe, hence it makes some assumptions. Do not use it directly or for embedding.", tags = "ShinyProxy")
+	@ApiResponses(value = {
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(
+					responseCode = "401",
+					description = "User is not authenticated.",
+					content = {
+							@Content(
+									mediaType = "application/json",
+									examples = {
+											@ExampleObject(value = "{\"message\":\"shinyproxy_authentication_required\",\"status\":\"fail\"}")
+									}
+							)
+					}),
+			@io.swagger.v3.oas.annotations.responses.ApiResponse(
+					responseCode = "410",
+					description = "App has been stopped or the app never existed or the user has no access to the app.",
+					content = {
+							@Content(
+									mediaType = "application/json",
+									examples = {
+											@ExampleObject(value = "{\"message\":\"app_stopped_or_non_existent\",\"status\":\"fail\"}")
+									}
+							)
+					}),
+	})
+	@RequestMapping(value={"/app_proxy/{proxyId}/**"})
+	public void appProxy(@PathVariable String proxyId, HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String requestUrl = request.getRequestURI().substring(getBasePublicPath().length()); // TODO cache
-		// in ShinyProxy, proxy ids are used in the urls and these have a fixed length
-		// therefore we can simply extract it from the URL
-		if (requestUrl.length() < 36) {
-			response.setStatus(400);
-			response.getWriter().write("{\"status\":\"error\", \"message\":\"invalid_request\"}");
-			return;
-		}
-		String proxyId = requestUrl.substring(0, PROXY_ID_LENGTH);
 
 		Proxy proxy = proxyService.getProxy(proxyId);
-		if (proxy == null || proxy.getStatus().isUnavailable()) {
-			response.setStatus(410);
-			response.getWriter().write("{\"status\":\"error\", \"message\":\"app_stopped_or_non_existent\"}");
-			return;
-		}
-		if (!userService.isOwner(proxy)) {
-			response.setStatus(401);
-			response.getWriter().write("{\"status\":\"error\", \"message\":\"shinyproxy_authentication_required\"}");
-			return;
-		}
-		if (requestUrl.equals(proxyId)) {
-			// requested an empty path -> redirect to the root path
-			// i.e. request /app_proxy/<proxy_id> redirect to /app_proxy/<proxy_id>/
-			try {
-				response.sendRedirect(request.getRequestURI() + "/");
-			} catch (Exception e) {
-				throw new RuntimeException("Error redirecting proxy request", e);
-			}
+		if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
+			ShinyProxyApiResponse.appStoppedOrNonExistent(response);
 			return;
 		}
 		try {
 			mappingManager.dispatchAsync(requestUrl, request, response);
 		} catch (Exception e) {
-			throw new RuntimeException("Error routing proxy request", e);
+			throw new RuntimeException("Error routing proxy request", e); // TODO error handling
 		}
 	}
 

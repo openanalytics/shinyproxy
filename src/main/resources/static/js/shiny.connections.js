@@ -58,10 +58,10 @@ Shiny.connections = {
                     return;
                 }
                 var res = JSON.parse(response.responseText);
-                if (res !== null && res.status === "error") {
-                    if (res.message === "app_stopped_or_non_existent") {
+                if (res !== null && res.status === "fail") {
+                    if (res.data === "app_stopped_or_non_existent") {
                         Shiny.ui.showStoppedPage();
-                    } else if (res.message === "shinyproxy_authentication_required") {
+                    } else if (res.data === "shinyproxy_authentication_required") {
                         Shiny.ui.showLoggedOutPage();
                     }
                 }
@@ -318,9 +318,9 @@ Shiny.connections = {
                             .then((response) => {
                                 if (response.status === 410 || response.status === 401) {
                                     response.clone().json().then(function(clonedResponse) {
-                                        if (clonedResponse.status === "error" && clonedResponse.message === "app_stopped_or_non_existent") {
+                                        if (clonedResponse.status === "fail" && clonedResponse.data === "app_stopped_or_non_existent") {
                                             window.__shinyProxyParent.ui.showStoppedPage();
-                                        } else if (clonedResponse.status === "error" && clonedResponse.message === "shinyproxy_authentication_required") {
+                                        } else if (clonedResponse.status === "fail" && clonedResponse.data === "shinyproxy_authentication_required") {
                                             window.__shinyProxyParent.ui.showLoggedOutPage();
                                         }
                                     });
@@ -353,10 +353,10 @@ Shiny.connections = {
                     this.addEventListener('load', function () {
                         if (this.status === 410 || this.status === 401) {
                             var res = JSON.parse(this.responseText);
-                            if (res !== null && res.status === "error" && res.message === "app_stopped_or_non_existent") {
+                            if (res !== null && res.status === "fail" && res.data === "app_stopped_or_non_existent") {
                                 // app stopped
                                 window.__shinyProxyParent.ui.showStoppedPage();
-                            } else if (res !== null && res.status === "error" && res.message === "shinyproxy_authentication_required") {
+                            } else if (res !== null && res.status === "fail" && res.data === "shinyproxy_authentication_required") {
                                 // app stopped
                                 window.__shinyProxyParent.ui.showLoggedOutPage();
                             }
@@ -472,11 +472,11 @@ Shiny.connections = {
             error: function (response) {
                 try {
                     var res = JSON.parse(response.responseText);
-                    if (res !== null && res.status === "error") {
-                        if (res.message === "app_stopped_or_non_existent") {
+                    if (res !== null && res.status === "fail") {
+                        if (res.data === "app_stopped_or_non_existent") {
                             cb(true);
                             return;
-                        } else if (res.message === "shinyproxy_authentication_required") {
+                        } else if (res.data === "shinyproxy_authentication_required") {
                             Shiny.ui.showLoggedOutPage();
                             // never call call-back, but just redirect to login page
                             return;

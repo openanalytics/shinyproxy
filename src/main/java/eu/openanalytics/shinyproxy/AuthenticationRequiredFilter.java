@@ -20,6 +20,7 @@
  */
 package eu.openanalytics.shinyproxy;
 
+import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -48,7 +49,7 @@ import java.io.IOException;
  * - /heartbeat/* , i.e. heartbeat requests
  *
  * When the filter detects that a user is not authenticated when requesting one of these endpoints, it returns the response:
- * {"status":"error", "message":"shinyproxy_authentication_required"} with status code 401.
+ * {"status":"fail", "data":"shinyproxy_authentication_required"} with status code 401.
  * This response is specific unique enough such that it can be handled by the frontend.
  *
  * Note: this cannot be easily implemented as a {@link AuthenticationEntryPoint} since these entrypoints are sometimes,
@@ -77,8 +78,7 @@ public class AuthenticationRequiredFilter extends GenericFilterBean {
                     throw new ServletException("Unable to handle the Spring Security Exception because the response is already committed.", ex);
                 }
                 SecurityContextHolder.getContext().setAuthentication(null);
-                response.setStatus(401);
-                response.getWriter().write("{\"status\":\"error\", \"message\":\"shinyproxy_authentication_required\"}");
+                ShinyProxyApiResponse.authenticationRequired(response);
                 return;
             }
             throw ex;

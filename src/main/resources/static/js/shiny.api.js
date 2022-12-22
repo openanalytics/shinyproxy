@@ -22,8 +22,12 @@ Shiny = window.Shiny || {};
 Shiny.api = {
     _proxiesCache: null,
     getProxies: async function () {
-        let resp = await fetch(Shiny.api.buildURL("api/proxy?only_owned_proxies=true"));
-        return await resp.json();
+        const resp = await fetch(Shiny.api.buildURL("api/proxy"));
+        const json = await Shiny.api._getResponseJson(resp);
+        if (json === null) {
+            return [];
+        }
+        return json.data;
     },
     getAllSpInstances: async function () {
         const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
@@ -45,8 +49,14 @@ Shiny.api = {
         }
         const requests = [];
         for (const instance of instances) {
-            requests.push(fetch(Shiny.api.buildURLForInstance("api/proxy?only_owned_proxies=true", instance))
-                .then(response => response.json()));
+            requests.push(fetch(Shiny.api.buildURLForInstance("api/proxy", instance))
+                .then(resp => Shiny.api._getResponseJson(resp))
+                .then(json =>  {
+                    if (json === null) {
+                        return [];
+                    }
+                    return json.data;
+                }));
         }
         const responses = await Promise.all(requests);
         return Shiny.api._groupByApp(responses.flat());
@@ -55,37 +65,27 @@ Shiny.api = {
         if (parameters === null) {
             parameters = {};
         }
-        let response = await fetch(Shiny.api.buildURLForInstance("api/" + proxyId + '/status', spInstance), {
+        const resp = await fetch(Shiny.api.buildURLForInstance("api/" + proxyId + '/status', spInstance), {
             method: 'PUT',
             body:  JSON.stringify({"desiredState": desiredState, "parameters": parameters}),
             headers: {
                 'Content-Type': 'application/json'
             },
         });
-        if (response.status === 400) {
-            return false;
-        } else if (response.status !== 200) {
-            console.log(response);
-            return false;
-        }
-        return true;
+        const json = await Shiny.api._getResponseJson(resp);
+        return json !== null;
     },
     async waitForStatusChange(proxyId, spInstance) {
         while (true) {
-            let url = Shiny.api.buildURLForInstance('api/' + proxyId + "/status?watch=true&timeout=10", spInstance);
+            const url = Shiny.api.buildURLForInstance('api/' + proxyId + "/status?watch=true&timeout=10", spInstance);
             try {
-                let response = await fetch(url);
-                if (response.status !== 200) {
-                    console.log(response);
-                    return null; // error -> return
-                }
-                response = await response.json();
-                if (response.status === "error" || response.status === "fail") {
-                    console.log(response);
+                const resp = await fetch(url);
+                const json = await Shiny.api._getResponseJson(resp);
+                if (json === null) {
                     return null;
                 }
-                if (response.data.status === "Up" || response.data.status === "Stopped" || response.data.status === "Paused" ) {
-                    return response.data;
+                if (json.data.status === "Up" || json.data.status === "Stopped" || json.data.status === "Paused" ) {
+                    return json.data;
                 }
             } catch (e) {
                 console.log(e);
@@ -94,13 +94,9 @@ Shiny.api = {
         }
     },
     getProxyById: async function (proxyId, spInstance) {
-        return await fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId, spInstance))
-            .then(async response => {
-                if (response.status === 200) {
-                    return await response.json();
-                }
-                return null;
-            });
+        const resp = await fetch(Shiny.api.buildURLForInstance("api/proxy/" + proxyId, spInstance));
+        const json = await Shiny.api._getResponseJson(resp);
+        return json.data;
     },
     getProxyByIdFromCache: async function (proxyId, spInstance) {
         if (Shiny.api._proxiesCache === null) {
@@ -266,4 +262,24 @@ Shiny.api = {
         const appInstance = app.runtimeValues.SHINYPROXY_APP_INSTANCE;
         return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/";
     },
+    _getResponseJson: async function(response) {
+        if (response.status !== 200) {
+            console.log("Received invalid response (not 200 OK) ", response);
+            return null;
+        }
+        let json = await response.json();
+        if (!json.hasOwnProperty("status")) {
+            console.log("Received invalid response (missing status) ", json);
+            return null;
+        }
+        if (json.status !== "success") {
+            console.log("Received invalid response (status is not success) ", json);
+            return null;
+        }
+        if (!json.hasOwnProperty("data")) {
+            console.log("Received invalid response (missing data) ", json);
+            return null;
+        }
+        return json;
+    }
 };

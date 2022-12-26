@@ -102,7 +102,13 @@ public class ShinyProxySpecExtension extends AbstractSpecExtension {
     }
 
     @Override
-    public ShinyProxySpecExtension resolve(SpecExpressionResolver resolver, SpecExpressionContext context) {
+    public ShinyProxySpecExtension firstResolve(SpecExpressionResolver resolver, SpecExpressionContext context) {
         return this;
     }
+
+    @Override
+    public ShinyProxySpecExtension finalResolve(SpecExpressionResolver resolver, SpecExpressionContext context) {
+        return this;
+    }
+
 }

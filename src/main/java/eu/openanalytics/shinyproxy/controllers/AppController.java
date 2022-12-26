@@ -118,7 +118,7 @@ public class AppController extends BaseController {
 			previousParameters = proxy.getRuntimeObjectOrNull(ParameterValuesKey.inst);
 		}
 		map.put("proxy", proxy);
-		if (spec.getParameters() != null) {
+		if (spec != null && spec.getParameters() != null) {
 			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 			AllowedParametersForUser allowedParametersForUser = parameterService.calculateAllowedParametersForUser(auth, spec, previousParameters);
 			map.put("parameterAllowedCombinations", allowedParametersForUser.getAllowedCombinations());

@@ -98,6 +98,10 @@ public class AppController extends BaseController {
 			return new ModelAndView(redirect.get());
 		}
 
+		if (proxy == null && spec == null) {
+			throw new RuntimeException("forbidden");
+		}
+
 		prepareMap(map, request);
 		map.put("heartbeatRate", getHeartbeatRate());
 		map.put("page", "app");

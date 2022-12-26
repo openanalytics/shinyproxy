@@ -20,7 +20,6 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.AccessControl;
 import eu.openanalytics.containerproxy.model.spec.ContainerSpec;
@@ -30,7 +29,6 @@ import eu.openanalytics.containerproxy.model.spec.PortMapping;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
 import eu.openanalytics.containerproxy.spec.expression.SpelField;
-import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
 import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebsocketReconnectionMode;
@@ -119,7 +117,6 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			runtimeValues.add(new RuntimeValue(WebSocketReconnectionModeKey.inst, webSocketReconnectionMode));
 		}
 
-		runtimeValues.add(new RuntimeValue(MaxInstancesKey.inst, getMaxInstancesForSpec(proxy)));
 		runtimeValues.add(new RuntimeValue(ShinyForceFullReloadKey.inst, getShinyForceFullReload(proxy)));
 
 		return runtimeValues;
@@ -173,15 +170,6 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			return alwaysShowSwitchInstance;
 		}
 		return defaultAlwaysSwitchInstance;
-	}
-
-	@Override
-	public Proxy postProcessRecoveredProxy(Proxy proxy) {
-		// we retrieve the spec here, therefore after AppRecovery this uses the updated values of the spec
-		ProxySpec proxySpec = getSpec(proxy.getSpecId());
-		return proxy.toBuilder()
-				.addRuntimeValues(getRuntimeValues(proxySpec))
-				.build();
 	}
 
 	public static class ShinyProxySpec {

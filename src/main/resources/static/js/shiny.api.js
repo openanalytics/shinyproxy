@@ -228,13 +228,12 @@ Shiny.api = {
         return apps;
     },
     getHeartBeatInfo: async function (proxyId, spInstance) {
-        return await fetch(Shiny.api.buildURLForInstance("heartbeat/" + proxyId, spInstance))
-            .then(async response => {
-                if (response.status === 200) {
-                    return await response.json();
-                }
-                return null;
-            });
+        const resp = await fetch(Shiny.api.buildURLForInstance("heartbeat/" + proxyId, spInstance))
+        const json = await Shiny.api._getResponseJson(resp);
+        if (json === null) {
+            return null;
+        }
+        return json.data;
     },
     buildURL(location) {
         const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);

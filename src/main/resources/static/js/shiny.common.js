@@ -98,33 +98,37 @@ Shiny.common = {
                 return;
             }
 
-            const uptimeSec = (Date.now() - proxy.startupTimestamp) / 1000;
-            let uptime = Shiny.ui.formatSeconds(uptimeSec);
-
-            const timeoutMs = parseInt(proxy.runtimeValues.SHINYPROXY_HEARTBEAT_TIMEOUT, 10);
+            let uptime = "N/A";
             let heartbeatTimeout = null;
-            if (timeoutMs !== -1) {
-                heartbeatTimeout = Shiny.ui.formatSeconds(timeoutMs / 1000);
-            }
-
-            const timeSinceLastHeartbeat = (Date.now() - heartbeatInfo.lastHeartbeat)
-            let isInUse;
             let heartbeatTimeoutRemaining = null;
-            if (timeSinceLastHeartbeat <= (heartbeatInfo.heartbeatRate * 2)) {
-                isInUse = "Yes";
-            } else {
-                isInUse = "No";
-                const remaining = Math.max(0, (timeoutMs - timeSinceLastHeartbeat) / 1000);
-                heartbeatTimeoutRemaining = Shiny.ui.formatSeconds(remaining);
-            }
-
-            const maxLifetimeSec = parseInt(proxy.runtimeValues.SHINYPROXY_MAX_LIFETIME, 10) * 60;
+            let isInUse = "N/A";
             let maxLifetime = null;
             let maxLifetimeRemaining = null;
-            if (maxLifetimeSec > 0) {
-                maxLifetime = Shiny.ui.formatSeconds(maxLifetimeSec);
-                const remaining = Math.max(0, maxLifetimeSec - uptimeSec);
-                maxLifetimeRemaining = Shiny.ui.formatSeconds(remaining);
+
+            if (proxy.status === "Up" && proxy.startupTimestamp > 0) {
+                const uptimeSec = (Date.now() - proxy.startupTimestamp) / 1000;
+                uptime = Shiny.ui.formatSeconds(uptimeSec);
+
+                const timeoutMs = parseInt(proxy.runtimeValues.SHINYPROXY_HEARTBEAT_TIMEOUT, 10);
+                if (timeoutMs !== -1) {
+                    heartbeatTimeout = Shiny.ui.formatSeconds(timeoutMs / 1000);
+                }
+
+                const timeSinceLastHeartbeat = (Date.now() - heartbeatInfo.lastHeartbeat)
+                if (timeSinceLastHeartbeat <= (heartbeatInfo.heartbeatRate * 2)) {
+                    isInUse = "Yes";
+                } else {
+                    isInUse = "No";
+                    const remaining = Math.max(0, (timeoutMs - timeSinceLastHeartbeat) / 1000);
+                    heartbeatTimeoutRemaining = Shiny.ui.formatSeconds(remaining);
+                }
+
+                const maxLifetimeSec = parseInt(proxy.runtimeValues.SHINYPROXY_MAX_LIFETIME, 10) * 60;
+                if (maxLifetimeSec > 0) {
+                    maxLifetime = Shiny.ui.formatSeconds(maxLifetimeSec);
+                    const remaining = Math.max(0, maxLifetimeSec - uptimeSec);
+                    maxLifetimeRemaining = Shiny.ui.formatSeconds(remaining);
+                }
             }
 
             let parameters = null;

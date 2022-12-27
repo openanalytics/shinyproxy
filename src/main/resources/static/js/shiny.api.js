@@ -147,7 +147,7 @@ Shiny.api = {
                     displayName = instance.displayName;
                     let instanceName = Shiny.instances._toAppDisplayName(appInstance);
 
-                    let uptime = "N/A";
+                    let uptime = null;
                     if (instance.hasOwnProperty("startupTimestamp") && instance.startupTimestamp > 0) {
                         uptime = Shiny.ui.formatSeconds((Date.now() - instance.startupTimestamp) / 1000);
                     }

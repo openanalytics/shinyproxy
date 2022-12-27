@@ -45,6 +45,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -66,6 +67,7 @@ import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.StringTemplateResolver;
 
 import javax.inject.Inject;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -88,7 +90,7 @@ public class AppController extends BaseController {
     private ParametersService parameterService;
 
 	@RequestMapping(value={"/app_i/*/**", "/app/**"}, method=RequestMethod.GET)
-	public ModelAndView app(ModelMap map, HttpServletRequest request) {
+	public ModelAndView app(ModelMap map, HttpServletRequest request, HttpServletResponse response) {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
 		Proxy proxy = findUserProxy(appRequestInfo);
 
@@ -99,7 +101,8 @@ public class AppController extends BaseController {
 		}
 
 		if (proxy == null && spec == null) {
-			throw new RuntimeException("forbidden");
+			request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, HttpStatus.FORBIDDEN.value());
+			return new ModelAndView("forward:/error");
 		}
 
 		prepareMap(map, request);
@@ -286,7 +289,7 @@ public class AppController extends BaseController {
 		try {
 			mappingManager.dispatchAsync(requestUrl, request, response);
 		} catch (Exception e) {
-			throw new RuntimeException("Error routing proxy request", e); // TODO error handling
+			throw new RuntimeException("Error routing proxy request", e);
 		}
 	}
 

@@ -26,21 +26,20 @@ import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.InvalidParametersException;
-import eu.openanalytics.containerproxy.util.BadRequestException;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.inject.Inject;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -52,7 +51,7 @@ public class AppDirectController extends BaseController {
 
     @Operation(summary = "Proxy request to app. Starts the app if it does not yet exists. Can be used directly or for embedding.", tags = "ShinyProxy")
     @RequestMapping(value = {"/app_direct_i/**", "/app_direct/**"})
-    public void appDirect(HttpServletRequest request, HttpServletResponse response) throws InvalidParametersException {
+    public void appDirect(HttpServletRequest request, HttpServletResponse response) throws InvalidParametersException, ServletException, IOException {
         // note: app_direct does not support parameters and resume
         AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
 
@@ -65,7 +64,10 @@ public class AppDirectController extends BaseController {
             return;
         }
 
-        Proxy proxy = getOrStart(appRequestInfo);
+        Proxy proxy = getOrStart(appRequestInfo, request, response);
+        if (proxy == null) {
+            return;
+        }
         String mapping = getProxyEndpoint(proxy);
 
         try {
@@ -75,15 +77,19 @@ public class AppDirectController extends BaseController {
         }
     }
 
-    private Proxy getOrStart(AppRequestInfo appRequestInfo) throws InvalidParametersException {
+    private Proxy getOrStart(AppRequestInfo appRequestInfo, HttpServletRequest request, HttpServletResponse response) throws InvalidParametersException, ServletException, IOException {
         Proxy proxy = findUserProxy(appRequestInfo);
         if (proxy == null) {
             ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
 
-            if (spec == null) throw new BadRequestException("Unknown proxy spec: " + appRequestInfo.getAppName());
+            if (spec == null) {
+                response.setStatus(HttpStatus.FORBIDDEN.value());
+                request.getRequestDispatcher("/error").forward(request, response);
+                return null;
+            }
 
             if (!validateProxyStart(spec)) {
-                throw new BadRequestException("Cannot start new proxy because the maximum amount of instances of this proxy has been reached");
+                throw new ContainerProxyException("Cannot start new proxy because the maximum amount of instances of this proxy has been reached");
             }
 
             List<RuntimeValue> runtimeValues = shinyProxySpecProvider.getRuntimeValues(spec);
@@ -91,7 +97,11 @@ public class AppDirectController extends BaseController {
             runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(appRequestInfo)));
             runtimeValues.add(new RuntimeValue(AppInstanceKey.inst, appRequestInfo.getAppInstance()));
 
-            proxyService.startProxy(userService.getCurrentAuth(), spec, runtimeValues, id, null).run();
+            try {
+                proxyService.startProxy(userService.getCurrentAuth(), spec, runtimeValues, id, null).run();
+            } catch (Throwable t) {
+                throw new ContainerProxyException("Failed to start app " + appRequestInfo.getAppName(), t);
+            }
             proxy = proxyService.getProxy(id);
         }
         if (proxy.getStatus() == ProxyStatus.Up) {
@@ -102,21 +112,21 @@ public class AppDirectController extends BaseController {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException ex) {
-                    throw new ContainerProxyException("Proxy failed to start");
+                    throw new ContainerProxyException("Failed to start app " + appRequestInfo.getAppName());
                 }
                 Proxy result = proxyService.getProxy(proxy.getId());
                 if (result == null) {
-                    throw new ContainerProxyException("Proxy failed to start");
+                    throw new ContainerProxyException("Failed to start app " + appRequestInfo.getAppName());
                 }
                 if (result.getStatus().equals(ProxyStatus.Up)) {
                     return result;
                 }
                 if (!result.getStatus().equals(ProxyStatus.New)) {
-                    throw new ContainerProxyException("Proxy failed to start");
+                    throw new ContainerProxyException("Failed to start app " + appRequestInfo.getAppName());
                 }
             }
         }
-        throw new ContainerProxyException("Proxy failed to start");
+        throw new ContainerProxyException("Failed to start app " + appRequestInfo.getAppName());
     }
 
     private String getPublicPath(AppRequestInfo appRequestInfo) {

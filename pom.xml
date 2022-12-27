@@ -123,67 +123,6 @@
 			<artifactId>xnio-api</artifactId>
 			<version>3.8.8.Final</version>
 		</dependency>
-
-		<dependency>
-			<!-- Dependency of lettuce - > update to fix security issue -->
-			<groupId>io.netty</groupId>
-			<artifactId>netty-common</artifactId>
-			<version>4.1.86.Final</version>
-		</dependency>
-		<dependency>
-			<!-- Dependency of lettuce - > update to fix security issue -->
-			<groupId>io.netty</groupId>
-			<artifactId>netty-handler</artifactId>
-			<version>4.1.86.Final</version>
-		</dependency>
-		<dependency>
-			<!-- Dependency of lettuce - > update to fix security issue -->
-			<groupId>io.netty</groupId>
-			<artifactId>netty-resolver</artifactId>
-			<version>4.1.86.Final</version>
-		</dependency>
-		<dependency>
-			<!-- Dependency of lettuce - > update to fix security issue -->
-			<groupId>io.netty</groupId>
-			<artifactId>netty-buffer</artifactId>
-			<version>4.1.86.Final</version>
-		</dependency>
-		<dependency>
-			<!-- Dependency of lettuce - > update to fix security issue -->
-			<groupId>io.netty</groupId>
-			<artifactId>netty-transport-native-unix-common</artifactId>
-			<version>4.1.86.Final</version>
-		</dependency>
-		<dependency>
-			<!-- Dependency of lettuce - > update to fix security issue -->
-			<groupId>io.netty</groupId>
-			<artifactId>netty-codec</artifactId>
-			<version>4.1.86.Final</version>
-		</dependency>
-		<dependency>
-			<!-- Dependency of lettuce - > update to fix security issue -->
-			<groupId>io.netty</groupId>
-			<artifactId>netty-transport</artifactId>
-			<version>4.1.86.Final</version>
-		</dependency>
-		<dependency>
-			<!-- Dependency of aws sdk- > update to fix security issue -->
-			<groupId>io.netty</groupId>
-			<artifactId>netty-codec-http</artifactId>
-			<version>4.1.86.Final</version>
-		</dependency>
-		<dependency>
-			<!-- Dependency of aws sdk- > update to fix security issue -->
-			<groupId>io.netty</groupId>
-			<artifactId>netty-codec-http2</artifactId>
-			<version>4.1.86.Final</version>
-		</dependency>
-		<dependency>
-			<!-- Dependency of aws sdk- > update to fix security issue -->
-			<groupId>io.netty</groupId>
-			<artifactId>netty-transport-classes-epoll</artifactId>
-			<version>4.1.86.Final</version>
-		</dependency>
 		<dependency>
 			<!-- Dependency of Spring -->
 			<groupId>org.yaml</groupId>
@@ -200,6 +139,14 @@
 					<version>2.26-b03</version>
 					<type>pom</type>
 					<scope>import</scope>
+			</dependency>
+			<dependency>
+				<!-- Dependency of lettuce and AWS SDK -> update to fix security issue -->
+				<groupId>io.netty</groupId>
+				<artifactId>netty-bom</artifactId>
+				<version> 4.1.86.Final</version>
+				<type>pom</type>
+				<scope>import</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

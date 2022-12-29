@@ -65,6 +65,13 @@
 				</div>
 			</div>
 		</nav>
+		<script>
+			// fix padding of body as soon as navbar is rendered
+			let navbarHeight = $('.navbar-height').height();
+			if (navbarHeight !== undefined) {
+				$('body').css('padding-top', navbarHeight + 'px');
+			}
+		</script>
 		<div class="modal fade" id="reportIssueModal" role="dialog">
 			<div class="modal-dialog">
 				<div class="modal-content">

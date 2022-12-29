@@ -66,9 +66,13 @@ Shiny.ui = {
      */
     setShinyFrameHeight: function () {
         // note: we use JS here instead of CSS in order to support custom navbars using any possible height.
-        let height = $(window).height() - $('.navbar-height').height();
+        let navbarHeight = $('.navbar-height').height();
+        if (navbarHeight === undefined) {
+            navbarHeight = 0; // when navbar is hidden
+        }
+        let height = $(window).height() - navbarHeight;
         $('#shinyframe').css('height', height + 'px');
-        $('body').css('padding-top', $('.navbar-height').height() + 'px');
+        $('body').css('padding-top', navbarHeight + 'px');
     },
 
     updateLoadingTxt: function () {

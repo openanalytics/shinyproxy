@@ -22,9 +22,8 @@ package eu.openanalytics.shinyproxy;
 
 import eu.openanalytics.containerproxy.backend.strategy.IProxyTestStrategy;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.service.StructuredLogger;
 import eu.openanalytics.containerproxy.util.Retrying;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -43,7 +42,7 @@ import java.util.Arrays;
 @Primary
 public class ShinyProxyTestStrategy implements IProxyTestStrategy {
 
-	private Logger log = LogManager.getLogger(ShinyProxyTestStrategy.class);
+	private final StructuredLogger log = StructuredLogger.create(getClass());
 	
 	@Inject
 	private Environment environment;
@@ -79,11 +78,15 @@ public class ShinyProxyTestStrategy implements IProxyTestStrategy {
 				connection.setInstanceFollowRedirects(false);
 				int responseCode = connection.getResponseCode();
 				if (Arrays.asList(200, 301, 302, 303, 307, 308).contains(responseCode)) {
-					log.info("Container responsive {}", proxy.getContainers().get(0).getId());
+					if (currentAttempt > 10) {
+						log.info(proxy, "Container responsive");
+					}
 					return true;
 				}
 			} catch (Exception e) {
-				if (currentAttempt > 10 && log != null) log.warn(String.format("Container unresponsive, trying again (%d/%d): %s", currentAttempt, maxAttempts, targetURI));
+				if (currentAttempt > 10) {
+					log.warn(proxy, String.format("Container unresponsive, trying again (%d/%d): %s", currentAttempt, maxAttempts, targetURI));
+				}
 			}
 			return false;
 		}, totalWaitMs);

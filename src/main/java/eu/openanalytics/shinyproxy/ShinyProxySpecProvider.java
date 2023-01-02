@@ -27,18 +27,24 @@ import eu.openanalytics.containerproxy.model.spec.DockerSwarmSecret;
 import eu.openanalytics.containerproxy.model.spec.Parameters;
 import eu.openanalytics.containerproxy.model.spec.PortMapping;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
+import eu.openanalytics.containerproxy.spec.expression.SpecExpressionContext;
+import eu.openanalytics.containerproxy.spec.expression.SpecExpressionResolver;
 import eu.openanalytics.containerproxy.spec.expression.SpelField;
 import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebsocketReconnectionMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -67,9 +73,16 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
 	private static Environment environment;
 
-	private Integer defaultMaxInstances;
+	private String defaultMaxInstances;
 
 	private Boolean defaultAlwaysSwitchInstance;
+
+	@Inject
+	private SpecExpressionResolver expressionResolver;
+
+	@Inject
+	@Lazy
+	private UserService userService;
 
 	@Autowired
 	public void setEnvironment(Environment env){
@@ -81,7 +94,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		this.specs.stream().collect(Collectors.groupingBy(ProxySpec::getId)).forEach((id, duplicateSpecs) -> {
 			if (duplicateSpecs.size() > 1) throw new IllegalArgumentException(String.format("Configuration error: spec with id '%s' is defined multiple times", id));
 		});
-		defaultMaxInstances = environment.getProperty(PROP_DEFAULT_MAX_INSTANCES, Integer.class, 1);
+		defaultMaxInstances = environment.getProperty(PROP_DEFAULT_MAX_INSTANCES, String.class, "1");
 		defaultAlwaysSwitchInstance = environment.getProperty(PROP_DEFAULT_ALWAYS_SWITCH_INSTANCE, Boolean.class, false);
 		specs.forEach(ProxySpec::setContainerIndex);
 	}
@@ -123,24 +136,36 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 	}
 
 	public Integer getMaxInstancesForSpec(ProxySpec proxySpec) {
-		// TODO support SpEL
-		Integer maxInstances = proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getMaxInstances();
+		Authentication user = userService.getCurrentAuth();
+		SpecExpressionContext context = SpecExpressionContext.create(
+				user,
+				user.getPrincipal(),
+				user.getCredentials());
+
+		Integer maxInstances = proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getMaxInstances().resolve(expressionResolver, context).getValueOrNull();
 		if (maxInstances != null) {
             return maxInstances;
 		}
-		return defaultMaxInstances;
+		return expressionResolver.evaluateToInteger(defaultMaxInstances, context);
 	}
 
 	public Map<String, Integer> getMaxInstances() {
+		Authentication user = userService.getCurrentAuth();
+		SpecExpressionContext context = SpecExpressionContext.create(
+				user,
+				user.getPrincipal(),
+				user.getCredentials());
+
 		Map<String, Integer> result = new HashMap<>();
 
-		// TODO support SpEL
+		Integer resolvedDefault = expressionResolver.evaluateToInteger(defaultMaxInstances, context);
+
 		for (ProxySpec proxySpec: getSpecs()) {
-			Integer maxInstances = proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getMaxInstances();
+			Integer maxInstances = proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getMaxInstances().resolve(expressionResolver, context).getValueOrNull();
 			if (maxInstances != null) {
 				result.put(proxySpec.getId(), maxInstances);
 			} else {
-				result.put(proxySpec.getId(), defaultMaxInstances);
+				result.put(proxySpec.getId(), resolvedDefault);
 			}
 		}
 

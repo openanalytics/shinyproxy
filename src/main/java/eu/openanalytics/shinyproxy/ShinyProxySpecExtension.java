@@ -23,83 +23,43 @@ package eu.openanalytics.shinyproxy;
 import eu.openanalytics.containerproxy.model.spec.AbstractSpecExtension;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionContext;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionResolver;
+import eu.openanalytics.containerproxy.spec.expression.SpelField;
 import eu.openanalytics.shinyproxy.runtimevalues.WebsocketReconnectionMode;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@EqualsAndHashCode(callSuper = true)
+@Data
+@Setter
+@Getter
+@Builder(toBuilder = true)
+@AllArgsConstructor
+@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE) // Jackson deserialize compatibility
 public class ShinyProxySpecExtension extends AbstractSpecExtension {
 
-    private WebsocketReconnectionMode websocketReconnectionMode;
+    WebsocketReconnectionMode websocketReconnectionMode;
 
-    private Boolean shinyForceFullReload;
+    Boolean shinyForceFullReload;
 
-    private Integer maxInstances;
+    @Builder.Default
+    SpelField.Integer maxInstances = new SpelField.Integer();
 
-    private Boolean hideNavbarOnMainPageLink;
+    Boolean hideNavbarOnMainPageLink;
 
-    private Boolean alwaysSwitchInstance;
+    Boolean alwaysShowSwitchInstance;
 
-    private String templateGroup;
+    String templateGroup;
 
-    private Map<String, String> templateProperties = new HashMap<>();
-
-    public WebsocketReconnectionMode getWebsocketReconnectionMode() {
-        return websocketReconnectionMode;
-    }
-
-    public void setWebsocketReconnectionMode(WebsocketReconnectionMode websocketReconnectionMode) {
-        this.websocketReconnectionMode = websocketReconnectionMode;
-    }
-
-    public Boolean getShinyForceFullReload() {
-        return shinyForceFullReload;
-    }
-
-    public void setShinyForceFullReload(Boolean shinyForceFullReload) {
-        this.shinyForceFullReload = shinyForceFullReload;
-    }
-
-    public Integer getMaxInstances() {
-        return maxInstances;
-    }
-
-    public void setMaxInstances(Integer maxInstances) {
-        this.maxInstances = maxInstances;
-    }
-
-    public Boolean getHideNavbarOnMainPageLink() {
-        return hideNavbarOnMainPageLink;
-    }
-
-    public void setHideNavbarOnMainPageLink(Boolean hideNavbarOnMainPageLink) {
-        this.hideNavbarOnMainPageLink = hideNavbarOnMainPageLink;
-    }
-
-    public void setAlwaysSwitchInstance(Boolean alwaysSwitchInstance) {
-        this.alwaysSwitchInstance = alwaysSwitchInstance;
-    }
-
-    public Boolean getAlwaysShowSwitchInstance() {
-        return alwaysSwitchInstance;
-    }
-
-
-    public void setTemplateGroup(String templateGroup) {
-        this.templateGroup = templateGroup;
-    }
-
-    public String getTemplateGroup() {
-        return templateGroup;
-    }
-
-    public void setTemplateProperties(Map<String, String> templateProperties) {
-        this.templateProperties = templateProperties;
-    }
-
-    public Map<String, String> getTemplateProperties() {
-        return templateProperties;
-    }
+    Map<String, String> templateProperties = new HashMap<>();
 
     @Override
     public ShinyProxySpecExtension firstResolve(SpecExpressionResolver resolver, SpecExpressionContext context) {

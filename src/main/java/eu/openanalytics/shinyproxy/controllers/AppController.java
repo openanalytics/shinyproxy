@@ -315,9 +315,11 @@ public class AppController extends BaseController {
 		if (override != null) {
 			return true;
 		}
-		for (Cookie cookie : request.getCookies()) {
-			if (cookie.getName().equals("sp-instance-override")) {
-				return true;
+		if (request.getCookies() != null) {
+			for (Cookie cookie : request.getCookies()) {
+				if (cookie.getName().equals("sp-instance-override")) {
+					return true;
+				}
 			}
 		}
 		return false;

@@ -50,52 +50,35 @@
     <button id="new-version-btn" class="btn btn-default btn-sm">Switch to new version!</button>
 </div>
 
-<th:block th:fragment="applink(app)">
-    <th:block  th:if="${app!= null}">
-        <a th:unless="${@thymeleaf.openSwitchInstanceInsteadOfApp(app)}"
-           th:href="${@thymeleaf.getAppUrl(app)}"
-           th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
-
-        <a th:if="${@thymeleaf.openSwitchInstanceInsteadOfApp(app)}"
-           class="app-link"
-           th:data-app-id="${app.id}"
-           th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></a>
-    </th:block>
-</th:block>
-
 <!-- This is a fragment used to display a single app. -->
 <!-- Modify this in order to change how a single app looks. -->
 <th:block th:fragment="app(app)">
     <th:block th:if="${app != null}">
-        <li th:if="${!displayAppLogos}">
-            <th:block th:replace=":: applink(${app})"/>
+        <a th:unless="${@thymeleaf.openSwitchInstanceInsteadOfApp(app)}"
+           th:href="${@thymeleaf.getAppUrl(app)}"
+           class="list-group-item"
+        >
+            <span class="app-list-title" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></span>
+            <br th:if="${appLogos.get(app) != null}"/>
+            <img th:if="${appLogos.get(app) != null}" th:src="${appLogos.get(app)}">
             <br th:if="${app.description != null}"/>
             <span th:if="${app.description != null}" th:utext="${app.description}"></span>
-        </li>
-        <div th:if="${displayAppLogos}" class="row" style="margin-top:20px;">
-            <div class="media col-md-12">
-                <div class="media-left">
-                    <img th:if="${appLogos.get(app) != null}" th:src="${appLogos.get(app)}"></img>
-                </div>
-                <div class="media-body">
-                    <th:block th:replace=":: applink(${app})"/>
-                    <br th:if="${app.description != null}"/>
-                    <span th:if="${app.description != null}" th:utext="${app.description}"></span>
-                </div>
-            </div>
-        </div>
+        </a>
+
+        <a th:if="${@thymeleaf.openSwitchInstanceInsteadOfApp(app)}"
+           class="app-link"
+           th:data-app-id="${app.id}">
+        </a>
     </th:block>
 </th:block>
 <!--End of the template.-->
 
 <div class="container-fluid">
     <div class="row">
-        <!-- Part that shows a list when none of the apps contain a logo -->
-        <div th:if="${!displayAppLogos}" id="applist"
-             th:class="${myAppsMode == 'Inline' ? 'col-xs-12 col-md-7 col-lg-8' : 'col-lg-12'}">
+        <div id="applist" th:class="${myAppsMode == 'Inline' ? 'col-xs-12 col-md-4 col-md-offset-3 col-lg-5 col-lg-offset-3' : 'col-lg-6 col-lg-offset-3'}">
             <th:block th:each="group: ${templateGroups}">
                 <h2 th:text="${group.properties.get('display-name')}"></h2>
-                <ul>
+                <ul class="list-group">
                     <th:block th:each="app: ${groupedApps.get(group.id)}" th:include="index :: app(${app})"/>
                 </ul>
                 <br>
@@ -103,32 +86,14 @@
             <th:block th:if="${ungroupedApps.size() > 0}">
                 <!-- Only show the "Other" header if there are other groups with apps -->
                 <h2 th:if="${groupedApps.size() > 0}">Other</h2>
-                <ul>
+                <ul class="list-group">
                     <th:block th:each="app: ${ungroupedApps}" th:include="index :: app(${app})"/>
                 </ul>
             </th:block>
         </div>
 
-        <!-- Part that shows a list when the apps contain a logo -->
-        <div th:if="${displayAppLogos}" id="applist"
-             th:class="${myAppsMode == 'Inline' ? 'col-xs-12 col-md-4 col-md-offset-3 col-lg-5 col-lg-offset-3' : 'col-lg-6 col-lg-offset-3'}">
-            <th:block th:each="group: ${templateGroups}">
-                <div style="margin-top:20px;">
-                    <h2 th:text="${group.properties.get('display-name')}"></h2>
-                </div>
-                <th:block th:each="app: ${groupedApps.get(group.id)}" th:include="index :: app(${app})"/>
-                <br>
-            </th:block>
-            <th:block th:if="${ungroupedApps.size() > 0}">
-                <div style="margin-top:20px;">
-                    <!-- Only show the "Other" header if there are other groups with apps -->
-                    <h2 th:if="${groupedApps.size() > 0}">Other</h2>
-                </div>
-                <th:block th:each="app: ${ungroupedApps}" th:include="index :: app(${app})"/>
-            </th:block>
-        </div>
         <div th:if="${myAppsMode == 'Inline'}" class="col-md-5 col-lg-4 col-xs-12 myApps-inline">
-            <div class="myAapps-title">
+            <div class="myApps-title">
                 <h4>My apps</h4>
             </div>
             <div id="myApps" class="myApps">

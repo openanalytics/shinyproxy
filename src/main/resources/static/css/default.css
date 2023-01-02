@@ -19,11 +19,14 @@
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
 #applist {
-	margin-top: 10px;
+	margin-top: 16px;
 }
 
 #applist h2 {
-	padding-left: 20px;
+	border-bottom: 1px solid rgba(0,0,0,.2);
+	margin-bottom: 30px;
+	margin-top: 0px;
+	padding-bottom: 10px;
 }
 
 #new-version-banner {
@@ -149,6 +152,16 @@
 	text-decoration: underline;
 }
 
+.app-list-title {
+	color: #337ab7;
+	text-decoration: none;
+}
+
+.list-group-item:hover .app-list-title {
+	color: #23527c;
+	text-decoration: underline;
+}
+
 @media (min-width: 1200px) {
 	.myApps-inline {
 		max-width: 760px;
@@ -248,17 +261,18 @@
 
 
 @media (max-width: 992px) {
-	.myAapps-title, .myApps-inline #myApps, .myApps-footer {
+	.myApps-title, .myApps-inline #myApps, .myApps-footer {
 		margin-left: 0 !important;
 		margin-right: 0 !important;
 	}
 }
 
-.myAapps-title {
+.myApps-title {
 	border-bottom: 1px solid rgba(0,0,0,.2);
 	margin-right: 30px;
 	margin-top: 30px;
 	margin-left: 30px;
+	height: 30px;
 }
 
 .myApps-inline #myApps {

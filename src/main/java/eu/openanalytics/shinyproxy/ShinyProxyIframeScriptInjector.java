@@ -115,7 +115,8 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
         // 1. get HTML page and add script tag
         String r = outputStream.toString();
         if (exchange.getStatusCode() == HttpStatus.OK.value()
-                && exchange.getResponseHeaders().get("Content-Type").contains("text/html")) {
+                && exchange.getResponseHeaders().get("Content-Type") != null
+                && exchange.getResponseHeaders().get("Content-Type").stream().anyMatch(headerValue -> headerValue.contains("text/html"))) {
             // only inject script of response successful and actually a html response
             r += "<script src='/js/shiny.iframe.js'></script>";
         }

@@ -112,6 +112,7 @@ public class AppController extends BaseController {
 		map.put("appName", appRequestInfo.getAppName());
 		map.put("appInstance", appRequestInfo.getAppInstance());
 		map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
+		map.put("appPath", appRequestInfo.getAppPath());
 		map.put("containerSubPath", buildContainerSubPath(request, appRequestInfo));
 		ParameterValues previousParameters = null;
 		if (proxy == null || proxy.getRuntimeObjectOrNull(DisplayNameKey.inst) == null) {
@@ -325,6 +326,7 @@ public class AppController extends BaseController {
 		String res = UriComponentsBuilder
 				.fromPath(appRequestInfo.getSubPath())
 				.query(queryString)
+				.build(true)
 				.toUriString();
 
 		if (res.startsWith("/")) {

@@ -37,6 +37,7 @@ Shiny.app = {
             names: null,
             ids: null
         },
+        appPath: null,
         containerSubPath: null,
     },
 
@@ -68,10 +69,11 @@ Shiny.app = {
      * @param parameterDefinitions
      * @param parametersIds
      */
-    start: async function (proxy, heartBeatRate, appName, appInstanceName, isSpOverrideActive, parameterAllowedCombinations, parameterDefinitions, parametersIds, containerSubPath) {
+    start: async function (proxy, heartBeatRate, appName, appInstanceName, isSpOverrideActive, parameterAllowedCombinations, parameterDefinitions, parametersIds, appPath, containerSubPath) {
         Shiny.app.staticState.heartBeatRate = heartBeatRate;
         Shiny.app.staticState.appName = appName;
         Shiny.app.staticState.appInstanceName = appInstanceName;
+        Shiny.app.staticState.appPath = appPath;
         Shiny.app.staticState.containerSubPath = containerSubPath;
         Shiny.app.staticState.isSpOverrideActive = isSpOverrideActive;
         Shiny.app.staticState.parameters.allowedCombinations = parameterAllowedCombinations;
@@ -109,7 +111,7 @@ Shiny.app = {
                 Shiny.app.resumeApp(null);
             }
         } else if (Shiny.app.runtimeState.proxy.status === "Up") {
-            Shiny.app.runtimeState.containerPath = Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH + Shiny.app.staticState.containerSubPath;
+            Shiny.app.runtimeState.containerPath = Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH + Shiny.app.staticState.containerSubPath + window.location.hash;
             Shiny.ui.setupIframe();
             Shiny.ui.showFrame();
             Shiny.connections.startHeartBeats();

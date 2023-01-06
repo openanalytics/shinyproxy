@@ -48,7 +48,6 @@ Shiny.app = {
         containerPath: null,
         navigatingAway: false,
         reloaded: false,
-        injectorIntervalId: null,
         tryingToReconnect: false,
         reloadAttempts: 0,
         reloadDismissed: false,

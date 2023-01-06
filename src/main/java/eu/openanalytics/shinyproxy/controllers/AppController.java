@@ -37,6 +37,7 @@ import eu.openanalytics.containerproxy.service.InvalidParametersException;
 import eu.openanalytics.containerproxy.service.ParametersService;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.shinyproxy.ShinyProxyIframeScriptInjector;
 import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
@@ -288,6 +289,28 @@ public class AppController extends BaseController {
 		}
 		try {
 			mappingManager.dispatchAsync(requestUrl, request, response);
+		} catch (Exception e) {
+			throw new RuntimeException("Error routing proxy request", e);
+		}
+	}
+
+	/**
+	 * Special handler for HTML requests that inject the ShinyProxy iframe javascript.
+	 */
+	@RequestMapping(value={"/app_proxy/{proxyId}/**"}, produces= "text/html")
+	public void appProxyHtml(@PathVariable String proxyId, HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String requestUrl = request.getRequestURI().substring(getBasePublicPath().length()); // TODO cache
+
+		Proxy proxy = proxyService.getProxy(proxyId);
+		if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
+			ShinyProxyApiResponse.appStoppedOrNonExistent(response);
+			return;
+		}
+		try {
+			mappingManager.dispatchAsync(requestUrl, request, response, (exchange) -> {
+				exchange.getRequestHeaders().remove("Accept-Encoding"); // ensure no encoding is used
+				exchange.addResponseWrapper((factory, exchange1) -> new ShinyProxyIframeScriptInjector(factory.create(), exchange1));
+			});
 		} catch (Exception e) {
 			throw new RuntimeException("Error routing proxy request", e);
 		}

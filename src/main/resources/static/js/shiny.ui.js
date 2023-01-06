@@ -25,9 +25,6 @@ Shiny.ui = {
      */
     setupIframe: function () {
         var $iframe = $('<iframe id="shinyframe" width="100%" style="display:none;" frameBorder="0"></iframe>')
-        // IMPORTANT: start the injector before setting the `src` property of the iframe
-        // This is required to ensure that the polling catches all events and therefore the injector works properly.
-        Shiny.connections.startInjector();
         $iframe.attr("src", Shiny.app.runtimeState.containerPath);
         $('#iframeinsert').before($iframe); // insert the iframe into the HTML.
         Shiny.ui.setShinyFrameHeight();

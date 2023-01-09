@@ -130,4 +130,32 @@ if (window.parent.Shiny !== undefined
     _replaceFetch(window);
     _replaceOpen(window.XMLHttpRequest.prototype);
 
+    // update the url when the page changes, e.g. plain HTTP apps
+    window.addEventListener('load', function() {
+        shinyProxy.connections._updateIframeUrl(window.location.toString());
+    });
+
+    // update the url for SPA apps
+    var originalReplaceState = window.history.replaceState;
+    window.history.replaceState = function (data, title, url) {
+        originalReplaceState.call(window.history, data, title, url);
+        shinyProxy.connections._updateIframeUrl(url);
+    };
+
+    // update the url for SPA apps
+    var originalPushState = window.history.pushState;
+    window.history.pushState = function (data, title, url) {
+        originalPushState.call(window.history, data, title, url);
+        shinyProxy.connections._updateIframeUrl(url);
+    };
+
+    // required for some type of applications (e.g. Angular 1: apache zeppelin)
+    // note: this event doesn't get triggered for calls to history.replaceState and
+    // history.pushState.
+    window.addEventListener('popstate', (event) => {
+        setTimeout(() => {
+            shinyProxy.connections._updateIframeUrl(window.location.toString());
+        });
+    });
+
 }

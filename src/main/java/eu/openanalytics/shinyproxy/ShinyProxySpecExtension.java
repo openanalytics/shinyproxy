@@ -57,6 +57,8 @@ public class ShinyProxySpecExtension extends AbstractSpecExtension {
 
     Boolean alwaysShowSwitchInstance;
 
+    Boolean trackAppUrl;
+
     String templateGroup;
 
     Map<String, String> templateProperties = new HashMap<>();

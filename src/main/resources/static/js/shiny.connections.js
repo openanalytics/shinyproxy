@@ -57,13 +57,18 @@ Shiny.connections = {
                     Shiny.ui.showLoggedOutPage();
                     return;
                 }
-                var res = JSON.parse(response.responseText);
-                if (res !== null && res.status === "fail") {
-                    if (res.data === "app_stopped_or_non_existent") {
-                        Shiny.ui.showStoppedPage();
-                    } else if (res.data === "shinyproxy_authentication_required") {
-                        Shiny.ui.showLoggedOutPage();
+                try {
+                    var res = JSON.parse(response.responseText);
+                    if (res !== null && res.status === "fail") {
+                        if (res.data === "app_stopped_or_non_existent") {
+                            Shiny.ui.showStoppedPage();
+                        } else if (res.data === "shinyproxy_authentication_required") {
+                            Shiny.ui.showLoggedOutPage();
+                        }
                     }
+                } catch (error) {
+                    // server or connection crashed, let app reconnect
+                    // ignore JSON parsing error
                 }
             });
     },
@@ -72,6 +77,7 @@ Shiny.connections = {
      * Handles a WebSocket error (i.e. close).
      */
     handleWebSocketError: function () {
+        const reconnectionMode = Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_WEBSOCKET_RECONNECTION_MODE || "None";
         if (Shiny.app.runtimeState.navigatingAway) {
             return;
         }
@@ -80,7 +86,7 @@ Shiny.connections = {
             return;
         }
         Shiny.app.runtimeState.tryingToReconnect = true;
-        if (Shiny.app.staticState.webSocketReconnectionMode === "None") {
+        if (reconnectionMode === "None") {
             // check if app has been stopped but ignore the error (i.e. don't try to reconnect)
             Shiny.connections._checkAppHasBeenStopped(function (isStopped) {
                 if (isStopped) {
@@ -107,8 +113,8 @@ Shiny.connections = {
                 return;
             }
             Shiny.ui.hideModal();
-            if (Shiny.app.staticState.webSocketReconnectionMode === "Auto"
-                || (Shiny.app.staticState.webSocketReconnectionMode === "Confirm"
+            if (reconnectionMode === "Auto"
+                || (reconnectionMode === "Confirm"
                     && confirm("Connection to server lost, try to reconnect to the application?"))
             ) {
                 Shiny.connections._reloadPage();
@@ -306,6 +312,25 @@ Shiny.connections = {
         }
 
         return false;
-    }
+    },
+
+    _updateIframeUrl: function(url) {
+        if (!Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_TRACK_APP_URL) {
+            return;
+        }
+        if (Shiny.app.runtimeState.navigatingAway || Shiny.app.runtimeState.appStopped) {
+            return;
+        }
+        if (url === undefined || url === null) {
+            return;
+        }
+        if (url.startsWith(Shiny.app.runtimeState.baseFrameUrl)) {
+            const newUrl = url.replace(Shiny.app.runtimeState.baseFrameUrl, Shiny.app.runtimeState.parentFrameUrl);
+            window.history.replaceState(null, null, newUrl);
+        } else if (url.startsWith(Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH)) {
+            const newUrl = url.replace(Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH, Shiny.app.runtimeState.parentFrameUrl);
+            window.history.replaceState(null, null, newUrl);
+        }
+    },
 
 };

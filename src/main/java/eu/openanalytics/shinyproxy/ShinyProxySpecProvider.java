@@ -33,6 +33,7 @@ import eu.openanalytics.containerproxy.spec.expression.SpecExpressionContext;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionResolver;
 import eu.openanalytics.containerproxy.spec.expression.SpelField;
 import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
+import eu.openanalytics.shinyproxy.runtimevalues.TrackAppUrl;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import eu.openanalytics.shinyproxy.runtimevalues.WebsocketReconnectionMode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -131,6 +132,12 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 		}
 
 		runtimeValues.add(new RuntimeValue(ShinyForceFullReloadKey.inst, getShinyForceFullReload(proxy)));
+
+		Boolean trackAppUrl = proxy.getSpecExtension(ShinyProxySpecExtension.class).getTrackAppUrl();
+		if (trackAppUrl == null) {
+			trackAppUrl = environment.getProperty("proxy.default-track-app-url", Boolean.class, false);
+		}
+		runtimeValues.add(new RuntimeValue(TrackAppUrl.inst, trackAppUrl));
 
 		return runtimeValues;
 	}

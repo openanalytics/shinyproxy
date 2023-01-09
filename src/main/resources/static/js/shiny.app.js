@@ -43,7 +43,7 @@ Shiny.app = {
 
     runtimeState: {
         /**
-         * @type {?{id: string, status: string, runtimeValues: {SHINYPROXY_PUBLIC_PATH: string, SHINYPROXY_FORCE_FULL_RELOAD: boolean}}}
+         * @type {?{id: string, status: string, runtimeValues: {SHINYPROXY_PUBLIC_PATH: string, SHINYPROXY_WEBSOCKET_RECONNECTION_MODE: string, SHINYPROXY_FORCE_FULL_RELOAD: boolean, SHINYPROXY_TRACK_APP_URL: boolean}}}
          */
         proxy: null,
         containerPath: null,
@@ -56,6 +56,8 @@ Shiny.app = {
         websocketConnections: [],
         lastHeartbeatTime: null,
         appStopped: false,
+        parentFrameUrl: null, // the current url of the shinyproxy page, i.e. the location of the browser (e.g. http://localhost:8080/app/01_hello); guaranteed to end with /
+        baseFrameUrl: null, // the base url of the app iframe (i.e. without any subpath, query parameters, hash location etc.); guaranteed to end with /
     },
 
     /**
@@ -116,6 +118,18 @@ Shiny.app = {
             Shiny.ui.showFrame();
             Shiny.connections.startHeartBeats();
             Shiny.app.setUpOverride();
+
+            const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
+            let parentUrl = new URL(Shiny.app.staticState.appPath , baseURL).toString();
+            if (!parentUrl.endsWith("/")) {
+                parentUrl = parentUrl + "/";
+            }
+            Shiny.app.runtimeState.parentFrameUrl = parentUrl;
+            let baseFrameUrl = new URL(Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH , baseURL).toString();
+            if (!baseFrameUrl.endsWith("/")) {
+                baseFrameUrl = parentUrl + "/";
+            }
+            Shiny.app.runtimeState.baseFrameUrl = baseFrameUrl;
         } else if (Shiny.app.runtimeState.proxy.status === "Stopping") {
             Shiny.ui.showStoppingPage();
             Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance);

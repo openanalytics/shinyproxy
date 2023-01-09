@@ -202,9 +202,11 @@ Shiny.instances = {
         if (templateData.apps.hasOwnProperty(appName)) {
             templateData = templateData.apps[appName];
 
-            templateData.instances.forEach(instance => {
-                instance.active = instance.proxyId === Shiny.app.runtimeState.proxy.id
-            });
+            if (Shiny.app.runtimeState.proxy !== null) {
+                templateData.instances.forEach(instance => {
+                    instance.active = instance.proxyId === Shiny.app.runtimeState.proxy.id
+                });
+            }
 
             // put active item in front of the list
             const index = templateData.instances.findIndex(instance => instance.active);

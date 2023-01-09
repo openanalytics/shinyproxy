@@ -54,20 +54,17 @@
 <!-- Modify this in order to change how a single app looks. -->
 <th:block th:fragment="app(app)">
     <th:block th:if="${app != null}">
-        <a th:unless="${@thymeleaf.openSwitchInstanceInsteadOfApp(app)}"
-           th:href="${@thymeleaf.getAppUrl(app)}"
+        <a
+           th:href="${@thymeleaf.openSwitchInstanceInsteadOfApp(app) ? '#' : @thymeleaf.getAppUrl(app)}"
            class="list-group-item"
+           th:classappend="${@thymeleaf.openSwitchInstanceInsteadOfApp(app) ? 'app-link' : ''}"
+           th:data-app-id="${app.id}"
         >
             <span class="app-list-title" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></span>
             <br th:if="${appLogos.get(app) != null}"/>
             <img th:if="${appLogos.get(app) != null}" th:src="${appLogos.get(app)}">
             <br th:if="${app.description != null}"/>
             <span th:if="${app.description != null}" th:utext="${app.description}"></span>
-        </a>
-
-        <a th:if="${@thymeleaf.openSwitchInstanceInsteadOfApp(app)}"
-           class="app-link"
-           th:data-app-id="${app.id}">
         </a>
     </th:block>
 </th:block>

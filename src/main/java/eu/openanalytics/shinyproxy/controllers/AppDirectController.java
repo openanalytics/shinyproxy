@@ -71,7 +71,7 @@ public class AppDirectController extends BaseController {
         String mapping = getProxyEndpoint(proxy);
 
         try {
-            mappingManager.dispatchAsync(mapping + appRequestInfo.getSubPath(), request, response);
+            mappingManager.dispatchAsync(proxy.getId(), mapping + appRequestInfo.getSubPath(), request, response);
         } catch (Exception e) {
             throw new RuntimeException("Error routing proxy request", e);
         }

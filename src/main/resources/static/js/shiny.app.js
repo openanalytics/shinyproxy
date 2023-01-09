@@ -114,6 +114,9 @@ Shiny.app = {
             }
         } else if (Shiny.app.runtimeState.proxy.status === "Up") {
             Shiny.app.runtimeState.containerPath = Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH + Shiny.app.staticState.containerSubPath + window.location.hash;
+            if (!(await Shiny.app.checkAppHealth())) {
+                return;
+            }
             Shiny.ui.setupIframe();
             Shiny.ui.showFrame();
             Shiny.connections.startHeartBeats();
@@ -205,6 +208,23 @@ Shiny.app = {
             const url = new URL("app_proxy/" + Shiny.app.runtimeState.proxy.id + "/", baseURL);
             Cookies.set('sp-instance-override', Shiny.common.staticState.spInstance, {path: url.pathname});
         }
+    },
+    async checkAppHealth() {
+        // check that the app endpoint is still accessible
+        const response = await fetch(Shiny.app.runtimeState.containerPath);
+        if (response.status !== 503) {
+            return true;
+        }
+        const json = await response.json();
+        if (json.status === "error" && json.message === "app_stopped_or_non_existent") {
+            Shiny.ui.showStoppedPage();
+            return false;
+        }
+        if (json.status === "error" && json.message === "app_crashed") {
+            Shiny.ui.showCrashedPage();
+            return false;
+        }
+        return true;
     }
 }
 
@@ -226,7 +246,7 @@ $(window).on('load', function () {
         Shiny.instances.eventHandlers.showAppDetails();
     });
 
-    $('.app-link').click(function(e) {
+    $('.app-link').on('click auxclick', function(e) {
         const appId = $(e.target).data("app-id");
         Shiny.ui.showInstanceModal();
         Shiny.instances.eventHandlers.onShow(appId);

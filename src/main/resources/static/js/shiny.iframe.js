@@ -75,14 +75,14 @@ if (window.parent.Shiny !== undefined
             return new Promise((resolve, reject) => {
                 originalFetch.apply(this, arguments)
                     .then((response) => {
-                        if (response.status === 410 || response.status === 401) {
+                        if (response.status === 410 || response.status === 401 || response.status === 503) {
                             response.clone().json().then(function (clonedResponse) {
                                 if (clonedResponse.status === "fail" && clonedResponse.data === "app_stopped_or_non_existent") {
                                     shinyProxy.ui.showStoppedPage();
                                 } else if (clonedResponse.status === "fail" && clonedResponse.data === "shinyproxy_authentication_required") {
-                                    if (shinyProxy !== null) {
-                                        shinyProxy.ui.showLoggedOutPage();
-                                    }
+                                    shinyProxy.ui.showLoggedOutPage();
+                                } else if (clonedResponse.status === "fail" && clonedResponse.data === "app_crashed") {
+                                    shinyProxy.ui.showCrashedPage();
                                 }
                             });
                         }
@@ -110,7 +110,7 @@ if (window.parent.Shiny !== undefined
 
         parent.open = function () {
             this.addEventListener('load', function () {
-                if (this.status === 410 || this.status === 401) {
+                if (this.status === 410 || this.status === 401 || this.status === 503) {
                     var res = JSON.parse(this.responseText);
                     if (res !== null && res.status === "fail" && res.data === "app_stopped_or_non_existent") {
                         // app stopped
@@ -118,10 +118,12 @@ if (window.parent.Shiny !== undefined
                     } else if (res !== null && res.status === "fail" && res.data === "shinyproxy_authentication_required") {
                         // app stopped
                         shinyProxy.ui.showLoggedOutPage();
+                    } else if (res !== null && res.status === "fail" && res.data === "app_crashed") {
+                        shinyProxy.ui.showCrashedPage();
                     }
                 }
-            });
-            shinyProxy.app.runtimeState.lastHeartbeatTime = Date.now();
+        });
+        shinyProxy.app.runtimeState.lastHeartbeatTime = Date.now();
 
             return originalOpen.apply(this, arguments);
         }

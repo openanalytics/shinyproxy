@@ -147,7 +147,18 @@ Shiny.ui = {
         $('#shinyframe').remove();
         $('.loading').hide();
         $('#modal').modal('hide')
-        $('#appStopped').show();
+        if (!$('#appCrashed').is(":visible")) {
+            $('#appStopped').show();
+        }
+    },
+
+    showCrashedPage: function () {
+        Shiny.app.runtimeState.appStopped = true;
+        $('#shinyframe').remove();
+        $("#loading").hide();
+        $("#reconnecting").hide();
+        $('#modal').modal('hide')
+        $('#appCrashed').show();
     },
 
     showLoggedOutPage: function () {

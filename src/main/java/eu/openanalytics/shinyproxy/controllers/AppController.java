@@ -289,7 +289,7 @@ public class AppController extends BaseController {
 			return;
 		}
 		try {
-			mappingManager.dispatchAsync(requestUrl, request, response);
+			mappingManager.dispatchAsync(proxy.getId(), requestUrl, request, response);
 		} catch (Exception e) {
 			throw new RuntimeException("Error routing proxy request", e);
 		}
@@ -308,7 +308,7 @@ public class AppController extends BaseController {
 			return;
 		}
 		try {
-			mappingManager.dispatchAsync(requestUrl, request, response, (exchange) -> {
+			mappingManager.dispatchAsync(proxyId, requestUrl, request, response, (exchange) -> {
 				exchange.getRequestHeaders().remove("Accept-Encoding"); // ensure no encoding is used
 				exchange.addResponseWrapper((factory, exchange1) -> new ShinyProxyIframeScriptInjector(factory.create(), exchange1));
 			});

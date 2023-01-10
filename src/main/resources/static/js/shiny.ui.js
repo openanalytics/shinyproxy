@@ -292,6 +292,14 @@ Shiny.ui = {
         }
     },
 
+    loadDefaultParameters(defaultParameters) {
+        for (let i = 0; i < Shiny.app.staticState.parameters.ids.length; i++) {
+            const keyName = Shiny.app.staticState.parameters.ids[i];
+            $('select[name=' + keyName + '] option:eq(' + defaultParameters[i] + ')').prop('selected', true);
+            Shiny.ui.selectChange($('select[name=' + keyName + ']'));
+        }
+    },
+
     formatSeconds(time) {
         const hours = Math.floor(time / 3600);
         const minutes = Math.floor((time % 3600) / 60).toString().padStart(2, '0');

@@ -142,9 +142,9 @@
                         <div class="col-sm-10">
                             <select th:id="${'parameter-' + parameterDefinition.getId()}" th:name="${parameterDefinition.getId()}" class="form-control"
 									th:disabled="${paramIter.index > 0 && parameterDefaults.get(paramIter.index) == 0}" >
-                                <option disabled th:selected="${parameterDefaults.get(paramIter.index) == 0}">Select an option</option>
-                                <option th:each="value, iter : ${parameterValues.get(parameterDefinition.id)}" th:selected="${parameterDefaults.get(paramIter.index) == (iter.index+1)}" th:text="${value}"></option>
-                            </select>
+                                <option disabled selected>Select an option</option>
+								<option th:each="value, iter : ${parameterValues.get(parameterDefinition.id)}" th:text="${value}"></option>
+							</select>
                             <span class="help-block" th:if="${parameterDefinition.getDescription() != null}" th:utext="${parameterDefinition.getDescription()}"></span>
                         </div>
                     </div>
@@ -179,6 +179,7 @@
 					[[${appPath}]],
 					[[${containerSubPath}]],
 			);
+			window.Shiny.ui.loadDefaultParameters([[${parameterDefaults}]]);
 		});
 	</script>
 </body>

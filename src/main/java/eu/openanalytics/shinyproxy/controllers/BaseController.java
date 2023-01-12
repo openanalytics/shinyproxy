@@ -86,11 +86,6 @@ public abstract class BaseController {
 	private static final Logger logger = LogManager.getLogger(BaseController.class);
 	private static final Map<String, String> imageCache = new HashMap<>();
 
-	protected String getUserName(HttpServletRequest request) {
-		Principal principal = request.getUserPrincipal();
-		return (principal == null) ? request.getSession().getId() : principal.getName();
-	}
-	
 	protected String getContextPath() {
 		return SessionHelper.getContextPath(environment, true);
 	}

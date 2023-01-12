@@ -53,7 +53,7 @@ public class IssueController extends BaseController {
 	@RequestMapping(value="/issue", method=RequestMethod.POST)
 	public ResponseEntity<HashMap<String, String>> postIssue(HttpServletRequest request, HttpServletResponse response) {
 		IssueForm form = new IssueForm();
-		form.setUserName(getUserName(request));
+		form.setUserName(userService.getCurrentUserId());
 		form.setCurrentLocation(request.getParameter("currentLocation"));
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromURI(form.getCurrentLocation());
 		if (appRequestInfo != null) {

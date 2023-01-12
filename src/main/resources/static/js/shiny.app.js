@@ -246,7 +246,7 @@ $(window).on('load', function () {
         Shiny.instances.eventHandlers.showAppDetails();
     });
 
-    $('.app-link').click(function(e) {
+    $('.app-link').on('click auxclick', function(e) {
         e.preventDefault();
         const appId = $(this).data("app-id");
         Shiny.ui.showInstanceModal();

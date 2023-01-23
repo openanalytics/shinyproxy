@@ -30,7 +30,6 @@
 	<link rel="stylesheet" media="screen" th:href="@{${resourcePrefix} + '/css/default.css'}"/>
 	<script th:src="@{${resourcePrefix} + ${jqueryJs}}"></script>
 	<script th:src="@{${resourcePrefix} + ${bootstrapJs}}"></script>
-	<script th:src="@{${resourcePrefix} + ${cookieJs}}"></script>
 	<script th:src="@{${resourcePrefix} + ${handlebars}}"></script>
 	<script th:src="@{${resourcePrefix} + '/js/shiny.app.js' }"></script>
 	<script th:src="@{${resourcePrefix} + '/js/shiny.api.js' }"></script>
@@ -38,17 +37,12 @@
 	<script th:src="@{${resourcePrefix} + '/js/shiny.instances.js' }"></script>
 	<script th:src="@{${resourcePrefix} + '/js/shiny.ui.js' }"></script>
 	<script th:src="@{${resourcePrefix} + '/js/shiny.common.js'}"></script>
-	<script th:src="@{${resourcePrefix} + '/js/shiny.operator.js'}"  th:if="${operatorEnabled}" ></script>
 	<script th:src="@{${resourcePrefix} + '/handlebars/precompiled.js'}"></script>
 </head>
 <body id="appPage">
 	<div th:replace="fragments/navbar :: navbar"></div>
 
     <div id="iframeinsert"></div>
-	<div id="new-version-banner" class="alert alert-info" role="alert" style="display:none;">
-		<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-		A new version of <span th:text="${application_name}"></span> is available <button id="new-version-btn" class="btn btn-default btn-sm" >Switch to new version!</button>
-	</div>
     <div id="loading" class="loading">
 		<div class="loading-txt">Launching <span th:text="${appTitle}"></span>...</div>
 		<div class="loading-img"></div>
@@ -163,15 +157,11 @@
 	<script type="text/javascript" th:inline="javascript">
 		$(window).on('load', function() {
 			window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]], [[${appMaxInstances}]], [[${myAppsMode}]], [[${pauseSupported}]]);
-			if ([[${operatorEnabled}]]) {
-				window.Shiny.operator.init([[${operatorForceTransfer}]], [[${operatorForceTransferWithActiveApps}]], [[${operatorShowTransferMessage}]]);
-			}
 			window.Shiny.app.start(
 					[[${proxy}]],
 					[[${heartbeatRate}]],
 					[[${appName}]],
 					[[${appInstance}]],
-					[[${isSpOverrideActive}]],
                     [[${parameterAllowedCombinations}]],
                     [[${parameterDefinitions}]],
                     [[${parameterIds}]],

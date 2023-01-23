@@ -31,7 +31,6 @@ Shiny.app = {
         maxReloadAttempts: 10,
         heartBeatRate: null,
         maxInstances: null,
-        isSpOverrideActive: null,
         parameters: {
             allowedCombinations: null,
             names: null,
@@ -66,18 +65,18 @@ Shiny.app = {
      * @param heartBeatRate
      * @param appName
      * @param appInstanceName
-     * @param isSpOverrideActive
      * @param parameterAllowedCombinations
      * @param parameterDefinitions
      * @param parametersIds
+     * @param appPath
+     * @param containerSubPath
      */
-    start: async function (proxy, heartBeatRate, appName, appInstanceName, isSpOverrideActive, parameterAllowedCombinations, parameterDefinitions, parametersIds, appPath, containerSubPath) {
+    start: async function (proxy, heartBeatRate, appName, appInstanceName, parameterAllowedCombinations, parameterDefinitions, parametersIds, appPath, containerSubPath) {
         Shiny.app.staticState.heartBeatRate = heartBeatRate;
         Shiny.app.staticState.appName = appName;
         Shiny.app.staticState.appInstanceName = appInstanceName;
         Shiny.app.staticState.appPath = appPath;
         Shiny.app.staticState.containerSubPath = containerSubPath;
-        Shiny.app.staticState.isSpOverrideActive = isSpOverrideActive;
         Shiny.app.staticState.parameters.allowedCombinations = parameterAllowedCombinations;
         Shiny.app.staticState.parameters.names = parameterDefinitions;
         Shiny.app.staticState.parameters.ids = parametersIds;
@@ -86,16 +85,6 @@ Shiny.app = {
     },
     async loadApp() {
         if (Shiny.app.runtimeState.proxy === null) {
-            // TODO operator
-            // TODO is new app message still shown on app page?
-            // if (Shiny.operator === undefined || await Shiny.operator.start()) {
-            // if (Shiny.app.staticState.isSpOverrideActive) { // TODO
-            //     // do not start new apps on old SP instances -> redirect to same page but without override
-            //     const overrideUrl = new URL(window.location);
-            //     overrideUrl.searchParams.delete("sp_instance_override");
-            //     window.location = overrideUrl;
-            //     return;
-            // }
             if (Shiny.app.staticState.parameters.names !== null) {
                 Shiny.ui.showParameterForm();
             } else {
@@ -120,7 +109,6 @@ Shiny.app = {
             Shiny.ui.setupIframe();
             Shiny.ui.showFrame();
             Shiny.connections.startHeartBeats();
-            Shiny.app.setUpOverride();
 
             const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
             let parentUrl = new URL(Shiny.app.staticState.appPath , baseURL).toString();
@@ -135,13 +123,13 @@ Shiny.app = {
             Shiny.app.runtimeState.baseFrameUrl = baseFrameUrl;
         } else if (Shiny.app.runtimeState.proxy.status === "Stopping") {
             Shiny.ui.showStoppingPage();
-            Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance);
+            Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id);
             if (Shiny.app.runtimeState.proxy !== null && !Shiny.app.runtimeState.navigatingAway) {
                 Shiny.ui.showStoppedPage();
             }
         } else if (Shiny.app.runtimeState.proxy.status === "Pausing") {
             Shiny.ui.showPausingPage();
-            Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance);
+            Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id);
             if (Shiny.app.runtimeState.proxy !== null && !Shiny.app.runtimeState.navigatingAway) {
                 Shiny.ui.showPausedAppPage();
             }
@@ -150,7 +138,7 @@ Shiny.app = {
         }
     },
     async waitForAppStart() {
-        const proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance);
+        const proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id);
         Shiny.app.runtimeState.proxy = proxy;
         if (proxy === null || proxy.status === "Stopped") {
             Shiny.app.startupFailed();
@@ -168,7 +156,7 @@ Shiny.app = {
     async resumeApp(parameters) {
         Shiny.ui.setShinyFrameHeight();
         Shiny.ui.showResumingPage();
-        await Shiny.api.changeProxyStatus(Shiny.app.runtimeState.proxy.id, Shiny.common.staticState.spInstance, 'Resuming', parameters)
+        await Shiny.api.changeProxyStatus(Shiny.app.runtimeState.proxy.id, 'Resuming', parameters)
         await Shiny.app.waitForAppStart();
     },
     async startAppWithParameters(parameters) {
@@ -200,13 +188,6 @@ Shiny.app = {
     startupFailed() {
         if (!Shiny.app.runtimeState.appStopped && !Shiny.app.runtimeState.navigatingAway) {
             Shiny.ui.showStartFailedPage();
-        }
-    },
-    setUpOverride() {
-        if (Shiny.common.staticState.operatorEnabled) {
-            const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
-            const url = new URL("app_proxy/" + Shiny.app.runtimeState.proxy.id + "/", baseURL);
-            Cookies.set('sp-instance-override', Shiny.common.staticState.spInstance, {path: url.pathname});
         }
     },
     async checkAppHealth() {

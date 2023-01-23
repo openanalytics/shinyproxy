@@ -25,8 +25,6 @@ import eu.openanalytics.containerproxy.security.ICustomSecurityConfig;
 import eu.openanalytics.containerproxy.service.UserService;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
-import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -39,9 +37,6 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 	
 	@Inject
 	private UserService userService;
-
-	@Inject
-	private OperatorService operatorService;
 
 	@Override
 	public void apply(HttpSecurity http) throws Exception {

@@ -99,8 +99,6 @@ public class IndexController extends BaseController {
 		map.put("page", "index");
 
 		map.put("myAppsMode", myAppsMode.toString());
-		// operator specific
-		map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnMainPage());
 
 		return "index";
     }

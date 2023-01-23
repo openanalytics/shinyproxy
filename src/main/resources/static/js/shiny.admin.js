@@ -93,11 +93,11 @@ Shiny.admin = {
                             return `
                                <div class="btn-group btn-group-xs" style="width: 100px; display:block;" role="group">
                                     <button type="button" class="btn btn-primary"
-                                            onclick="Shiny.admin.showAppDetails('${data.displayName}', '${data.instanceName}', '${data.proxyId}', '${data.spInstance}');">
+                                            onclick="Shiny.admin.showAppDetails('${data.displayName}', '${data.instanceName}', '${data.proxyId}');">
                                         Details
                                     </button>
                                     <button type="button" class="btn btn-primary"
-                                            onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '${data.instanceName}', '${data.proxyId}', '${data.spInstance}');">
+                                            onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '${data.instanceName}', '${data.proxyId}');">
                                         Stop
                                     </button>
                                 </div>
@@ -128,7 +128,7 @@ Shiny.admin = {
         Shiny.admin._table.clear().rows.add(Shiny.admin._adminData).draw();
     },
 
-    showAppDetails(appName, appInstanceName, proxyId, spInstance) {
+    showAppDetails(appName, appInstanceName, proxyId) {
         function refresh() {
             let appDetails = null;
             for (const app of Shiny.admin._adminData) {

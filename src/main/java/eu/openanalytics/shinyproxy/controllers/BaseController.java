@@ -30,7 +30,6 @@ import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.containerproxy.util.SessionHelper;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
-import eu.openanalytics.shinyproxy.OperatorService;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import org.apache.logging.log4j.LogManager;
@@ -48,7 +47,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
-import java.security.Principal;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,9 +68,6 @@ public abstract class BaseController {
 
 	@Inject
 	HeartbeatService heartbeatService;
-
-	@Inject
-	OperatorService operatorService;
 
 	@Inject
 	IdentifierService identifierService;
@@ -126,7 +121,6 @@ public abstract class BaseController {
 		map.put("bootstrapCss", "/webjars/bootstrap/3.4.1/css/bootstrap.min.css");
 		map.put("bootstrapJs", "/webjars/bootstrap/3.4.1/js/bootstrap.min.js");
 		map.put("jqueryJs", "/webjars/jquery/3.6.1/jquery.min.js");
-		map.put("cookieJs", "/webjars/js-cookie/2.2.1/js.cookie.min.js");
 		map.put("handlebars", "/webjars/handlebars/4.7.7/handlebars.runtime.min.js");
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -141,11 +135,6 @@ public abstract class BaseController {
 		map.put("resourcePrefix", "/" + identifierService.instanceId);
 		map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
 		map.put("pauseSupported", backend.supportsPause());
-
-		// operator specific
-		map.put("operatorEnabled", operatorService.isEnabled());
-		map.put("operatorForceTransfer", operatorService.mustForceTransfer());
-		map.put("operatorForceTransferWithActiveApps", operatorService.mustForceTransferWithActiveApps());
 		map.put("spInstance", identifierService.instanceId);
 	}
 	
@@ -199,7 +188,6 @@ public abstract class BaseController {
 				p -> p.getSpecId().equals(spec.getId())
 						&& userService.isOwner(p),
 				false).size();
-
 
 		return currentAmountOfInstances < maxInstances;
 	}

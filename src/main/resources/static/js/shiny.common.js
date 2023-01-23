@@ -25,7 +25,6 @@ Shiny.common = {
         contextPath: null,
         applicationName: null,
         spInstance: null,
-        operatorEnabled: false,
         appMaxInstances: null, // max instances per app
         myAppsMode: null,
         pauseSupported: null,
@@ -65,14 +64,14 @@ Shiny.common = {
         }
     },
 
-    showAppDetails: function (event, appName, appInstanceName, proxyId, spInstance) {
+    showAppDetails: function (event, appName, appInstanceName, proxyId) {
         event.preventDefault();
         if (Shiny.common.staticState.myAppsMode === 'Modal') {
             Shiny.ui.showAppDetailsModal($('#myAppsModal'));
         } else {
             Shiny.ui.showAppDetailsModal();
         }
-        Shiny.common.loadAppDetails(appName, appInstanceName, proxyId, spInstance);
+        Shiny.common.loadAppDetails(appName, appInstanceName, proxyId);
     },
 
     closeAppDetails: function() {
@@ -82,10 +81,10 @@ Shiny.common = {
         }
     },
 
-    loadAppDetails(appName, appInstanceName, proxyId, spInstance) {
+    loadAppDetails(appName, appInstanceName, proxyId) {
         async function refresh() {
-            const proxy = await Shiny.api.getProxyByIdFromCache(proxyId, spInstance);
-            const heartbeatInfo = await Shiny.api.getHeartBeatInfo(proxyId, spInstance);
+            const proxy = await Shiny.api.getProxyByIdFromCache(proxyId);
+            const heartbeatInfo = await Shiny.api.getHeartBeatInfo(proxyId);
             if (proxy === null || heartbeatInfo == null || proxy.status === "Stopped" || proxy.status === "Stopping") {
                 const templateData = {
                     appName: appName,
@@ -163,13 +162,11 @@ Shiny.common = {
         if (confirm("Are you sure you want to stop all your apps?")) {
             $('#stop-all-apps-btn').hide();
             $('#stopping-all-apps-btn').show();
-            const proxies = await Shiny.api.getProxiesAsTemplateData()
+            const proxies = await Shiny.api.getProxies()
             const proxyIds = [];
-            for (const app of Object.values(proxies.apps)) {
-                for (const proxy of app.instances) {
-                    Shiny.api.changeProxyStatus(proxy.proxyId, proxy.spInstance, 'Stopping');
-                    proxyIds.push(proxy.proxyId);
-                }
+            for (const proxy of proxies) {
+                Shiny.api.changeProxyStatus(proxy.id, 'Stopping');
+                proxyIds.push(proxy.id);
             }
             // wait for all proxies to be stopped
             while (!await Shiny.common._areAllProxiesDeleted(proxyIds)) {
@@ -181,12 +178,10 @@ Shiny.common = {
     },
 
     async _areAllProxiesDeleted(proxyIds) {
-        const proxies = await Shiny.api.getProxiesAsTemplateData()
-        for (const app of Object.values(proxies.apps)) {
-            for (const proxy of app.instances) {
-                if (proxyIds.includes(proxy.proxyId)) {
-                    return false;
-                }
+        const proxies = await Shiny.api.getProxies()
+        for (const proxy of proxies) {
+            if (proxyIds.includes(proxy.id)) {
+                return false;
             }
         }
         return true;
@@ -207,13 +202,7 @@ Shiny.common = {
             $('#stop-all-apps-btn').show();
         }
     },
-
     async startIndex() {
-        if (Shiny.common.staticState.operatorEnabled) {
-            if (!await window.Shiny.operator.start()) {
-                return;
-            }
-        }
         if (Shiny.common.staticState.myAppsMode === 'Inline') {
             Shiny.common.onShowMyApps();
         }

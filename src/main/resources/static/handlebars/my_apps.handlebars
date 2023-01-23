@@ -6,15 +6,15 @@
                 <span class="app-instance-title">{{ instanceName }}</span>
                 <div class="btn-group btn-group-xs" role="group">
                     <button type="button" class="btn btn-primary"
-                            onclick="Shiny.common.showAppDetails(event, '{{ displayName }}', '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">
+                            onclick="Shiny.common.showAppDetails(event, '{{ displayName }}', '{{ instanceName }}', '{{ proxyId }}');">
                         Details
                     </button>
                     <button type="button" class="btn btn-primary"
-                            onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">
+                            onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '{{ instanceName }}', '{{ proxyId }}');">
                         Stop
                     </button>
                     {{#if ../../pauseSupported}}
-                        <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onPauseApp(event, '{{ instanceName }}', '{{ proxyId }}', '{{ spInstance }}');">Pause</button>
+                        <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onPauseApp(event, '{{ instanceName }}', '{{ proxyId }}');">Pause</button>
                     {{/if}}
                 </div>
                 <span>{{{ formatStatus status }}} {{#if uptime}}Uptime: {{ uptime }} {{/if}}</span>

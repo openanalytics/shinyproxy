@@ -69,7 +69,6 @@ import org.thymeleaf.templateresolver.StringTemplateResolver;
 
 import javax.inject.Inject;
 import javax.servlet.RequestDispatcher;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -147,14 +146,6 @@ public class AppController extends BaseController {
 			map.put("parameterDefinitions", null);
 			map.put("parameterIds", null);
 			map.put("parameterFragment", null);
-		}
-		// operator specific
-		if (operatorService.isEnabled()) {
-			map.put("isSpOverrideActive", getIsSpOverrideActive(request));
-			map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnAppPage());
-		} else {
-			map.put("isSpOverrideActive", false);
-			map.put("operatorShowTransferMessage", false);
 		}
 
 		return new ModelAndView("app", map);
@@ -331,21 +322,6 @@ public class AppController extends BaseController {
 			return res.substring(1);
 		}
 		return res;
-	}
-
-	private boolean getIsSpOverrideActive(HttpServletRequest request) {
-		String override = request.getParameter("sp_instance_override");
-		if (override != null) {
-			return true;
-		}
-		if (request.getCookies() != null) {
-			for (Cookie cookie : request.getCookies()) {
-				if (cookie.getName().equals("sp-instance-override")) {
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	private String getPublicPath(String proxyId) {

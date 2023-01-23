@@ -138,7 +138,7 @@ public abstract class BaseController {
 		map.put("page", ""); // defaults, used in navbar
 		map.put("maxInstances", 0); // defaults, used in navbar
 		map.put("contextPath", getContextPath());
-		map.put("resourceSuffix", "");
+		map.put("resourcePrefix", "/" + identifierService.instanceId);
 		map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
 		map.put("pauseSupported", backend.supportsPause());
 

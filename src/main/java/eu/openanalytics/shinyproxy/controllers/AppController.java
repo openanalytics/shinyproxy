@@ -151,11 +151,9 @@ public class AppController extends BaseController {
 		// operator specific
 		if (operatorService.isEnabled()) {
 			map.put("isSpOverrideActive", getIsSpOverrideActive(request));
-			map.put("resourceSuffix", "?sp_instance_override=" + identifierService.instanceId);
 			map.put("operatorShowTransferMessage", operatorService.showTransferMessageOnAppPage());
 		} else {
 			map.put("isSpOverrideActive", false);
-			map.put("resourceSuffix", "");
 			map.put("operatorShowTransferMessage", false);
 		}
 

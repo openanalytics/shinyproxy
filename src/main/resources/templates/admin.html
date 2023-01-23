@@ -26,23 +26,23 @@
 <head lang="en">
 	<title th:text="${title}"></title>
 	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<link rel="stylesheet" media="screen" th:href="@{${bootstrapCss}}" />
-	<link rel="stylesheet" media="screen" th:href="@{/css/default.css}"/>
-	<link rel="stylesheet" media="screen" th:href="@{/webjars/datatables/1.12.1/css/dataTables.bootstrap.min.css}"/>
-	<link rel="stylesheet" media="screen" th:href="@{/webjars/datatables-buttons/2.2.2/css/buttons.bootstrap.min.css}">
-	<link rel="stylesheet" media="screen" th:href="@{/webjars/datatables-responsive/2.2.7/css/responsive.bootstrap.min.css}">
-	<script th:src="@{${jqueryJs}}"></script>
-	<script th:src="@{${bootstrapJs}}"></script>
-	<script th:src="@{${cookieJs}}"></script>
-	<script th:src="@{${handlebars} + ${resourceSuffix}}"></script>
-	<script th:src="@{'/js/shiny.api.js' + ${resourceSuffix}}"></script>
-	<script th:src="@{'/js/shiny.ui.js' + ${resourceSuffix}}"></script>
-	<script th:src="@{'/js/shiny.common.js' + ${resourceSuffix}}"></script>
-	<script th:src="@{'/js/shiny.instances.js' + ${resourceSuffix}}"></script>
-	<script th:src="@{'/js/shiny.ui.js' + ${resourceSuffix}}"></script>
-	<script th:src="@{'/js/shiny.admin.js' + ${resourceSuffix}}"></script>
-	<script th:if="${operatorEnabled}" th:src="@{'/js/shiny.operator.js' + ${resourceSuffix}}"></script>
-	<script th:src="@{'/handlebars/precompiled.js' + ${resourceSuffix}}"></script>
+	<link rel="stylesheet" media="screen" th:href="@{${resourcePrefix} + ${bootstrapCss}}"/>
+	<link rel="stylesheet" media="screen" th:href="@{${resourcePrefix} + '/css/default.css'}"/>
+	<link rel="stylesheet" media="screen" th:href="@{${resourcePrefix} + '/webjars/datatables/1.12.1/css/dataTables.bootstrap.min.css'}"/>
+	<link rel="stylesheet" media="screen" th:href="@{${resourcePrefix} + '/webjars/datatables-buttons/2.2.2/css/buttons.bootstrap.min.css'}">
+	<link rel="stylesheet" media="screen" th:href="@{${resourcePrefix} + '/webjars/datatables-responsive/2.2.7/css/responsive.bootstrap.min.css'}">
+	<script th:src="@{${resourcePrefix} + ${jqueryJs}}"></script>
+	<script th:src="@{${resourcePrefix} + ${bootstrapJs}}"></script>
+	<script th:src="@{${resourcePrefix} + ${cookieJs}}"></script>
+	<script th:src="@{${resourcePrefix} + ${handlebars}}"></script>
+	<script th:src="@{${resourcePrefix} + '/js/shiny.app.js' }"></script>
+	<script th:src="@{${resourcePrefix} + '/js/shiny.api.js' }"></script>
+	<script th:src="@{${resourcePrefix} + '/js/shiny.instances.js' }"></script>
+	<script th:src="@{${resourcePrefix} + '/js/shiny.ui.js' }"></script>
+	<script th:src="@{${resourcePrefix} + '/js/shiny.common.js'}"></script>
+	<script th:src="@{${resourcePrefix} + '/js/shiny.admin.js'}"></script>
+	<script th:src="@{${resourcePrefix} + '/js/shiny.operator.js'}"  th:if="${operatorEnabled}" ></script>
+	<script th:src="@{${resourcePrefix} + '/handlebars/precompiled.js'}"></script>
 </head>
 <body>
 	<div th:replace="fragments/navbar :: navbar"></div>

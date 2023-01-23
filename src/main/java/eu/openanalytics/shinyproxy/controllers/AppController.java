@@ -35,6 +35,7 @@ import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.AsyncProxyService;
 import eu.openanalytics.containerproxy.service.InvalidParametersException;
 import eu.openanalytics.containerproxy.service.ParametersService;
+import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.ShinyProxyIframeScriptInjector;
@@ -270,7 +271,7 @@ public class AppController extends BaseController {
 	})
 	@RequestMapping(value={"/app_proxy/{proxyId}/**"})
 	public void appProxy(@PathVariable String proxyId, HttpServletRequest request, HttpServletResponse response) throws IOException {
-		String requestUrl = request.getRequestURI().substring(getBasePublicPath().length()); // TODO cache
+		String requestUrl = request.getRequestURI().substring(getBasePublicPath().length());
 
 		Proxy proxy = proxyService.getProxy(proxyId);
 		if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
@@ -289,7 +290,7 @@ public class AppController extends BaseController {
 	 */
 	@RequestMapping(value={"/app_proxy/{proxyId}/**"}, produces= "text/html")
 	public void appProxyHtml(@PathVariable String proxyId, HttpServletRequest request, HttpServletResponse response) throws IOException {
-		String requestUrl = request.getRequestURI().substring(getBasePublicPath().length()); // TODO cache
+		String requestUrl = request.getRequestURI().substring(getBasePublicPath().length());
 
 		Proxy proxy = proxyService.getProxy(proxyId);
 		if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
@@ -329,9 +330,8 @@ public class AppController extends BaseController {
 	}
 
 	private String getBasePublicPath() {
-		return getContextPath() + "app_proxy/";
+		return ContextPathHelper.withEndingSlash() + "app_proxy/";
 	}
-
 
 	private Optional<RedirectView> createRedirectIfRequired(HttpServletRequest request, AppRequestInfo appRequestInfo, Proxy proxy, ProxySpec spec) {
 		// if sub-path is empty -> no ending slash -> no ending slash and redirect required

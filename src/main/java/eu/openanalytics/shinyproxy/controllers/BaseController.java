@@ -28,7 +28,7 @@ import eu.openanalytics.containerproxy.service.IdentifierService;
 import eu.openanalytics.containerproxy.service.ProxyService;
 import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
-import eu.openanalytics.containerproxy.util.SessionHelper;
+import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
@@ -81,10 +81,6 @@ public abstract class BaseController {
 	private static final Logger logger = LogManager.getLogger(BaseController.class);
 	private static final Map<String, String> imageCache = new HashMap<>();
 
-	protected String getContextPath() {
-		return SessionHelper.getContextPath(environment, true);
-	}
-
 	protected long getHeartbeatRate() {
 		return heartbeatService.getHeartbeatRate();
 	}
@@ -131,7 +127,7 @@ public abstract class BaseController {
 		map.put("logoutUrl", authenticationBackend.getLogoutURL());
 		map.put("page", ""); // defaults, used in navbar
 		map.put("maxInstances", 0); // defaults, used in navbar
-		map.put("contextPath", getContextPath());
+		map.put("contextPath", ContextPathHelper.withEndingSlash());
 		map.put("resourcePrefix", "/" + identifierService.instanceId);
 		map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
 		map.put("pauseSupported", backend.supportsPause());

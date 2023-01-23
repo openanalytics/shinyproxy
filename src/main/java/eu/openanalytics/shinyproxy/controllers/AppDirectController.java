@@ -26,6 +26,7 @@ import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.InvalidParametersException;
+import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
@@ -130,7 +131,7 @@ public class AppDirectController extends BaseController {
     }
 
     private String getPublicPath(AppRequestInfo appRequestInfo) {
-        return getContextPath() + "app_direct_i/" + appRequestInfo.getAppName() + "/" + appRequestInfo.getAppInstance();
+        return ContextPathHelper.withEndingSlash() + "app_direct_i/" + appRequestInfo.getAppName() + "/" + appRequestInfo.getAppInstance();
     }
 
 }

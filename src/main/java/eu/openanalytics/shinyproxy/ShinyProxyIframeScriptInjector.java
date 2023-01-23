@@ -20,6 +20,7 @@
  */
 package eu.openanalytics.shinyproxy;
 
+import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import io.undertow.UndertowMessages;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.protocol.http.ServerFixedLengthStreamSinkConduit;
@@ -118,7 +119,7 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
                 && exchange.getResponseHeaders().get("Content-Type") != null
                 && exchange.getResponseHeaders().get("Content-Type").stream().anyMatch(headerValue -> headerValue.contains("text/html"))) {
             // only inject script of response successful and actually a html response
-            r += "<script src='/js/shiny.iframe.js'></script>";
+            r += "<script src='" + ContextPathHelper.withEndingSlash() + "js/shiny.iframe.js'></script>";
         }
         // 2. convert to ByteBuffer
         ByteBuffer out = ByteBuffer.wrap(r.getBytes(StandardCharsets.UTF_8));

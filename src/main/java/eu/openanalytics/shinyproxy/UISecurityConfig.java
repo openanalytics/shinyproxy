@@ -60,11 +60,5 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 			http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
 		}
 
-		if (operatorService.isEnabled()) {
-		    // running using operator
-            http.addFilterAfter(new OperatorCookieFilter(), AnonymousAuthenticationFilter.class);
-            http.authorizeRequests().antMatchers("/server-transfer").permitAll();
-        }
-
 	}
 }

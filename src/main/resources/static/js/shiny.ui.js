@@ -293,10 +293,12 @@ Shiny.ui = {
     },
 
     loadDefaultParameters(defaultParameters) {
-        for (let i = 0; i < Shiny.app.staticState.parameters.ids.length; i++) {
-            const keyName = Shiny.app.staticState.parameters.ids[i];
-            $('select[name=' + keyName + '] option:eq(' + defaultParameters[i] + ')').prop('selected', true);
-            Shiny.ui.selectChange($('select[name=' + keyName + ']'));
+        if (Shiny.app.staticState.parameters.ids !== null) {
+            for (let i = 0; i < Shiny.app.staticState.parameters.ids.length; i++) {
+                const keyName = Shiny.app.staticState.parameters.ids[i];
+                $('select[name=' + keyName + '] option:eq(' + defaultParameters[i] + ')').prop('selected', true);
+                Shiny.ui.selectChange($('select[name=' + keyName + ']'));
+            }
         }
     },
 

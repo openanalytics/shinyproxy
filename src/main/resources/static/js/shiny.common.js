@@ -85,7 +85,7 @@ Shiny.common = {
         async function refresh() {
             const proxy = await Shiny.api.getProxyByIdFromCache(proxyId);
             const heartbeatInfo = await Shiny.api.getHeartBeatInfo(proxyId);
-            if (proxy === null || heartbeatInfo == null || proxy.status === "Stopped" || proxy.status === "Stopping") {
+            if (proxy === null ||  proxy.status === "Stopped" || proxy.status === "Stopping") {
                 const templateData = {
                     appName: appName,
                     proxyId: proxyId,
@@ -104,7 +104,7 @@ Shiny.common = {
             let maxLifetime = null;
             let maxLifetimeRemaining = null;
 
-            if (proxy.status === "Up" && proxy.startupTimestamp > 0) {
+            if (proxy.status === "Up" && proxy.startupTimestamp > 0 && heartbeatInfo !== null) {
                 const uptimeSec = (Date.now() - proxy.startupTimestamp) / 1000;
                 uptime = Shiny.ui.formatSeconds(uptimeSec);
 

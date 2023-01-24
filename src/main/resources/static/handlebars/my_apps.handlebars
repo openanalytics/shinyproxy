@@ -14,7 +14,9 @@
                         Stop
                     </button>
                     {{#if ../../pauseSupported}}
-                        <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onPauseApp(event, '{{ instanceName }}', '{{ proxyId }}');">Pause</button>
+                        {{#if uptime}}
+                            <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onPauseApp(event, '{{ instanceName }}', '{{ proxyId }}');">Pause</button>
+                        {{/if}}
                     {{/if}}
                 </div>
                 <span>{{{ formatStatus status }}} {{#if uptime}}Uptime: {{ uptime }} {{/if}}</span>

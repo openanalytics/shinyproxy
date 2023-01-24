@@ -8,7 +8,9 @@
                     <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '{{ instanceName }}', '{{ proxyId }}');">Stop</button>
                     <button type="button" class="btn btn-primary btn-restart-app" onclick="Shiny.instances.eventHandlers.onRestartInstance(event);">Restart</button>
                     {{#if ../pauseSupported}}
-                        <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onPauseApp(event, '{{ instanceName }}', '{{ proxyId }}');">Pause</button>
+                        {{#if uptime}}
+                            <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onPauseApp(event, '{{ instanceName }}', '{{ proxyId }}');">Pause</button>
+                        {{/if}}
                     {{/if}}
                 </div>
                 <span>{{{formatStatus status }}} {{#if uptime}}Uptime: {{ uptime }} {{/if}}</span>
@@ -20,7 +22,9 @@
                     <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.showAppDetails(event, '{{ appName }}', '{{ instanceName }}', '{{ proxyId }}');">Details</button>
                     <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '{{ instanceName }}', '{{ proxyId }}');">Stop</button>
                     {{#if ../pauseSupported}}
-                        <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onPauseApp(event, '{{ instanceName }}', '{{ proxyId }}');">Pause</button>
+                        {{#if uptime}}
+                            <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onPauseApp(event, '{{ instanceName }}', '{{ proxyId }}');">Pause</button>
+                        {{/if}}
                     {{/if}}
                 </div>
                 <span>{{{formatStatus status }}} {{#if uptime}}Uptime: {{ uptime }} {{/if}}</span>

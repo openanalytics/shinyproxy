@@ -141,8 +141,8 @@ public class AdminController extends BaseController {
 				} else {
 					imageTag = "N/A";
 				}
-				if (container.getTargets().containsKey("default")) {
-					endpoint = container.getTargets().get("default").toString();
+				if (container.getTargets().containsKey(proxy.getId())) {
+					endpoint = container.getTargets().get(proxy.getId()).toString();
 				} else {
 					endpoint = "N/A";
 				}

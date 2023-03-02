@@ -22,9 +22,9 @@ package eu.openanalytics.shinyproxy;
 
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKeyRegistry;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
-import eu.openanalytics.shinyproxy.runtimevalues.MaxInstancesKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
 import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
+import eu.openanalytics.shinyproxy.runtimevalues.TrackAppUrl;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
@@ -35,9 +35,9 @@ public class ShinyProxyConfiguration {
 
 	static {
 		RuntimeValueKeyRegistry.addRuntimeValueKey(AppInstanceKey.inst);
-		RuntimeValueKeyRegistry.addRuntimeValueKey(MaxInstancesKey.inst);
 		RuntimeValueKeyRegistry.addRuntimeValueKey(PublicPathKey.inst);
 		RuntimeValueKeyRegistry.addRuntimeValueKey(ShinyForceFullReloadKey.inst);
 		RuntimeValueKeyRegistry.addRuntimeValueKey(WebSocketReconnectionModeKey.inst);
+		RuntimeValueKeyRegistry.addRuntimeValueKey(TrackAppUrl.inst);
 	}
 }

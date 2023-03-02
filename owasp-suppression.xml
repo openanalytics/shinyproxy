@@ -2,14 +2,27 @@
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
     <!--
         https://nvd.nist.gov/vuln/detail/CVE-2018-1258
-        Vulnerability only applies when using spring-framework 5.0.5 -> we are not using that version.
+        Vulnerability only applies to old spring-framework versions.
     -->
     <suppress>
-        <!--        <notes><![CDATA[-->
-        <!--   file name: spring-security-ldap-5.3.9.RELEASE.jar-->
-        <!--   ]]></notes>-->
-        <!--        <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring\-security\-ldap@.*$</packageUrl>-->
         <cve>CVE-2018-1258</cve>
+        <cve>CVE-2013-4152</cve>
+        <cve>CVE-2013-7315</cve>
+        <cve>CVE-2014-0054</cve>
+        <cve>CVE-2016-1000027</cve>
+        <cve>CVE-2018-11039</cve>
+        <cve>CVE-2018-11040</cve>
+        <cve>CVE-2018-1257</cve>
+        <cve>CVE-2020-5421</cve>
+        <cve>CVE-2022-22950</cve>
+        <cve>CVE-2022-22965</cve>
+        <cve>CVE-2022-22968</cve>
+        <cve>CVE-2022-22970</cve>
+        <cve>CVE-2022-22976</cve>
+        <cve>CVE-2022-22978</cve>
+        <cve>CVE-2019-3772</cve>
+        <cve>CVE-2022-27772</cve>
+        <cve>CVE-2020-5408</cve>
     </suppress>
 
     <!--
@@ -31,6 +44,21 @@
     -->
     <suppress>
         <cve>CVE-2020-14359</cve>
+    </suppress>
+
+    <!--
+        https://nvd.nist.gov/vuln/detail/CVE-2020-14359
+        Only applies to Keycloak (server) not the keycloak libraries.
+    -->
+    <suppress>
+        <cve>CVE-2021-20323</cve>
+        <cve>CVE-2021-3632</cve>
+        <cve>CVE-2021-3637</cve>
+        <cve>CVE-2021-3827</cve>
+        <cve>CVE-2021-3856</cve>
+        <cve>CVE-2021-4133</cve>
+        <cve>CVE-2022-1245</cve>
+        <cve>CVE-2022-1466</cve>
     </suppress>
 
 
@@ -61,13 +89,14 @@
     </suppress>
 
 
-    <!--
-        https://nvd.nist.gov/vuln/detail/CVE-2021-29425
-        Only applies to Apache Commons IO before 2.7, but we are using 2.7. (however somewhere this version is referred).
-    -->
     <suppress>
-        <sha1>7e39112810f6096061c43504188d18edc7d7eece</sha1>
+        <!--
+            https://nvd.nist.gov/vuln/detail/CVE-2021-29425
+            Only applies to Apache Commons IO before 2.7, but we are using 2.7. (however somewhere this version is referred).
+        -->
         <cve>CVE-2021-29425</cve>
+        <!-- Applies to commons-net, but this is not used -->
+        <cve>CVE-2021-37533</cve>
     </suppress>
 
 
@@ -77,5 +106,26 @@
     -->
     <suppress>
         <cve>CVE-2015-5258</cve>
+    </suppress>
+
+    <!-- Only applies to old Undertow/Jboss versions -->
+    <suppress>
+        <cve>CVE-2016-7046</cve>
+        <cve>CVE-2016-6311</cve>
+    </suppress>
+
+    <!-- H2: not relevant -->
+    <suppress>
+        <cve>CVE-2022-45868</cve>
+    </suppress>
+
+    <!-- xercesImpl: not related to xercesImpl-->
+    <suppress>
+        <cve>CVE-2017-10355</cve>
+    </suppress>
+
+    <suppress>
+        <!-- Related to nim lang, not Java-->
+        <cve>CVE-2020-23171</cve>
     </suppress>
 </suppressions>

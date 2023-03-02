@@ -29,11 +29,23 @@ public class ShinyForceFullReloadKey extends RuntimeValueKey<Boolean> {
         super("openanalytics.eu/sp-shiny-force-full-reload",
                 "SHINYPROXY_FORCE_FULL_RELOAD",
                 false,
+                true,
                 false,
+                true,
+                true,
                 false,
-                false, Boolean.class);
+                Boolean.class);
     }
 
     public static ShinyForceFullReloadKey inst = new ShinyForceFullReloadKey();
 
+    @Override
+    public Boolean deserializeFromString(String value) {
+        return Boolean.valueOf(value);
+    }
+
+    @Override
+    public String serializeToString(Boolean value) {
+        return value.toString();
+    }
 }

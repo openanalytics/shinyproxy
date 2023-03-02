@@ -28,25 +28,56 @@ Shiny.connections = {
      * in the last `Shiny.heartBeatRate` milliseconds.
      */
     startHeartBeats: function () {
+        Shiny.connections.sendHeartBeat(); // send heartbeat right after loading app to validate the app is working
         setInterval(function () {
             if (Shiny.app.runtimeState.appStopped) {
                 return;
             }
             if (!Shiny.connections._webSocketConnectionIsOpen()) {
                 var lastHeartbeat = Date.now() - Shiny.app.runtimeState.lastHeartbeatTime;
-                if (lastHeartbeat > Shiny.app.staticState.heartBeatRate && Shiny.app.staticState.proxyId !== null) {
-
-                    // contextPath is guaranteed to end with a slash
-                    $.post(Shiny.common.staticState.contextPath + "heartbeat/" + Shiny.app.staticState.proxyId);
+                if (lastHeartbeat > Shiny.app.staticState.heartBeatRate && Shiny.app.runtimeState.proxy !== null) {
+                    Shiny.connections.sendHeartBeat();
                 }
             }
         }, Shiny.app.staticState.heartBeatRate);
     },
 
     /**
+     * Send heartbeat and process the result.
+     */
+    sendHeartBeat: function() {
+        // contextPath is guaranteed to end with a slash
+        $.post(Shiny.api.buildURL("heartbeat/" + Shiny.app.runtimeState.proxy.id), function() {})
+            .fail(function (response) {
+                if (Shiny.app.runtimeState.appStopped) {
+                    // if stopped in meantime -> ignore
+                    return;
+                }
+                if (response.status === 401) {
+                    Shiny.ui.showLoggedOutPage();
+                    return;
+                }
+                try {
+                    var res = JSON.parse(response.responseText);
+                    if (res !== null && res.status === "fail") {
+                        if (res.data === "app_stopped_or_non_existent") {
+                            Shiny.ui.showStoppedPage();
+                        } else if (res.data === "shinyproxy_authentication_required") {
+                            Shiny.ui.showLoggedOutPage();
+                        }
+                    }
+                } catch (error) {
+                    // server or connection crashed, let app reconnect
+                    // ignore JSON parsing error
+                }
+            });
+    },
+
+    /**
      * Handles a WebSocket error (i.e. close).
      */
     handleWebSocketError: function () {
+        const reconnectionMode = Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_WEBSOCKET_RECONNECTION_MODE || "None";
         if (Shiny.app.runtimeState.navigatingAway) {
             return;
         }
@@ -55,7 +86,7 @@ Shiny.connections = {
             return;
         }
         Shiny.app.runtimeState.tryingToReconnect = true;
-        if (Shiny.app.staticState.webSocketReconnectionMode === "None") {
+        if (reconnectionMode === "None") {
             // check if app has been stopped but ignore the error (i.e. don't try to reconnect)
             Shiny.connections._checkAppHasBeenStopped(function (isStopped) {
                 if (isStopped) {
@@ -81,9 +112,9 @@ Shiny.connections = {
                 Shiny.ui.showStoppedPage();
                 return;
             }
-            Shiny.ui.hideInstanceModal();
-            if (Shiny.app.staticState.webSocketReconnectionMode === "Auto"
-                || (Shiny.app.staticState.webSocketReconnectionMode === "Confirm"
+            Shiny.ui.hideModal();
+            if (reconnectionMode === "Auto"
+                || (reconnectionMode === "Confirm"
                     && confirm("Connection to server lost, try to reconnect to the application?"))
             ) {
                 Shiny.connections._reloadPage();
@@ -104,7 +135,7 @@ Shiny.connections = {
                 typeof _shinyFrame.contentWindow.Shiny.shinyapp !== 'undefined' &&
                 typeof _shinyFrame.contentWindow.Shiny.shinyapp.reconnect === 'function') {
 
-                if (Shiny.app.staticState.shinyForceFullReload) {
+                if (Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_FORCE_FULL_RELOAD) {
                     // this is a Shiny app, but the forceFullReload option is set -> handle it as a non-Shiny app.
                     return false;
                 }
@@ -239,207 +270,10 @@ Shiny.connections = {
         setTimeout(() => Shiny.connections._checkShinyReloadSucceeded(checks + 1), 250);
     },
 
-    _injectedScript: `
-        if (window.WebSocket.name === "WebSocket") {
-            var oldWebsocket = window.WebSocket;
-            function ErrorHandlingWebSocket(url, protocols) {
-                console.log("Called ErrorHandlingWebSocket");
-                var res = new oldWebsocket(url, protocols);
-
-                function handler() {
-                    console.log("Handling error of websocket connection.")
-                    setTimeout(window.__shinyProxyParent.connections.handleWebSocketError, 1); // execute async to not block other error handling code
-                }
-
-                res.addEventListener("error", function () {
-                    handler();
-                });
-
-                res.addEventListener("close", function (event) {
-                    if (!event.wasClean) {
-                        handler();
-                    }
-                });
-
-                window.__shinyProxyParent.app.runtimeState.websocketConnections.push(res);
-
-                return res;
-            }
-            ErrorHandlingWebSocket.prototype = oldWebsocket.prototype;
-            ErrorHandlingWebSocket.CONNECTING = oldWebsocket.CONNECTING;
-            ErrorHandlingWebSocket.OPEN = oldWebsocket.OPEN;
-            ErrorHandlingWebSocket.CLOSING = oldWebsocket.CLOSING;
-            ErrorHandlingWebSocket.CLOSED = oldWebsocket.CLOSED;
-
-            window.WebSocket = ErrorHandlingWebSocket; 
-            
-            /**
-             * Replaces the \`fetch\` function on the \`parent\` object by a wrapper function that keeps tracks of the
-             * Shiny.lastHeartbeatTime.
-             * This can be called on window.fetch to update the Shiny.lastHeartbeatTime everytime a fetch
-             * request is sent.
-             * Note: the only side-effect when a Shiny app would circumvents this function is that more heartbeats than
-             * strictly needed are sent.
-             * @param parent
-             */
-            var _replaceFetch = function (parent) {
-                var originalFetch = parent.fetch;
-
-                parent.fetch = function () {
-                    window.__shinyProxyParent.app.runtimeState.lastHeartbeatTime = Date.now();
-
-                    return new Promise((resolve, reject) => {
-                        originalFetch.apply(this, arguments)
-                            .then((response) => {
-                                if (response.status === 410 || response.status === 401) {
-                                    response.clone().json().then(function(clonedResponse) {
-                                        if (clonedResponse.status === "error" && clonedResponse.message === "app_stopped_or_non_existent") {
-                                            window.__shinyProxyParent.ui.showStoppedPage();
-                                        } else if (clonedResponse.status === "error" && clonedResponse.message === "shinyproxy_authentication_required") {
-                                            window.__shinyProxyParent.ui.showLoggedOutPage();
-                                        }
-                                    });
-                                }
-                                resolve(response);
-                            })
-                            .catch((error) => {
-                                reject(error);
-                            })
-                    });
-                }
-            };
-            
-            
-            _replaceFetch(window);
-            
-            /**
-             * Replaces the \`open\` function on the \`parent\` object by a wrapper function that keeps tracks of the
-             * Shiny.lastHeartbeatTime.
-             * This can be called on window.XMLHttpRequest.prototype to update the Shiny.lastHeartbeatTime everytime an AJAX
-             * request is sent.
-             * Note: the only side-effect when a Shiny app would circumvents this function is that more heartbeats than
-             * strictly needed are sent.
-             * @param parent
-             */
-            var _replaceOpen = function (parent) {
-                var originalOpen = parent.open;
-
-                parent.open = function () {
-                    this.addEventListener('load', function () {
-                        if (this.status === 410 || this.status === 401) {
-                            var res = JSON.parse(this.responseText);
-                            if (res !== null && res.status === "error" && res.message === "app_stopped_or_non_existent") {
-                                // app stopped
-                                window.__shinyProxyParent.ui.showStoppedPage();
-                            } else if (res !== null && res.status === "error" && res.message === "shinyproxy_authentication_required") {
-                                // app stopped
-                                window.__shinyProxyParent.ui.showLoggedOutPage();
-                            }
-                        }
-                    });
-                    window.__shinyProxyParent.app.runtimeState.lastHeartbeatTime = Date.now();
-
-                    return originalOpen.apply(this, arguments);
-                }
-            };
-
-            _replaceOpen(window.XMLHttpRequest.prototype);
-            
-            window.addEventListener('load', function() {
-                // register eventListener only after page to prevent the event being triggered before the iframe has fully loaded
-                window.addEventListener('unload', function (e) {
-                    window.__shinyProxyParent.connections._beforeIframeReload();
-                });
-            });
-        }
-    `,
-
-    /**
-     * Injects the Shiny.connections._injectedScript into the iframe.
-     */
-    _injectWebSocket: function () {
-        var shinyWindow = document.getElementById('shinyframe');
-        var allFrames =  Array.prototype.slice.call(shinyWindow.contentWindow.document.querySelectorAll("iframe"));
-        allFrames.push(shinyWindow);
-
-        for (var idx = 0; idx < allFrames.length; idx++) {
-            var currentWindow = allFrames[idx].contentWindow;
-
-            var script = currentWindow.document.createElement("script");
-            script.append(Shiny.connections._injectedScript);
-            currentWindow.__shinyProxyParent = Shiny;
-
-            if (currentWindow.document.documentElement !== null) {
-                currentWindow.document.documentElement.appendChild(script);
-            }
-        }
-    },
-
-    _beforeIframeReload: function () {
-        if (Shiny.app.runtimeState.navigatingAway || Shiny.app.runtimeState.appStopped) {
-            return;
-        }
-        window.injected = false;
-        Shiny.connections.startInjector();
-    },
-
-    /**
-     * Starts the injection of the ErrorHandlingWebSocket into the iframe.
-     * The idea is to poll the iframe every 50ms for its readyState. If the readyState has changed from something
-     * different than `complete` to `complete` we know that the injection was successful.
-     *
-     * The goal is to inject between the `interactive` and `DOMContentLoaded` states.
-     * Unfortunately, there is no event generated by the browser which we could use. Therefore we have to fallback to
-     * a polling approach.
-     *
-     * See: https://developer.mozilla.org/en-US/docs/Web/API/Document/readystatechange_event
-     * See: https://developer.mozilla.org/en-US/docs/Web/API/Document/readyState
-     */
-    startInjector: function () {
-        if (Shiny.app.runtimeState.injectorIntervalId !== null) {
-            Shiny.connections._stopInjector();
-        }
-
-        Shiny.app.runtimeState.injectorIntervalId = setInterval(function () {
-            try {
-                var mustContinue = false;
-                var state = document.getElementById('shinyframe').contentWindow.document.readyState
-                if (state === "complete") {
-                    var frames = Array.prototype.slice.call(document.getElementById('shinyframe').contentWindow.document.querySelectorAll("iframe"));
-                    for (var idx = 0; idx < frames.length; idx++) {
-                        var frame = frames[idx];
-                        if (frame.contentWindow.WebSocket.name === "WebSocket") {
-                            mustContinue = true;
-                            break;
-                        }
-                    }
-                } else {
-                    mustContinue = true;
-                }
-            } catch (error) {
-                return;
-            }
-            if (!mustContinue) {
-                // ok
-                Shiny.connections._stopInjector();
-            } else {
-                Shiny.connections._injectWebSocket();
-            }
-        }, 50);
-
-    },
-
-    /**
-     * Stops the Injector.
-     */
-    _stopInjector: function () {
-        clearInterval(Shiny.app.runtimeState.injectorIntervalId);
-    },
-
     _checkAppHasBeenStopped: function (cb) {
         $.ajax({
             method: 'POST',
-            url: Shiny.common.staticState.contextPath + "heartbeat/" + Shiny.app.staticState.proxyId,
+            url: Shiny.api.buildURL("heartbeat/" + Shiny.app.runtimeState.proxy.id),
             timeout: 3000,
             success: function () {
                 cb(false);
@@ -447,11 +281,11 @@ Shiny.connections = {
             error: function (response) {
                 try {
                     var res = JSON.parse(response.responseText);
-                    if (res !== null && res.status === "error") {
-                        if (res.message === "app_stopped_or_non_existent") {
+                    if (res !== null && res.status === "fail") {
+                        if (res.data === "app_stopped_or_non_existent") {
                             cb(true);
                             return;
-                        } else if (res.message === "shinyproxy_authentication_required") {
+                        } else if (res.data === "shinyproxy_authentication_required") {
                             Shiny.ui.showLoggedOutPage();
                             // never call call-back, but just redirect to login page
                             return;
@@ -478,6 +312,25 @@ Shiny.connections = {
         }
 
         return false;
-    }
+    },
+
+    _updateIframeUrl: function(url) {
+        if (!Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_TRACK_APP_URL) {
+            return;
+        }
+        if (Shiny.app.runtimeState.navigatingAway || Shiny.app.runtimeState.appStopped) {
+            return;
+        }
+        if (url === undefined || url === null) {
+            return;
+        }
+        if (url.startsWith(Shiny.app.runtimeState.baseFrameUrl)) {
+            const newUrl = url.replace(Shiny.app.runtimeState.baseFrameUrl, Shiny.app.runtimeState.parentFrameUrl);
+            window.history.replaceState(null, null, newUrl);
+        } else if (url.startsWith(Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH)) {
+            const newUrl = url.replace(Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH, Shiny.app.runtimeState.parentFrameUrl);
+            window.history.replaceState(null, null, newUrl);
+        }
+    },
 
 };

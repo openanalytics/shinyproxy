@@ -18,17 +18,34 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
-package eu.openanalytics.shinyproxy;
+package eu.openanalytics.shinyproxy.runtimevalues;
 
-import org.springframework.context.annotation.Condition;
-import org.springframework.context.annotation.ConditionContext;
-import org.springframework.core.type.AnnotatedTypeMetadata;
 
-public class OperatorEnabledCondition implements Condition {
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 
-    @Override
-    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-        return context.getEnvironment().getProperty("proxy.realm-id") != null;
+public class TrackAppUrl extends RuntimeValueKey<Boolean> {
+
+    public TrackAppUrl() {
+        super("openanalytics.eu/sp-track-app-url",
+                "SHINYPROXY_TRACK_APP_URL",
+                false,
+                true,
+                false,
+                true,
+                true,
+                false,
+                Boolean.class);
     }
 
+    public static TrackAppUrl inst = new TrackAppUrl();
+
+    @Override
+    public Boolean deserializeFromString(String value) {
+        return Boolean.valueOf(value);
+    }
+
+    @Override
+    public String serializeToString(Boolean value) {
+        return value.toString();
+    }
 }

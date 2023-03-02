@@ -30,9 +30,21 @@ public class AppInstanceKey extends RuntimeValueKey<String>  {
                 false,
                 true, // include as annotation so that the value can be recovered
                 false,
-                true, String.class);
+                true,
+                true,
+                false,
+                String.class);
     }
 
     public static AppInstanceKey inst = new AppInstanceKey();
 
+    @Override
+    public String deserializeFromString(String value) {
+        return value;
+    }
+
+    @Override
+    public String serializeToString(String value) {
+        return value;
+    }
 }

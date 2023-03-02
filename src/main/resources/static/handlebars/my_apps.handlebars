@@ -1,0 +1,30 @@
+{{#each apps}}
+    <h5>{{ displayName }}</h5>
+    <div class="list-group">
+        {{#each instances}}
+            <a href="{{ url }}" class="app-instance list-group-item">
+                <span class="app-instance-title">{{ instanceName }}</span>
+                <div class="btn-group btn-group-xs" role="group">
+                    <button type="button" class="btn btn-primary"
+                            onclick="Shiny.common.showAppDetails(event, '{{ displayName }}', '{{ instanceName }}', '{{ proxyId }}');">
+                        Details
+                    </button>
+                    <button type="button" class="btn btn-primary"
+                            onclick="Shiny.instances.eventHandlers.onDeleteInstance(event, '{{ instanceName }}', '{{ proxyId }}');">
+                        Stop
+                    </button>
+                    {{#if ../../pauseSupported}}
+                        {{#if uptime}}
+                            <button type="button" class="btn btn-primary" onclick="Shiny.instances.eventHandlers.onPauseApp(event, '{{ instanceName }}', '{{ proxyId }}');">Pause</button>
+                        {{/if}}
+                    {{/if}}
+                </div>
+                <span>{{{ formatStatus status }}} {{#if uptime}}Uptime: {{ uptime }} {{/if}}</span>
+            </a>
+        {{/each}}
+    </div>
+{{/each}}
+{{#unless apps}}
+    You don't have any running apps.<br>
+    Start a new app by clicking on its name or logo.
+{{/unless}}

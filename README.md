@@ -18,7 +18,7 @@ Open Source Enterprise Deployment for Shiny Apps
 
 Learn more at https://shinyproxy.io
 
-#### (c) Copyright Open Analytics NV, 2016-2021 - Apache License 2.0
+#### (c) Copyright Open Analytics NV, 2016-2023 - Apache License 2.0
 
 ## Building from source
 
@@ -42,4 +42,3 @@ Navigate to http://localhost:8080 to access the application.  If the default con
 ## Further information
 
 https://shinyproxy.io
-

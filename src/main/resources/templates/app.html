@@ -129,7 +129,7 @@
                 <div class="alert alert-danger" role="alert">Please select a value for each parameter before starting the app!</div>
             </div>
             <div class="row">
-                <form class="form-horizontal">
+                <form class="form-horizontal default-parameter-form">
                     <div class="form-group" th:each="parameterDefinition, paramIter : ${parameterDefinitions}">
                         <label th:for="${'parameter-' + parameterDefinition.getId()}" class="col-sm-2 control-label" th:text="${parameterDefinition.getDisplayNameOrId()}"></label>
                         <div class="col-sm-10">

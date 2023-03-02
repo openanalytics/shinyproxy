@@ -245,7 +245,7 @@ $(window).on('load', function () {
     });
 
 
-    $('#parameterForm form').on('submit', function (e) {
+    $('#parameterForm .default-parameter-form').on('submit', function (e) {
         e.preventDefault();
         Shiny.ui.submitParameterForm();
     });

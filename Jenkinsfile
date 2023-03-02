@@ -20,7 +20,7 @@ pipeline {
 
                      configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
 
-                         sh 'mvn -B -s $MAVEN_SETTINGS_RSB -U clean deploy'
+                         sh 'mvn -B -s $MAVEN_SETTINGS_RSB -Dmaven.repo.local=/home/jenkins/agent/m2 -U clean deploy'
 
                      }
                 }

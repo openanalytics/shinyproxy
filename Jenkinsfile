@@ -3,6 +3,7 @@ pipeline {
     agent {
         kubernetes {
             yamlFile 'kubernetesPod.yaml'
+            workspaceVolume dynamicPVC(accessModes: 'ReadWriteOnce', requestsSize: '40Gi')
         }
     }
 

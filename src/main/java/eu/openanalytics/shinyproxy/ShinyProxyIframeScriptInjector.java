@@ -137,7 +137,10 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
     private void updateContentLength(HttpServerExchange exchange, ByteBuffer output) {
         long length = output.limit();
 
-        exchange.getResponseHeaders().put(Headers.CONTENT_LENGTH, length);
+        // check works case-insensitive
+        if (!exchange.getResponseHeaders().contains("Transfer-Encoding")) {
+            exchange.getResponseHeaders().put(Headers.CONTENT_LENGTH, length);
+        }
 
         // also update length of ServerFixedLengthStreamSinkConduit
         if (next instanceof ServerFixedLengthStreamSinkConduit) {

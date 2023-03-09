@@ -20,9 +20,6 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import eu.openanalytics.containerproxy.model.runtime.ParameterValues;
-import eu.openanalytics.containerproxy.util.BadRequestException;
-
 import javax.servlet.http.HttpServletRequest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,7 +34,6 @@ public class AppRequestInfo {
     private final String appInstance;
     private final String subPath;
     private final String appPath;
-    private ParameterValues providedParameters = null;
 
     public AppRequestInfo(String appName, String appInstance, String appPath, String subPath) {
         this.appName = appName;
@@ -46,20 +42,9 @@ public class AppRequestInfo {
         this.subPath = subPath;
     }
 
-    public static AppRequestInfo fromRequestOrException(HttpServletRequest request) {
-        AppRequestInfo result = fromURI(request.getRequestURI());
-        if (result == null) {
-            throw new BadRequestException("Error parsing URL.");
-        }
-        return result;
+    public static AppRequestInfo fromRequestOrNull(HttpServletRequest request) {
+        return fromURI(request.getRequestURI());
     }
-
-    public static AppRequestInfo fromRequestOrException(HttpServletRequest request, ParameterValues providedParameters) {
-        AppRequestInfo result = fromRequestOrException(request);
-        result.setProvidedParameters(providedParameters);
-        return result;
-    }
-
 
     public static AppRequestInfo fromURI(String uri) {
         Matcher appMatcher = APP_PATTERN.matcher(uri);
@@ -67,16 +52,16 @@ public class AppRequestInfo {
         if (appInstanceMatcher.matches()) {
             String appName = appInstanceMatcher.group(2);
             if (appName == null || appName.trim().equals("")) {
-                throw new BadRequestException("Error parsing URL: name of app not found in URL.");
+                return null;
             }
 
             String appInstance = appInstanceMatcher.group(3);
             if (appInstance == null || appInstance.trim().equals("")) {
-                throw new BadRequestException("Error parsing URL: name of instance not found in URL.");
+                return null;
             }
 
             if (appInstance.length() > 64 || !INSTANCE_NAME_PATTERN.matcher(appInstance).matches()) {
-                throw new BadRequestException("Error parsing URL: name of instance contains invalid characters or is too long.");
+                return null;
             }
 
             String subPath = appInstanceMatcher.group(4);
@@ -93,7 +78,7 @@ public class AppRequestInfo {
         } else if (appMatcher.matches()) {
             String appName = appMatcher.group(2);
             if (appName == null || appName.trim().equals("")) {
-                throw new BadRequestException("Error parsing URL: name of app not found in URL.");
+                return null;
             }
 
             String appInstance = "_";
@@ -136,14 +121,6 @@ public class AppRequestInfo {
 
     public String getAppPath() {
         return appPath;
-    }
-
-    public ParameterValues getProvidedParameters() {
-        return providedParameters;
-    }
-
-    private void setProvidedParameters(ParameterValues providedParameters) {
-        this.providedParameters = providedParameters;
     }
 
 }

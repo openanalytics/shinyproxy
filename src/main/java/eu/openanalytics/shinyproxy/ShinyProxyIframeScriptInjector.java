@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2021 Open Analytics
+ * Copyright (C) 2016-2023 Open Analytics
  *
  * ===========================================================================
  *
@@ -137,7 +137,10 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
     private void updateContentLength(HttpServerExchange exchange, ByteBuffer output) {
         long length = output.limit();
 
-        exchange.getResponseHeaders().put(Headers.CONTENT_LENGTH, length);
+        // check works case-insensitive
+        if (!exchange.getResponseHeaders().contains("Transfer-Encoding")) {
+            exchange.getResponseHeaders().put(Headers.CONTENT_LENGTH, length);
+        }
 
         // also update length of ServerFixedLengthStreamSinkConduit
         if (next instanceof ServerFixedLengthStreamSinkConduit) {

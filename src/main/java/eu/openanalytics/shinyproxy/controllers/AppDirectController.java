@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2021 Open Analytics
+ * Copyright (C) 2016-2023 Open Analytics
  *
  * ===========================================================================
  *
@@ -35,8 +35,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.inject.Inject;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -54,7 +56,12 @@ public class AppDirectController extends BaseController {
     @RequestMapping(value = {"/app_direct_i/**", "/app_direct/**"})
     public void appDirect(HttpServletRequest request, HttpServletResponse response) throws InvalidParametersException, ServletException, IOException {
         // note: app_direct does not support parameters and resume
-        AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
+        AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrNull(request);
+        if (appRequestInfo == null) {
+            request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, HttpStatus.FORBIDDEN.value());
+            request.getRequestDispatcher("/error").forward(request, response);
+            return;
+        }
 
         if (appRequestInfo.getSubPath() == null) {
             try {

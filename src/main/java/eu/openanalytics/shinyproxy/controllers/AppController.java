@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2021 Open Analytics
+ * Copyright (C) 2016-2023 Open Analytics
  *
  * ===========================================================================
  *
@@ -92,7 +92,12 @@ public class AppController extends BaseController {
 
 	@RequestMapping(value={"/app_i/*/**", "/app/**"}, method=RequestMethod.GET)
 	public ModelAndView app(ModelMap map, HttpServletRequest request, HttpServletResponse response) {
-		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrException(request);
+		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrNull(request);
+		if (appRequestInfo == null) {
+			request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, HttpStatus.FORBIDDEN.value());
+			return new ModelAndView("forward:/error");
+		}
+
 		Proxy proxy = findUserProxy(appRequestInfo);
 
 		ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());

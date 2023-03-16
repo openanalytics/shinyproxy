@@ -3,3 +3,6 @@
 /application.yml
 /.project
 *.gz
+*.zip
+.vscode/
+.idea/

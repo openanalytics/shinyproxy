@@ -2,7 +2,7 @@
 
     ShinyProxy
 
-    Copyright (C) 2016-2021 Open Analytics
+    Copyright (C) 2016-2023 Open Analytics
 
     ===========================================================================
 
@@ -21,13 +21,13 @@
 
 -->
 <!DOCTYPE html>
-<html 
+<html
 	xmlns:th="http://www.thymeleaf.org"
 	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head></head>
 <body>
 	<div th:fragment="navbar" th:if="${showNavbar}" id="navbar">
-		<nav class="navbar navbar-inverse navbar-fixed-top">
+		<nav class="navbar navbar-inverse navbar-fixed-top navbar-height">
 			<div class="container-fluid">
 				<div class="navbar-header">
 					<img class="navbar-brand" th:src="${logo}" />
@@ -35,13 +35,22 @@
 				</div>
 				<div class="navbar-form navbar-right">
 					<a role="button" class="btn btn-primary btn-sm" id="switchInstancesModal-btn"
-					   data-toggle="modal" data-target="#switchInstancesModal" th:if="${isAppPage && (maxInstances > 1 || maxInstances == -1)}" >Switch instance</a>
+					   th:if="${page == 'app' && appMaxInstances.get(appName) != 1}" >Switch instance</a>
 
-					<a role="button" class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onRestartInstance();"
-						th:if="${isAppPage && maxInstances == 1}" >Restart app</a>
+					<a role="button" class="btn btn-primary btn-sm btn-restart-app" onclick="Shiny.instances.eventHandlers.showAppDetails();"
+					   th:if="${page == 'app' && appMaxInstances.get(appName) == 1}" >App details</a>
+
+					<a role="button" class="btn btn-primary btn-sm btn-restart-app" onclick="Shiny.instances.eventHandlers.onRestartInstance();"
+						th:if="${page == 'app' && appMaxInstances.get(appName) == 1}" >Restart app</a>
 
 					<a role="button" class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onDeleteInstance();"
-					   th:if="${isAppPage && maxInstances == 1}" >Stop app</a>
+					   th:if="${page == 'app' && appMaxInstances.get(appName) == 1}" >Stop app</a>
+
+					<a role="button" class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onPauseApp();"
+					   th:if="${page == 'app' && pauseSupported && appMaxInstances.get(appName) == 1}" >Pause app</a>
+
+					<a role="button" class="btn btn-primary btn-sm" id="myAppsModal-btn"
+					   th:if="${page == 'index' && myAppsMode == 'Modal'}" >My apps</a>
 
 					<a role="button" class="btn btn-primary btn-sm" th:if="${isSupportEnabled}"
 						data-toggle="modal" data-target="#reportIssueModal">Report Issue</a>
@@ -56,6 +65,13 @@
 				</div>
 			</div>
 		</nav>
+		<script>
+			// fix padding of body as soon as navbar is rendered
+			let navbarHeight = $('.navbar-height').height();
+			if (navbarHeight !== undefined) {
+				$('body').css('padding-top', navbarHeight + 'px');
+			}
+		</script>
 		<div class="modal fade" id="reportIssueModal" role="dialog">
 			<div class="modal-dialog">
 				<div class="modal-content">

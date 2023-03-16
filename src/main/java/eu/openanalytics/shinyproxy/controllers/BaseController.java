@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2021 Open Analytics
+ * Copyright (C) 2016-2023 Open Analytics
  *
  * ===========================================================================
  *
@@ -20,23 +20,17 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
-import java.security.Principal;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
+import eu.openanalytics.containerproxy.backend.IContainerBackend;
+import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.service.IdentifierService;
+import eu.openanalytics.containerproxy.service.ProxyService;
+import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
+import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
-import eu.openanalytics.shinyproxy.OperatorService;
+import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,11 +41,16 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.ModelMap;
 import org.springframework.util.StreamUtils;
 
-import eu.openanalytics.containerproxy.model.runtime.Proxy;
-import eu.openanalytics.containerproxy.model.spec.ProxySpec;
-import eu.openanalytics.containerproxy.service.ProxyService;
-import eu.openanalytics.containerproxy.service.UserService;
-import eu.openanalytics.containerproxy.util.SessionHelper;
+import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 
 public abstract class BaseController {
 
@@ -71,44 +70,38 @@ public abstract class BaseController {
 	HeartbeatService heartbeatService;
 
 	@Inject
-	OperatorService operatorService;
+	IdentifierService identifierService;
+
+	@Inject
+	protected ShinyProxySpecProvider shinyProxySpecProvider;
+
+	@Inject
+	private IContainerBackend backend;
 
 	private static final Logger logger = LogManager.getLogger(BaseController.class);
 	private static final Map<String, String> imageCache = new HashMap<>();
-
-	protected String getUserName(HttpServletRequest request) {
-		Principal principal = request.getUserPrincipal();
-		return (principal == null) ? request.getSession().getId() : principal.getName();
-	}
-	
-	protected String getAppTitle(AppRequestInfo appRequestInfo) {
-		String appName = appRequestInfo.getAppName();
-		ProxySpec spec = proxyService.getProxySpec(appName);
-		if (spec == null || spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) return appName;
-		else return spec.getDisplayName();
-	}
-	
-	protected String getContextPath() {
-		return SessionHelper.getContextPath(environment, true);
-	}
 
 	protected long getHeartbeatRate() {
 		return heartbeatService.getHeartbeatRate();
 	}
 	
 	protected Proxy findUserProxy(AppRequestInfo appRequestInfo) {
+		return findUserProxy(appRequestInfo.getAppName(), appRequestInfo.getAppInstance());
+	}
+
+	protected Proxy findUserProxy(String appname, String appInstance) {
 		return proxyService.findProxy(p ->
-				p.getSpec().getId().equals(appRequestInfo.getAppName())
-				&& p.getRuntimeValue(AppInstanceKey.inst).equals(appRequestInfo.getAppInstance())
-				&& userService.isOwner(p),
+						p.getSpecId().equals(appname)
+								&& p.getRuntimeValue(AppInstanceKey.inst).equals(appInstance)
+								&& userService.isOwner(p),
 				false);
 	}
-	
+
 	protected String getProxyEndpoint(Proxy proxy) {
-		if (proxy == null || proxy.getTargets().isEmpty()) return null;
-		return proxy.getTargets().keySet().iterator().next();
+		if (proxy == null || proxy.getContainers().get(0).getTargets().isEmpty()) return null;
+		return proxy.getContainers().get(0).getTargets().keySet().iterator().next();
 	}
-	
+
 	protected void prepareMap(ModelMap map, HttpServletRequest request) {
         map.put("application_name", environment.getProperty("spring.application.name")); // name of ShinyProxy, ContainerProxy etc
 		map.put("title", environment.getProperty("proxy.title", "ShinyProxy"));
@@ -123,9 +116,8 @@ public abstract class BaseController {
 
 		map.put("bootstrapCss", "/webjars/bootstrap/3.4.1/css/bootstrap.min.css");
 		map.put("bootstrapJs", "/webjars/bootstrap/3.4.1/js/bootstrap.min.js");
-		map.put("jqueryJs", "/webjars/jquery/3.5.1/jquery.min.js");
-		map.put("cookieJs", "/webjars/js-cookie/2.2.1/js.cookie.min.js");
-		map.put("handlebars", "/webjars/handlebars/4.7.6/handlebars.runtime.min.js");
+		map.put("jqueryJs", "/webjars/jquery/3.6.1/jquery.min.js");
+		map.put("handlebars", "/webjars/handlebars/4.7.7/handlebars.runtime.min.js");
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		boolean isLoggedIn = authentication != null && !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated();
@@ -133,13 +125,13 @@ public abstract class BaseController {
 		map.put("isAdmin", userService.isAdmin(authentication));
 		map.put("isSupportEnabled", isLoggedIn && getSupportAddress() != null);
 		map.put("logoutUrl", authenticationBackend.getLogoutURL());
-		map.put("isAppPage", false); // defaults, used in navbar
+		map.put("page", ""); // defaults, used in navbar
 		map.put("maxInstances", 0); // defaults, used in navbar
-		map.put("contextPath", getContextPath());
-
-		// operator specific
-		map.put("operatorEnabled", operatorService.isEnabled());
-		map.put("operatorForceTransfer", operatorService.mustForceTransfer());
+		map.put("contextPath", ContextPathHelper.withEndingSlash());
+		map.put("resourcePrefix", "/" + identifierService.instanceId);
+		map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
+		map.put("pauseSupported", backend.supportsPause());
+		map.put("spInstance", identifierService.instanceId);
 	}
 	
 	protected String getSupportAddress() {
@@ -167,6 +159,33 @@ public abstract class BaseController {
 		}
 		imageCache.put(resourceURI, resolvedValue);
 		return resolvedValue;
+	}
+
+	/**
+	 * Validates whether a proxy should be allowed to start.
+	 */
+	protected boolean validateProxyStart(ProxySpec spec) {
+		Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec);
+
+		if (maxInstances == -1) {
+			return true;
+		}
+
+		// note: there is a very small change that the user is able to start more instances than allowed, if the user
+		// starts many proxies at once. E.g. in the following scenario:
+		// - max proxies = 2
+		// - user starts a proxy
+		// - user sends a start proxy request -> this function is called and returns true
+		// - just before this new proxy is added to the list of active proxies, the user sends a new start proxy request
+		// - again this new proxy is allowed, because there is still only one proxy in the list of active proxies
+		// -> the user has three proxies running.
+		// Because of chance that this happens is small and that the consequences are low, we accept this risk.
+		int currentAmountOfInstances = proxyService.getProxies(
+				p -> p.getSpecId().equals(spec.getId())
+						&& userService.isOwner(p),
+				false).size();
+
+		return currentAmountOfInstances < maxInstances;
 	}
 
 }

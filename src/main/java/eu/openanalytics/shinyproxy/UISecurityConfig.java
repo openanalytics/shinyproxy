@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2021 Open Analytics
+ * Copyright (C) 2016-2023 Open Analytics
  *
  * ===========================================================================
  *
@@ -23,11 +23,8 @@ package eu.openanalytics.shinyproxy;
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
 import eu.openanalytics.containerproxy.security.ICustomSecurityConfig;
 import eu.openanalytics.containerproxy.service.UserService;
-import eu.openanalytics.shinyproxy.controllers.HeartbeatController;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
-import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.stereotype.Component;
 
 import javax.inject.Inject;
@@ -41,30 +38,22 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 	@Inject
 	private UserService userService;
 
-	@Inject
-	private OperatorService operatorService;
-
 	@Override
 	public void apply(HttpSecurity http) throws Exception {
 		if (auth.hasAuthorization()) {
 			
 			// Limit access to the app pages according to spec permissions
-			http.authorizeRequests().antMatchers("/app/{specId}/**").access("@accessControlService.canAccess(authentication, #specId)");
-			http.authorizeRequests().antMatchers("/app_i/{specId}/**").access("@accessControlService.canAccess(authentication, #specId)");
-			http.authorizeRequests().antMatchers("/app_direct/{specId}/**").access("@accessControlService.canAccess(authentication, #specId)");
-			http.authorizeRequests().antMatchers("/app_direct_i/{specId}/**").access("@accessControlService.canAccess(authentication, #specId)");
+			http.authorizeRequests().antMatchers("/app/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
+			http.authorizeRequests().antMatchers("/app_i/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
+			http.authorizeRequests().antMatchers("/app_direct/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
+			http.authorizeRequests().antMatchers("/app_direct_i/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
 
 			// Limit access to the admin pages
 			http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminGroups());
+			http.authorizeRequests().antMatchers("/admin/data").hasAnyRole(userService.getAdminGroups());
 
 			http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
 		}
-
-		if (operatorService.isEnabled()) {
-		    // running using operator
-            http.addFilterAfter(new OperatorCookieFilter(), AnonymousAuthenticationFilter.class);
-            http.authorizeRequests().antMatchers("/server-transfer").permitAll();
-        }
 
 	}
 }

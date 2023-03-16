@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2021 Open Analytics
+ * Copyright (C) 2016-2023 Open Analytics
  *
  * ===========================================================================
  *
@@ -28,6 +28,7 @@ import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import eu.openanalytics.containerproxy.log.LogPaths;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +53,7 @@ public class IssueController extends BaseController {
 	@RequestMapping(value="/issue", method=RequestMethod.POST)
 	public ResponseEntity<HashMap<String, String>> postIssue(HttpServletRequest request, HttpServletResponse response) {
 		IssueForm form = new IssueForm();
-		form.setUserName(getUserName(request));
+		form.setUserName(userService.getCurrentUserId());
 		form.setCurrentLocation(request.getParameter("currentLocation"));
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromURI(form.getCurrentLocation());
 		if (appRequestInfo != null) {
@@ -62,7 +63,7 @@ public class IssueController extends BaseController {
 		
 		Proxy activeProxy = null;
 		for (Proxy proxy: proxyService.getProxies(null, false)) {
-			if (proxy.getUserId().equals(form.getUserName()) && proxy.getSpec().getId().equals(form.getAppName())) {
+			if (proxy.getUserId().equals(form.getUserName()) && proxy.getSpecId().equals(form.getAppName())) {
 				activeProxy = proxy;
 				break;
 			}
@@ -99,17 +100,20 @@ public class IssueController extends BaseController {
 
 			// Attachments (only if container-logging is enabled)
 			if (proxy != null) {
-				String[] filePaths = logService.getLogs(proxy);
+				LogPaths filePaths = logService.getLogs(proxy);
 				
-				if (filePaths != null && filePaths.length > 1) {
-					if (new File(filePaths[0]).exists()) {
-						for (String p: filePaths) {
-							File f = new File(p);
-							helper.addAttachment(f.getName(), f);
+				if (filePaths != null) {
+					File stdout = filePaths.getStdout().toFile();
+					if (stdout.exists()) {
+						helper.addAttachment(stdout.getName(), stdout);
+						// if stderr exists add it as well (stdout may exists without stderr)
+						File stderr = filePaths.getStderr().toFile();
+						if (stderr.exists()) {
+							helper.addAttachment(stderr.getName(), stderr);
 						}
 					} else {
-						body.append(String.format("Log (stdout): %s%s", filePaths[0], lineSep));
-						body.append(String.format("Log (stderr): %s%s", filePaths[1], lineSep));
+						body.append(String.format("Log (stdout): %s%s", filePaths.getStdout().toString(), lineSep));
+						body.append(String.format("Log (stderr): %s%s", filePaths.getStderr().toString(), lineSep));
 					}
 				}
 			}

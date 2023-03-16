@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2021 Open Analytics
+ * Copyright (C) 2016-2023 Open Analytics
  *
  * ===========================================================================
  *
@@ -20,10 +20,11 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import eu.openanalytics.shinyproxy.controllers.AppController;
+import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.ClientAuthorizationRequiredException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.util.ThrowableAnalyzer;
@@ -42,26 +43,31 @@ import java.io.IOException;
 
 /**
  * A filter that blocks the default {@link AuthenticationEntryPoint} when requests are made to certain endpoints.
+ * These endpoints are only accessed from AJAX calls.
  * These endpoints are:
- * - /app_direct_i/* /* /** (without spaces), i.e. any subpath on the app_direct endpoint (thus not the page that loads the app)
+ * - /app_proxy/** (without spaces), i.e. any subpath on the app_direct endpoint (thus not the page that loads the app)
  * - /heartbeat/* , i.e. heartbeat requests
+ * - /api/**
+ * - /admin/data
  *
  * When the filter detects that a user is not authenticated when requesting one of these endpoints, it returns the response:
- * {"status":"error", "message":"shinyproxy_authentication_required"} with status code 401.
+ * {"status":"fail", "data":"shinyproxy_authentication_required"} with status code 401.
  * This response is specific unique enough such that it can be handled by the frontend.
- *
- * See {@link AppController#appDirect} where a similar approach is used for apps that have been stopped.
  *
  * Note: this cannot be easily implemented as a {@link AuthenticationEntryPoint} since these entrypoints are sometimes,
  * but not always overridden by the authentication backend.
+ * See #26403, #28490
  */
 public class AuthenticationRequiredFilter extends GenericFilterBean {
 
     private final ThrowableAnalyzer throwableAnalyzer = new DefaultThrowableAnalyzer();
 
     private static final RequestMatcher REQUEST_MATCHER = new OrRequestMatcher(
-            new AntPathRequestMatcher("/app_direct_i/*/*/**"),
-            new AntPathRequestMatcher("/heartbeat/*"));
+            new AntPathRequestMatcher("/app_proxy/**"),
+            new AntPathRequestMatcher("/heartbeat/*"),
+            new AntPathRequestMatcher("/api/**"),
+            new AntPathRequestMatcher("/admin/data")
+            );
 
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;
@@ -77,8 +83,7 @@ public class AuthenticationRequiredFilter extends GenericFilterBean {
                     throw new ServletException("Unable to handle the Spring Security Exception because the response is already committed.", ex);
                 }
                 SecurityContextHolder.getContext().setAuthentication(null);
-                response.setStatus(401);
-                response.getWriter().write("{\"status\":\"error\", \"message\":\"shinyproxy_authentication_required\"}");
+                ShinyProxyApiResponse.authenticationRequired(response);
                 return;
             }
             throw ex;
@@ -91,12 +96,16 @@ public class AuthenticationRequiredFilter extends GenericFilterBean {
      */
     private boolean isAuthException(Exception ex) {
         Throwable[] causeChain = throwableAnalyzer.determineCauseChain(ex);
-        RuntimeException ase = (AuthenticationException) throwableAnalyzer.getFirstThrowableOfType(AuthenticationException.class, causeChain);
-        if (ase != null) {
+        Throwable type = throwableAnalyzer.getFirstThrowableOfType(AuthenticationException.class, causeChain);
+        if (type != null) {
             return true;
         }
-        ase = (AccessDeniedException) throwableAnalyzer.getFirstThrowableOfType(AccessDeniedException.class, causeChain);
-        return ase != null;
+        type = throwableAnalyzer.getFirstThrowableOfType(ClientAuthorizationRequiredException.class, causeChain);
+        if (type != null) {
+            return true;
+        }
+        type = throwableAnalyzer.getFirstThrowableOfType(AccessDeniedException.class, causeChain);
+        return type != null;
     }
 
     /**

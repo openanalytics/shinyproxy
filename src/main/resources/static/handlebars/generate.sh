@@ -2,7 +2,7 @@
 #
 # ShinyProxy
 #
-# Copyright (C) 2016-2021 Open Analytics
+# Copyright (C) 2016-2023 Open Analytics
 #
 # ===========================================================================
 #
@@ -27,7 +27,7 @@ set -u
 set -o pipefail
 
 if [ ! -f "./node_modules/.bin/handlebars" ]; then
-    npm install handlebars@4.7.6 --save false
+    npm install handlebars@4.7.7 --save false
 fi
 
 rm precompiled.js

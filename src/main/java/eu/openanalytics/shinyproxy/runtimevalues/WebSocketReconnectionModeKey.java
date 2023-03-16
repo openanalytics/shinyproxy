@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2021 Open Analytics
+ * Copyright (C) 2016-2023 Open Analytics
  *
  * ===========================================================================
  *
@@ -29,11 +29,23 @@ public class WebSocketReconnectionModeKey extends RuntimeValueKey<WebsocketRecon
         super("openanalytics.eu/sp-websocket-reconnection-mode",
                 "SHINYPROXY_WEBSOCKET_RECONNECTION_MODE",
                 false,
+                true,
+                false,
+                true,
                 false,
                 false,
-                false, WebsocketReconnectionMode.class);
+                WebsocketReconnectionMode.class);
     }
 
     public static WebSocketReconnectionModeKey inst = new WebSocketReconnectionModeKey();
 
+    @Override
+    public WebsocketReconnectionMode deserializeFromString(String value) {
+        return WebsocketReconnectionMode.valueOf(value);
+    }
+
+    @Override
+    public String serializeToString(WebsocketReconnectionMode value) {
+        return value.name();
+    }
 }

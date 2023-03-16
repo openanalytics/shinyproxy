@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2021 Open Analytics
+ * Copyright (C) 2016-2023 Open Analytics
  *
  * ===========================================================================
  *
@@ -20,20 +20,32 @@
  */
 package eu.openanalytics.shinyproxy.runtimevalues;
 
+
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 
-public class MaxInstancesKey extends RuntimeValueKey<Integer> {
+public class TrackAppUrl extends RuntimeValueKey<Boolean> {
 
-    public MaxInstancesKey() {
-        super("openanalytics.eu/sp-max-instances",
-                "SHINYPROXY_MAX_INSTANCES",
+    public TrackAppUrl() {
+        super("openanalytics.eu/sp-track-app-url",
+                "SHINYPROXY_TRACK_APP_URL",
                 false,
+                true,
                 false,
+                true,
+                true,
                 false,
-                false, Integer.class);
+                Boolean.class);
     }
 
-    public static MaxInstancesKey inst = new MaxInstancesKey();
+    public static TrackAppUrl inst = new TrackAppUrl();
 
+    @Override
+    public Boolean deserializeFromString(String value) {
+        return Boolean.valueOf(value);
+    }
 
+    @Override
+    public String serializeToString(Boolean value) {
+        return value.toString();
+    }
 }

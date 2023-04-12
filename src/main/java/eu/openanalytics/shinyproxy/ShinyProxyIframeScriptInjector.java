@@ -21,6 +21,7 @@
 package eu.openanalytics.shinyproxy;
 
 import eu.openanalytics.containerproxy.util.ContextPathHelper;
+import io.netty.buffer.ByteBuf;
 import io.undertow.UndertowMessages;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.protocol.http.ServerFixedLengthStreamSinkConduit;
@@ -113,16 +114,19 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
 
     @Override
     public void terminateWrites() throws IOException {
-        // 1. get HTML page and add script tag
-        String r = outputStream.toString();
+        ByteBuffer out;
+        // 1. check whether it's a html response and success
         if (exchange.getStatusCode() == HttpStatus.OK.value()
                 && exchange.getResponseHeaders().get("Content-Type") != null
                 && exchange.getResponseHeaders().get("Content-Type").stream().anyMatch(headerValue -> headerValue.contains("text/html"))) {
-            // only inject script of response successful and actually a html response
+            // 2. inject script
+            String r = outputStream.toString();
             r += "<script src='" + ContextPathHelper.withEndingSlash() + "js/shiny.iframe.js'></script>";
+            out = ByteBuffer.wrap(r.getBytes(StandardCharsets.UTF_8));
+        } else {
+            // 2. read bytes
+            out = ByteBuffer.wrap(outputStream.toByteArray());
         }
-        // 2. convert to ByteBuffer
-        ByteBuffer out = ByteBuffer.wrap(r.getBytes(StandardCharsets.UTF_8));
         // 3. set Content-Length header
         updateContentLength(exchange, out);
         // 4. write new response (to the next stream)

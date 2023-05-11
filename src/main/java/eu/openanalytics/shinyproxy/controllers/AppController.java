@@ -78,6 +78,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+
 @Controller
 public class AppController extends BaseController {
 
@@ -90,7 +92,7 @@ public class AppController extends BaseController {
     @Inject
     private ParametersService parameterService;
 
-	@RequestMapping(value={"/app_i/*/**", "/app/**"}, method=RequestMethod.GET)
+	@RequestMapping(value={"/app_i/*/**", "/app/**"}, method= GET)
 	public ModelAndView app(ModelMap map, HttpServletRequest request, HttpServletResponse response) {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrNull(request);
 		if (appRequestInfo == null) {
@@ -293,7 +295,7 @@ public class AppController extends BaseController {
 	/**
 	 * Special handler for HTML requests that inject the ShinyProxy iframe javascript.
 	 */
-	@RequestMapping(value={"/app_proxy/{proxyId}/**"}, produces= "text/html")
+	@RequestMapping(value={"/app_proxy/{proxyId}/**"}, produces= "text/html", method = GET)
 	public void appProxyHtml(@PathVariable String proxyId, HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String requestUrl = request.getRequestURI().substring(getBasePublicPath().length());
 

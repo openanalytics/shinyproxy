@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import eu.openanalytics.containerproxy.api.dto.ApiResponse;
 import eu.openanalytics.containerproxy.api.dto.ChangeProxyStatusDto;
 import eu.openanalytics.containerproxy.api.dto.SwaggerDto;
+import eu.openanalytics.containerproxy.auth.impl.OpenIDAuthenticationBackend;
 import eu.openanalytics.containerproxy.model.Views;
 import eu.openanalytics.containerproxy.model.runtime.AllowedParametersForUser;
 import eu.openanalytics.containerproxy.model.runtime.ParameterValues;
@@ -121,6 +122,7 @@ public class AppController extends BaseController {
 		map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
 		map.put("appPath", appRequestInfo.getAppPath());
 		map.put("containerSubPath", buildContainerSubPath(request, appRequestInfo));
+		map.put("refreshOpenidEnabled", authenticationBackend.getName().equals(OpenIDAuthenticationBackend.NAME));
 		ParameterValues previousParameters = null;
 		if (proxy == null || proxy.getRuntimeObjectOrNull(DisplayNameKey.inst) == null) {
 			if (spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) {

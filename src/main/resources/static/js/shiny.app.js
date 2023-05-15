@@ -50,6 +50,7 @@ Shiny.app = {
         appInstanceName: null,
         maxReloadAttempts: 10,
         heartBeatRate: null,
+        openIdRefreshRate: 30000,
         maxInstances: null,
         parameters: {
             allowedCombinations: null,

@@ -73,6 +73,15 @@ Shiny.connections = {
             });
     },
 
+    startOpenidRefresh: function() {
+        setInterval(function() {
+            if (Shiny.app.runtimeState.appStopped) {
+                return;
+            }
+            $.post(Shiny.api.buildURL("/refresh-openid"));
+        }, Shiny.app.staticState.openIdRefreshRate);
+    },
+
     /**
      * Handles a WebSocket error (i.e. close).
      */

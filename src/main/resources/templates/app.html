@@ -113,7 +113,7 @@
 	</div>
 	<div id="userLoggedOut" class="loading">
 		<div class="loading-txt">
-			You logged out using another browser tab, you can now close this tab.<br><br>
+			You are now (automatically) logged out, you can now close this tab.<br><br>
 			<span class="refreshButton">
 				<a th:href="@{/}" class="btn btn-default">Login again</a>
 			</span>
@@ -169,6 +169,9 @@
 					[[${containerSubPath}]],
 			);
 			window.Shiny.ui.loadDefaultParameters([[${parameterDefaults}]]);
+			if ([[${refreshOpenidEnabled}]]) {
+				window.Shiny.connections.startOpenidRefresh();
+			}
 		});
 	</script>
 </body>

@@ -23,37 +23,64 @@ package eu.openanalytics.shinyproxy;
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
 import eu.openanalytics.containerproxy.security.ICustomSecurityConfig;
 import eu.openanalytics.containerproxy.service.UserService;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.inject.Inject;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+import static eu.openanalytics.containerproxy.ui.AuthController.AUTH_SUCCESS_URL_SESSION_ATTR;
 
 @Component
 public class UISecurityConfig implements ICustomSecurityConfig {
 
-	@Inject
-	private IAuthenticationBackend auth;
-	
-	@Inject
-	private UserService userService;
+    @Inject
+    private IAuthenticationBackend auth;
 
-	@Override
-	public void apply(HttpSecurity http) throws Exception {
-		if (auth.hasAuthorization()) {
-			
-			// Limit access to the app pages according to spec permissions
-			http.authorizeRequests().antMatchers("/app/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
-			http.authorizeRequests().antMatchers("/app_i/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
-			http.authorizeRequests().antMatchers("/app_direct/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
-			http.authorizeRequests().antMatchers("/app_direct_i/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
+    @Inject
+    private UserService userService;
 
-			// Limit access to the admin pages
-			http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminGroups());
-			http.authorizeRequests().antMatchers("/admin/data").hasAnyRole(userService.getAdminGroups());
+    @Inject
+    @Lazy
+    private SavedRequestAwareAuthenticationSuccessHandler savedRequestAwareAuthenticationSuccessHandler;
 
-			http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
-		}
+    @Override
+    public void apply(HttpSecurity http) throws Exception {
+        if (auth.hasAuthorization()) {
 
-	}
+            // Limit access to the app pages according to spec permissions
+            http.authorizeRequests().antMatchers("/app/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
+            http.authorizeRequests().antMatchers("/app_i/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
+            http.authorizeRequests().antMatchers("/app_direct/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
+            http.authorizeRequests().antMatchers("/app_direct_i/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
+
+            // Limit access to the admin pages
+            http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminGroups());
+            http.authorizeRequests().antMatchers("/admin/data").hasAnyRole(userService.getAdminGroups());
+
+            http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
+
+            savedRequestAwareAuthenticationSuccessHandler.setRedirectStrategy(new DefaultRedirectStrategy() {
+                @Override
+                public void sendRedirect(HttpServletRequest request, HttpServletResponse response, String url) throws IOException {
+                    String redirectUrl = calculateRedirectUrl(request.getContextPath(), url);
+                    AppRequestInfo appRequestInfo = AppRequestInfo.fromURI(redirectUrl);
+                    if (appRequestInfo != null) {
+                        // before auth, the user tried to open the page of an app, redirect back to that app
+                        // (we don't redirect to any other app, see  #30648 and #28624)
+                        request.getSession().setAttribute(AUTH_SUCCESS_URL_SESSION_ATTR, url);
+                    }
+                    response.sendRedirect(ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth-success").build().toUriString());
+                }
+            });
+        }
+
+    }
 }

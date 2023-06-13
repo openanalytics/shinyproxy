@@ -311,6 +311,20 @@ public class AppController extends BaseController {
 			ShinyProxyApiResponse.appStoppedOrNonExistent(response);
 			return;
 		}
+
+		String secFetchMode = request.getHeader("Sec-Fetch-Mode");
+		if (secFetchMode != null && !secFetchMode.equals("navigate")) {
+			// do not inject script since this isn't a navigate request (it's e.g. an ajax/fetch request)
+			// note: the header is relatively new and therefore the script is injected if the header is not present
+			// see: #30809
+			try {
+				mappingManager.dispatchAsync(proxy.getId(), requestUrl, request, response);
+				return;
+			} catch (Exception e) {
+				throw new RuntimeException("Error routing proxy request", e);
+			}
+		}
+
 		try {
 			mappingManager.dispatchAsync(proxyId, requestUrl, request, response, (exchange) -> {
 				exchange.getRequestHeaders().remove("Accept-Encoding"); // ensure no encoding is used

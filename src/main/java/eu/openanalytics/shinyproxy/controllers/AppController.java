@@ -22,7 +22,6 @@ package eu.openanalytics.shinyproxy.controllers;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import eu.openanalytics.containerproxy.api.dto.ApiResponse;
-import eu.openanalytics.containerproxy.api.dto.ChangeProxyStatusDto;
 import eu.openanalytics.containerproxy.api.dto.SwaggerDto;
 import eu.openanalytics.containerproxy.auth.impl.OpenIDAuthenticationBackend;
 import eu.openanalytics.containerproxy.model.Views;
@@ -43,6 +42,7 @@ import eu.openanalytics.shinyproxy.ShinyProxyIframeScriptInjector;
 import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
+import eu.openanalytics.shinyproxy.runtimevalues.UserTimeZoneKey;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -161,13 +161,15 @@ public class AppController extends BaseController {
 		return new ModelAndView("app", map);
 	}
 
+	// TODO add example with timezone
 	@Operation(summary = "Start an app.", tags = "ShinyProxy",
 			requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
 					content = @Content(
 							mediaType = "application/json",
-							schema = @Schema(implementation = ChangeProxyStatusDto.class),
+							schema = @Schema(implementation = AppBody.class),
 							examples = {
-									@ExampleObject(name = "With parameters", value = "{\"parameters\":{\"resources\":\"2 CPU cores - 8G RAM\",\"other_parameter\":\"example\"}}")
+									@ExampleObject(name = "With parameters", value = "{\"parameters\":{\"resources\":\"2 CPU cores - 8G RAM\",\"other_parameter\":\"example\"}}"),
+									@ExampleObject(name = "With timezone", value = "{\"timezone\":\"Europe/Brussels\"}")
 							}
 					)
 			)
@@ -243,6 +245,9 @@ public class AppController extends BaseController {
 		String id = UUID.randomUUID().toString();
 		runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(id)));
 		runtimeValues.add(new RuntimeValue(AppInstanceKey.inst, appInstanceName));
+		if (appBody.getTimezone() != null) {
+			runtimeValues.add(new RuntimeValue(UserTimeZoneKey.inst, appBody.getTimezone()));
+		}
 
 		try {
 			return ApiResponse.success(asyncProxyService.startProxy(spec, runtimeValues, id, (appBody != null) ? appBody.getParameters() : null));
@@ -392,16 +397,27 @@ public class AppController extends BaseController {
 		return templateEngine.process(template, context);
 	}
 
-    private static class AppBody {
-        private Map<String, String> parameters;
+	private static class AppBody {
+		private Map<String, String> parameters;
+		private String timezone;
 
-        public Map<String, String> getParameters() {
-            return parameters;
-        }
+		@Schema(description = "Map of parameters for the app.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+		public Map<String, String> getParameters() {
+			return parameters;
+		}
 
-        public void setParameters(Map<String, String> parameters) {
-            this.parameters = parameters;
-        }
-    }
+		public void setParameters(Map<String, String> parameters) {
+			this.parameters = parameters;
+		}
+
+		@Schema(description = "The timezone of the user in TZ format.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+		public String getTimezone() {
+			return timezone;
+		}
+
+		public void setTimezone(String timezone) {
+			this.timezone = timezone;
+		}
+	}
 
 }

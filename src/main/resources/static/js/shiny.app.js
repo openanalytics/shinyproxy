@@ -186,10 +186,11 @@ Shiny.app = {
         if (parameters === null) {
             parameters = {}
         }
+        const body = {parameters, timezone: Shiny.ui.getTimeZone()};
         let url = Shiny.api.buildURL('app_i/' + Shiny.app.staticState.appName + '/' + Shiny.app.staticState.appInstanceName);
         let response = await fetch(url, {
             method: 'POST',
-            body:  JSON.stringify({parameters}),
+            body:  JSON.stringify(body),
             headers: {
                 'Content-Type': 'application/json'
             },

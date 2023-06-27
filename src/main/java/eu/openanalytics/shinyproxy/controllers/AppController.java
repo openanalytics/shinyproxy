@@ -344,7 +344,7 @@ public class AppController extends BaseController {
 		String res = UriComponentsBuilder
 				.fromPath(appRequestInfo.getSubPath())
 				.query(queryString)
-				.build(true)
+				.build(false) // #30932: queryString is not yet encoded
 				.toUriString();
 
 		if (res.startsWith("/")) {

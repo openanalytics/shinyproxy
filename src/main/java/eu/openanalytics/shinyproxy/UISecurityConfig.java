@@ -61,10 +61,6 @@ public class UISecurityConfig implements ICustomSecurityConfig {
             http.authorizeRequests().antMatchers("/app_direct/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
             http.authorizeRequests().antMatchers("/app_direct_i/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
 
-            // Limit access to the admin pages
-            http.authorizeRequests().antMatchers("/admin").access("@userService.isAdmin()");
-            http.authorizeRequests().antMatchers("/admin/data").access("@userService.isAdmin()");
-
             http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
 
             savedRequestAwareAuthenticationSuccessHandler.setRedirectStrategy(new DefaultRedirectStrategy() {
@@ -81,6 +77,9 @@ public class UISecurityConfig implements ICustomSecurityConfig {
                 }
             });
         }
+        // Limit access to the admin pages
+        http.authorizeRequests().antMatchers("/admin").access("@userService.isAdmin()");
+        http.authorizeRequests().antMatchers("/admin/data").access("@userService.isAdmin()");
 
     }
 }

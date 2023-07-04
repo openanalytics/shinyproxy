@@ -62,8 +62,8 @@ public class UISecurityConfig implements ICustomSecurityConfig {
             http.authorizeRequests().antMatchers("/app_direct_i/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
 
             // Limit access to the admin pages
-            http.authorizeRequests().antMatchers("/admin").hasAnyRole(userService.getAdminGroups());
-            http.authorizeRequests().antMatchers("/admin/data").hasAnyRole(userService.getAdminGroups());
+            http.authorizeRequests().antMatchers("/admin").access("@userService.isAdmin()");
+            http.authorizeRequests().antMatchers("/admin/data").access("@userService.isAdmin()");
 
             http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
 

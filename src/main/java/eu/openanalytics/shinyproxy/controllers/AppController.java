@@ -361,33 +361,53 @@ public class AppController extends BaseController {
 		return ContextPathHelper.withEndingSlash() + "app_proxy/";
 	}
 
+	/**
+	 * Checks if a redirect is required before we can handle the request.
+	 * <p>
+	 * ShinyProxy supports proxying to multiple targets. When proxying to a target (without a sub-path for that specific target), the URL must end with a slash.
+	 * However, when the sub-path does not point to a specific target, it's not required that the URL ends with a slash.
+	 * </p>
+	 * <p>
+	 * Assume an app called `myapp` has a additional-port-mapping named `abc`:
+	 *  - /app/myapp -> no redirect required (getPublicPath() always add a slash)
+	 *  - /app/myapp/test123 -> no redirect required
+	 *  - /app/myapp/abc -> redirect to /app/myapp/abc/
+	 *  - /app/myapp/abc/ -> no redirect required
+	 *  - /app/myapp/abc/test -> no redirect required
+	 * </p>
+	 * @param request the current request
+	 * @param appRequestInfo the appRequstInfo for this request
+	 * @param proxy the current proxy
+	 * @param spec the spec of the current app
+	 * @return a RedirectView if a redirect is needed
+	 */
 	private Optional<RedirectView> createRedirectIfRequired(HttpServletRequest request, AppRequestInfo appRequestInfo, Proxy proxy, ProxySpec spec) {
-		// if sub-path is empty -> no ending slash -> no ending slash and redirect required
+		// if sub-path is empty or it's a slash -> no redirect required
 		if (appRequestInfo.getSubPath() == null || appRequestInfo.getSubPath().equals("/")) {
 			return Optional.empty();
 		}
 
-		if (proxy == null) {
-			// sub-path is non-empty, but proxy does not yet exist -> redirect to root path
-			String uri = ServletUriComponentsBuilder.fromRequest(request)
-					.replacePath(appRequestInfo.getAppPath())
-					.query(null)
-					.build()
-					.toUriString();
-			return Optional.of(new RedirectView(uri));
-		}
+		// sub-path always starts with a slash -> get part without the slash
+		// this contains the mapping and any additional paths
+		String subPath = appRequestInfo.getSubPath().substring(1);
 
-		// if sub-path is just the mapping -> no ending slash and redirect required
-		String mapping = appRequestInfo.getSubPath().substring(1);
-		if (mapping.contains("/")) {
+		// if the subPath contains a slash -> no redirect required
+		// e.g. /app/myapp/mapping/
+		// e.g. /app/myapp/mapping/some_path
+		//                 ^^^^^^^^^^^^^^^^^^ -> this is the subpath (without initial slash)
+		if (subPath.contains("/")) {
 			return Optional.empty();
 		}
 
-		boolean mappingWithoutSlash = spec.getContainerSpecs().get(0)
+		// the provided subpath does not contain a slash (i.e. it's a single "directory" name)
+		// -> we have to check whether the provided subpath is a configured mapping (and thus point to a specific port on the app)
+		// or whether it's just a subpath
+		boolean isMappingWithoutSlash = spec.getContainerSpecs().get(0)
 				.getPortMapping()
 				.stream()
-				.anyMatch(it -> it.getName().equals(mapping));
-		if (mappingWithoutSlash) {
+				.anyMatch(it -> it.getName().equals(subPath));
+		if (isMappingWithoutSlash) {
+			// the provided subpath is a configured mapping -> redirect so it ends with a slash
 			String uri = ServletUriComponentsBuilder.fromRequest(request)
 					.path("/")
 					.build()

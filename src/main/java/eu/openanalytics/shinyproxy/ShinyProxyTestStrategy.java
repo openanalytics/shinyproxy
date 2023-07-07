@@ -62,7 +62,7 @@ public class ShinyProxyTestStrategy implements IProxyTestStrategy {
 					// proxy got stopped while loading -> no need to try to connect it since the container will already be deleted
 					return true;
 				}
-				URL testURL = new URL(targetURI.toString());
+				URL testURL = new URL(targetURI.toString() + "/");
 				HttpURLConnection connection = ((HttpURLConnection) testURL.openConnection());
 				if (currentAttempt <= 5) {
 					// When the container has only just started (or when the k8s service has only just been created),

@@ -144,6 +144,8 @@ Shiny.app = {
             Shiny.app.runtimeState.baseFrameUrl = baseFrameUrl;
         } else if (Shiny.app.runtimeState.proxy.status === "Stopping") {
             Shiny.ui.showStoppingPage();
+            // re-send stop request in case previous stop is stuck
+            await Shiny.api.changeProxyStatus(Shiny.app.runtimeState.proxy.id, 'Stopping')
             Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id);
             if (Shiny.app.runtimeState.proxy !== null && !Shiny.app.runtimeState.navigatingAway) {
                 Shiny.ui.showStoppedPage();

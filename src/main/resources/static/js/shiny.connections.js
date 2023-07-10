@@ -75,7 +75,8 @@ Shiny.connections = {
 
     startOpenidRefresh: function() {
         setInterval(function() {
-            if (Shiny.app.runtimeState.appStopped) {
+            if (Shiny.app.runtimeState.proxy && Shiny.app.runtimeState.proxy.status === "Stopped") {
+                console.log("no openid refresh");
                 return;
             }
             $.post(Shiny.api.buildURL("/refresh-openid"));

@@ -44,6 +44,7 @@ Shiny.api = {
         return json !== null;
     },
     async waitForStatusChange(proxyId) {
+        let networkErrors = 0;
         while (true) {
             const url = Shiny.api.buildURL('api/' + proxyId + "/status?watch=true&timeout=10");
             try {
@@ -56,8 +57,13 @@ Shiny.api = {
                     return json.data;
                 }
             } catch (e) {
+                // retry the status request up to 10 times in case of network issues.
                 console.log(e);
-                return null; // error -> return
+                networkErrors++;
+                if (networkErrors >= 10) {
+                    console.log("Reached more than 10 NetworkErrors, stopping attempt");
+                    return null;
+                }
             }
         }
     },

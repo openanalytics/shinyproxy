@@ -38,7 +38,7 @@ public class ShinyProxyApiResponse {
     }
 
     public static void authenticationRequired(HttpServletResponse response) throws IOException {
-        ImmediateJsonResponse.write(response, 410, "\"{\\\"status\\\":\\\"fail\\\", \\\"data\\\":\\\"shinyproxy_authentication_required\\\"}\"");
+        ImmediateJsonResponse.write(response, 410, "{\"status\":\"fail\", \"data\":\"shinyproxy_authentication_required\"}");
     }
 
 }

@@ -21,6 +21,7 @@
 package eu.openanalytics.shinyproxy.controllers;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.openanalytics.containerproxy.api.dto.ApiResponse;
 import eu.openanalytics.containerproxy.api.dto.SwaggerDto;
 import eu.openanalytics.containerproxy.auth.impl.OpenIDAuthenticationBackend;
@@ -93,6 +94,13 @@ public class AppController extends BaseController {
     @Inject
     private ParametersService parameterService;
 
+	private final ObjectMapper objectMapper = new ObjectMapper();
+
+	public AppController() {
+		objectMapper.setConfig(objectMapper.getSerializationConfig()
+				.withView(Views.UserApi.class));
+	}
+
 	@RequestMapping(value={"/app_i/*/**", "/app/**"}, method= GET)
 	public ModelAndView app(ModelMap map, HttpServletRequest request, HttpServletResponse response) {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrNull(request);
@@ -135,7 +143,7 @@ public class AppController extends BaseController {
 			map.put("appTitle", proxy.getRuntimeValue(DisplayNameKey.inst));
 			previousParameters = proxy.getRuntimeObjectOrNull(ParameterValuesKey.inst);
 		}
-		map.put("proxy", proxy);
+		map.put("proxy", secureProxy(proxy));
 		if (spec != null && spec.getParameters() != null) {
 			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 			AllowedParametersForUser allowedParametersForUser = parameterService.calculateAllowedParametersForUser(auth, spec, previousParameters);
@@ -429,6 +437,14 @@ public class AppController extends BaseController {
 
 		ExpressionContext context = new ExpressionContext(templateEngine.getConfiguration(), null, map);
 		return templateEngine.process(template, context);
+	}
+
+	/**
+	 * Converts a proxy into an Object using {@link Views.UserApi} view, in order to hide security sensitive values.
+	 * @return the secured proxy
+	 */
+	private Object secureProxy(Proxy proxy) {
+		return objectMapper.convertValue(proxy, Object.class);
 	}
 
 	private static class AppBody {

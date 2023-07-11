@@ -114,19 +114,16 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
 
     @Override
     public void terminateWrites() throws IOException {
-        ByteBuffer out;
         // 1. check whether it's a html response and success
         if (exchange.getStatusCode() == HttpStatus.OK.value()
                 && exchange.getResponseHeaders().get("Content-Type") != null
                 && exchange.getResponseHeaders().get("Content-Type").stream().anyMatch(headerValue -> headerValue.contains("text/html"))) {
             // 2. inject script
-            String r = outputStream.toString();
-            r += "<script src='" + ContextPathHelper.withEndingSlash() + "js/shiny.iframe.js'></script>";
-            out = ByteBuffer.wrap(r.getBytes(StandardCharsets.UTF_8));
-        } else {
-            // 2. read bytes
-            out = ByteBuffer.wrap(outputStream.toByteArray());
+            String r = "<script src='" + ContextPathHelper.withEndingSlash() + "js/shiny.iframe.js'></script>";
+            outputStream.write(r.getBytes(StandardCharsets.UTF_8));
         }
+
+        ByteBuffer out = ByteBuffer.wrap(outputStream.toByteArray());
         // 3. set Content-Length header
         updateContentLength(exchange, out);
         // 4. write new response (to the next stream)

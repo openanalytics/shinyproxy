@@ -122,8 +122,8 @@ if (window.parent.Shiny !== undefined
                         shinyProxy.ui.showCrashedPage();
                     }
                 }
-        });
-        shinyProxy.app.runtimeState.lastHeartbeatTime = Date.now();
+            });
+            shinyProxy.app.runtimeState.lastHeartbeatTime = Date.now();
 
             return originalOpen.apply(this, arguments);
         }
@@ -133,7 +133,7 @@ if (window.parent.Shiny !== undefined
     _replaceOpen(window.XMLHttpRequest.prototype);
 
     // update the url when the page changes, e.g. plain HTTP apps
-    window.addEventListener('load', function() {
+    window.addEventListener('load', function () {
         shinyProxy.connections._updateIframeUrl(window.location.toString());
     });
 

@@ -40,72 +40,72 @@ import java.util.Map;
 @Controller
 public class IndexController extends BaseController {
 
-	@Inject
-	private ShinyProxySpecProvider shinyProxySpecProvider;
+    @Inject
+    private ShinyProxySpecProvider shinyProxySpecProvider;
 
-	@Inject
-	private Environment environment;
+    @Inject
+    private Environment environment;
 
-	private MyAppsMode myAppsMode;
+    private MyAppsMode myAppsMode;
 
-	@PostConstruct
-	public void init() {
-		myAppsMode = environment.getProperty("proxy.my-apps-mode", MyAppsMode.class, MyAppsMode.None);
-	}
-
-	@RequestMapping("/")
-    private Object index(ModelMap map, HttpServletRequest request) {
-		String landingPage = environment.getProperty("proxy.landing-page", "/");
-		if (!landingPage.equals("/")) return new RedirectView(landingPage);	
-		
-		prepareMap(map, request);
-		
-		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
-		map.put("apps", apps);
-
-		Map<ProxySpec, String> appLogos = new HashMap<>();
-		map.put("appLogos", appLogos);
-		
-		boolean displayAppLogos = false;
-		for (ProxySpec app: apps) {
-			if (app.getLogoURL() != null) {
-				displayAppLogos = true;
-				appLogos.put(app, resolveImageURI(app.getLogoURL()));
-			}
-		}
-		map.put("displayAppLogos", displayAppLogos);
-
-		// template groups
-		HashMap<String, ArrayList<ProxySpec>> groupedApps = new HashMap<>();
-		List<ProxySpec> ungroupedApps = new ArrayList<>();
-
-		for (ProxySpec app: apps) {
-			String groupId = app.getSpecExtension(ShinyProxySpecExtension.class).getTemplateGroup();
-			if (groupId != null) {
-				groupedApps.putIfAbsent(groupId, new ArrayList<>());
-				groupedApps.get(groupId).add(app);
-			} else {
-				ungroupedApps.add(app);
-			}
-		}
-
-		List<ShinyProxySpecProvider.TemplateGroup> templateGroups = shinyProxySpecProvider.getTemplateGroups().stream().filter((g) -> groupedApps.containsKey(g.getId())).toList();
-		map.put("templateGroups", templateGroups);
-		map.put("groupedApps", groupedApps);
-		map.put("ungroupedApps", ungroupedApps);
-
-		// navbar
-		map.put("page", "index");
-
-		map.put("myAppsMode", myAppsMode.toString());
-
-		return "index";
+    @PostConstruct
+    public void init() {
+        myAppsMode = environment.getProperty("proxy.my-apps-mode", MyAppsMode.class, MyAppsMode.None);
     }
 
-	public enum MyAppsMode {
-		Inline,
-		Modal,
-		None
-	}
+    @RequestMapping("/")
+    private Object index(ModelMap map, HttpServletRequest request) {
+        String landingPage = environment.getProperty("proxy.landing-page", "/");
+        if (!landingPage.equals("/")) return new RedirectView(landingPage);
+
+        prepareMap(map, request);
+
+        ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
+        map.put("apps", apps);
+
+        Map<ProxySpec, String> appLogos = new HashMap<>();
+        map.put("appLogos", appLogos);
+
+        boolean displayAppLogos = false;
+        for (ProxySpec app : apps) {
+            if (app.getLogoURL() != null) {
+                displayAppLogos = true;
+                appLogos.put(app, resolveImageURI(app.getLogoURL()));
+            }
+        }
+        map.put("displayAppLogos", displayAppLogos);
+
+        // template groups
+        HashMap<String, ArrayList<ProxySpec>> groupedApps = new HashMap<>();
+        List<ProxySpec> ungroupedApps = new ArrayList<>();
+
+        for (ProxySpec app : apps) {
+            String groupId = app.getSpecExtension(ShinyProxySpecExtension.class).getTemplateGroup();
+            if (groupId != null) {
+                groupedApps.putIfAbsent(groupId, new ArrayList<>());
+                groupedApps.get(groupId).add(app);
+            } else {
+                ungroupedApps.add(app);
+            }
+        }
+
+        List<ShinyProxySpecProvider.TemplateGroup> templateGroups = shinyProxySpecProvider.getTemplateGroups().stream().filter((g) -> groupedApps.containsKey(g.getId())).toList();
+        map.put("templateGroups", templateGroups);
+        map.put("groupedApps", groupedApps);
+        map.put("ungroupedApps", ungroupedApps);
+
+        // navbar
+        map.put("page", "index");
+
+        map.put("myAppsMode", myAppsMode.toString());
+
+        return "index";
+    }
+
+    public enum MyAppsMode {
+        Inline,
+        Modal,
+        None
+    }
 
 }

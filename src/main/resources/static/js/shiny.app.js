@@ -132,12 +132,12 @@ Shiny.app = {
             Shiny.connections.startHeartBeats();
 
             const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
-            let parentUrl = new URL(Shiny.app.staticState.appPath , baseURL).toString();
+            let parentUrl = new URL(Shiny.app.staticState.appPath, baseURL).toString();
             if (!parentUrl.endsWith("/")) {
                 parentUrl = parentUrl + "/";
             }
             Shiny.app.runtimeState.parentFrameUrl = parentUrl;
-            let baseFrameUrl = new URL(Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH , baseURL).toString();
+            let baseFrameUrl = new URL(Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH, baseURL).toString();
             if (!baseFrameUrl.endsWith("/")) {
                 baseFrameUrl = parentUrl + "/";
             }
@@ -192,7 +192,7 @@ Shiny.app = {
         let url = Shiny.api.buildURL('app_i/' + Shiny.app.staticState.appName + '/' + Shiny.app.staticState.appInstanceName);
         let response = await fetch(url, {
             method: 'POST',
-            body:  JSON.stringify(body),
+            body: JSON.stringify(body),
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -251,7 +251,7 @@ $(window).on('load', function () {
         Shiny.instances.eventHandlers.showAppDetails();
     });
 
-    $('.app-link').on('click auxclick', function(e) {
+    $('.app-link').on('click auxclick', function (e) {
         e.preventDefault();
         const appId = $(this).data("app-id");
         Shiny.ui.showInstanceModal();

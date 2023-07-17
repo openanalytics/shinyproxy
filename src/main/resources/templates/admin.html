@@ -22,73 +22,76 @@
 -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
-<head lang="en">
-	<title th:text="${title}"></title>
-	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1" />
-	<link rel="stylesheet" media="screen" th:href="@{${resourcePrefix} + ${bootstrapCss}}"/>
-	<link rel="stylesheet" media="screen" th:href="@{${resourcePrefix} + '/css/default.css'}"/>
-	<link rel="stylesheet" media="screen" th:href="@{${resourcePrefix} + '/webjars/datatables/1.12.1/css/dataTables.bootstrap.min.css'}"/>
-	<link rel="stylesheet" media="screen" th:href="@{${resourcePrefix} + '/webjars/datatables-buttons/2.2.2/css/buttons.bootstrap.min.css'}">
-	<link rel="stylesheet" media="screen" th:href="@{${resourcePrefix} + '/webjars/datatables-responsive/2.2.7/css/responsive.bootstrap.min.css'}">
-	<script th:src="@{${resourcePrefix} + ${jqueryJs}}"></script>
-	<script th:src="@{${resourcePrefix} + ${bootstrapJs}}"></script>
-	<script th:src="@{${resourcePrefix} + ${handlebars}}"></script>
-	<script th:src="@{${resourcePrefix} + '/js/shiny.app.js' }"></script>
-	<script th:src="@{${resourcePrefix} + '/js/shiny.api.js' }"></script>
-	<script th:src="@{${resourcePrefix} + '/js/shiny.instances.js' }"></script>
-	<script th:src="@{${resourcePrefix} + '/js/shiny.ui.js' }"></script>
-	<script th:src="@{${resourcePrefix} + '/js/shiny.common.js'}"></script>
-	<script th:src="@{${resourcePrefix} + '/js/shiny.admin.js'}"></script>
-	<script th:src="@{${resourcePrefix} + '/handlebars/precompiled.js'}"></script>
-</head>
-<body>
-	<div th:replace="fragments/navbar :: navbar"></div>
+>
+    <head lang="en">
+        <title th:text="${title}"></title>
+        <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"/>
+        <meta content="width=device-width, initial-scale=1" name="viewport"/>
+        <link media="screen" rel="stylesheet" th:href="@{${resourcePrefix} + ${bootstrapCss}}"/>
+        <link media="screen" rel="stylesheet" th:href="@{${resourcePrefix} + '/css/default.css'}"/>
+        <link media="screen" rel="stylesheet"
+              th:href="@{${resourcePrefix} + '/webjars/datatables/1.12.1/css/dataTables.bootstrap.min.css'}"/>
+        <link media="screen" rel="stylesheet"
+              th:href="@{${resourcePrefix} + '/webjars/datatables-buttons/2.2.2/css/buttons.bootstrap.min.css'}">
+        <link media="screen" rel="stylesheet"
+              th:href="@{${resourcePrefix} + '/webjars/datatables-responsive/2.2.7/css/responsive.bootstrap.min.css'}">
+        <script th:src="@{${resourcePrefix} + ${jqueryJs}}"></script>
+        <script th:src="@{${resourcePrefix} + ${bootstrapJs}}"></script>
+        <script th:src="@{${resourcePrefix} + ${handlebars}}"></script>
+        <script th:src="@{${resourcePrefix} + '/js/shiny.app.js' }"></script>
+        <script th:src="@{${resourcePrefix} + '/js/shiny.api.js' }"></script>
+        <script th:src="@{${resourcePrefix} + '/js/shiny.instances.js' }"></script>
+        <script th:src="@{${resourcePrefix} + '/js/shiny.ui.js' }"></script>
+        <script th:src="@{${resourcePrefix} + '/js/shiny.common.js'}"></script>
+        <script th:src="@{${resourcePrefix} + '/js/shiny.admin.js'}"></script>
+        <script th:src="@{${resourcePrefix} + '/handlebars/precompiled.js'}"></script>
+    </head>
+    <body>
+        <div th:replace="fragments/navbar :: navbar"></div>
 
-	<div class="container-fluid">
-		<div id="admin">
-			<h3>Active Proxies</h3>
-			<div id="allApps">
-				<table class="table table-condensed dt-responsive nowrap" style="width:100%">
-					<thead>
-					<tr>
-						<th data-priority="100">Server</th>
-						<th data-priority="100">ID</th>
-						<th>Status</th>
-						<th>User</th>
-						<th>Appname</th>
-						<th>Instance</th>
-						<th>Endpoint</th>
-						<th>Uptime</th>
-						<th>Last heartbeat</th>
-						<th>Image</th>
-						<th>Image tag</th>
-						<th data-priority="100">Actions</th>
-					</tr>
-					</thead>
-					<tbody>
-					</tbody>
-				</table>
-			</div>
-		</div>
-	</div>
+        <div class="container-fluid">
+            <div id="admin">
+                <h3>Active Proxies</h3>
+                <div id="allApps">
+                    <table class="table table-condensed dt-responsive nowrap" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th data-priority="100">Server</th>
+                                <th data-priority="100">ID</th>
+                                <th>Status</th>
+                                <th>User</th>
+                                <th>Appname</th>
+                                <th>Instance</th>
+                                <th>Endpoint</th>
+                                <th>Uptime</th>
+                                <th>Last heartbeat</th>
+                                <th>Image</th>
+                                <th>Image tag</th>
+                                <th data-priority="100">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-	<div th:replace="fragments/modal :: modal"></div>
+        <div th:replace="fragments/modal :: modal"></div>
 
-	<script th:src="@{/webjars/datatables/1.12.1/js/jquery.dataTables.min.js}"></script>
-	<script th:src="@{/webjars/datatables/1.12.1/js/dataTables.bootstrap.min.js}"></script>
-	<script th:src="@{/webjars/datatables-buttons/2.2.2/js/dataTables.buttons.min.js}"></script>
-	<script th:src="@{/webjars/datatables-buttons/2.2.2/js/buttons.bootstrap.min.js}"></script>
-	<script th:src="@{/webjars/datatables-buttons/2.2.2/js/buttons.html5.min.js}"></script>
-	<script th:src="@{/webjars/datatables-responsive/2.2.7/js/dataTables.responsive.min.js}"></script>
-	<script th:src="@{/webjars/datatables-responsive/2.2.7/js/responsive.bootstrap.min.js}"></script>
+        <script th:src="@{/webjars/datatables/1.12.1/js/jquery.dataTables.min.js}"></script>
+        <script th:src="@{/webjars/datatables/1.12.1/js/dataTables.bootstrap.min.js}"></script>
+        <script th:src="@{/webjars/datatables-buttons/2.2.2/js/dataTables.buttons.min.js}"></script>
+        <script th:src="@{/webjars/datatables-buttons/2.2.2/js/buttons.bootstrap.min.js}"></script>
+        <script th:src="@{/webjars/datatables-buttons/2.2.2/js/buttons.html5.min.js}"></script>
+        <script th:src="@{/webjars/datatables-responsive/2.2.7/js/dataTables.responsive.min.js}"></script>
+        <script th:src="@{/webjars/datatables-responsive/2.2.7/js/responsive.bootstrap.min.js}"></script>
 
-	<script type="text/javascript" th:inline="javascript">
-		$(window).on('load', function () {
-			window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]], [[${pauseSupported}]]);
-			window.Shiny.admin.init();
-		});
-	</script>
-</body>
+        <script th:inline="javascript" type="text/javascript">
+            $(window).on('load', function () {
+                window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]], [[${pauseSupported}]]);
+                window.Shiny.admin.init();
+            });
+        </script>
+    </body>
 </html>

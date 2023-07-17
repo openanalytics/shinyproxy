@@ -25,6 +25,8 @@ import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueK
 
 public class TrackAppUrl extends RuntimeValueKey<Boolean> {
 
+    public static final TrackAppUrl inst = new TrackAppUrl();
+
     public TrackAppUrl() {
         super("openanalytics.eu/sp-track-app-url",
                 "SHINYPROXY_TRACK_APP_URL",
@@ -36,8 +38,6 @@ public class TrackAppUrl extends RuntimeValueKey<Boolean> {
                 false,
                 Boolean.class);
     }
-
-    public static final TrackAppUrl inst = new TrackAppUrl();
 
     @Override
     public Boolean deserializeFromString(String value) {

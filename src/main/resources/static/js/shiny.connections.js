@@ -45,9 +45,10 @@ Shiny.connections = {
     /**
      * Send heartbeat and process the result.
      */
-    sendHeartBeat: function() {
+    sendHeartBeat: function () {
         // contextPath is guaranteed to end with a slash
-        $.post(Shiny.api.buildURL("heartbeat/" + Shiny.app.runtimeState.proxy.id), function() {})
+        $.post(Shiny.api.buildURL("heartbeat/" + Shiny.app.runtimeState.proxy.id), function () {
+        })
             .fail(function (response) {
                 if (Shiny.app.runtimeState.appStopped) {
                     // if stopped in meantime -> ignore
@@ -73,8 +74,8 @@ Shiny.connections = {
             });
     },
 
-    startOpenidRefresh: function() {
-        setInterval(function() {
+    startOpenidRefresh: function () {
+        setInterval(function () {
             if (Shiny.app.runtimeState.proxy && Shiny.app.runtimeState.proxy.status === "Stopped") {
                 console.log("no openid refresh");
                 return;
@@ -324,7 +325,7 @@ Shiny.connections = {
         return false;
     },
 
-    _updateIframeUrl: function(url) {
+    _updateIframeUrl: function (url) {
         if (!Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_TRACK_APP_URL) {
             return;
         }

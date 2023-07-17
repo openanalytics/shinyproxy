@@ -43,12 +43,12 @@ public class ShinyProxySpecExtensionProvider {
         specs.forEach(specExtension -> proxySpecProvider.getSpec(specExtension.getId()).addSpecExtension(specExtension));
     }
 
-    public void setSpecs(List<ShinyProxySpecExtension> specs) {
-        this.specs = specs;
-    }
-
     public List<ShinyProxySpecExtension> getSpecs() {
         return specs;
+    }
+
+    public void setSpecs(List<ShinyProxySpecExtension> specs) {
+        this.specs = specs;
     }
 
 }

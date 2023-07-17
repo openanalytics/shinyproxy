@@ -60,14 +60,13 @@ import java.io.IOException;
  */
 public class AuthenticationRequiredFilter extends GenericFilterBean {
 
-    private final ThrowableAnalyzer throwableAnalyzer = new DefaultThrowableAnalyzer();
-
     private static final RequestMatcher REQUEST_MATCHER = new OrRequestMatcher(
             new AntPathRequestMatcher("/app_proxy/**"),
             new AntPathRequestMatcher("/heartbeat/*"),
             new AntPathRequestMatcher("/api/**"),
             new AntPathRequestMatcher("/admin/data")
-            );
+    );
+    private final ThrowableAnalyzer throwableAnalyzer = new DefaultThrowableAnalyzer();
 
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;

@@ -155,15 +155,13 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
                         long.class,
                         HttpServerExchange.class);
                 m.setAccessible(true);
-            }
-            catch (NoSuchMethodException | SecurityException ex) {
+            } catch (NoSuchMethodException | SecurityException ex) {
                 throw new RuntimeException("could not find ServerFixedLengthStreamSinkConduit.reset method", ex);
             }
 
             try {
                 m.invoke(next, length, exchange);
-            }
-            catch (Throwable ex) {
+            } catch (Throwable ex) {
                 throw new RuntimeException("could not access BUFFERED_REQUEST_DATA field", ex);
             }
         }

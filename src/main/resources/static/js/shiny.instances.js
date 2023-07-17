@@ -53,7 +53,7 @@ Shiny.instances = {
             clearInterval(Shiny.instances._refreshIntervalId);
             clearInterval(Shiny.instances._detailsRefreshIntervalId); // just to be sure
         },
-        showAppDetails: function(event, appName, appInstanceName, proxyId) {
+        showAppDetails: function (event, appName, appInstanceName, proxyId) {
             if (event) {
                 event.preventDefault();
             }

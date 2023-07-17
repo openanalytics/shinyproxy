@@ -115,7 +115,7 @@ public class AppDirectController extends BaseController {
             return proxy;
         } else if (proxy.getStatus() == ProxyStatus.New) {
             // maximum wait 10 minutes for the app to startup
-            for (int i = 0; i < 600; i++ ) {
+            for (int i = 0; i < 600; i++) {
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException ex) {

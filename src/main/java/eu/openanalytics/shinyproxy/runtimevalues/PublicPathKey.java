@@ -22,7 +22,9 @@ package eu.openanalytics.shinyproxy.runtimevalues;
 
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 
-public class PublicPathKey extends RuntimeValueKey<String>  {
+public class PublicPathKey extends RuntimeValueKey<String> {
+
+    public static final PublicPathKey inst = new PublicPathKey();
 
     public PublicPathKey() {
         super("openanalytics.eu/sp-public-path",
@@ -35,8 +37,6 @@ public class PublicPathKey extends RuntimeValueKey<String>  {
                 false,
                 String.class);
     }
-
-    public static final PublicPathKey inst = new PublicPathKey();
 
     @Override
     public String deserializeFromString(String value) {

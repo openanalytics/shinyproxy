@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Controller
 public class IndexController extends BaseController {
@@ -90,7 +89,7 @@ public class IndexController extends BaseController {
 			}
 		}
 
-		List<ShinyProxySpecProvider.TemplateGroup> templateGroups = shinyProxySpecProvider.getTemplateGroups().stream().filter((g) -> groupedApps.containsKey(g.getId())).collect(Collectors.toList());
+		List<ShinyProxySpecProvider.TemplateGroup> templateGroups = shinyProxySpecProvider.getTemplateGroups().stream().filter((g) -> groupedApps.containsKey(g.getId())).toList();
 		map.put("templateGroups", templateGroups);
 		map.put("groupedApps", groupedApps);
 		map.put("ungroupedApps", ungroupedApps);

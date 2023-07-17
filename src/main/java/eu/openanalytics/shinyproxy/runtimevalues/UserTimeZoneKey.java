@@ -36,7 +36,7 @@ public class UserTimeZoneKey extends RuntimeValueKey<String>  {
                 String.class);
     }
 
-    public static UserTimeZoneKey inst = new UserTimeZoneKey();
+    public static final UserTimeZoneKey inst = new UserTimeZoneKey();
 
     @Override
     public String deserializeFromString(String value) {

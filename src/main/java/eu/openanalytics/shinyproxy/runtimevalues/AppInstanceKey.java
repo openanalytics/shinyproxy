@@ -36,7 +36,7 @@ public class AppInstanceKey extends RuntimeValueKey<String>  {
                 String.class);
     }
 
-    public static AppInstanceKey inst = new AppInstanceKey();
+    public static final AppInstanceKey inst = new AppInstanceKey();
 
     @Override
     public String deserializeFromString(String value) {

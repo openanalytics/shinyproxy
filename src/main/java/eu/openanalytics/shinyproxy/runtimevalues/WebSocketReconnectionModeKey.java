@@ -37,7 +37,7 @@ public class WebSocketReconnectionModeKey extends RuntimeValueKey<WebsocketRecon
                 WebsocketReconnectionMode.class);
     }
 
-    public static WebSocketReconnectionModeKey inst = new WebSocketReconnectionModeKey();
+    public static final WebSocketReconnectionModeKey inst = new WebSocketReconnectionModeKey();
 
     @Override
     public WebsocketReconnectionMode deserializeFromString(String value) {

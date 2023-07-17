@@ -110,7 +110,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 	}
 
 	public void setSpecs(List<ShinyProxySpec> specs) {
-		this.specs = specs.stream().map(ShinyProxySpec::getProxySpec).collect(Collectors.toList());
+		this.specs = specs.stream().map(ShinyProxySpec::getProxySpec).toList();
 	}
 
 	public void setTemplateGroups(List<TemplateGroup> templateGroups) {

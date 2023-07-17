@@ -37,7 +37,7 @@ public class TrackAppUrl extends RuntimeValueKey<Boolean> {
                 Boolean.class);
     }
 
-    public static TrackAppUrl inst = new TrackAppUrl();
+    public static final TrackAppUrl inst = new TrackAppUrl();
 
     @Override
     public Boolean deserializeFromString(String value) {

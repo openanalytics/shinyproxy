@@ -70,7 +70,7 @@ public class IssueController extends BaseController {
 		}
 		sendSupportMail(form, activeProxy);
 		
-		return ResponseEntity.ok(new HashMap<String, String>() {{
+		return ResponseEntity.ok(new HashMap<>() {{
 			put("status", "success");
 		}});
 	}

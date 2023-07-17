@@ -40,9 +40,7 @@ public class ShinyProxySpecExtensionProvider {
 
     @PostConstruct
     public void postInit() {
-        specs.forEach(specExtension -> {
-            proxySpecProvider.getSpec(specExtension.getId()).addSpecExtension(specExtension);
-        });
+        specs.forEach(specExtension -> proxySpecProvider.getSpec(specExtension.getId()).addSpecExtension(specExtension));
     }
 
     public void setSpecs(List<ShinyProxySpecExtension> specs) {

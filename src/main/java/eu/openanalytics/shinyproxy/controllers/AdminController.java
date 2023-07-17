@@ -48,7 +48,6 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Controller
 public class AdminController extends BaseController {
@@ -88,7 +87,7 @@ public class AdminController extends BaseController {
     @ResponseBody
     private ResponseEntity<ApiResponse<List<ProxyInfo>>> adminData() {
         List<Proxy> proxies = proxyService.getProxies(null, false);
-		List<ProxyInfo> proxyInfos = proxies.stream().map(ProxyInfo::new).collect(Collectors.toList());
+		List<ProxyInfo> proxyInfos = proxies.stream().map(ProxyInfo::new).toList();
 		return ApiResponse.success(proxyInfos);
     }
 

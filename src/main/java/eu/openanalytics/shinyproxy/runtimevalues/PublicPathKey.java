@@ -36,7 +36,7 @@ public class PublicPathKey extends RuntimeValueKey<String>  {
                 String.class);
     }
 
-    public static PublicPathKey inst = new PublicPathKey();
+    public static final PublicPathKey inst = new PublicPathKey();
 
     @Override
     public String deserializeFromString(String value) {

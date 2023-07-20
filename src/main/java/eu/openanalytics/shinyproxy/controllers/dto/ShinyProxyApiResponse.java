@@ -22,9 +22,9 @@ package eu.openanalytics.shinyproxy.controllers.dto;
 
 import eu.openanalytics.containerproxy.api.dto.ApiResponse;
 import eu.openanalytics.containerproxy.util.ImmediateJsonResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 public class ShinyProxyApiResponse {

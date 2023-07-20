@@ -22,8 +22,12 @@ package eu.openanalytics.shinyproxy;
 
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
 import eu.openanalytics.containerproxy.security.ICustomSecurityConfig;
+import eu.openanalytics.containerproxy.service.ProxyAccessControlService;
 import eu.openanalytics.containerproxy.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
@@ -32,8 +36,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static eu.openanalytics.containerproxy.ui.AuthController.AUTH_SUCCESS_URL_SESSION_ATTR;
@@ -51,16 +53,22 @@ public class UISecurityConfig implements ICustomSecurityConfig {
     @Lazy
     private SavedRequestAwareAuthenticationSuccessHandler savedRequestAwareAuthenticationSuccessHandler;
 
+    @Inject
+    private ProxyAccessControlService proxyAccessControlService;
+
     @Override
     public void apply(HttpSecurity http) throws Exception {
         if (auth.hasAuthorization()) {
 
             // Limit access to the app pages according to spec permissions
-            http.authorizeRequests().antMatchers("/app/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
-            http.authorizeRequests().antMatchers("/app_i/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
-            http.authorizeRequests().antMatchers("/app_direct/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
-            http.authorizeRequests().antMatchers("/app_direct_i/{specId}/**").access("@proxyAccessControlService.canAccessOrHasExistingProxy(authentication, #specId)");
-
+            http.authorizeHttpRequests(authz -> authz
+                    .requestMatchers(
+                            "/app/{specId}/**",
+                            "/app_i/{specId}/**",
+                            "/app_direct/{specId}/**",
+                            "/app_direct_i/{specId}/**")
+                    .access((authentication, context) -> new AuthorizationDecision(proxyAccessControlService.canAccessOrHasExistingProxy(authentication.get(), context)))
+            );
             http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
 
             savedRequestAwareAuthenticationSuccessHandler.setRedirectStrategy(new DefaultRedirectStrategy() {
@@ -77,9 +85,12 @@ public class UISecurityConfig implements ICustomSecurityConfig {
                 }
             });
         }
+
         // Limit access to the admin pages
-        http.authorizeRequests().antMatchers("/admin").access("@userService.isAdmin()");
-        http.authorizeRequests().antMatchers("/admin/data").access("@userService.isAdmin()");
+        http.authorizeHttpRequests(authz -> authz
+                .requestMatchers("/admin", "/admin/data")
+                .access((authentication, context) -> new AuthorizationDecision(userService.isAdmin(authentication.get())))
+        );
 
     }
 }

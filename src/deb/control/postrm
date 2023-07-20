@@ -1,7 +1,0 @@
-#!/bin/bash
-
-if [ "$1" = "remove" -o "$1" = "0" ];
-then
-  rm -f /etc/systemd/system/shinyproxy.service
-  rm -f /etc/init/shinyproxy.conf
-fi

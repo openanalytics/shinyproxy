@@ -24,12 +24,13 @@ package eu.openanalytics.shinyproxy;
 import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.util.List;
 
-@Configuration
+@Component
 @ConfigurationProperties(prefix = "proxy")
 public class ShinyProxySpecExtensionProvider {
 

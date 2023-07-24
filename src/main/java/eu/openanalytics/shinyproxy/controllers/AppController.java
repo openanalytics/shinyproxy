@@ -253,7 +253,7 @@ public class AppController extends BaseController {
 		String id = UUID.randomUUID().toString();
 		runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(id)));
 		runtimeValues.add(new RuntimeValue(AppInstanceKey.inst, appInstanceName));
-		if (appBody.getTimezone() != null) {
+		if (appBody != null && appBody.getTimezone() != null) {
 			runtimeValues.add(new RuntimeValue(UserTimeZoneKey.inst, appBody.getTimezone()));
 		}
 

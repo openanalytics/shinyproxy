@@ -332,6 +332,14 @@ Shiny.ui = {
             return `<span class="label status-label label-danger">Stopped</span>`;
         }
         return "";
+    },
+
+    getTimeZone() {
+        try {
+            return Intl.DateTimeFormat().resolvedOptions().timeZone;
+        } catch {
+            return null;
+        }
     }
 }
 

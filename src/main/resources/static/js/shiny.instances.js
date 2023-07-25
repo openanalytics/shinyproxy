@@ -88,7 +88,7 @@ Shiny.instances = {
                     Shiny.app.runtimeState.appStopped = true;
                     Shiny.ui.removeFrame();
                     Shiny.ui.showStoppingPage();
-                    await Shiny.api.waitForStatusChange(proxyId);
+                    Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id);
                     Shiny.ui.showStoppedPage();
                 }
             }
@@ -112,7 +112,7 @@ Shiny.instances = {
                     Shiny.app.runtimeState.appStopped = true;
                     Shiny.ui.removeFrame();
                     Shiny.ui.showPausingPage();
-                    await Shiny.api.waitForStatusChange(proxyId);
+                    Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id);
                     Shiny.ui.showPausedAppPage();
                 }
             }
@@ -136,7 +136,7 @@ Shiny.instances = {
                 Shiny.ui.showStoppingPage();
 
                 await Shiny.api.changeProxyStatus(Shiny.app.runtimeState.proxy.id, 'Stopping');
-                await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id)
+                Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id);
 
                 window.location = overrideUrl;
             }

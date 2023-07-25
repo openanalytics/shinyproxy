@@ -21,6 +21,7 @@
 package eu.openanalytics.shinyproxy.controllers.dto;
 
 import eu.openanalytics.containerproxy.api.dto.ApiResponse;
+import eu.openanalytics.containerproxy.util.ImmediateJsonResponse;
 import org.springframework.http.ResponseEntity;
 
 import javax.servlet.http.HttpServletResponse;
@@ -33,13 +34,11 @@ public class ShinyProxyApiResponse {
     }
 
     public static void appStoppedOrNonExistent(HttpServletResponse response) throws IOException {
-        response.setStatus(410);
-        response.getWriter().write("{\"status\":\"fail\", \"data\":\"app_stopped_or_non_existent\"}");
+        ImmediateJsonResponse.write(response, 410, "{\"status\":\"fail\", \"data\":\"app_stopped_or_non_existent\"}");
     }
 
     public static void authenticationRequired(HttpServletResponse response) throws IOException {
-        response.setStatus(401);
-        response.getWriter().write("{\"status\":\"fail\", \"data\":\"shinyproxy_authentication_required\"}");
+        ImmediateJsonResponse.write(response, 410, "{\"status\":\"fail\", \"data\":\"shinyproxy_authentication_required\"}");
     }
 
 }

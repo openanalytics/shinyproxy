@@ -21,9 +21,10 @@
 package eu.openanalytics.shinyproxy.controllers;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.openanalytics.containerproxy.api.dto.ApiResponse;
-import eu.openanalytics.containerproxy.api.dto.ChangeProxyStatusDto;
 import eu.openanalytics.containerproxy.api.dto.SwaggerDto;
+import eu.openanalytics.containerproxy.auth.impl.OpenIDAuthenticationBackend;
 import eu.openanalytics.containerproxy.model.Views;
 import eu.openanalytics.containerproxy.model.runtime.AllowedParametersForUser;
 import eu.openanalytics.containerproxy.model.runtime.ParameterValues;
@@ -42,6 +43,7 @@ import eu.openanalytics.shinyproxy.ShinyProxyIframeScriptInjector;
 import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
+import eu.openanalytics.shinyproxy.runtimevalues.UserTimeZoneKey;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -78,6 +80,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+
 @Controller
 public class AppController extends BaseController {
 
@@ -90,7 +94,14 @@ public class AppController extends BaseController {
     @Inject
     private ParametersService parameterService;
 
-	@RequestMapping(value={"/app_i/*/**", "/app/**"}, method=RequestMethod.GET)
+	private final ObjectMapper objectMapper = new ObjectMapper();
+
+	public AppController() {
+		objectMapper.setConfig(objectMapper.getSerializationConfig()
+				.withView(Views.UserApi.class));
+	}
+
+	@RequestMapping(value={"/app_i/*/**", "/app/**"}, method= GET)
 	public ModelAndView app(ModelMap map, HttpServletRequest request, HttpServletResponse response) {
 		AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrNull(request);
 		if (appRequestInfo == null) {
@@ -119,6 +130,7 @@ public class AppController extends BaseController {
 		map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
 		map.put("appPath", appRequestInfo.getAppPath());
 		map.put("containerSubPath", buildContainerSubPath(request, appRequestInfo));
+		map.put("refreshOpenidEnabled", authenticationBackend.getName().equals(OpenIDAuthenticationBackend.NAME));
 		ParameterValues previousParameters = null;
 		if (proxy == null || proxy.getRuntimeObjectOrNull(DisplayNameKey.inst) == null) {
 			if (spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) {
@@ -131,7 +143,7 @@ public class AppController extends BaseController {
 			map.put("appTitle", proxy.getRuntimeValue(DisplayNameKey.inst));
 			previousParameters = proxy.getRuntimeObjectOrNull(ParameterValuesKey.inst);
 		}
-		map.put("proxy", proxy);
+		map.put("proxy", secureProxy(proxy));
 		if (spec != null && spec.getParameters() != null) {
 			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 			AllowedParametersForUser allowedParametersForUser = parameterService.calculateAllowedParametersForUser(auth, spec, previousParameters);
@@ -157,13 +169,15 @@ public class AppController extends BaseController {
 		return new ModelAndView("app", map);
 	}
 
+	// TODO add example with timezone
 	@Operation(summary = "Start an app.", tags = "ShinyProxy",
 			requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
 					content = @Content(
 							mediaType = "application/json",
-							schema = @Schema(implementation = ChangeProxyStatusDto.class),
+							schema = @Schema(implementation = AppBody.class),
 							examples = {
-									@ExampleObject(name = "With parameters", value = "{\"parameters\":{\"resources\":\"2 CPU cores - 8G RAM\",\"other_parameter\":\"example\"}}")
+									@ExampleObject(name = "With parameters", value = "{\"parameters\":{\"resources\":\"2 CPU cores - 8G RAM\",\"other_parameter\":\"example\"}}"),
+									@ExampleObject(name = "With timezone", value = "{\"timezone\":\"Europe/Brussels\"}")
 							}
 					)
 			)
@@ -239,6 +253,9 @@ public class AppController extends BaseController {
 		String id = UUID.randomUUID().toString();
 		runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(id)));
 		runtimeValues.add(new RuntimeValue(AppInstanceKey.inst, appInstanceName));
+		if (appBody != null && appBody.getTimezone() != null) {
+			runtimeValues.add(new RuntimeValue(UserTimeZoneKey.inst, appBody.getTimezone()));
+		}
 
 		try {
 			return ApiResponse.success(asyncProxyService.startProxy(spec, runtimeValues, id, (appBody != null) ? appBody.getParameters() : null));
@@ -293,7 +310,7 @@ public class AppController extends BaseController {
 	/**
 	 * Special handler for HTML requests that inject the ShinyProxy iframe javascript.
 	 */
-	@RequestMapping(value={"/app_proxy/{proxyId}/**"}, produces= "text/html")
+	@RequestMapping(value={"/app_proxy/{proxyId}/**"}, produces= "text/html", method = GET)
 	public void appProxyHtml(@PathVariable String proxyId, HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String requestUrl = request.getRequestURI().substring(getBasePublicPath().length());
 
@@ -302,6 +319,20 @@ public class AppController extends BaseController {
 			ShinyProxyApiResponse.appStoppedOrNonExistent(response);
 			return;
 		}
+
+		String secFetchMode = request.getHeader("Sec-Fetch-Mode");
+		if (secFetchMode != null && !secFetchMode.equals("navigate")) {
+			// do not inject script since this isn't a navigate request (it's e.g. an ajax/fetch request)
+			// note: the header is relatively new and therefore the script is injected if the header is not present
+			// see: #30809
+			try {
+				mappingManager.dispatchAsync(proxy.getId(), requestUrl, request, response);
+				return;
+			} catch (Exception e) {
+				throw new RuntimeException("Error routing proxy request", e);
+			}
+		}
+
 		try {
 			mappingManager.dispatchAsync(proxyId, requestUrl, request, response, (exchange) -> {
 				exchange.getRequestHeaders().remove("Accept-Encoding"); // ensure no encoding is used
@@ -321,7 +352,7 @@ public class AppController extends BaseController {
 		String res = UriComponentsBuilder
 				.fromPath(appRequestInfo.getSubPath())
 				.query(queryString)
-				.build(true)
+				.build(false) // #30932: queryString is not yet encoded
 				.toUriString();
 
 		if (res.startsWith("/")) {
@@ -338,33 +369,53 @@ public class AppController extends BaseController {
 		return ContextPathHelper.withEndingSlash() + "app_proxy/";
 	}
 
+	/**
+	 * Checks if a redirect is required before we can handle the request.
+	 * <p>
+	 * ShinyProxy supports proxying to multiple targets. When proxying to a target (without a sub-path for that specific target), the URL must end with a slash.
+	 * However, when the sub-path does not point to a specific target, it's not required that the URL ends with a slash.
+	 * </p>
+	 * <p>
+	 * Assume an app called `myapp` has a additional-port-mapping named `abc`:
+	 *  - /app/myapp -> no redirect required (getPublicPath() always add a slash)
+	 *  - /app/myapp/test123 -> no redirect required
+	 *  - /app/myapp/abc -> redirect to /app/myapp/abc/
+	 *  - /app/myapp/abc/ -> no redirect required
+	 *  - /app/myapp/abc/test -> no redirect required
+	 * </p>
+	 * @param request the current request
+	 * @param appRequestInfo the appRequstInfo for this request
+	 * @param proxy the current proxy
+	 * @param spec the spec of the current app
+	 * @return a RedirectView if a redirect is needed
+	 */
 	private Optional<RedirectView> createRedirectIfRequired(HttpServletRequest request, AppRequestInfo appRequestInfo, Proxy proxy, ProxySpec spec) {
-		// if sub-path is empty -> no ending slash -> no ending slash and redirect required
+		// if sub-path is empty or it's a slash -> no redirect required
 		if (appRequestInfo.getSubPath() == null || appRequestInfo.getSubPath().equals("/")) {
 			return Optional.empty();
 		}
 
-		if (proxy == null) {
-			// sub-path is non-empty, but proxy does not yet exist -> redirect to root path
-			String uri = ServletUriComponentsBuilder.fromRequest(request)
-					.replacePath(appRequestInfo.getAppPath())
-					.query(null)
-					.build()
-					.toUriString();
-			return Optional.of(new RedirectView(uri));
-		}
+		// sub-path always starts with a slash -> get part without the slash
+		// this contains the mapping and any additional paths
+		String subPath = appRequestInfo.getSubPath().substring(1);
 
-		// if sub-path is just the mapping -> no ending slash and redirect required
-		String mapping = appRequestInfo.getSubPath().substring(1);
-		if (mapping.contains("/")) {
+		// if the subPath contains a slash -> no redirect required
+		// e.g. /app/myapp/mapping/
+		// e.g. /app/myapp/mapping/some_path
+		//                 ^^^^^^^^^^^^^^^^^^ -> this is the subpath (without initial slash)
+		if (subPath.contains("/")) {
 			return Optional.empty();
 		}
 
-		boolean mappingWithoutSlash = spec.getContainerSpecs().get(0)
+		// the provided subpath does not contain a slash (i.e. it's a single "directory" name)
+		// -> we have to check whether the provided subpath is a configured mapping (and thus point to a specific port on the app)
+		// or whether it's just a subpath
+		boolean isMappingWithoutSlash = spec.getContainerSpecs().get(0)
 				.getPortMapping()
 				.stream()
-				.anyMatch(it -> it.getName().equals(mapping));
-		if (mappingWithoutSlash) {
+				.anyMatch(it -> it.getName().equals(subPath));
+		if (isMappingWithoutSlash) {
+			// the provided subpath is a configured mapping -> redirect so it ends with a slash
 			String uri = ServletUriComponentsBuilder.fromRequest(request)
 					.path("/")
 					.build()
@@ -388,16 +439,35 @@ public class AppController extends BaseController {
 		return templateEngine.process(template, context);
 	}
 
-    private static class AppBody {
-        private Map<String, String> parameters;
+	/**
+	 * Converts a proxy into an Object using {@link Views.UserApi} view, in order to hide security sensitive values.
+	 * @return the secured proxy
+	 */
+	private Object secureProxy(Proxy proxy) {
+		return objectMapper.convertValue(proxy, Object.class);
+	}
 
-        public Map<String, String> getParameters() {
-            return parameters;
-        }
+	private static class AppBody {
+		private Map<String, String> parameters;
+		private String timezone;
 
-        public void setParameters(Map<String, String> parameters) {
-            this.parameters = parameters;
-        }
-    }
+		@Schema(description = "Map of parameters for the app.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+		public Map<String, String> getParameters() {
+			return parameters;
+		}
+
+		public void setParameters(Map<String, String> parameters) {
+			this.parameters = parameters;
+		}
+
+		@Schema(description = "The timezone of the user in TZ format.", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+		public String getTimezone() {
+			return timezone;
+		}
+
+		public void setTimezone(String timezone) {
+			this.timezone = timezone;
+		}
+	}
 
 }

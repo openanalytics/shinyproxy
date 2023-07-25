@@ -50,6 +50,7 @@ Shiny.app = {
         appInstanceName: null,
         maxReloadAttempts: 10,
         heartBeatRate: null,
+        openIdRefreshRate: 30000,
         maxInstances: null,
         parameters: {
             allowedCombinations: null,
@@ -143,6 +144,8 @@ Shiny.app = {
             Shiny.app.runtimeState.baseFrameUrl = baseFrameUrl;
         } else if (Shiny.app.runtimeState.proxy.status === "Stopping") {
             Shiny.ui.showStoppingPage();
+            // re-send stop request in case previous stop is stuck
+            await Shiny.api.changeProxyStatus(Shiny.app.runtimeState.proxy.id, 'Stopping')
             Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id);
             if (Shiny.app.runtimeState.proxy !== null && !Shiny.app.runtimeState.navigatingAway) {
                 Shiny.ui.showStoppedPage();
@@ -185,10 +188,11 @@ Shiny.app = {
         if (parameters === null) {
             parameters = {}
         }
+        const body = {parameters, timezone: Shiny.ui.getTimeZone()};
         let url = Shiny.api.buildURL('app_i/' + Shiny.app.staticState.appName + '/' + Shiny.app.staticState.appInstanceName);
         let response = await fetch(url, {
             method: 'POST',
-            body:  JSON.stringify({parameters}),
+            body:  JSON.stringify(body),
             headers: {
                 'Content-Type': 'application/json'
             },

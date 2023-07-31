@@ -30,7 +30,7 @@ import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
-import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.PublicPathKey;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
@@ -75,10 +75,9 @@ public class AppDirectController extends BaseController {
         if (proxy == null) {
             return;
         }
-        String mapping = getProxyEndpoint(proxy);
 
         try {
-            mappingManager.dispatchAsync(proxy.getId(), mapping + appRequestInfo.getSubPath(), request, response);
+            mappingManager.dispatchAsync(proxy.getId(), appRequestInfo.getSubPath(), request, response);
         } catch (Exception e) {
             throw new RuntimeException("Error routing proxy request", e);
         }
@@ -137,7 +136,7 @@ public class AppDirectController extends BaseController {
     }
 
     private String getPublicPath(AppRequestInfo appRequestInfo) {
-        return ContextPathHelper.withEndingSlash() + "app_direct_i/" + appRequestInfo.getAppName() + "/" + appRequestInfo.getAppInstance();
+        return contextPathHelper.withEndingSlash() + "app_direct_i/" + appRequestInfo.getAppName() + "/" + appRequestInfo.getAppInstance();
     }
 
 }

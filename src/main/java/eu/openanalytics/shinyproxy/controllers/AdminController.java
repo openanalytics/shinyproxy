@@ -145,17 +145,17 @@ public class AdminController extends BaseController {
                 } else {
                     imageTag = "N/A";
                 }
-                if (container.getTargets().containsKey(proxy.getId())) {
-                    endpoint = container.getTargets().get(proxy.getId()).toString();
-                } else {
-                    endpoint = "N/A";
-                }
                 backendContainerName = container.getRuntimeObjectOrDefault(BackendContainerNameKey.inst, "N/A");
             } else {
                 imageName = "N/A";
                 imageTag = "N/A";
-                endpoint = "N/A";
                 backendContainerName = "N/A";
+            }
+
+            if (proxy.getTargets().containsKey(proxy.getId())) {
+                endpoint = proxy.getTargets().get("").toString();
+            } else {
+                endpoint = "N/A";
             }
 
             Long heartbeatTimeout = proxy.getRuntimeObjectOrNull(HeartbeatTimeoutKey.inst);

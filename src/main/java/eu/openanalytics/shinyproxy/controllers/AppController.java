@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.openanalytics.containerproxy.api.dto.ApiResponse;
 import eu.openanalytics.containerproxy.api.dto.SwaggerDto;
 import eu.openanalytics.containerproxy.auth.impl.OpenIDAuthenticationBackend;
+import eu.openanalytics.containerproxy.backend.strategy.impl.DefaultTargetMappingStrategy;
 import eu.openanalytics.containerproxy.model.Views;
 import eu.openanalytics.containerproxy.model.runtime.AllowedParametersForUser;
 import eu.openanalytics.containerproxy.model.runtime.ParameterValues;
@@ -36,13 +37,12 @@ import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.AsyncProxyService;
 import eu.openanalytics.containerproxy.service.InvalidParametersException;
 import eu.openanalytics.containerproxy.service.ParametersService;
-import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.ShinyProxyIframeScriptInjector;
 import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
-import eu.openanalytics.shinyproxy.runtimevalues.PublicPathKey;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.PublicPathKey;
 import eu.openanalytics.shinyproxy.runtimevalues.UserTimeZoneKey;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -72,6 +72,7 @@ import org.thymeleaf.spring6.dialect.SpringStandardDialect;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.StringTemplateResolver;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -94,9 +95,16 @@ public class AppController extends BaseController {
     @Inject
     private ParametersService parameterService;
 
+    private int pathPrefixLength = 0;
+
     public AppController() {
         objectMapper.setConfig(objectMapper.getSerializationConfig()
                 .withView(Views.UserApi.class));
+    }
+
+    @PostConstruct
+    public void init() {
+        pathPrefixLength = getBasePublicPath().length() + DefaultTargetMappingStrategy.TARGET_ID_LENGTH;
     }
 
     @RequestMapping(value = {"/app_i/*/**", "/app/**"}, method = GET)
@@ -289,17 +297,22 @@ public class AppController extends BaseController {
                             )
                     }),
     })
-    @RequestMapping(value = {"/app_proxy/{proxyId}/**"})
-    public void appProxy(@PathVariable String proxyId, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String requestUrl = request.getRequestURI().substring(getBasePublicPath().length());
+    @RequestMapping(value = {"/app_proxy/{targetId}/**"})
+    public void appProxy(@PathVariable String targetId, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String subPath = extractSubPath(targetId, request);
+        if (subPath == null) {
+            ShinyProxyApiResponse.appStoppedOrNonExistent(response);
+            return;
+        }
 
-        Proxy proxy = proxyService.getProxy(proxyId);
+        Proxy proxy = proxyService.getUserProxyByTargetId(targetId);
         if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
             ShinyProxyApiResponse.appStoppedOrNonExistent(response);
             return;
         }
+
         try {
-            mappingManager.dispatchAsync(proxy.getId(), requestUrl, request, response);
+            mappingManager.dispatchAsync(proxy.getId(), subPath, request, response);
         } catch (Exception e) {
             throw new RuntimeException("Error routing proxy request", e);
         }
@@ -308,11 +321,15 @@ public class AppController extends BaseController {
     /**
      * Special handler for HTML requests that inject the ShinyProxy iframe javascript.
      */
-    @RequestMapping(value = {"/app_proxy/{proxyId}/**"}, produces = "text/html", method = GET)
-    public void appProxyHtml(@PathVariable String proxyId, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String requestUrl = request.getRequestURI().substring(getBasePublicPath().length());
+    @RequestMapping(value = {"/app_proxy/{targetId}/**"}, produces = "text/html", method = GET)
+    public void appProxyHtml(@PathVariable String targetId, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String subPath = extractSubPath(targetId, request);
+        if (subPath == null) {
+            ShinyProxyApiResponse.appStoppedOrNonExistent(response);
+            return;
+        }
 
-        Proxy proxy = proxyService.getProxy(proxyId);
+        Proxy proxy = proxyService.getUserProxyByTargetId(targetId);
         if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
             ShinyProxyApiResponse.appStoppedOrNonExistent(response);
             return;
@@ -324,7 +341,7 @@ public class AppController extends BaseController {
             // note: the header is relatively new and therefore the script is injected if the header is not present
             // see: #30809
             try {
-                mappingManager.dispatchAsync(proxy.getId(), requestUrl, request, response);
+                mappingManager.dispatchAsync(proxy.getId(), subPath, request, response);
                 return;
             } catch (Exception e) {
                 throw new RuntimeException("Error routing proxy request", e);
@@ -332,9 +349,9 @@ public class AppController extends BaseController {
         }
 
         try {
-            mappingManager.dispatchAsync(proxyId, requestUrl, request, response, (exchange) -> {
+            mappingManager.dispatchAsync(proxy.getId(), subPath, request, response, (exchange) -> {
                 exchange.getRequestHeaders().remove("Accept-Encoding"); // ensure no encoding is used
-                exchange.addResponseWrapper((factory, exchange1) -> new ShinyProxyIframeScriptInjector(factory.create(), exchange1));
+                exchange.addResponseWrapper((factory, exchange1) -> new ShinyProxyIframeScriptInjector(contextPathHelper.withEndingSlash(),factory.create(), exchange1));
             });
         } catch (Exception e) {
             throw new RuntimeException("Error routing proxy request", e);
@@ -359,12 +376,20 @@ public class AppController extends BaseController {
         return res;
     }
 
-    private String getPublicPath(String proxyId) {
-        return getBasePublicPath() + proxyId + "/";
+    private String extractSubPath(String targetId, HttpServletRequest request) {
+        if (targetId.length() != DefaultTargetMappingStrategy.TARGET_ID_LENGTH) {
+            return null;
+        }
+
+        return request.getRequestURI().substring(pathPrefixLength);
     }
 
     private String getBasePublicPath() {
-        return ContextPathHelper.withEndingSlash() + "app_proxy/";
+        return contextPathHelper.withEndingSlash() + "app_proxy/";
+    }
+
+    private String getPublicPath(String targetId) {
+        return getBasePublicPath() + targetId + "/";
     }
 
     /**

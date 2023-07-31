@@ -72,6 +72,8 @@ public abstract class BaseController {
     IdentifierService identifierService;
     @Inject
     private IContainerBackend backend;
+    @Inject
+    protected ContextPathHelper contextPathHelper;
 
     protected long getHeartbeatRate() {
         return heartbeatService.getHeartbeatRate();
@@ -87,11 +89,6 @@ public abstract class BaseController {
                                 && p.getRuntimeValue(AppInstanceKey.inst).equals(appInstance)
                                 && userService.isOwner(p),
                 false);
-    }
-
-    protected String getProxyEndpoint(Proxy proxy) {
-        if (proxy == null || proxy.getContainers().get(0).getTargets().isEmpty()) return null;
-        return proxy.getContainers().get(0).getTargets().keySet().iterator().next();
     }
 
     protected void prepareMap(ModelMap map, HttpServletRequest request) {
@@ -119,7 +116,7 @@ public abstract class BaseController {
         map.put("logoutUrl", authenticationBackend.getLogoutURL());
         map.put("page", ""); // defaults, used in navbar
         map.put("maxInstances", 0); // defaults, used in navbar
-        map.put("contextPath", ContextPathHelper.withEndingSlash());
+        map.put("contextPath", contextPathHelper.withEndingSlash());
         map.put("resourcePrefix", "/" + identifierService.instanceId);
         map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
         map.put("pauseSupported", backend.supportsPause());

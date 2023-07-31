@@ -32,7 +32,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.inject.Inject;
@@ -56,6 +58,9 @@ public class UISecurityConfig implements ICustomSecurityConfig {
     @Inject
     private ProxyAccessControlService proxyAccessControlService;
 
+    @Inject
+    private HandlerMappingIntrospector handlerMappingIntrospector;
+
     @Override
     public void apply(HttpSecurity http) throws Exception {
         if (auth.hasAuthorization()) {
@@ -63,10 +68,10 @@ public class UISecurityConfig implements ICustomSecurityConfig {
             // Limit access to the app pages according to spec permissions
             http.authorizeHttpRequests(authz -> authz
                     .requestMatchers(
-                            "/app/{specId}/**",
-                            "/app_i/{specId}/**",
-                            "/app_direct/{specId}/**",
-                            "/app_direct_i/{specId}/**")
+                             new MvcRequestMatcher(handlerMappingIntrospector, "/app/{specId}/**"),
+                             new MvcRequestMatcher(handlerMappingIntrospector, "/app_i/{specId}/**"),
+                             new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct/{specId}/**"),
+                             new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct_i/{specId}/**"))
                     .access((authentication, context) -> new AuthorizationDecision(proxyAccessControlService.canAccessOrHasExistingProxy(authentication.get(), context)))
             );
             http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
@@ -88,7 +93,9 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 
         // Limit access to the admin pages
         http.authorizeHttpRequests(authz -> authz
-                .requestMatchers("/admin", "/admin/data")
+                .requestMatchers(
+                        new MvcRequestMatcher(handlerMappingIntrospector,"/admin"),
+                        new MvcRequestMatcher(handlerMappingIntrospector,"/admin/data"))
                 .access((authentication, context) -> new AuthorizationDecision(userService.isAdmin(authentication.get())))
         );
 

@@ -51,6 +51,7 @@ import java.nio.charset.StandardCharsets;
 public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<StreamSinkConduit> {
 
     private final ByteArrayOutputStream outputStream;
+    private final String contextPath;
     private final HttpServerExchange exchange;
 
     /**
@@ -59,8 +60,9 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
      * @param next     the delegate conduit to set
      * @param exchange the exchange
      */
-    public ShinyProxyIframeScriptInjector(StreamSinkConduit next, HttpServerExchange exchange) {
+    public ShinyProxyIframeScriptInjector(String contextPath, StreamSinkConduit next, HttpServerExchange exchange) {
         super(next);
+        this.contextPath = contextPath;
         this.exchange = exchange;
         long length = exchange.getResponseContentLength();
         if (length <= 0L) {
@@ -120,7 +122,7 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
                 && exchange.getResponseHeaders().get("Content-Type").stream().anyMatch(headerValue -> headerValue.contains("text/html"))) {
             // 2. inject script
             String r = outputStream.toString(StandardCharsets.UTF_8);
-            r += "<script src='" + ContextPathHelper.withEndingSlash() + "js/shiny.iframe.js'></script>";
+            r += "<script src='" + contextPath + "js/shiny.iframe.js'></script>";
             out = ByteBuffer.wrap(r.getBytes(StandardCharsets.UTF_8));
         } else {
             // 2. read bytes

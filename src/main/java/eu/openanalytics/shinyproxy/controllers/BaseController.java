@@ -84,11 +84,7 @@ public abstract class BaseController {
     }
 
     protected Proxy findUserProxy(String appname, String appInstance) {
-        return proxyService.findProxy(p ->
-                        p.getSpecId().equals(appname)
-                                && p.getRuntimeValue(AppInstanceKey.inst).equals(appInstance)
-                                && userService.isOwner(p),
-                false);
+        return proxyService.findUserProxy(p -> p.getSpecId().equals(appname) && p.getRuntimeValue(AppInstanceKey.inst).equals(appInstance));
     }
 
     protected void prepareMap(ModelMap map, HttpServletRequest request) {
@@ -169,10 +165,7 @@ public abstract class BaseController {
         // - again this new proxy is allowed, because there is still only one proxy in the list of active proxies
         // -> the user has three proxies running.
         // Because of chance that this happens is small and that the consequences are low, we accept this risk.
-        int currentAmountOfInstances = proxyService.getProxies(
-                p -> p.getSpecId().equals(spec.getId())
-                        && userService.isOwner(p),
-                false).size();
+        long currentAmountOfInstances = proxyService.findUserProxies(p -> p.getSpecId().equals(spec.getId())).count();
 
         return currentAmountOfInstances < maxInstances;
     }

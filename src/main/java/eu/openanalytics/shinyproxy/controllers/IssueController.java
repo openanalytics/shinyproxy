@@ -59,13 +59,8 @@ public class IssueController extends BaseController {
         }
         form.setCustomMessage(request.getParameter("customMessage"));
 
-        Proxy activeProxy = null;
-        for (Proxy proxy : proxyService.getProxies(null, false)) {
-            if (proxy.getUserId().equals(form.getUserName()) && proxy.getSpecId().equals(form.getAppName())) {
-                activeProxy = proxy;
-                break;
-            }
-        }
+        // TODO this is not correct when using multiple instances, send proxyId in requets
+        Proxy activeProxy = proxyService.findUserProxy(p -> p.getSpecId().equals(form.getAppName()));
         sendSupportMail(form, activeProxy);
 
         return ResponseEntity.ok(new HashMap<>() {{

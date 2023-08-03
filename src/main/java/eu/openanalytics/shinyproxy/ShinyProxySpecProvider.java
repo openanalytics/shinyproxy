@@ -24,11 +24,13 @@ import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.AccessControl;
 import eu.openanalytics.containerproxy.model.spec.ContainerSpec;
 import eu.openanalytics.containerproxy.model.spec.DockerSwarmSecret;
+import eu.openanalytics.containerproxy.model.spec.ISpecExtension;
 import eu.openanalytics.containerproxy.model.spec.Parameters;
 import eu.openanalytics.containerproxy.model.spec.PortMapping;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
+import eu.openanalytics.containerproxy.spec.ISpecExtensionProvider;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionContext;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionResolver;
 import eu.openanalytics.containerproxy.spec.expression.SpelField;
@@ -81,6 +83,9 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
     @Lazy
     private UserService userService;
 
+    @Inject
+    private List<ISpecExtensionProvider<?>> specExtensionProviders;
+
     @Autowired
     public void setEnvironment(Environment env) {
         ShinyProxySpecProvider.environment = env;
@@ -94,6 +99,11 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
         defaultMaxInstances = environment.getProperty(PROP_DEFAULT_MAX_INSTANCES, String.class, "1");
         defaultAlwaysSwitchInstance = environment.getProperty(PROP_DEFAULT_ALWAYS_SWITCH_INSTANCE, Boolean.class, false);
         specs.forEach(ProxySpec::setContainerIndex);
+        for (ISpecExtensionProvider<?> specExtensionProvider: specExtensionProviders) {
+            for (ISpecExtension specExtension : specExtensionProvider.getSpecs()) {
+                getSpec(specExtension.getId()).addSpecExtension(specExtension);
+            }
+        }
     }
 
     public List<ProxySpec> getSpecs() {

@@ -33,6 +33,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * This component tests the responsiveness of Shiny containers by making an HTTP GET request to the container's published port (default 3838).
@@ -49,6 +50,10 @@ public class ShinyProxyTestStrategy implements IProxyTestStrategy {
 
     @Override
     public boolean testProxy(Proxy proxy) {
+        if (!Objects.equals(proxy.getTargetId(), proxy.getId())) {
+            // Proxy points to a different target, should not test it
+            return true;
+        }
 
         int totalWaitMs = Integer.parseInt(environment.getProperty("proxy.container-wait-time", "20000"));
         int timeoutMs = Integer.parseInt(environment.getProperty("proxy.container-wait-timeout", "5000"));

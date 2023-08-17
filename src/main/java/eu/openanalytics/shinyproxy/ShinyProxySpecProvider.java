@@ -20,6 +20,9 @@
  */
 package eu.openanalytics.shinyproxy;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Scheduler;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.AccessControl;
 import eu.openanalytics.containerproxy.model.spec.ContainerSpec;
@@ -28,6 +31,7 @@ import eu.openanalytics.containerproxy.model.spec.ISpecExtension;
 import eu.openanalytics.containerproxy.model.spec.Parameters;
 import eu.openanalytics.containerproxy.model.spec.PortMapping;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.service.ProxyAccessControlService;
 import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
 import eu.openanalytics.containerproxy.spec.ISpecExtensionProvider;
@@ -45,6 +49,8 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -53,6 +59,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -77,6 +86,8 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
     private Boolean defaultAlwaysSwitchInstance;
 
+    private final Cache<String, Map<String, Integer>> maxInstancesCache;
+
     @Inject
     private SpecExpressionResolver expressionResolver;
 
@@ -90,6 +101,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
     @Autowired
     public void setEnvironment(Environment env) {
         ShinyProxySpecProvider.environment = env;
+    }
+
+    public ShinyProxySpecProvider() {
+        // cache maxInstances results for (at least) 60 minutes, since this never changes during the lifetime of a session
+        maxInstancesCache = Caffeine.newBuilder()
+            .scheduler(Scheduler.systemScheduler())
+            .expireAfterAccess(60, TimeUnit.MINUTES)
+            .build();
     }
 
     @PostConstruct
@@ -151,40 +170,33 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
     }
 
     public Integer getMaxInstancesForSpec(ProxySpec proxySpec) {
-        Authentication user = userService.getCurrentAuth();
-        SpecExpressionContext context = SpecExpressionContext.create(
-                user,
-                user.getPrincipal(),
-                user.getCredentials());
-
-        Integer maxInstances = proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getMaxInstances().resolve(expressionResolver, context).getValueOrNull();
-        if (maxInstances != null) {
-            return maxInstances;
-        }
-        return expressionResolver.evaluateToInteger(defaultMaxInstances, context);
+        return getMaxInstances().get(proxySpec.getId());
     }
 
     public Map<String, Integer> getMaxInstances() {
-        Authentication user = userService.getCurrentAuth();
-        SpecExpressionContext context = SpecExpressionContext.create(
+        String sessionId = Objects.requireNonNull(RequestContextHolder.getRequestAttributes()).getSessionId();
+        return maxInstancesCache.get(sessionId, s -> {
+            Authentication user = userService.getCurrentAuth();
+            SpecExpressionContext context = SpecExpressionContext.create(
                 user,
                 user.getPrincipal(),
                 user.getCredentials());
 
-        Map<String, Integer> result = new HashMap<>();
+            Map<String, Integer> result = new HashMap<>();
 
-        Integer resolvedDefault = expressionResolver.evaluateToInteger(defaultMaxInstances, context);
+            Integer resolvedDefault = expressionResolver.evaluateToInteger(defaultMaxInstances, context);
 
-        for (ProxySpec proxySpec : getSpecs()) {
-            Integer maxInstances = proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getMaxInstances().resolve(expressionResolver, context).getValueOrNull();
-            if (maxInstances != null) {
-                result.put(proxySpec.getId(), maxInstances);
-            } else {
-                result.put(proxySpec.getId(), resolvedDefault);
+            for (ProxySpec proxySpec : getSpecs()) {
+                Integer maxInstances = proxySpec.getSpecExtension(ShinyProxySpecExtension.class).getMaxInstances().resolve(expressionResolver, context).getValueOrNull();
+                if (maxInstances != null) {
+                    result.put(proxySpec.getId(), maxInstances);
+                } else {
+                    result.put(proxySpec.getId(), resolvedDefault);
+                }
             }
-        }
 
-        return result;
+            return result;
+        });
     }
 
     public Boolean getShinyForceFullReload(ProxySpec proxySpec) {

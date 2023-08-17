@@ -59,10 +59,10 @@ public class IssueController extends BaseController {
         }
         form.setCustomMessage(request.getParameter("customMessage"));
 
-        // TODO this is not correct when using multiple instances, send proxyId in requets
-        Proxy activeProxy = proxyService.findUserProxy(p -> p.getSpecId().equals(form.getAppName()));
-        sendSupportMail(form, activeProxy);
-
+        // TODO this is not correct when using multiple instances, send proxyId in requests #31217
+//        Proxy activeProxy = proxyService.findUserProxy(p -> p.getSpecId().equals(form.getAppName()));
+//        sendSupportMail(form, activeProxy);
+//
         return ResponseEntity.ok(new HashMap<>() {{
             put("status", "success");
         }});

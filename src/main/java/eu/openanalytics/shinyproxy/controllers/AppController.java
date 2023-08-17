@@ -305,8 +305,8 @@ public class AppController extends BaseController {
             return;
         }
 
-        Proxy proxy = proxyService.getUserProxyByTargetId(targetId);
-        if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
+        Proxy proxy = userAndTargetIdProxyIndex.getProxy(userService.getCurrentUserId(), targetId);
+        if (proxy == null || proxy.getStatus().isUnavailable()  || !userService.isOwner(proxy)) {
             ShinyProxyApiResponse.appStoppedOrNonExistent(response);
             return;
         }
@@ -329,8 +329,8 @@ public class AppController extends BaseController {
             return;
         }
 
-        Proxy proxy = proxyService.getUserProxyByTargetId(targetId);
-        if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
+        Proxy proxy = userAndTargetIdProxyIndex.getProxy(userService.getCurrentUserId(), targetId);
+        if (proxy == null || proxy.getStatus().isUnavailable()  || !userService.isOwner(proxy)) {
             ShinyProxyApiResponse.appStoppedOrNonExistent(response);
             return;
         }

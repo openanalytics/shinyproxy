@@ -26,12 +26,13 @@ import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.IdentifierService;
 import eu.openanalytics.containerproxy.service.ProxyService;
+import eu.openanalytics.containerproxy.service.UserAndTargetIdProxyIndex;
 import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
-import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
+import eu.openanalytics.shinyproxy.UserAndAppNameAndInstanceNameProxyIndex;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,7 +51,6 @@ import java.net.URLConnection;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public abstract class BaseController {
 
@@ -74,6 +74,10 @@ public abstract class BaseController {
     private IContainerBackend backend;
     @Inject
     protected ContextPathHelper contextPathHelper;
+    @Inject
+    protected UserAndAppNameAndInstanceNameProxyIndex userAndAppNameAndInstanceNameProxyIndex;
+    @Inject
+    protected UserAndTargetIdProxyIndex userAndTargetIdProxyIndex;
 
     protected long getHeartbeatRate() {
         return heartbeatService.getHeartbeatRate();
@@ -165,7 +169,7 @@ public abstract class BaseController {
         // - again this new proxy is allowed, because there is still only one proxy in the list of active proxies
         // -> the user has three proxies running.
         // Because of chance that this happens is small and that the consequences are low, we accept this risk.
-        long currentAmountOfInstances = proxyService.findUserProxies(p -> p.getSpecId().equals(spec.getId())).count();
+        long currentAmountOfInstances = proxyService.getUserProxiesBySpecId(spec.getId()).count();
 
         return currentAmountOfInstances < maxInstances;
     }

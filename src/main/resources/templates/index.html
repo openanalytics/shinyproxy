@@ -42,7 +42,7 @@
     </head>
     <body>
         <!-- navigation bar -->
-        <div th:replace="fragments/navbar :: navbar"></div>
+        <div th:replace="~{fragments/navbar :: navbar}"></div>
 
         <!-- This is a fragment used to display a single app. -->
         <!-- Modify this in order to change how a single app looks. -->
@@ -76,7 +76,7 @@
                     <th:block th:each="group: ${templateGroups}">
                         <h2 th:text="${group.properties.get('display-name')}"></h2>
                         <ul class="list-group">
-                            <th:block th:each="app: ${groupedApps.get(group.id)}" th:include="index :: app(${app})"/>
+                            <th:block th:each="app: ${groupedApps.get(group.id)}" th:insert="~{index :: app(${app})}"/>
                         </ul>
                         <br>
                     </th:block>
@@ -84,7 +84,7 @@
                         <!-- Only show the "Other" header if there are other groups with apps -->
                         <h2 th:if="${groupedApps.size() > 0}">Other</h2>
                         <ul class="list-group">
-                            <th:block th:each="app: ${ungroupedApps}" th:include="index :: app(${app})"/>
+                            <th:block th:each="app: ${ungroupedApps}" th:insert="~{index :: app(${app})}"/>
                         </ul>
                     </th:block>
                 </div>
@@ -108,7 +108,7 @@
             </div>
         </div>
 
-        <div th:replace="fragments/modal :: modal"></div>
+        <div th:replace="~{fragments/modal :: modal}"></div>
 
         <script th:inline="javascript" type="text/javascript">
             $(window).on('load', function () {

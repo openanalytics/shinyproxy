@@ -47,7 +47,7 @@
         <script th:src="@{${resourcePrefix} + '/handlebars/precompiled.js'}"></script>
     </head>
     <body>
-        <div th:replace="fragments/navbar :: navbar"></div>
+        <div th:replace="~{fragments/navbar :: navbar}"></div>
 
         <div class="container-fluid">
             <div id="admin">
@@ -77,7 +77,7 @@
             </div>
         </div>
 
-        <div th:replace="fragments/modal :: modal"></div>
+        <div th:replace="~{fragments/modal :: modal}"></div>
 
         <script th:src="@{/webjars/datatables/1.12.1/js/jquery.dataTables.min.js}"></script>
         <script th:src="@{/webjars/datatables/1.12.1/js/dataTables.bootstrap.min.js}"></script>

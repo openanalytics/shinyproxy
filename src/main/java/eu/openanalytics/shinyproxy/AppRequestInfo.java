@@ -100,15 +100,7 @@ public class AppRequestInfo {
         }
     }
 
-
     public String getAppInstance() {
-        return appInstance;
-    }
-
-    public String getAppInstanceDisplayName() {
-        if (appInstance.equals("_")) {
-            return "Default";
-        }
         return appInstance;
     }
 

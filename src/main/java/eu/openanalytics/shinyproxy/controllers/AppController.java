@@ -32,17 +32,16 @@ import eu.openanalytics.containerproxy.model.runtime.ParameterValues;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.DisplayNameKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.ParameterValuesKey;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.PublicPathKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.AsyncProxyService;
 import eu.openanalytics.containerproxy.service.InvalidParametersException;
 import eu.openanalytics.containerproxy.service.ParametersService;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
-import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.ShinyProxyIframeScriptInjector;
 import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
-import eu.openanalytics.containerproxy.model.runtime.runtimevalues.PublicPathKey;
 import eu.openanalytics.shinyproxy.runtimevalues.UserTimeZoneKey;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -50,6 +49,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -74,8 +74,6 @@ import org.thymeleaf.templateresolver.StringTemplateResolver;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-
-import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -107,18 +105,21 @@ public class AppController extends BaseController {
         pathPrefixLength = getBasePublicPath().length() + DefaultTargetMappingStrategy.TARGET_ID_LENGTH;
     }
 
-    @RequestMapping(value = {"/app_i/*/**", "/app/**"}, method = GET)
-    public ModelAndView app(ModelMap map, HttpServletRequest request, HttpServletResponse response) {
-        AppRequestInfo appRequestInfo = AppRequestInfo.fromRequestOrNull(request);
-        if (appRequestInfo == null) {
-            request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, HttpStatus.FORBIDDEN.value());
-            return new ModelAndView("forward:/error");
-        }
+    @RequestMapping(value = "/app/{appName}/{*subPath}", method = GET)
+    public ModelAndView app(ModelMap map, HttpServletRequest request, @PathVariable String appName, @PathVariable String subPath) {
+        return app(map, request, appName, "_", "/app/" + appName, subPath);
+    }
 
-        Proxy proxy = findUserProxy(appRequestInfo);
+    @RequestMapping(value = "/app_i/{appName}/{appInstance}/{*subPath}", method = GET)
+    public ModelAndView app(ModelMap map, HttpServletRequest request, @PathVariable String appName, @PathVariable String appInstance, @PathVariable String subPath) {
+        return app(map, request, appName, appInstance, "/app_i/" + appName + "/" + appInstance, subPath);
+    }
 
-        ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
-        Optional<RedirectView> redirect = createRedirectIfRequired(request, appRequestInfo, proxy, spec);
+    private ModelAndView app(ModelMap map, HttpServletRequest request, String appName, String appInstance, String appPath, String subPath) {
+        Proxy proxy = findUserProxy(appName, appInstance);
+
+        ProxySpec spec = proxyService.getProxySpec(appName);
+        Optional<RedirectView> redirect = createRedirectIfRequired(request, subPath, spec);
         if (redirect.isPresent()) {
             return new ModelAndView(redirect.get());
         }
@@ -129,13 +130,14 @@ public class AppController extends BaseController {
         }
 
         prepareMap(map, request);
-        map.put("heartbeatRate", getHeartbeatRate());
+        map.put("heartbeatRate", 10_000); // TODO
+//        map.put("heartbeatRate", getHeartbeatRate());
         map.put("page", "app");
-        map.put("appName", appRequestInfo.getAppName());
-        map.put("appInstance", appRequestInfo.getAppInstance());
-        map.put("appInstanceDisplayName", appRequestInfo.getAppInstanceDisplayName());
-        map.put("appPath", appRequestInfo.getAppPath());
-        map.put("containerSubPath", buildContainerSubPath(request, appRequestInfo));
+        map.put("appName",  appName);
+        map.put("appInstance", appInstance);
+        map.put("appInstanceDisplayName", getAppInstanceDisplayName(appInstance));
+        map.put("appPath", appPath);
+        map.put("containerSubPath", buildContainerSubPath(request, subPath));
         map.put("refreshOpenidEnabled", authenticationBackend.getName().equals(OpenIDAuthenticationBackend.NAME));
         ParameterValues previousParameters = null;
         if (proxy == null || proxy.getRuntimeObjectOrNull(DisplayNameKey.inst) == null) {
@@ -171,8 +173,7 @@ public class AppController extends BaseController {
             map.put("parameterIds", null);
             map.put("parameterFragment", null);
         }
-
-        return new ModelAndView("app", map);
+       return new ModelAndView("app", map);
     }
 
     // TODO add example with timezone
@@ -358,14 +359,14 @@ public class AppController extends BaseController {
         }
     }
 
-    private String buildContainerSubPath(HttpServletRequest request, AppRequestInfo appRequestInfo) {
+    private String buildContainerSubPath(HttpServletRequest request, String subPath) {
         String queryString = ServletUriComponentsBuilder.fromRequest(request)
                 .replaceQueryParam("sp_hide_navbar")
                 .replaceQueryParam("sp_instance_override")
                 .build().getQuery();
 
         String res = UriComponentsBuilder
-                .fromPath(appRequestInfo.getSubPath())
+                .fromPath(subPath)
                 .query(queryString)
                 .build(false) // #30932: queryString is not yet encoded
                 .toUriString();
@@ -408,26 +409,24 @@ public class AppController extends BaseController {
      * </p>
      *
      * @param request        the current request
-     * @param appRequestInfo the appRequstInfo for this request
-     * @param proxy          the current proxy
      * @param spec           the spec of the current app
      * @return a RedirectView if a redirect is needed
      */
-    private Optional<RedirectView> createRedirectIfRequired(HttpServletRequest request, AppRequestInfo appRequestInfo, Proxy proxy, ProxySpec spec) {
+    private Optional<RedirectView> createRedirectIfRequired(HttpServletRequest request, String subPath, ProxySpec spec) {
         // if sub-path is empty or it's a slash -> no redirect required
-        if (appRequestInfo.getSubPath() == null || appRequestInfo.getSubPath().equals("/")) {
+        if (subPath.isEmpty() || subPath.equals("/")) {
             return Optional.empty();
         }
 
         // sub-path always starts with a slash -> get part without the slash
         // this contains the mapping and any additional paths
-        String subPath = appRequestInfo.getSubPath().substring(1);
+        String trimmedSubPath = subPath.substring(1);
 
-        // if the subPath contains a slash -> no redirect required
+        // if the trimmedSubPath contains a slash -> no redirect required
         // e.g. /app/myapp/mapping/
         // e.g. /app/myapp/mapping/some_path
         //                 ^^^^^^^^^^^^^^^^^^ -> this is the subpath (without initial slash)
-        if (subPath.contains("/")) {
+        if (trimmedSubPath.contains("/")) {
             return Optional.empty();
         }
 
@@ -437,7 +436,7 @@ public class AppController extends BaseController {
         boolean isMappingWithoutSlash = spec.getContainerSpecs().get(0)
                 .getPortMapping()
                 .stream()
-                .anyMatch(it -> it.getName().equals(subPath));
+                .anyMatch(it -> it.getName().equals(trimmedSubPath));
         if (isMappingWithoutSlash) {
             // the provided subpath is a configured mapping -> redirect so it ends with a slash
             String uri = ServletUriComponentsBuilder.fromRequest(request)
@@ -470,6 +469,13 @@ public class AppController extends BaseController {
      */
     private Object secureProxy(Proxy proxy) {
         return objectMapper.convertValue(proxy, Object.class);
+    }
+
+    private String getAppInstanceDisplayName(String appInstance) {
+        if (appInstance.equals("_")) {
+            return "Default";
+        }
+        return appInstance;
     }
 
     private static class AppBody {

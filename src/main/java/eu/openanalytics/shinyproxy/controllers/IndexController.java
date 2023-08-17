@@ -60,7 +60,7 @@ public class IndexController extends BaseController {
 
         prepareMap(map, request);
 
-        ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
+        List<ProxySpec> apps = proxyService.getUserSpecs();
         map.put("apps", apps);
 
         Map<ProxySpec, String> appLogos = new HashMap<>();

@@ -96,8 +96,7 @@ public class AppController extends BaseController {
     private int pathPrefixLength = 0;
 
     public AppController() {
-        objectMapper.setConfig(objectMapper.getSerializationConfig()
-                .withView(Views.UserApi.class));
+        objectMapper.setConfig(objectMapper.getSerializationConfig().withView(Views.UserApi.class));
     }
 
     @PostConstruct
@@ -118,7 +117,7 @@ public class AppController extends BaseController {
     private ModelAndView app(ModelMap map, HttpServletRequest request, String appName, String appInstance, String appPath, String subPath) {
         Proxy proxy = findUserProxy(appName, appInstance);
 
-        ProxySpec spec = proxyService.getProxySpec(appName);
+        ProxySpec spec = proxyService.getUserSpec(appName);
         Optional<RedirectView> redirect = createRedirectIfRequired(request, subPath, spec);
         if (redirect.isPresent()) {
             return new ModelAndView(redirect.get());
@@ -128,6 +127,9 @@ public class AppController extends BaseController {
             request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, HttpStatus.FORBIDDEN.value());
             return new ModelAndView("forward:/error");
         }
+
+        // if the proxy exists, the proxy object is non-null and the spec might be null (if the spec no longer exists or the user no longer has access to the spec)
+        // if the proxy does not exists, the proxy object is null and the spec is non-null
 
         prepareMap(map, request);
         map.put("heartbeatRate", 10_000); // TODO
@@ -243,7 +245,7 @@ public class AppController extends BaseController {
     @JsonView(Views.UserApi.class)
     @RequestMapping(value = "/app_i/{specId}/{appInstanceName}", method = RequestMethod.POST)
     public ResponseEntity<ApiResponse<Proxy>> startApp(@PathVariable String specId, @PathVariable String appInstanceName, @RequestBody(required = false) AppBody appBody) {
-        ProxySpec spec = proxyService.getProxySpec(specId);
+        ProxySpec spec = proxyService.getUserSpec(specId);
         if (!userService.canAccess(spec)) {
             return ApiResponse.failForbidden();
         }

@@ -26,7 +26,6 @@ import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.InvalidParametersException;
-import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
@@ -86,7 +85,7 @@ public class AppDirectController extends BaseController {
     private Proxy getOrStart(AppRequestInfo appRequestInfo, HttpServletRequest request, HttpServletResponse response) throws InvalidParametersException, ServletException, IOException {
         Proxy proxy = findUserProxy(appRequestInfo);
         if (proxy == null) {
-            ProxySpec spec = proxyService.getProxySpec(appRequestInfo.getAppName());
+            ProxySpec spec = proxyService.getUserSpec(appRequestInfo.getAppName());
 
             if (spec == null) {
                 response.setStatus(HttpStatus.FORBIDDEN.value());

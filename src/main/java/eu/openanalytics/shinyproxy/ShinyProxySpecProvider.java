@@ -71,6 +71,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
     private static final String PROP_DEFAULT_ALWAYS_SWITCH_INSTANCE = "proxy.default-always-switch-instance";
     private static Environment environment;
     private List<ProxySpec> specs = new ArrayList<>();
+    private Map<String, ProxySpec> specsMap = new HashMap<>();
     private List<TemplateGroup> templateGroups = new ArrayList<>();
     private String defaultMaxInstances;
 
@@ -99,6 +100,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
         defaultMaxInstances = environment.getProperty(PROP_DEFAULT_MAX_INSTANCES, String.class, "1");
         defaultAlwaysSwitchInstance = environment.getProperty(PROP_DEFAULT_ALWAYS_SWITCH_INSTANCE, Boolean.class, false);
         specs.forEach(ProxySpec::setContainerIndex);
+        specs.forEach(spec -> specsMap.put(spec.getId(), spec));
         for (ISpecExtensionProvider<?> specExtensionProvider: specExtensionProviders) {
             for (ISpecExtension specExtension : specExtensionProvider.getSpecs()) {
                 getSpec(specExtension.getId()).addSpecExtension(specExtension);
@@ -116,7 +118,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
     public ProxySpec getSpec(String id) {
         if (id == null || id.isEmpty()) return null;
-        return specs.stream().filter(s -> id.equals(s.getId())).findAny().orElse(null);
+        return specsMap.get(id);
     }
 
     public List<TemplateGroup> getTemplateGroups() {

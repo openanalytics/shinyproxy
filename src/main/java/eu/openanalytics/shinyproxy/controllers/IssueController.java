@@ -69,7 +69,6 @@ public class IssueController extends BaseController {
     }
 
     public void sendSupportMail(IssueForm form, Proxy proxy) {
-        String supportAddress = getSupportAddress();
         if (supportAddress == null) throw new RuntimeException("Cannot send mail: no support address configured");
         if (mailSender == null) throw new RuntimeException("Cannot send mail: no smtp settings configured");
 

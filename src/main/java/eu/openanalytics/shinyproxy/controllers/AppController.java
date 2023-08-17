@@ -132,8 +132,7 @@ public class AppController extends BaseController {
         // if the proxy does not exists, the proxy object is null and the spec is non-null
 
         prepareMap(map, request);
-        map.put("heartbeatRate", 10_000); // TODO
-//        map.put("heartbeatRate", getHeartbeatRate());
+        map.put("heartbeatRate", heartbeatRate);
         map.put("page", "app");
         map.put("appName",  appName);
         map.put("appInstance", appInstance);

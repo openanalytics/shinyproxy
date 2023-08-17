@@ -43,33 +43,41 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.ModelMap;
 import org.springframework.util.StreamUtils;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class BaseController {
 
     private static final Logger logger = LogManager.getLogger(BaseController.class);
-    private static final Map<String, String> imageCache = new HashMap<>();
+    private static final Map<String, String> imageCache = new ConcurrentHashMap<>();
+    protected String applicationName;
+    protected String title;
+    protected String logo;
+    protected long heartbeatRate;
+    protected boolean defaultShowNavbar;
+    protected String supportAddress;
     @Inject
     protected ShinyProxySpecProvider shinyProxySpecProvider;
     @Inject
-    ProxyService proxyService;
+    protected ProxyService proxyService;
     @Inject
-    UserService userService;
+    protected UserService userService;
     @Inject
-    Environment environment;
+    protected Environment environment;
     @Inject
-    IAuthenticationBackend authenticationBackend;
+    protected IAuthenticationBackend authenticationBackend;
     @Inject
-    HeartbeatService heartbeatService;
+    protected HeartbeatService heartbeatService;
     @Inject
-    IdentifierService identifierService;
+    protected IdentifierService identifierService;
     @Inject
     private IContainerBackend backend;
     @Inject
@@ -79,8 +87,14 @@ public abstract class BaseController {
     @Inject
     protected UserAndTargetIdProxyIndex userAndTargetIdProxyIndex;
 
-    protected long getHeartbeatRate() {
-        return heartbeatService.getHeartbeatRate();
+    @PostConstruct
+    public void baseInit() {
+        applicationName = environment.getProperty("spring.application.name");
+        title = environment.getProperty("proxy.title", "ShinyProxy");
+        logo = resolveImageURI(environment.getProperty("proxy.logo-url"));
+        heartbeatRate = heartbeatService.getHeartbeatRate();
+        defaultShowNavbar = !Boolean.parseBoolean(environment.getProperty("proxy.hide-navbar"));
+        supportAddress = environment.getProperty("proxy.support.mail-to-address");
     }
 
     protected Proxy findUserProxy(AppRequestInfo appRequestInfo) {
@@ -88,19 +102,19 @@ public abstract class BaseController {
     }
 
     protected Proxy findUserProxy(String appname, String appInstance) {
-        return proxyService.findUserProxy(p -> p.getSpecId().equals(appname) && p.getRuntimeValue(AppInstanceKey.inst).equals(appInstance));
+        return userAndAppNameAndInstanceNameProxyIndex.getProxy(userService.getCurrentUserId(), appname, appInstance);
     }
 
     protected void prepareMap(ModelMap map, HttpServletRequest request) {
-        map.put("application_name", environment.getProperty("spring.application.name")); // name of ShinyProxy, ContainerProxy etc
-        map.put("title", environment.getProperty("proxy.title", "ShinyProxy"));
-        map.put("logo", resolveImageURI(environment.getProperty("proxy.logo-url")));
+        map.put("application_name", applicationName); // name of ShinyProxy, ContainerProxy etc
+        map.put("title", title);
+        map.put("logo", logo);
 
         String hideNavBarParam = request.getParameter("sp_hide_navbar");
         if (Objects.equals(hideNavBarParam, "true")) {
             map.put("showNavbar", false);
         } else {
-            map.put("showNavbar", !Boolean.parseBoolean(environment.getProperty("proxy.hide-navbar")));
+            map.put("showNavbar", defaultShowNavbar);
         }
 
         map.put("bootstrapCss", "/webjars/bootstrap/3.4.1/css/bootstrap.min.css");
@@ -112,7 +126,7 @@ public abstract class BaseController {
         boolean isLoggedIn = authentication != null && !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated();
         map.put("isLoggedIn", isLoggedIn);
         map.put("isAdmin", userService.isAdmin(authentication));
-        map.put("isSupportEnabled", isLoggedIn && getSupportAddress() != null);
+        map.put("isSupportEnabled", isLoggedIn && supportAddress != null);
         map.put("logoutUrl", authenticationBackend.getLogoutURL());
         map.put("page", ""); // defaults, used in navbar
         map.put("maxInstances", 0); // defaults, used in navbar
@@ -121,10 +135,6 @@ public abstract class BaseController {
         map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
         map.put("pauseSupported", backend.supportsPause());
         map.put("spInstance", identifierService.instanceId);
-    }
-
-    protected String getSupportAddress() {
-        return environment.getProperty("proxy.support.mail-to-address");
     }
 
     protected String resolveImageURI(String resourceURI) {

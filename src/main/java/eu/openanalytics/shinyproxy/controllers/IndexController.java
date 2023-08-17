@@ -48,14 +48,16 @@ public class IndexController extends BaseController {
 
     private MyAppsMode myAppsMode;
 
+    private String landingPage;
+
     @PostConstruct
     public void init() {
         myAppsMode = environment.getProperty("proxy.my-apps-mode", MyAppsMode.class, MyAppsMode.None);
+        landingPage = environment.getProperty("proxy.landing-page", "/");
     }
 
     @RequestMapping("/")
     private Object index(ModelMap map, HttpServletRequest request) {
-        String landingPage = environment.getProperty("proxy.landing-page", "/");
         if (!landingPage.equals("/")) return new RedirectView(landingPage);
 
         prepareMap(map, request);

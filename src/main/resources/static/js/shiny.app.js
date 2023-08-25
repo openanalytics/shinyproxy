@@ -20,28 +20,6 @@
  */
 // noinspection ES6ConvertVarToLetConst
 
-/*
- * ShinyProxy
- *
- * Copyright (C) 2016-2021 Open Analytics
- *
- * ===========================================================================
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the Apache License as published by
- * The Apache Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * Apache License for more details.
- *
- * You should have received a copy of the Apache License
- * along with this program.  If not, see <http://www.apache.org/licenses/>
- */
-
-
 Shiny = window.Shiny || {};
 Shiny.app = {
 
@@ -124,9 +102,6 @@ Shiny.app = {
             }
         } else if (Shiny.app.runtimeState.proxy.status === "Up") {
             Shiny.app.runtimeState.containerPath = Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH + Shiny.app.staticState.containerSubPath + window.location.hash;
-            if (!(await Shiny.app.checkAppHealth())) {
-                return;
-            }
             Shiny.ui.setupIframe();
             Shiny.ui.showFrame();
             Shiny.connections.startHeartBeats();
@@ -142,6 +117,7 @@ Shiny.app = {
                 baseFrameUrl = parentUrl + "/";
             }
             Shiny.app.runtimeState.baseFrameUrl = baseFrameUrl;
+            Shiny.app.checkAppHealth();
         } else if (Shiny.app.runtimeState.proxy.status === "Stopping") {
             Shiny.ui.showStoppingPage();
             // re-send stop request in case previous stop is stuck
@@ -217,15 +193,15 @@ Shiny.app = {
     async checkAppHealth() {
         // check that the app endpoint is still accessible
         const response = await fetch(Shiny.app.runtimeState.containerPath);
-        if (response.status !== 503) {
+        if (response.status !== 503 && response.status !== 410) {
             return true;
         }
         const json = await response.json();
-        if (json.status === "error" && json.message === "app_stopped_or_non_existent") {
+        if (json.status === "fail" && json.data === "app_stopped_or_non_existent") {
             Shiny.ui.showStoppedPage();
             return false;
         }
-        if (json.status === "error" && json.message === "app_crashed") {
+        if (json.status === "fail" && json.data === "app_crashed") {
             Shiny.ui.showCrashedPage();
             return false;
         }

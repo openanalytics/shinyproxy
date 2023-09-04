@@ -284,6 +284,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
             proxySpec.logoClasses(logoURL);
         }
 
+        public String getFaviconPath() {
+            return proxySpec.build().getFaviconPath();
+        }
+
+        public void setFaviconPath(String faviconPath) {
+            proxySpec.faviconPath(faviconPath);
+        }
+
 		public SpelField.String getContainerImage() {
 			return containerSpec.build().getImage();
 		}

@@ -55,8 +55,10 @@
            th:data-app-id="${app.id}"
         >
             <span class="app-list-title" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></span>
-            <br th:if="${appLogos.get(app) != null}"/>
-            <img th:if="${appLogos.get(app) != null}" th:src="${appLogos.get(app)}">
+            <th:block th:with="logo=${appLogos.get(app)}" th:if="${appLogos.get(app) != null}">
+                <br/>
+                <img th:src="${logo.src}" th:width="${logo.width}" th:height="${logo.height}" th:style="${logo.style}">
+            </th:block>
             <br th:if="${app.description != null}"/>
             <span th:if="${app.description != null}" th:utext="${app.description}"></span>
         </a>

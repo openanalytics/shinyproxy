@@ -252,6 +252,38 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			proxySpec.logoURL(logoURL);
 		}
 
+        public String getLogoWidth() {
+            return proxySpec.build().getLogoWidth();
+        }
+
+        public void setLogoWidth(String logoURL) {
+            proxySpec.logoWidth(logoURL);
+        }
+
+        public String getLogoHeight() {
+            return proxySpec.build().getLogoHeight();
+        }
+
+        public void setLogoHeight(String logoURL) {
+            proxySpec.logoHeight(logoURL);
+        }
+
+        public String getLogoStyle() {
+            return proxySpec.build().getLogoStyle();
+        }
+
+        public void setLogoStyle(String logoURL) {
+            proxySpec.logoStyle(logoURL);
+        }
+
+        public String getLogoClasses() {
+            return proxySpec.build().getLogoClasses();
+        }
+
+        public void setLogoClasses(String logoURL) {
+            proxySpec.logoClasses(logoURL);
+        }
+
 		public SpelField.String getContainerImage() {
 			return containerSpec.build().getImage();
 		}

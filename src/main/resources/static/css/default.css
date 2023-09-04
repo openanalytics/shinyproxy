@@ -261,3 +261,7 @@
 	width: 70px;
 	line-height: inherit;
 }
+
+#adminStoppingApps, #adminStoppedApps {
+    display: none;
+}

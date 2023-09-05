@@ -20,6 +20,8 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import eu.openanalytics.containerproxy.auth.IAuthenticationBackend;
 import eu.openanalytics.containerproxy.backend.IContainerBackend;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
@@ -34,6 +36,9 @@ import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.UserAndAppNameAndInstanceNameProxyIndex;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.core.env.Environment;
@@ -50,20 +55,23 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Base64;
-import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class BaseController {
 
     private static final Logger logger = LogManager.getLogger(BaseController.class);
-    private static final Map<String, String> imageCache = new ConcurrentHashMap<>();
+    private static final Cache<String, LogoInfo> logoInfCache = Caffeine.newBuilder().build();
     protected String applicationName;
     protected String title;
     protected String logo;
     protected long heartbeatRate;
     protected boolean defaultShowNavbar;
     protected String supportAddress;
+    protected String defaultLogo;
+    protected String defaultLogoWidth;
+    protected String defaultLogoHeight;
+    protected String defaultLogoStyle;
+    protected String defaultLogoClasses;
     @Inject
     protected ShinyProxySpecProvider shinyProxySpecProvider;
     @Inject
@@ -87,11 +95,18 @@ public abstract class BaseController {
     @Inject
     protected UserAndTargetIdProxyIndex userAndTargetIdProxyIndex;
 
+
+
     @PostConstruct
     public void baseInit() {
+        defaultLogo = resolveImageURI(environment.getProperty("proxy.default-app-logo-url"));
+        defaultLogoWidth = environment.getProperty("proxy.default-app-logo-width");
+        defaultLogoHeight = environment.getProperty("proxy.default-app-logo-height");
+        defaultLogoStyle = environment.getProperty("proxy.default-app-logo-style");
+        defaultLogoClasses = environment.getProperty("proxy.default-app-logo-classes");
+        logo = resolveImageURI(environment.getProperty("proxy.logo-url"));
         applicationName = environment.getProperty("spring.application.name");
         title = environment.getProperty("proxy.title", "ShinyProxy");
-        logo = resolveImageURI(environment.getProperty("proxy.logo-url"));
         heartbeatRate = heartbeatService.getHeartbeatRate();
         defaultShowNavbar = !Boolean.parseBoolean(environment.getProperty("proxy.hide-navbar"));
         supportAddress = environment.getProperty("proxy.support.mail-to-address");
@@ -137,9 +152,27 @@ public abstract class BaseController {
         map.put("spInstance", identifierService.instanceId);
     }
 
+    protected LogoInfo getAppLogoInfo(ProxySpec proxySpec) {
+        return logoInfCache.get(proxySpec.getId(), (specId) -> {
+            String src = coalesce(resolveImageURI(proxySpec.getLogoURL()), defaultLogo);
+            if (src == null) {
+                return null;
+            }
+
+            return LogoInfo.builder()
+                .src(src)
+                .width(coalesce(proxySpec.getLogoWidth(), defaultLogoWidth))
+                .height(coalesce(proxySpec.getLogoHeight(), defaultLogoHeight))
+                .style(coalesce(proxySpec.getLogoStyle(), defaultLogoStyle))
+                .classes(coalesce(proxySpec.getLogoClasses(), defaultLogoClasses))
+                .build();
+        });
+    }
+
     protected String resolveImageURI(String resourceURI) {
-        if (resourceURI == null || resourceURI.isEmpty()) return resourceURI;
-        if (imageCache.containsKey(resourceURI)) return imageCache.get(resourceURI);
+        if (resourceURI == null || resourceURI.isEmpty()) {
+            return null;
+        }
 
         String resolvedValue = resourceURI;
         if (resourceURI.toLowerCase().startsWith("file://")) {
@@ -156,7 +189,6 @@ public abstract class BaseController {
                 }
             }
         }
-        imageCache.put(resourceURI, resolvedValue);
         return resolvedValue;
     }
 
@@ -184,4 +216,24 @@ public abstract class BaseController {
         return currentAmountOfInstances < maxInstances;
     }
 
+    @Data
+    @Builder
+    @AllArgsConstructor
+    public static class LogoInfo {
+
+        String src;
+
+        String width;
+
+        String height;
+
+        String style;
+
+        String classes;
+
+    }
+
+    private <T> T coalesce(T first, T second) {
+        return first != null ? first : second;
+    }
 }

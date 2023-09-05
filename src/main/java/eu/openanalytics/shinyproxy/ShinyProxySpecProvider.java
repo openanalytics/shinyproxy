@@ -31,7 +31,6 @@ import eu.openanalytics.containerproxy.model.spec.ISpecExtension;
 import eu.openanalytics.containerproxy.model.spec.Parameters;
 import eu.openanalytics.containerproxy.model.spec.PortMapping;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
-import eu.openanalytics.containerproxy.service.ProxyAccessControlService;
 import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
 import eu.openanalytics.containerproxy.spec.ISpecExtensionProvider;
@@ -49,7 +48,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
 import javax.annotation.PostConstruct;
@@ -60,7 +58,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -80,7 +77,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
     private static final String PROP_DEFAULT_ALWAYS_SWITCH_INSTANCE = "proxy.default-always-switch-instance";
     private static Environment environment;
     private List<ProxySpec> specs = new ArrayList<>();
-    private Map<String, ProxySpec> specsMap = new HashMap<>();
+    private final Map<String, ProxySpec> specsMap = new HashMap<>();
     private List<TemplateGroup> templateGroups = new ArrayList<>();
     private String defaultMaxInstances;
 
@@ -270,6 +267,46 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
         public void setLogoURL(String logoURL) {
             proxySpec.logoURL(logoURL);
+        }
+
+        public String getLogoWidth() {
+            return proxySpec.build().getLogoWidth();
+        }
+
+        public void setLogoWidth(String logoURL) {
+            proxySpec.logoWidth(logoURL);
+        }
+
+        public String getLogoHeight() {
+            return proxySpec.build().getLogoHeight();
+        }
+
+        public void setLogoHeight(String logoURL) {
+            proxySpec.logoHeight(logoURL);
+        }
+
+        public String getLogoStyle() {
+            return proxySpec.build().getLogoStyle();
+        }
+
+        public void setLogoStyle(String logoURL) {
+            proxySpec.logoStyle(logoURL);
+        }
+
+        public String getLogoClasses() {
+            return proxySpec.build().getLogoClasses();
+        }
+
+        public void setLogoClasses(String logoURL) {
+            proxySpec.logoClasses(logoURL);
+        }
+
+        public String getFaviconPath() {
+            return proxySpec.build().getFaviconPath();
+        }
+
+        public void setFaviconPath(String faviconPath) {
+            proxySpec.faviconPath(faviconPath);
         }
 
         public SpelField.String getContainerImage() {

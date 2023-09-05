@@ -27,6 +27,7 @@
         <title th:text="${title}"></title>
         <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"/>
         <meta content="width=device-width, initial-scale=1" name="viewport"/>
+        <link rel="icon" th:href="@{${resourcePrefix} + '/favicon'}">
         <link media="screen" rel="stylesheet" th:href="@{${resourcePrefix} + ${bootstrapCss}}"/>
         <link media="screen" rel="stylesheet" th:href="@{${resourcePrefix} + '/css/default.css'}"/>
         <script th:src="@{${resourcePrefix} + ${jqueryJs}}"></script>
@@ -54,10 +55,11 @@
                         th:data-app-id="${app.id}"
                         th:href="${@thymeleaf.openSwitchInstanceInsteadOfApp(app) ? '#' : @thymeleaf.getAppUrl(app)}"
                 >
-                    <span class="app-list-title"
-                          th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></span>
-                    <br th:if="${appLogos.get(app) != null}"/>
-                    <img th:if="${appLogos.get(app) != null}" th:src="${appLogos.get(app)}">
+            <span class="app-list-title" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></span>
+            <th:block th:with="logo=${appLogos.get(app)}" th:if="${appLogos.get(app) != null}">
+                <br/>
+                <img th:src="${logo.src}" th:width="${logo.width}" th:height="${logo.height}" th:style="${logo.style}">
+            </th:block>
                     <br th:if="${app.description != null}"/>
                     <span th:if="${app.description != null}" th:utext="${app.description}"></span>
                 </a>

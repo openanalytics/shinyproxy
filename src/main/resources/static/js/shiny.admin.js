@@ -32,7 +32,17 @@ Shiny.admin = {
             aaSorting: [], // apply no sort by default
             paging: false,
             lengthChange: false,
-            buttons: [{extend: 'csv'}],
+            buttons: [
+                {
+                    extend: 'csv'
+                },
+                {
+                    text: 'Stop all',
+                    action: function () {
+                        Shiny.admin.stopAll();
+                    }
+                }
+            ],
             responsive: {
                 details: false
             },
@@ -152,6 +162,36 @@ Shiny.admin = {
                 refresh();
             }
         }, 2500);
+    },
+
+    async stopAll() {
+        if (confirm("Are you sure you want to stop all apps from all users?")) {
+            $("#adminStoppingApps").show();
+            $('#adminStoppedApps').hide();
+            await Shiny.admin._refreshTable();
+            const proxyIds = [];
+            for (const proxy of Shiny.admin._adminData) {
+                Shiny.api.changeProxyStatus(proxy.proxyId, 'Stopping');
+                proxyIds.push(proxy.proxyId);
+            }
+            // wait for all proxies to be stopped
+            while (!await Shiny.admin._areAllProxiesDeleted(proxyIds)) {
+                await Shiny.common.sleep(1000);
+            }
+            $("#adminStoppingApps").hide();
+            $('#adminStoppedApps').show();
+        }
+
+    },
+
+    async _areAllProxiesDeleted(proxyIds) {
+        await Shiny.admin._refreshTable();
+        for (const proxy of Shiny.admin._adminData) {
+            if (proxyIds.includes(proxy.proxyId)) {
+                return false;
+            }
+        }
+        return true;
     },
 
 }

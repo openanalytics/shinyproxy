@@ -65,17 +65,12 @@ public class IndexController extends BaseController {
         List<ProxySpec> apps = proxyService.getUserSpecs();
         map.put("apps", apps);
 
-        Map<ProxySpec, String> appLogos = new HashMap<>();
-        map.put("appLogos", appLogos);
-
-        boolean displayAppLogos = false;
+        // app logos
+		Map<ProxySpec, LogoInfo> appLogos = new HashMap<>();
         for (ProxySpec app : apps) {
-            if (app.getLogoURL() != null) {
-                displayAppLogos = true;
-                appLogos.put(app, resolveImageURI(app.getLogoURL()));
+            appLogos.put(app, getAppLogoInfo(app));
             }
-        }
-        map.put("displayAppLogos", displayAppLogos);
+        map.put("appLogos", appLogos);
 
         // template groups
         HashMap<String, ArrayList<ProxySpec>> groupedApps = new HashMap<>();

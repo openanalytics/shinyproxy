@@ -141,14 +141,14 @@ if (window.parent.Shiny !== undefined
     var originalReplaceState = window.history.replaceState;
     window.history.replaceState = function (data, title, url) {
         originalReplaceState.call(window.history, data, title, url);
-        shinyProxy.connections._updateIframeUrl(url);
+        shinyProxy.connections._updateIframeUrl(window.location.toString());
     };
 
     // update the url for SPA apps
     var originalPushState = window.history.pushState;
     window.history.pushState = function (data, title, url) {
         originalPushState.call(window.history, data, title, url);
-        shinyProxy.connections._updateIframeUrl(url);
+        shinyProxy.connections._updateIframeUrl(window.location.toString());
     };
 
     // required for some type of applications (e.g. Angular 1: apache zeppelin)

@@ -41,7 +41,21 @@ import java.util.stream.Collectors;
 @Controller
 public class IndexController extends BaseController {
 
-	private static final String PROXY_LANDING_PAGE_AUTO_OPTION = "auto";
+	/**
+	 * Allows users on a ShinyProxy deployment <b>with only one app defined</b> to be redirected straight
+	 * to the only existing app, without going through the Index page.
+	 */
+	private static final String PROXY_LANDING_PAGE_SINGLE_APP_OPTION = "SingleApp";
+	/**
+	 * Allows users on any ShinyProxy deployment to be redirected straight to the first available app,
+	 * without going through the Index page.
+	 */
+	private static final String PROXY_LANDING_PAGE_FIRST_APP_OPTION = "FirstApp";
+
+	/**
+	 * Redirects users on a ShinyProxy deployment to the index page.
+	 */
+	private static final String PROXY_LANDING_PAGE_INDEX_OPTION = "/";
 
 	@Inject
 	private ShinyProxySpecProvider shinyProxySpecProvider;
@@ -59,7 +73,10 @@ public class IndexController extends BaseController {
 	@RequestMapping("/")
     private Object index(ModelMap map, HttpServletRequest request) {
 		String landingPage = environment.getProperty("proxy.landing-page", "/");
-		if (!landingPage.equals("/") && !landingPage.equals(PROXY_LANDING_PAGE_AUTO_OPTION)) {
+
+		if (!landingPage.equals(PROXY_LANDING_PAGE_INDEX_OPTION)
+				&& !landingPage.equals(PROXY_LANDING_PAGE_SINGLE_APP_OPTION)
+				&& !landingPage.equals(PROXY_LANDING_PAGE_FIRST_APP_OPTION)) {
 			return new RedirectView(landingPage);
 		}
 		
@@ -68,10 +85,14 @@ public class IndexController extends BaseController {
 		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
 		map.put("apps", apps);
 
-		// If set to `auto`, redirect to the first available app in the list
-		// See https://github.com/openanalytics/shinyproxy/issues/269
-		if (apps.length > 0 && landingPage.equals(PROXY_LANDING_PAGE_AUTO_OPTION))
+		// If set to `FirstApp`, redirect to the first app available to the logged-in user
+		if (apps.length > 0 && landingPage.equals(PROXY_LANDING_PAGE_FIRST_APP_OPTION)) {
 			return new RedirectView("/app/" + apps[0].getId());
+		}
+		// If set to `SingleApp` and only one app is available to the logged-in user, redirect to it
+		if (apps.length == 1 && landingPage.equals(PROXY_LANDING_PAGE_SINGLE_APP_OPTION)) {
+			return new RedirectView("/app/" + apps[0].getId());
+		}
 
 		Map<ProxySpec, String> appLogos = new HashMap<>();
 		map.put("appLogos", appLogos);

@@ -41,6 +41,8 @@ import java.util.stream.Collectors;
 @Controller
 public class IndexController extends BaseController {
 
+	private static final String PROXY_LANDING_PAGE_AUTO_OPTION = "auto";
+
 	@Inject
 	private ShinyProxySpecProvider shinyProxySpecProvider;
 
@@ -57,12 +59,19 @@ public class IndexController extends BaseController {
 	@RequestMapping("/")
     private Object index(ModelMap map, HttpServletRequest request) {
 		String landingPage = environment.getProperty("proxy.landing-page", "/");
-		if (!landingPage.equals("/")) return new RedirectView(landingPage);	
+		if (!landingPage.equals("/") && !landingPage.equals(PROXY_LANDING_PAGE_AUTO_OPTION)) {
+			return new RedirectView(landingPage);
+		}
 		
 		prepareMap(map, request);
 		
 		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
 		map.put("apps", apps);
+
+		// If set to `auto`, redirect to the first available app in the list
+		// See https://github.com/openanalytics/shinyproxy/issues/269
+		if (apps.length > 0 && landingPage.equals(PROXY_LANDING_PAGE_AUTO_OPTION))
+			return new RedirectView("/app/" + apps[0].getId());
 
 		Map<ProxySpec, String> appLogos = new HashMap<>();
 		map.put("appLogos", appLogos);

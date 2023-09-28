@@ -5,7 +5,7 @@
 
 	<groupId>eu.openanalytics</groupId>
 	<artifactId>shinyproxy</artifactId>
-	<version>3.0.3-SNAPSHOT</version>
+	<version>3.1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>ShinyProxy</name>
@@ -28,7 +28,7 @@
 		<java.version>1.8</java.version>
 		<maven.compiler.source>8</maven.compiler.source>
 		<maven.compiler.target>8</maven.compiler.target>
-		<containerproxy.version>1.0.3-SNAPSHOT</containerproxy.version>
+		<containerproxy.version>1.1.0-SNAPSHOT</containerproxy.version>
 		<resource.delimiter>&amp;</resource.delimiter>
 	</properties>
 

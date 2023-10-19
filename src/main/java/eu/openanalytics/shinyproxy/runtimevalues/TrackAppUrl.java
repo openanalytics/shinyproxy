@@ -28,11 +28,9 @@ public class TrackAppUrl extends RuntimeValueKey<Boolean> {
     public TrackAppUrl() {
         super("openanalytics.eu/sp-track-app-url",
                 "SHINYPROXY_TRACK_APP_URL",
-                "openanalytics.eu/sp-track-app-url",
-                false,
+            false,
                 true,
-                true,
-                false,
+            false,
                 true,
                 true,
                 false,

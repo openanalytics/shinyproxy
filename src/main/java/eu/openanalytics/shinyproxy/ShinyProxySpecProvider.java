@@ -244,14 +244,6 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 			proxySpec.description(description);
 		}
 
-		public SpelField.String getContainerTaskDefinition() {
-			return containerSpec.build().getTaskDefinition();
-		}
-
-		public void setContainerTaskDefinition(SpelField.String taskDefinition) {
-			containerSpec.taskDefinition(taskDefinition);
-		}
-
 		public String getLogoURL() {
 			return proxySpec.build().getLogoURL();
 		}

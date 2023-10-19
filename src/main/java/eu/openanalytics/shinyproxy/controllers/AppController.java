@@ -314,7 +314,7 @@ public class AppController extends BaseController {
         }
 
         try {
-            mappingManager.dispatchAsync(proxy.getId(), subPath, request, response);
+            mappingManager.dispatchAsync(proxy, subPath, request, response);
         } catch (Exception e) {
             throw new RuntimeException("Error routing proxy request", e);
         }
@@ -343,7 +343,7 @@ public class AppController extends BaseController {
             // note: the header is relatively new and therefore the script is injected if the header is not present
             // see: #30809
             try {
-                mappingManager.dispatchAsync(proxy.getId(), subPath, request, response);
+                mappingManager.dispatchAsync(proxy, subPath, request, response);
                 return;
             } catch (Exception e) {
                 throw new RuntimeException("Error routing proxy request", e);
@@ -351,7 +351,7 @@ public class AppController extends BaseController {
         }
 
         try {
-            mappingManager.dispatchAsync(proxy.getId(), subPath, request, response, (exchange) -> {
+            mappingManager.dispatchAsync(proxy, subPath, request, response, (exchange) -> {
                 exchange.getRequestHeaders().remove("Accept-Encoding"); // ensure no encoding is used
                 exchange.addResponseWrapper((factory, exchange1) -> new ShinyProxyIframeScriptInjector(contextPathHelper.withEndingSlash(),factory.create(), exchange1));
             });

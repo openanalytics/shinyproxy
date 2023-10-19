@@ -533,6 +533,22 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
             this.additionalPortMappings = additionalPortMappings;
         }
 
+        public void setAddDefaultHttpHeaders(boolean addDefaultHeaders) {
+            proxySpec.addDefaultHttpHeaders(addDefaultHeaders);
+        }
+
+        public boolean getAddDefaultHttpHeaders() {
+            return proxySpec.build().getAddDefaultHttpHeaders();
+        }
+
+        public void setHttpHeaders(Map<String, String> headers) {
+            proxySpec.httpHeaders(new SpelField.StringMap(headers));
+        }
+
+        public SpelField.StringMap getHttpHeaders() {
+            return proxySpec.build().getHttpHeaders();
+        }
+
         public ProxySpec getProxySpec() {
             additionalPortMappings.add(defaultPortMapping.build());
             containerSpec.portMapping(additionalPortMappings);

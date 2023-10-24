@@ -21,35 +21,20 @@
 package eu.openanalytics.shinyproxy;
 
 
-import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
+import eu.openanalytics.containerproxy.spec.ISpecExtensionProvider;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import java.util.List;
 
-@Component
+@Setter
+@Getter
+@Configuration
 @ConfigurationProperties(prefix = "proxy")
-public class ShinyProxySpecExtensionProvider {
+public class ShinyProxySpecExtensionProvider implements ISpecExtensionProvider<ShinyProxySpecExtension> {
 
     private List<ShinyProxySpecExtension> specs;
-
-    @Inject
-    private IProxySpecProvider proxySpecProvider;
-
-    @PostConstruct
-    public void postInit() {
-        specs.forEach(specExtension -> proxySpecProvider.getSpec(specExtension.getId()).addSpecExtension(specExtension));
-    }
-
-    public List<ShinyProxySpecExtension> getSpecs() {
-        return specs;
-    }
-
-    public void setSpecs(List<ShinyProxySpecExtension> specs) {
-        this.specs = specs;
-    }
 
 }

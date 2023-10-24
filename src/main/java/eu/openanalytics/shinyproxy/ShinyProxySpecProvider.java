@@ -118,8 +118,10 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
         specs.forEach(ProxySpec::setContainerIndex);
         specs.forEach(spec -> specsMap.put(spec.getId(), spec));
         for (ISpecExtensionProvider<?> specExtensionProvider: specExtensionProviders) {
-            for (ISpecExtension specExtension : specExtensionProvider.getSpecs()) {
-                getSpec(specExtension.getId()).addSpecExtension(specExtension);
+            if (specExtensionProvider.getSpecs() != null) {
+                for (ISpecExtension specExtension : specExtensionProvider.getSpecs()) {
+                    getSpec(specExtension.getId()).addSpecExtension(specExtension);
+                }
             }
         }
     }

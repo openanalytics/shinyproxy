@@ -100,7 +100,7 @@ public class HeartbeatController {
     @RequestMapping(value = "/heartbeat/{proxyId}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<ApiResponse<Object>> heartbeat(@PathVariable("proxyId") String proxyId) {
-        Proxy proxy = proxyService.getProxy(proxyId);
+        Proxy proxy = proxyService.getUserProxy(proxyId);
 
         if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
             return ShinyProxyApiResponse.appStoppedOrNonExistent();
@@ -155,7 +155,7 @@ public class HeartbeatController {
     @RequestMapping(value = "/heartbeat/{proxyId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<ApiResponse<HeartBeatInfoDto>> getHeartbeatInfo(@PathVariable("proxyId") String proxyId) {
-        Proxy proxy = proxyService.getProxy(proxyId);
+        Proxy proxy = proxyService.getUserProxy(proxyId);
 
         if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
             return ShinyProxyApiResponse.appStoppedOrNonExistent();

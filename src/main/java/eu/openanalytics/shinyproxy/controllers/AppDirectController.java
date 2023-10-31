@@ -107,7 +107,7 @@ public class AppDirectController extends BaseController {
             } catch (Throwable t) {
                 throw new ContainerProxyException("Failed to start app " + appRequestInfo.getAppName(), t);
             }
-            proxy = proxyService.getProxy(id);
+            proxy = proxyService.getUserProxy(id);
         }
         if (proxy.getStatus() == ProxyStatus.Up) {
             return proxy;

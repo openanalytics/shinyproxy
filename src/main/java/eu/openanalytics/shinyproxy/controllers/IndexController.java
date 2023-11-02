@@ -77,7 +77,7 @@ public class IndexController extends BaseController {
 		if (!landingPage.equals(PROXY_LANDING_PAGE_INDEX_OPTION)
 				&& !landingPage.equals(PROXY_LANDING_PAGE_SINGLE_APP_OPTION)
 				&& !landingPage.equals(PROXY_LANDING_PAGE_FIRST_APP_OPTION)) {
-			return new RedirectView(landingPage);
+			return new RedirectView(landingPage, true);
 		}
 		
 		prepareMap(map, request);
@@ -87,11 +87,11 @@ public class IndexController extends BaseController {
 
 		// If set to `FirstApp`, redirect to the first app available to the logged-in user
 		if (apps.length > 0 && landingPage.equals(PROXY_LANDING_PAGE_FIRST_APP_OPTION)) {
-			return new RedirectView("/app/" + apps[0].getId());
+			return new RedirectView("/app/" + apps[0].getId(), true);
 		}
 		// If set to `SingleApp` and only one app is available to the logged-in user, redirect to it
 		if (apps.length == 1 && landingPage.equals(PROXY_LANDING_PAGE_SINGLE_APP_OPTION)) {
-			return new RedirectView("/app/" + apps[0].getId());
+			return new RedirectView("/app/" + apps[0].getId(), true);
 		}
 
 		Map<ProxySpec, String> appLogos = new HashMap<>();

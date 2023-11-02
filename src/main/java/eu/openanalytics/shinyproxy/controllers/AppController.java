@@ -101,7 +101,8 @@ public class AppController extends BaseController {
 
     @PostConstruct
     public void init() {
-        pathPrefixLength = getBasePublicPath().length() + DefaultTargetMappingStrategy.TARGET_ID_LENGTH;
+        // +1 to include last slash
+        pathPrefixLength = getBasePublicPath().length() + DefaultTargetMappingStrategy.TARGET_ID_LENGTH + 1;
     }
 
     @RequestMapping(value = "/app/{appName}/{*subPath}", method = GET)
@@ -261,7 +262,7 @@ public class AppController extends BaseController {
         String id = UUID.randomUUID().toString();
         runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(id)));
         runtimeValues.add(new RuntimeValue(AppInstanceKey.inst, appInstanceName));
-        if (appBody.getTimezone() != null) {
+        if (appBody != null && appBody.getTimezone() != null) {
             runtimeValues.add(new RuntimeValue(UserTimeZoneKey.inst, appBody.getTimezone()));
         }
 

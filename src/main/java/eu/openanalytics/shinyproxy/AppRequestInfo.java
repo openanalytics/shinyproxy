@@ -71,7 +71,7 @@ public class AppRequestInfo {
                 subPath = null;
                 appPath = uri;
             } else {
-                subPath = subPath.trim();
+                subPath = subPath.trim().substring(1); // remove first slash
                 appPath = uri.substring(0, uri.length() - subPath.length());
             }
 
@@ -90,7 +90,7 @@ public class AppRequestInfo {
                 subPath = null;
                 appPath = uri;
             } else {
-                subPath = subPath.trim();
+                subPath = subPath.trim().substring(1); // remove first slash
                 appPath = uri.substring(0, uri.length() - subPath.length());
             }
 

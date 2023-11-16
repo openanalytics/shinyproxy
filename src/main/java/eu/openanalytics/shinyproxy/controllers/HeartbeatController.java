@@ -106,7 +106,7 @@ public class HeartbeatController {
             return ShinyProxyApiResponse.appStoppedOrNonExistent();
         }
 
-        heartbeatService.heartbeatReceived(HeartbeatService.HeartbeatSource.FALLBACK, proxy.getId(), null);
+        heartbeatService.heartbeatReceived(HeartbeatService.HeartbeatSource.FALLBACK, proxy, null);
 
         return ApiResponse.success();
     }

@@ -38,6 +38,7 @@ import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.AsyncProxyService;
 import eu.openanalytics.containerproxy.service.InvalidParametersException;
 import eu.openanalytics.containerproxy.service.ParametersService;
+import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.shinyproxy.ShinyProxyIframeScriptInjector;
 import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
@@ -352,9 +353,10 @@ public class AppController extends BaseController {
         }
 
         try {
+            String scriptPath = contextPathHelper.withEndingSlash() + identifierService.instanceId + "/js/shiny.iframe.js";
             mappingManager.dispatchAsync(proxy, subPath, request, response, (exchange) -> {
                 exchange.getRequestHeaders().remove("Accept-Encoding"); // ensure no encoding is used
-                exchange.addResponseWrapper((factory, exchange1) -> new ShinyProxyIframeScriptInjector(contextPathHelper.withEndingSlash(),factory.create(), exchange1));
+                exchange.addResponseWrapper((factory, exchange1) -> new ShinyProxyIframeScriptInjector(factory.create(), exchange1, scriptPath));
             });
         } catch (Exception e) {
             throw new RuntimeException("Error routing proxy request", e);

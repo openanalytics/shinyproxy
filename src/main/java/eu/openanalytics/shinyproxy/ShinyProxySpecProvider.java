@@ -23,6 +23,7 @@ package eu.openanalytics.shinyproxy;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Scheduler;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.CacheHeadersMode;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.AccessControl;
 import eu.openanalytics.containerproxy.model.spec.ContainerSpec;
@@ -549,6 +550,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
         public SpelField.StringMap getHttpHeaders() {
             return proxySpec.build().getHttpHeaders();
+        }
+
+        public void setCacheHeadersMode(CacheHeadersMode cacheHeadersMode){
+            proxySpec.cacheHeadersMode(cacheHeadersMode);
+        }
+
+        public CacheHeadersMode getCacheHeadersMode() {
+            return proxySpec.build().getCacheHeadersMode();
         }
 
         public ProxySpec getProxySpec() {

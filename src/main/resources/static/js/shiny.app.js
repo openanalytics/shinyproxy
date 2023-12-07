@@ -173,21 +173,29 @@ Shiny.app = {
                 'Content-Type': 'application/json'
             },
         });
-        if (response.status !== 200) {
+        try {
+            const json = await response.json();
+            if (response.status !== 200) {
+                if (json.status === "fail" && json.data !== null) {
+                    Shiny.app.startupFailed(json.data);
+                } else {
+                    Shiny.app.startupFailed();
+                }
+                return;
+            }
+            if (json.status !== "success") {
+                Shiny.app.startupFailed();
+                return;
+            }
+            Shiny.app.runtimeState.proxy = json.data;
+            await Shiny.app.waitForAppStart();
+        } catch {
             Shiny.app.startupFailed();
-            return;
         }
-        response = await response.json();
-        if (response.status !== "success") {
-            Shiny.app.startupFailed();
-            return;
-        }
-        Shiny.app.runtimeState.proxy = response.data;
-        await Shiny.app.waitForAppStart();
     },
-    startupFailed() {
+    startupFailed(errorMessage) {
         if (!Shiny.app.runtimeState.appStopped && !Shiny.app.runtimeState.navigatingAway) {
-            Shiny.ui.showStartFailedPage();
+            Shiny.ui.showStartFailedPage(errorMessage);
         }
     },
     async checkAppHealth() {

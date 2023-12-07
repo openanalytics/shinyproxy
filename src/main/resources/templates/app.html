@@ -103,6 +103,7 @@
         <div class="loading" id="startFailed">
             <div class="loading-txt">
                 Failed to start app <span th:text="${appTitle}"></span><br><br>
+                <div id="startFailedMessage"></div>
                 <span class="refreshButton">
 				<button class="btn btn-default" onClick="window.location.reload()">Try again</button>
 			</span>
@@ -143,7 +144,8 @@
                                    th:text="${parameterDefinition.getDisplayNameOrId()}"></label>
                             <div class="col-sm-10">
                                 <select class="form-control"
-                                        th:disabled="${paramIter.index > 0 && parameterDefaults.get(paramIter.index) == 0}" th:id="${'parameter-' + parameterDefinition.getId()}"
+                                        th:disabled="${paramIter.index > 0 && parameterDefaults.get(paramIter.index) == 0}"
+                                        th:id="${'parameter-' + parameterDefinition.getId()}"
                                         th:name="${parameterDefinition.getId()}">
                                     <option disabled selected>Select an option</option>
                                     <option th:each="value, iter : ${parameterValues.get(parameterDefinition.id)}"
@@ -170,15 +172,15 @@
             $(window).on('load', function () {
                 window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]], [[${appMaxInstances}]], [[${myAppsMode}]], [[${pauseSupported}]]);
                 window.Shiny.app.start(
-                        [[${proxy}]],
-                        [[${heartbeatRate}]],
-                        [[${appName}]],
-                        [[${appInstance}]],
-                        [[${parameterAllowedCombinations}]],
-                        [[${parameterDefinitions}]],
-                        [[${parameterIds}]],
-                        [[${appPath}]],
-                        [[${containerSubPath}]],
+                    [[${proxy}]],
+                    [[${heartbeatRate}]],
+                    [[${appName}]],
+                    [[${appInstance}]],
+                    [[${parameterAllowedCombinations}]],
+                    [[${parameterDefinitions}]],
+                    [[${parameterIds}]],
+                    [[${appPath}]],
+                    [[${containerSubPath}]],
                 );
                 window.Shiny.ui.loadDefaultParameters([[${parameterDefaults}]]);
                 if ([[${refreshOpenidEnabled}]]) {

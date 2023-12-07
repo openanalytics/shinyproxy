@@ -136,10 +136,13 @@ Shiny.ui = {
         $("#reloadFailed").show();
     },
 
-    showStartFailedPage: function () {
+    showStartFailedPage: function (errorMessage) {
         $('#shinyframe').hide();
         $('.loading').hide();
         $("#startFailed").show();
+        if (errorMessage) {
+            $('#startFailedMessage').text(errorMessage).show();
+        }
     },
 
     showStoppedPage: function () {

@@ -93,7 +93,7 @@ public class AppDirectController extends BaseController {
                 return null;
             }
 
-            if (!validateProxyStart(spec)) {
+            if (!validateMaxInstances(spec)) {
                 throw new ContainerProxyException("Cannot start new proxy because the maximum amount of instances of this proxy has been reached");
             }
 

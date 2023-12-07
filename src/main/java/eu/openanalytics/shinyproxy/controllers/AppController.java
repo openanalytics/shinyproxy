@@ -38,7 +38,6 @@ import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.AsyncProxyService;
 import eu.openanalytics.containerproxy.service.InvalidParametersException;
 import eu.openanalytics.containerproxy.service.ParametersService;
-import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.shinyproxy.ShinyProxyIframeScriptInjector;
 import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
@@ -255,8 +254,13 @@ public class AppController extends BaseController {
             return ApiResponse.fail("You already have an instance of this app with the given name");
         }
 
-        if (!validateProxyStart(spec)) {
-            return ApiResponse.fail("Cannot start new app because the maximum amount of instances of this app has been reached");
+        if (!validateMaxInstances(spec)) {
+            Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec);
+            return ApiResponse.fail(String.format("Cannot start this app because you are using the maximum number of instances (%s) of this app.", maxInstances));
+        }
+
+        if (!maxTotalInstancesPerApp(spec)) {
+            return ApiResponse.fail("The server does not have enough capacity to start this app, please try again later.");
         }
 
         List<RuntimeValue> runtimeValues = shinyProxySpecProvider.getRuntimeValues(spec);

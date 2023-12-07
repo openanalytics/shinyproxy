@@ -33,6 +33,7 @@ import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.shinyproxy.ShinyProxySpecExtension;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.UserAndAppNameAndInstanceNameProxyIndex;
 import jakarta.servlet.http.HttpServletRequest;
@@ -193,9 +194,10 @@ public abstract class BaseController {
     }
 
     /**
-     * Validates whether a proxy should be allowed to start.
+     * Checks whether starting a proxy violates the max instances of this spec and user.
+     * This corresponds to the `max-instances` property of an app.
      */
-    protected boolean validateProxyStart(ProxySpec spec) {
+    protected boolean validateMaxInstances(ProxySpec spec) {
         Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec);
 
         if (maxInstances == -1) {
@@ -214,6 +216,22 @@ public abstract class BaseController {
         long currentAmountOfInstances = proxyService.getUserProxiesBySpecId(spec.getId()).count();
 
         return currentAmountOfInstances < maxInstances;
+    }
+
+    /**
+     * Checks whether starting a proxy violates the max total instances of this spec.
+     * This corresponds to the `max-total-instances` property of an app.
+     */
+    protected boolean maxTotalInstancesPerApp(ProxySpec spec) {
+        Integer maxTotalInstances = spec.getSpecExtension(ShinyProxySpecExtension.class).getMaxTotalInstances();
+
+        if (maxTotalInstances == -1) {
+            return true;
+        }
+
+        long currentAmountOfInstances = proxyService.getNumberOfProxiesBySpecId(spec.getId());
+
+        return currentAmountOfInstances < maxTotalInstances;
     }
 
     @Data

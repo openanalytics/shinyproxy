@@ -259,7 +259,7 @@ public class AppController extends BaseController {
             return ApiResponse.fail(String.format("Cannot start this app because you are using the maximum number of instances (%s) of this app.", maxInstances));
         }
 
-        if (!maxTotalInstancesPerApp(spec)) {
+        if (!maxTotalInstancesPerApp(spec) || !maxTotalInstances()) {
             return ApiResponse.fail("The server does not have enough capacity to start this app, please try again later.");
         }
 

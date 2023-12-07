@@ -20,6 +20,23 @@
  */
 // noinspection ES6ConvertVarToLetConst
 
+/**
+ * @typedef {Object} Shiny.RuntimeValues
+ * @property {string} SHINYPROXY_PUBLIC_PATH
+ * @property {string} SHINYPROXY_WEBSOCKET_RECONNECTION_MODE
+ * @property {string} SHINYPROXY_FORCE_FULL_RELOAD
+ * @property {string} SHINYPROXY_TRACK_APP_URL
+ * @property {string} SHINYPROXY_APP_INSTANCE
+ */
+/**
+ * A number, or a string containing a number.
+ * @typedef {Object} Shiny.Proxy
+ * @property {string} id
+ * @property {string} specId
+ * @property {string} status
+ * @property {Shiny.RuntimeValues} runtimeValues
+ */
+
 Shiny = window.Shiny || {};
 Shiny.app = {
 
@@ -41,7 +58,7 @@ Shiny.app = {
 
     runtimeState: {
         /**
-         * @type {?{id: string, status: string, runtimeValues: {SHINYPROXY_PUBLIC_PATH: string, SHINYPROXY_WEBSOCKET_RECONNECTION_MODE: string, SHINYPROXY_FORCE_FULL_RELOAD: boolean, SHINYPROXY_TRACK_APP_URL: boolean}}}
+         * @type {Shiny.Proxy}
          */
         proxy: null,
         containerPath: null,

@@ -165,19 +165,20 @@ Shiny.instances = {
             }
 
             const existingInstances = await Shiny.api.getProxies();
-            if (existingInstances.hasOwnProperty(appName)) {
-                const currentAmountOfInstances = existingInstances[appName].length;
-                const maxInstances = Shiny.common.runtimeState.switchInstanceApp.maxInstances;
-                if (maxInstances !== -1 && currentAmountOfInstances >= maxInstances) {
-                    alert("You cannot start a new instance because you are using the maximum amount of instances of this app!");
-                    return;
-                }
-                for (const existingInstance of existingInstances[appName]) {
+            const maxInstances = Shiny.common.runtimeState.switchInstanceApp.maxInstances;
+            let currentAmountOfInstances = 0;
+            for (const existingInstance of existingInstances) {
+                if (existingInstance.specId === appName) {
+                    currentAmountOfInstances++;
                     if (existingInstance.runtimeValues.SHINYPROXY_APP_INSTANCE === instance) {
                         alert("You are already using an instance with this name!");
                         return;
                     }
                 }
+            }
+            if (maxInstances !== -1 && currentAmountOfInstances >= maxInstances) {
+                alert("You cannot start a new instance because you are using the maximum amount of instances of this app!");
+                return;
             }
 
             if (Shiny.common.runtimeState.switchInstanceApp.newTab) {

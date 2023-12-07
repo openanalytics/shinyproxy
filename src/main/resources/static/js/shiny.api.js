@@ -21,6 +21,9 @@
 Shiny = window.Shiny || {};
 Shiny.api = {
     _proxiesCache: null,
+    /**
+     * @return {Promise.<Array.<Shiny.Proxy>>}
+     */
     getProxies: async function () {
         const resp = await fetch(Shiny.api.buildURL("api/proxy"));
         const json = await Shiny.api._getResponseJson(resp);

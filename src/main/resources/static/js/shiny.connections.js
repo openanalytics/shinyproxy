@@ -97,41 +97,27 @@ Shiny.connections = {
             return;
         }
         Shiny.app.runtimeState.tryingToReconnect = true;
-        if (reconnectionMode === "None") {
-            // check if app has been stopped but ignore the error (i.e. don't try to reconnect)
-            Shiny.connections._checkAppHasBeenStopped(function (isStopped) {
-                if (isStopped) {
-                    // app was stopped, show stopped screen
-                    Shiny.ui.showStoppedPage();
-                }
-            });
-            return;
-        }
-        if (Shiny.app.runtimeState.reloadDismissed) {
-            // user already dismissed confirmation -> do not ask again
-            return;
-        }
-        if (Shiny.app.runtimeState.appStopped) {
-            // app has been stopped -> no need to reconnect
-            return;
-        }
 
-        // Check if the app has been stopped by another tab
-        Shiny.connections._checkAppHasBeenStopped(function (isStopped) {
-            if (isStopped) {
-                // app was stopped, show stopped screen
-                Shiny.ui.showStoppedPage();
-                return;
-            }
-            Shiny.ui.hideModal();
-            if (reconnectionMode === "Auto"
-                || (reconnectionMode === "Confirm"
-                    && confirm("Connection to server lost, try to reconnect to the application?"))
-            ) {
-                Shiny.connections._reloadPage();
-            } else {
-                Shiny.app.runtimeState.reloadDismissed = true;
-                Shiny.app.runtimeState.tryingToReconnect = false;
+        Shiny.app.checkAppCrashedOrStopped().then((appStoppedOrCrashed) => {
+            if (!appStoppedOrCrashed && reconnectionMode !== "None") {
+                if (Shiny.app.runtimeState.reloadDismissed) {
+                    // user already dismissed confirmation -> do not ask again
+                    return;
+                }
+                if (Shiny.app.runtimeState.appStopped) {
+                    // app has been stopped -> no need to reconnect
+                    return;
+                }
+                Shiny.ui.hideModal();
+                if (reconnectionMode === "Auto"
+                    || (reconnectionMode === "Confirm"
+                        && confirm("Connection to server lost, try to reconnect to the application?"))
+                ) {
+                    Shiny.connections._reloadPage();
+                } else {
+                    Shiny.app.runtimeState.reloadDismissed = true;
+                    Shiny.app.runtimeState.tryingToReconnect = false;
+                }
             }
         });
     },
@@ -176,12 +162,10 @@ Shiny.connections = {
         }
 
         // Check if the app has been stopped by ShinyProxy server (because of the timeout)
-        Shiny.connections._checkAppHasBeenStopped(function (isStopped) {
-            if (isStopped) {
+        Shiny.app.checkAppCrashedOrStopped().then((appStoppedOrCrashed) => {
+            if (appStoppedOrCrashed) {
                 Shiny.app.runtimeState.tryingToReconnect = false;
                 Shiny.app.runtimeState.reloadAttempts = 0;
-                // app was stopped, show stopped screen
-                Shiny.ui.showStoppedPage();
                 return;
             }
 
@@ -236,7 +220,7 @@ Shiny.connections = {
     _checkReloadSucceeded: function (checks = 0) {
         var completed = document.getElementById('shinyframe').contentDocument !== null
             && document.getElementById('shinyframe').contentDocument.readyState === "complete"
-            && document.getElementById('shinyframe').contentDocument.baseURI !== "about:blank"
+            && document.getElementById('shinyframe').contentDocument.baseURI.includes("/app_proxy/")
             && !Shiny.connections._checkIfIframeHasStartupMessage();
 
         if (completed) {
@@ -279,37 +263,6 @@ Shiny.connections = {
         }
 
         setTimeout(() => Shiny.connections._checkShinyReloadSucceeded(checks + 1), 250);
-    },
-
-    _checkAppHasBeenStopped: function (cb) {
-        $.ajax({
-            method: 'POST',
-            url: Shiny.api.buildURL("heartbeat/" + Shiny.app.runtimeState.proxy.id),
-            timeout: 3000,
-            success: function () {
-                cb(false);
-            },
-            error: function (response) {
-                try {
-                    var res = JSON.parse(response.responseText);
-                    if (res !== null && res.status === "fail") {
-                        if (res.data === "app_stopped_or_non_existent") {
-                            cb(true);
-                            return;
-                        } else if (res.data === "shinyproxy_authentication_required") {
-                            Shiny.ui.showLoggedOutPage();
-                            // never call call-back, but just redirect to login page
-                            return;
-                        }
-                    }
-                } catch (e) {
-                    // carry-on
-                }
-
-                cb(false);
-            }
-        });
-
     },
 
     /**

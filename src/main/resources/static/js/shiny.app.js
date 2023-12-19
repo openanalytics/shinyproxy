@@ -134,7 +134,7 @@ Shiny.app = {
                 baseFrameUrl = parentUrl + "/";
             }
             Shiny.app.runtimeState.baseFrameUrl = baseFrameUrl;
-            Shiny.app.checkAppHealth();
+            Shiny.app.checkAppCrashedOrStopped();
         } else if (Shiny.app.runtimeState.proxy.status === "Stopping") {
             Shiny.ui.showStoppingPage();
             // re-send stop request in case previous stop is stuck
@@ -215,22 +215,26 @@ Shiny.app = {
             Shiny.ui.showStartFailedPage(errorMessage);
         }
     },
-    async checkAppHealth() {
+    async checkAppCrashedOrStopped() {
         // check that the app endpoint is still accessible
-        const response = await fetch(Shiny.app.runtimeState.containerPath);
-        if (response.status !== 503 && response.status !== 410) {
-            return true;
+        try {
+            const response = await fetch(Shiny.app.runtimeState.containerPath);
+            if (response.status !== 503 && response.status !== 410) {
+                return false;
+            }
+            const json = await response.json();
+            if (json.status === "fail" && json.data === "app_stopped_or_non_existent") {
+                Shiny.ui.showStoppedPage();
+                return true;
+            }
+            if (json.status === "fail" && json.data === "app_crashed") {
+                Shiny.ui.showCrashedPage();
+                return true;
+            }
+        } catch (e) {
+            // ignore, server might not be reachable now, so app may still be running
         }
-        const json = await response.json();
-        if (json.status === "fail" && json.data === "app_stopped_or_non_existent") {
-            Shiny.ui.showStoppedPage();
-            return false;
-        }
-        if (json.status === "fail" && json.data === "app_crashed") {
-            Shiny.ui.showCrashedPage();
-            return false;
-        }
-        return true;
+        return false;
     }
 }
 

@@ -54,6 +54,7 @@ Shiny.app = {
         },
         appPath: null,
         containerSubPath: null,
+        wasAutomaticReloaded: false
     },
 
     runtimeState: {
@@ -97,7 +98,11 @@ Shiny.app = {
         Shiny.app.staticState.parameters.names = parameterDefinitions;
         Shiny.app.staticState.parameters.ids = parametersIds;
         Shiny.app.runtimeState.proxy = proxy;
+        Shiny.app.checkWasAutomaticReload();
         Shiny.app.loadApp();
+        if (Shiny.app.runtimeState.proxy.status === "Up") {
+            Shiny.app.checkAppCrashedOrStopped();
+        }
     },
     async loadApp() {
         if (Shiny.app.runtimeState.proxy === null) {
@@ -134,7 +139,6 @@ Shiny.app = {
                 baseFrameUrl = parentUrl + "/";
             }
             Shiny.app.runtimeState.baseFrameUrl = baseFrameUrl;
-            Shiny.app.checkAppCrashedOrStopped();
         } else if (Shiny.app.runtimeState.proxy.status === "Stopping") {
             Shiny.ui.showStoppingPage();
             // re-send stop request in case previous stop is stuck
@@ -160,6 +164,18 @@ Shiny.app = {
             Shiny.app.startupFailed();
         } else {
             Shiny.app.loadApp();
+            if (!Shiny.app.staticState.wasAutomaticReloaded) {
+                Shiny.app.checkAppCrashedOrStopped(false).then((appCrashedOrStopped) => {
+                    if (appCrashedOrStopped) {
+                        Shiny.ui.showLoading();
+                        const url = new URL(window.location);
+                        url.searchParams.append("sp_automatic_reload", "true");
+                        window.location = url;
+                    }
+                });
+            } else {
+                Shiny.app.checkAppCrashedOrStopped();
+            }
         }
     },
     submitParameters(parameters) {
@@ -215,7 +231,7 @@ Shiny.app = {
             Shiny.ui.showStartFailedPage(errorMessage);
         }
     },
-    async checkAppCrashedOrStopped() {
+    async checkAppCrashedOrStopped(showError = true) {
         // check that the app endpoint is still accessible
         try {
             const response = await fetch(Shiny.app.runtimeState.containerPath);
@@ -224,17 +240,32 @@ Shiny.app = {
             }
             const json = await response.json();
             if (json.status === "fail" && json.data === "app_stopped_or_non_existent") {
-                Shiny.ui.showStoppedPage();
+                if (showError) {
+                    Shiny.ui.showStoppedPage();
+                }
                 return true;
             }
             if (json.status === "fail" && json.data === "app_crashed") {
-                Shiny.ui.showCrashedPage();
+                if (showError) {
+                    Shiny.ui.showCrashedPage();
+                }
                 return true;
             }
         } catch (e) {
             // ignore, server might not be reachable now, so app may still be running
         }
         return false;
+    },
+    checkWasAutomaticReload() {
+        // If the app crashes immediately after starting it, ShinyProxy will reload the page a single time.
+        // A flag in the URL indicates that the page was automatically reloaded and thus a second reload should not
+        // be attempted. After reload this flag is removed from the URL.
+        const url = new URL(window.location);
+        if (url.searchParams.has("sp_automatic_reload")) {
+            Shiny.app.staticState.wasAutomaticReloaded = true;
+            url.searchParams.delete("sp_automatic_reload");
+            window.history.replaceState(null, null, url);
+        }
     }
 }
 

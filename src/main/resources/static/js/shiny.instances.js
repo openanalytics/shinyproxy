@@ -122,13 +122,10 @@ Shiny.instances = {
             if (event) {
                 event.preventDefault();
             }
-            const overrideUrl = new URL(window.location);
-            overrideUrl.searchParams.delete("sp_instance_override");
-
             if (Shiny.app.runtimeState.appStopped
                 || Shiny.app.runtimeState.proxy.status === "Stopped"
                 || Shiny.app.runtimeState.proxy.status === "Paused") {
-                window.location = overrideUrl;
+                window.location.reload();
                 return;
             } else if (confirm("Are you sure you want to restart the current instance?")) {
                 Shiny.app.runtimeState.appStopped = true;
@@ -138,7 +135,7 @@ Shiny.instances = {
                 await Shiny.api.changeProxyStatus(Shiny.app.runtimeState.proxy.id, 'Stopping');
                 Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id);
 
-                window.location = overrideUrl;
+                window.location.reload();
             }
         },
         onNewInstance: async function () {

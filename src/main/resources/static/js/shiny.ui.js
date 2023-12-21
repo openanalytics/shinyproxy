@@ -35,7 +35,7 @@ Shiny.ui = {
      */
     showLoading: function () {
         $('#appStopped').hide();
-        $('#shinyframe').hide();
+        $('#shinyframe').remove();
         $("#loading").show();
     },
 

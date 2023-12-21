@@ -370,7 +370,7 @@ public class AppController extends BaseController {
     private String buildContainerSubPath(HttpServletRequest request, String subPath) {
         String queryString = ServletUriComponentsBuilder.fromRequest(request)
                 .replaceQueryParam("sp_hide_navbar")
-                .replaceQueryParam("sp_instance_override")
+                .replaceQueryParam("sp_automatic_reload")
                 .build().getQuery();
 
         String res = UriComponentsBuilder

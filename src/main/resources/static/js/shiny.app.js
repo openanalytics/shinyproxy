@@ -32,6 +32,7 @@
  * A number, or a string containing a number.
  * @typedef {Object} Shiny.Proxy
  * @property {string} id
+ * @property {string} targetId
  * @property {string} specId
  * @property {string} status
  * @property {Shiny.RuntimeValues} runtimeValues

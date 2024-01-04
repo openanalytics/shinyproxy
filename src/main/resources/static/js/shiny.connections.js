@@ -30,12 +30,12 @@ Shiny.connections = {
     startHeartBeats: function () {
         Shiny.connections.sendHeartBeat(); // send heartbeat right after loading app to validate the app is working
         setInterval(function () {
-            if (Shiny.app.runtimeState.appStopped) {
+            if (Shiny.app.runtimeState.appStopped || Shiny.app.runtimeState.proxy === null) {
                 return;
             }
             if (!Shiny.connections._webSocketConnectionIsOpen()) {
-                var lastHeartbeat = Date.now() - Shiny.app.runtimeState.lastHeartbeatTime;
-                if (lastHeartbeat > Shiny.app.staticState.heartBeatRate && Shiny.app.runtimeState.proxy !== null) {
+                const lastHeartbeat = Date.now() - Shiny.app.runtimeState.lastHeartbeatTime;
+                if (Shiny.app.runtimeState.proxy.id !== Shiny.app.runtimeState.proxy.targetId || lastHeartbeat > Shiny.app.staticState.heartBeatRate) {
                     Shiny.connections.sendHeartBeat();
                 }
             }

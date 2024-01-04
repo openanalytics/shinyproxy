@@ -313,8 +313,14 @@ public class AppController extends BaseController {
             return;
         }
 
-        Proxy proxy = userAndTargetIdProxyIndex.getProxy(userService.getCurrentUserId(), targetId);
-        if (proxy == null || proxy.getStatus().isUnavailable()  || !userService.isOwner(proxy)) {
+        Proxy proxy;
+        String proxyId = request.getParameter("sp_proxy_id");
+        if (proxyId != null) {
+            proxy = proxyService.getUserProxy(proxyId);
+        } else {
+            proxy = userAndTargetIdProxyIndex.getProxy(userService.getCurrentUserId(), targetId);
+        }
+        if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
             ShinyProxyApiResponse.appStoppedOrNonExistent(response);
             return;
         }

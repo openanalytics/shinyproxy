@@ -101,7 +101,7 @@ Shiny.app = {
         Shiny.app.runtimeState.proxy = proxy;
         Shiny.app.checkWasAutomaticReload();
         Shiny.app.loadApp();
-        if (Shiny.app.runtimeState.proxy.status === "Up") {
+        if (proxy && proxy.status === "Up") {
             Shiny.app.checkAppCrashedOrStopped();
         }
     },

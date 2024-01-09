@@ -92,6 +92,8 @@ public abstract class BaseController {
     private String defaultLogoClasses;
     private String logo;
 
+    protected Boolean allowTransferApp;
+
     @PostConstruct
     public void baseInit() {
         defaultLogo = resolveImageURI(environment.getProperty("proxy.default-app-logo-url"));
@@ -100,6 +102,7 @@ public abstract class BaseController {
         defaultLogoStyle = environment.getProperty("proxy.default-app-logo-style");
         defaultLogoClasses = environment.getProperty("proxy.default-app-logo-classes");
         logo = resolveImageURI(environment.getProperty("proxy.logo-url"));
+        allowTransferApp = environment.getProperty("proxy.allow-transfer-app", Boolean.class, false);
     }
 
     protected long getHeartbeatRate() {
@@ -153,6 +156,7 @@ public abstract class BaseController {
 		map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
 		map.put("pauseSupported", backend.supportsPause());
 		map.put("spInstance", identifierService.instanceId);
+        map.put("allowTransferApp", allowTransferApp);
 	}
 	
 	protected String getSupportAddress() {

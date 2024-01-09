@@ -84,6 +84,15 @@
                 <div class="modal-body">
                     <div id="appDetails">
                     </div>
+                    <form th:if="${allowTransferApp}" id="changeUserIdForm" class="form-inline">
+                        <div class="form-group">
+                            <label for="userIdField"><span class="glyphicon glyphicon-chat"></span>Transfer app to another user:</label><br>
+                            <div class="input-group">
+                                <input class="form-control" id="userIdField" type="text">
+                                <button type="submit" class="btn btn-default btn-success">Transfer</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default close-button">Close</button>

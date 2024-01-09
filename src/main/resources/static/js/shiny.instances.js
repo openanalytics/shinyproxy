@@ -173,7 +173,7 @@ Shiny.instances = {
                     return;
                 }
                 for (const existingInstance of existingInstances[appName]) {
-                    if (existingInstance.runtimeValues.SHINYPROXY_APP_INSTANCE === instance) {
+                    if (existingInstance.runtimeValues.SHINYPROXY_APP_INSTANCE.toLowerCase() === instance.toLowerCase()) {
                         alert("You are already using an instance with this name!");
                         return;
                     }
@@ -187,8 +187,7 @@ Shiny.instances = {
             }
             inputField.val('');
             Shiny.ui.hideModal();
-
-        },
+        }
     },
     _createUrlForInstance: function (instance) {
         return Shiny.common.staticState.contextPath + "app_i/" + Shiny.common.runtimeState.switchInstanceApp.appName + "/" + instance + "/";

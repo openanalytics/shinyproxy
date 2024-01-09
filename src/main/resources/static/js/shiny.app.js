@@ -241,6 +241,11 @@ $(window).on('load', function () {
         Shiny.instances.eventHandlers.onNewInstance();
     });
 
+    $('#changeUserIdForm').submit(function (e) {
+        e.preventDefault();
+        Shiny.common.onChangeUserId();
+    });
+
     $('#myAppsModal-btn').click(function () {
         Shiny.ui.showMyAppsModal();
         Shiny.common.onShowMyApps();

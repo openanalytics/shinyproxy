@@ -560,6 +560,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
             return proxySpec.build().getCacheHeadersMode();
         }
 
+        public void setMaxTotalInstances(int maxTotalInstances) {
+            proxySpec.maxTotalInstances(maxTotalInstances);
+        }
+
+        public int getMaxTotalInstances() {
+            return proxySpec.build().getMaxTotalInstances();
+        }
+
         public ProxySpec getProxySpec() {
             additionalPortMappings.add(defaultPortMapping.build());
             containerSpec.portMapping(additionalPortMappings);

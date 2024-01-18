@@ -73,7 +73,6 @@ public abstract class BaseController {
     protected String defaultLogoHeight;
     protected String defaultLogoStyle;
     protected String defaultLogoClasses;
-    protected Integer maxTotalInstances;
     @Inject
     protected ShinyProxySpecProvider shinyProxySpecProvider;
     @Inject
@@ -112,7 +111,6 @@ public abstract class BaseController {
         heartbeatRate = heartbeatService.getHeartbeatRate();
         defaultShowNavbar = !Boolean.parseBoolean(environment.getProperty("proxy.hide-navbar"));
         supportAddress = environment.getProperty("proxy.support.mail-to-address");
-        maxTotalInstances = environment.getProperty("proxy.max-total-instances", Integer.class, -1);
     }
 
     protected Proxy findUserProxy(AppRequestInfo appRequestInfo) {
@@ -218,36 +216,6 @@ public abstract class BaseController {
         long currentAmountOfInstances = proxyService.getUserProxiesBySpecId(spec.getId()).count();
 
         return currentAmountOfInstances < maxInstances;
-    }
-
-    /**
-     * Checks whether starting a proxy violates the max total instances of this spec.
-     * This corresponds to the `max-total-instances` property of an app.
-     */
-    protected boolean maxTotalInstancesPerApp(ProxySpec spec) {
-        Integer maxTotalInstances = spec.getSpecExtension(ShinyProxySpecExtension.class).getMaxTotalInstances();
-
-        if (maxTotalInstances == -1) {
-            return true;
-        }
-
-        long currentAmountOfInstances = proxyService.getNumberOfProxiesBySpecId(spec.getId());
-
-        return currentAmountOfInstances < maxTotalInstances;
-    }
-
-    /**
-     * Checks whether starting a proxy violates the max total instances (for all apps and users).
-     * This corresponds to the `proxy.max-total-instances` property.
-     */
-    protected boolean maxTotalInstances() {
-        if (maxTotalInstances == -1) {
-            return true;
-        }
-
-        long currentAmountOfInstances = proxyService.getAllProxies().size();
-
-        return currentAmountOfInstances < maxTotalInstances;
     }
 
     @Data

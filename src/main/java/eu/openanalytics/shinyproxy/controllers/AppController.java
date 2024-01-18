@@ -22,6 +22,7 @@ package eu.openanalytics.shinyproxy.controllers;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.openanalytics.containerproxy.ProxyStartValidationException;
 import eu.openanalytics.containerproxy.api.dto.ApiResponse;
 import eu.openanalytics.containerproxy.api.dto.SwaggerDto;
 import eu.openanalytics.containerproxy.auth.impl.OpenIDAuthenticationBackend;
@@ -259,10 +260,6 @@ public class AppController extends BaseController {
             return ApiResponse.fail(String.format("Cannot start this app because you are using the maximum number of instances (%s) of this app.", maxInstances));
         }
 
-        if (!maxTotalInstancesPerApp(spec) || !maxTotalInstances()) {
-            return ApiResponse.fail("The server does not have enough capacity to start this app, please try again later.");
-        }
-
         List<RuntimeValue> runtimeValues = shinyProxySpecProvider.getRuntimeValues(spec);
         String id = UUID.randomUUID().toString();
         runtimeValues.add(new RuntimeValue(PublicPathKey.inst, getPublicPath(id)));
@@ -273,7 +270,7 @@ public class AppController extends BaseController {
 
         try {
             return ApiResponse.success(asyncProxyService.startProxy(spec, runtimeValues, id, (appBody != null) ? appBody.getParameters() : null));
-        } catch (InvalidParametersException ex) {
+        } catch (ProxyStartValidationException | InvalidParametersException ex) {
             return ApiResponse.fail(ex.getMessage());
         } catch (Throwable t) {
             return ApiResponse.error("Failed to start proxy");

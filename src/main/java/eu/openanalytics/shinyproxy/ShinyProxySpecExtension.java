@@ -53,9 +53,6 @@ public class ShinyProxySpecExtension extends AbstractSpecExtension {
     @Builder.Default
     SpelField.Integer maxInstances = new SpelField.Integer();
 
-    @Builder.Default
-    Integer maxTotalInstances = -1;
-
     Boolean hideNavbarOnMainPageLink;
 
     Boolean alwaysShowSwitchInstance;

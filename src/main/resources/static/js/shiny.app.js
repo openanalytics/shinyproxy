@@ -106,7 +106,11 @@ Shiny.app = {
         }
     },
     async loadApp() {
+        if (Shiny.app.runtimeState.proxy) {
+            console.log("Load app, id: " + Shiny.app.runtimeState.proxy.id + " status: " + Shiny.app.runtimeState.proxy.status);
+        }
         if (Shiny.app.runtimeState.proxy === null) {
+            console.log("Start app");
             if (Shiny.app.staticState.parameters.names !== null) {
                 Shiny.ui.showParameterForm();
             } else {

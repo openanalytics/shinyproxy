@@ -57,6 +57,7 @@ Shiny.api = {
                     return null;
                 }
                 if (json.data.status === "Up" || json.data.status === "Stopped" || json.data.status === "Paused") {
+                    console.log("App status changed, id: " + json.data.id + " status: " + json.data.status);
                     return json.data;
                 }
             } catch (e) {

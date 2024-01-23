@@ -167,7 +167,7 @@ Shiny.instances = {
             for (const existingInstance of existingInstances) {
                 if (existingInstance.specId === appName) {
                     currentAmountOfInstances++;
-                    if (existingInstance.runtimeValues.SHINYPROXY_APP_INSTANCE === instance) {
+                    if (existingInstance.runtimeValues.SHINYPROXY_APP_INSTANCE.toLowerCase() === instance.toLowerCase()) {
                         alert("You are already using an instance with this name!");
                         return;
                     }

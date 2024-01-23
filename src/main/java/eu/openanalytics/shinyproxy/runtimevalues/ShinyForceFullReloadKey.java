@@ -25,19 +25,19 @@ import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueK
 
 public class ShinyForceFullReloadKey extends RuntimeValueKey<Boolean> {
 
+    public static final ShinyForceFullReloadKey inst = new ShinyForceFullReloadKey();
+
     public ShinyForceFullReloadKey() {
         super("openanalytics.eu/sp-shiny-force-full-reload",
                 "SHINYPROXY_FORCE_FULL_RELOAD",
-                false,
+            false,
                 true,
-                false,
+            false,
                 true,
                 true,
                 false,
                 Boolean.class);
     }
-
-    public static ShinyForceFullReloadKey inst = new ShinyForceFullReloadKey();
 
     @Override
     public Boolean deserializeFromString(String value) {

@@ -20,8 +20,8 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
-import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.api.dto.ApiResponse;
+import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.service.ProxyService;
 import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.ActiveProxiesService;
@@ -100,13 +100,13 @@ public class HeartbeatController {
     @RequestMapping(value = "/heartbeat/{proxyId}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<ApiResponse<Object>> heartbeat(@PathVariable("proxyId") String proxyId) {
-        Proxy proxy = proxyService.getProxy(proxyId);
+        Proxy proxy = proxyService.getUserProxy(proxyId);
 
         if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
             return ShinyProxyApiResponse.appStoppedOrNonExistent();
         }
 
-        heartbeatService.heartbeatReceived(HeartbeatService.HeartbeatSource.FALLBACK, proxy.getId(), null);
+        heartbeatService.heartbeatReceived(HeartbeatService.HeartbeatSource.FALLBACK, proxy, null);
 
         return ApiResponse.success();
     }
@@ -155,7 +155,7 @@ public class HeartbeatController {
     @RequestMapping(value = "/heartbeat/{proxyId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<ApiResponse<HeartBeatInfoDto>> getHeartbeatInfo(@PathVariable("proxyId") String proxyId) {
-        Proxy proxy = proxyService.getProxy(proxyId);
+        Proxy proxy = proxyService.getUserProxy(proxyId);
 
         if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
             return ShinyProxyApiResponse.appStoppedOrNonExistent();

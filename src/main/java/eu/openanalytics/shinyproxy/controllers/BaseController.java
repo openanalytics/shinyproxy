@@ -28,12 +28,15 @@ import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.IdentifierService;
 import eu.openanalytics.containerproxy.service.ProxyService;
+import eu.openanalytics.containerproxy.service.UserAndTargetIdProxyIndex;
 import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.shinyproxy.ShinyProxySpecExtension;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
-import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
+import eu.openanalytics.shinyproxy.UserAndAppNameAndInstanceNameProxyIndex;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -48,7 +51,6 @@ import org.springframework.util.StreamUtils;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -58,39 +60,43 @@ import java.util.Objects;
 
 public abstract class BaseController {
 
-	@Inject
-	ProxyService proxyService;
-	
-	@Inject
-	UserService userService;
-	
-	@Inject
-	Environment environment;
-
-	@Inject
-	IAuthenticationBackend authenticationBackend;
-
-	@Inject
-	HeartbeatService heartbeatService;
-
-	@Inject
-	IdentifierService identifierService;
-
-	@Inject
-	protected ShinyProxySpecProvider shinyProxySpecProvider;
-
-	@Inject
-	private IContainerBackend backend;
-
-	private static final Logger logger = LogManager.getLogger(BaseController.class);
+    private static final Logger logger = LogManager.getLogger(BaseController.class);
     private static final Cache<String, LogoInfo> logoInfCache = Caffeine.newBuilder().build();
+    protected String applicationName;
+    protected String title;
+    protected String logo;
+    protected long heartbeatRate;
+    protected boolean defaultShowNavbar;
+    protected String supportAddress;
+    protected String defaultLogo;
+    protected String defaultLogoWidth;
+    protected String defaultLogoHeight;
+    protected String defaultLogoStyle;
+    protected String defaultLogoClasses;
+    @Inject
+    protected ShinyProxySpecProvider shinyProxySpecProvider;
+    @Inject
+    protected ProxyService proxyService;
+    @Inject
+    protected UserService userService;
+    @Inject
+    protected Environment environment;
+    @Inject
+    protected IAuthenticationBackend authenticationBackend;
+    @Inject
+    protected HeartbeatService heartbeatService;
+    @Inject
+    protected IdentifierService identifierService;
+    @Inject
+    private IContainerBackend backend;
+    @Inject
+    protected ContextPathHelper contextPathHelper;
+    @Inject
+    protected UserAndAppNameAndInstanceNameProxyIndex userAndAppNameAndInstanceNameProxyIndex;
+    @Inject
+    protected UserAndTargetIdProxyIndex userAndTargetIdProxyIndex;
 
-    private String defaultLogo;
-    private String defaultLogoWidth;
-    private String defaultLogoHeight;
-    private String defaultLogoStyle;
-    private String defaultLogoClasses;
-    private String logo;
+
 
     protected Boolean allowTransferApp;
 
@@ -102,61 +108,54 @@ public abstract class BaseController {
         defaultLogoStyle = environment.getProperty("proxy.default-app-logo-style");
         defaultLogoClasses = environment.getProperty("proxy.default-app-logo-classes");
         logo = resolveImageURI(environment.getProperty("proxy.logo-url"));
+        applicationName = environment.getProperty("spring.application.name");
+        title = environment.getProperty("proxy.title", "ShinyProxy");
+        heartbeatRate = heartbeatService.getHeartbeatRate();
+        defaultShowNavbar = !Boolean.parseBoolean(environment.getProperty("proxy.hide-navbar"));
+        supportAddress = environment.getProperty("proxy.support.mail-to-address");
         allowTransferApp = environment.getProperty("proxy.allow-transfer-app", Boolean.class, false);
     }
 
-    protected long getHeartbeatRate() {
-		return heartbeatService.getHeartbeatRate();
-	}
-	
-	protected Proxy findUserProxy(AppRequestInfo appRequestInfo) {
-		return findUserProxy(appRequestInfo.getAppName(), appRequestInfo.getAppInstance());
-	}
+    protected Proxy findUserProxy(AppRequestInfo appRequestInfo) {
+        return findUserProxy(appRequestInfo.getAppName(), appRequestInfo.getAppInstance());
+    }
 
-	protected Proxy findUserProxy(String appname, String appInstance) {
-		return proxyService.findProxy(p ->
-						p.getSpecId().equals(appname)
-								&& p.getRuntimeValue(AppInstanceKey.inst).equals(appInstance)
-								&& userService.isOwner(p),
-				false);
-	}
+    protected Proxy findUserProxy(String appname, String appInstance) {
+        return userAndAppNameAndInstanceNameProxyIndex.getProxy(userService.getCurrentUserId(), appname, appInstance);
+    }
 
-	protected String getProxyEndpoint(Proxy proxy) {
-		if (proxy == null || proxy.getContainers().get(0).getTargets().isEmpty()) return null;
-		return proxy.getContainers().get(0).getTargets().keySet().iterator().next();
-	}
+    protected void prepareMap(ModelMap map, HttpServletRequest request) {
+        map.put("application_name", applicationName); // name of ShinyProxy, ContainerProxy etc
+        map.put("title", title);
+        map.put("logo", logo);
 
-	protected void prepareMap(ModelMap map, HttpServletRequest request) {
-        map.put("application_name", environment.getProperty("spring.application.name")); // name of ShinyProxy, ContainerProxy etc
-		map.put("title", environment.getProperty("proxy.title", "ShinyProxy"));
-		map.put("logo", logo);
+        String hideNavBarParam = request.getParameter("sp_hide_navbar");
+        if (Objects.equals(hideNavBarParam, "true")) {
+            map.put("showNavbar", false);
+        } else {
+            map.put("showNavbar", defaultShowNavbar);
+        }
 
-		String hideNavBarParam = request.getParameter("sp_hide_navbar");
-		if (Objects.equals(hideNavBarParam, "true")) {
-			map.put("showNavbar", false);
-		} else {
-			map.put("showNavbar", !Boolean.parseBoolean(environment.getProperty("proxy.hide-navbar")));
-		}
-
-		map.put("bootstrapCss", "/webjars/bootstrap/3.4.1/css/bootstrap.min.css");
-		map.put("bootstrapJs", "/webjars/bootstrap/3.4.1/js/bootstrap.min.js");
-		map.put("jqueryJs", "/webjars/jquery/3.6.1/jquery.min.js");
-		map.put("handlebars", "/webjars/handlebars/4.7.7/handlebars.runtime.min.js");
+        map.put("bootstrapCss", "/webjars/bootstrap/3.4.1/css/bootstrap.min.css");
+        map.put("bootstrapJs", "/webjars/bootstrap/3.4.1/js/bootstrap.min.js");
+        map.put("jqueryJs", "/webjars/jquery/3.6.1/jquery.min.js");
+        map.put("handlebars", "/webjars/handlebars/4.7.7/handlebars.runtime.min.js");
 
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		boolean isLoggedIn = authentication != null && !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated();
 		map.put("isLoggedIn", isLoggedIn);
 		map.put("isAdmin", userService.isAdmin(authentication));
-		map.put("isSupportEnabled", isLoggedIn && getSupportAddress() != null);
+        map.put("isSupportEnabled", isLoggedIn && supportAddress != null);
 		map.put("logoutUrl", authenticationBackend.getLogoutURL());
 		map.put("page", ""); // defaults, used in navbar
 		map.put("maxInstances", 0); // defaults, used in navbar
-		map.put("contextPath", ContextPathHelper.withEndingSlash());
+		map.put("contextPath", contextPathHelper.withEndingSlash());
 		map.put("resourcePrefix", "/" + identifierService.instanceId);
 		map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
 		map.put("pauseSupported", backend.supportsPause());
 		map.put("spInstance", identifierService.instanceId);
         map.put("allowTransferApp", allowTransferApp);
+
 	}
 	
 	protected String getSupportAddress() {
@@ -179,57 +178,54 @@ public abstract class BaseController {
                 .build();
         });
     }
-	
-	protected String resolveImageURI(String resourceURI) {
-		if (resourceURI == null || resourceURI.isEmpty()) {
+
+    protected String resolveImageURI(String resourceURI) {
+        if (resourceURI == null || resourceURI.isEmpty()) {
             return null;
         }
 
-		String resolvedValue = resourceURI;
-		if (resourceURI.toLowerCase().startsWith("file://")) {
-			String mimetype = URLConnection.guessContentTypeFromName(resourceURI);
-			if (mimetype == null) {
-				logger.warn("Cannot determine mimetype for resource: " + resourceURI);
-			} else {
-				try (InputStream input = new URL(resourceURI).openConnection().getInputStream()) {
-					byte[] data = StreamUtils.copyToByteArray(input);
-					String encoded = Base64.getEncoder().encodeToString(data);
-					resolvedValue = String.format("data:%s;base64,%s", mimetype, encoded);
-				} catch (IOException e) {
-					logger.warn("Failed to convert file URI to data URI: " + resourceURI, e);
-				}
-			}
-		}
+        String resolvedValue = resourceURI;
+        if (resourceURI.toLowerCase().startsWith("file://")) {
+            String mimetype = URLConnection.guessContentTypeFromName(resourceURI);
+            if (mimetype == null) {
+                logger.warn("Cannot determine mimetype for resource: " + resourceURI);
+            } else {
+                try (InputStream input = new URL(resourceURI).openConnection().getInputStream()) {
+                    byte[] data = StreamUtils.copyToByteArray(input);
+                    String encoded = Base64.getEncoder().encodeToString(data);
+                    resolvedValue = String.format("data:%s;base64,%s", mimetype, encoded);
+                } catch (IOException e) {
+                    logger.warn("Failed to convert file URI to data URI: " + resourceURI, e);
+                }
+            }
+        }
+        return resolvedValue;
+    }
 
-		return resolvedValue;
-	}
+    /**
+     * Checks whether starting a proxy violates the max instances of this spec and user.
+     * This corresponds to the `max-instances` property of an app.
+     */
+    protected boolean validateMaxInstances(ProxySpec spec) {
+        Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec);
 
-	/**
-	 * Validates whether a proxy should be allowed to start.
-	 */
-	protected boolean validateProxyStart(ProxySpec spec) {
-		Integer maxInstances = shinyProxySpecProvider.getMaxInstancesForSpec(spec);
+        if (maxInstances == -1) {
+            return true;
+        }
 
-		if (maxInstances == -1) {
-			return true;
-		}
+        // note: there is a very small change that the user is able to start more instances than allowed, if the user
+        // starts many proxies at once. E.g. in the following scenario:
+        // - max proxies = 2
+        // - user starts a proxy
+        // - user sends a start proxy request -> this function is called and returns true
+        // - just before this new proxy is added to the list of active proxies, the user sends a new start proxy request
+        // - again this new proxy is allowed, because there is still only one proxy in the list of active proxies
+        // -> the user has three proxies running.
+        // Because of chance that this happens is small and that the consequences are low, we accept this risk.
+        long currentAmountOfInstances = proxyService.getUserProxiesBySpecId(spec.getId()).count();
 
-		// note: there is a very small change that the user is able to start more instances than allowed, if the user
-		// starts many proxies at once. E.g. in the following scenario:
-		// - max proxies = 2
-		// - user starts a proxy
-		// - user sends a start proxy request -> this function is called and returns true
-		// - just before this new proxy is added to the list of active proxies, the user sends a new start proxy request
-		// - again this new proxy is allowed, because there is still only one proxy in the list of active proxies
-		// -> the user has three proxies running.
-		// Because of chance that this happens is small and that the consequences are low, we accept this risk.
-		int currentAmountOfInstances = proxyService.getProxies(
-				p -> p.getSpecId().equals(spec.getId())
-						&& userService.isOwner(p),
-				false).size();
-
-		return currentAmountOfInstances < maxInstances;
-	}
+        return currentAmountOfInstances < maxInstances;
+    }
 
     @Data
     @Builder

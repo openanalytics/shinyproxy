@@ -75,7 +75,7 @@ Shiny.common = {
         Shiny.common.loadAppDetails(appName, appInstanceName, proxyId);
     },
 
-    closeAppDetails: function() {
+    closeAppDetails: function () {
         clearInterval(Shiny.common._detailsRefreshIntervalId);
         if (Shiny.admin !== undefined) {
             clearInterval(Shiny.admin._detailsRefreshIntervalId);
@@ -87,7 +87,7 @@ Shiny.common = {
         async function refresh() {
             const proxy = await Shiny.api.getProxyByIdFromCache(proxyId);
             const heartbeatInfo = await Shiny.api.getHeartBeatInfo(proxyId);
-            if (proxy === null ||  proxy.status === "Stopped" || proxy.status === "Stopping") {
+            if (proxy === null || proxy.status === "Stopped" || proxy.status === "Stopping") {
                 const templateData = {
                     appName: appName,
                     proxyId: proxyId,
@@ -152,8 +152,9 @@ Shiny.common = {
             }
             document.getElementById('appDetails').innerHTML = Handlebars.templates.app_details(templateData);
         }
+
         refresh();
-        Shiny.common._detailsRefreshIntervalId = setInterval(function() {
+        Shiny.common._detailsRefreshIntervalId = setInterval(function () {
             if (!document.hidden) {
                 refresh();
             }
@@ -220,7 +221,7 @@ Shiny.common = {
         });
         templateData['pauseSupported'] = Shiny.common.staticState.pauseSupported;
         document.getElementById('myApps').innerHTML = Handlebars.templates.my_apps(templateData);
-        if (templateData.apps.length === 0 ) {
+        if (templateData.apps.length === 0) {
             $('#stop-all-apps-btn').hide();
         } else if ($("#stopping-all-apps-btn").is(":hidden")) {
             // only show it if we are not stopping all apps

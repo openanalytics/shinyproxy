@@ -20,7 +20,8 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -70,7 +71,7 @@ public class AppRequestInfo {
                 subPath = null;
                 appPath = uri;
             } else {
-                subPath = subPath.trim();
+                subPath = subPath.trim().substring(1); // remove first slash
                 appPath = uri.substring(0, uri.length() - subPath.length());
             }
 
@@ -89,7 +90,7 @@ public class AppRequestInfo {
                 subPath = null;
                 appPath = uri;
             } else {
-                subPath = subPath.trim();
+                subPath = subPath.trim().substring(1); // remove first slash
                 appPath = uri.substring(0, uri.length() - subPath.length());
             }
 
@@ -99,15 +100,7 @@ public class AppRequestInfo {
         }
     }
 
-
     public String getAppInstance() {
-        return appInstance;
-    }
-
-    public String getAppInstanceDisplayName() {
-        if (appInstance.equals("_")) {
-            return "Default";
-        }
         return appInstance;
     }
 

@@ -21,6 +21,12 @@
 package eu.openanalytics.shinyproxy;
 
 import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -33,12 +39,6 @@ import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.GenericFilterBean;
 
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 /**
@@ -60,14 +60,13 @@ import java.io.IOException;
  */
 public class AuthenticationRequiredFilter extends GenericFilterBean {
 
-    private final ThrowableAnalyzer throwableAnalyzer = new DefaultThrowableAnalyzer();
-
     private static final RequestMatcher REQUEST_MATCHER = new OrRequestMatcher(
             new AntPathRequestMatcher("/app_proxy/**"),
             new AntPathRequestMatcher("/heartbeat/*"),
             new AntPathRequestMatcher("/api/**"),
             new AntPathRequestMatcher("/admin/data")
-            );
+    );
+    private final ThrowableAnalyzer throwableAnalyzer = new DefaultThrowableAnalyzer();
 
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;

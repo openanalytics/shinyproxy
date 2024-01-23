@@ -22,103 +22,111 @@
 -->
 <!DOCTYPE html>
 <html
-	xmlns:th="http://www.thymeleaf.org"
-	xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
-<head></head>
-<body>
-	<div th:fragment="navbar" th:if="${showNavbar}" id="navbar">
-		<nav class="navbar navbar-inverse navbar-fixed-top navbar-height">
-			<div class="container-fluid">
-				<div class="navbar-header">
-					<img class="navbar-brand" th:src="${logo}" />
-					<a class="navbar-brand" th:href="@{/}" th:text="${title}"></a>
-				</div>
-				<div class="navbar-form navbar-right">
-					<a role="button" class="btn btn-primary btn-sm" id="switchInstancesModal-btn"
-					   th:if="${page == 'app' && appMaxInstances.get(appName) != 1}" >Switch instance</a>
+        xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4"
+        xmlns:th="http://www.thymeleaf.org">
+    <head></head>
+    <body>
+        <div id="navbar" th:fragment="navbar" th:if="${showNavbar}">
+            <nav class="navbar navbar-inverse navbar-fixed-top navbar-height">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        <img class="navbar-brand" th:src="${logo}"/>
+                        <a class="navbar-brand" th:href="@{/}" th:text="${title}"></a>
+                    </div>
+                    <div class="navbar-form navbar-right">
+                        <a class="btn btn-primary btn-sm" id="switchInstancesModal-btn" role="button"
+                           th:if="${page == 'app' && appMaxInstances.get(appName) != 1}">Switch instance</a>
 
-					<a role="button" class="btn btn-primary btn-sm btn-restart-app" onclick="Shiny.instances.eventHandlers.showAppDetails();"
-					   th:if="${page == 'app' && appMaxInstances.get(appName) == 1}" >App details</a>
+                        <a class="btn btn-primary btn-sm btn-restart-app" onclick="Shiny.instances.eventHandlers.showAppDetails();"
+                           role="button"
+                           th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">App details</a>
 
-					<a role="button" class="btn btn-primary btn-sm btn-restart-app" onclick="Shiny.instances.eventHandlers.onRestartInstance();"
-						th:if="${page == 'app' && appMaxInstances.get(appName) == 1}" >Restart app</a>
+                        <a class="btn btn-primary btn-sm btn-restart-app" onclick="Shiny.instances.eventHandlers.onRestartInstance();"
+                           role="button"
+                           th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">Restart app</a>
 
-					<a role="button" class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onDeleteInstance();"
-					   th:if="${page == 'app' && appMaxInstances.get(appName) == 1}" >Stop app</a>
+                        <a class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onDeleteInstance();"
+                           role="button"
+                           th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">Stop app</a>
 
-					<a role="button" class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onPauseApp();"
-					   th:if="${page == 'app' && pauseSupported && appMaxInstances.get(appName) == 1}" >Pause app</a>
+                        <a class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onPauseApp();"
+                           role="button"
+                           th:if="${page == 'app' && pauseSupported && appMaxInstances.get(appName) == 1}">Pause app</a>
 
-					<a role="button" class="btn btn-primary btn-sm" id="myAppsModal-btn"
-					   th:if="${page == 'index' && myAppsMode == 'Modal'}" >My apps</a>
+                        <a class="btn btn-primary btn-sm" id="myAppsModal-btn" role="button"
+                           th:if="${page == 'index' && myAppsMode == 'Modal'}">My apps</a>
 
-					<a role="button" class="btn btn-primary btn-sm" th:if="${isSupportEnabled}"
-						data-toggle="modal" data-target="#reportIssueModal">Report Issue</a>
-					<a role="button" class="btn btn-primary btn-sm" th:href="@{/admin}" th:if="${isAdmin}">Admin</a>
-					<a role="button" class="btn btn-primary btn-sm" th:href="@{${logoutUrl}}" th:if="${isLoggedIn}">Sign Out</a>
-				</div>
-				<div class="navbar-right" sec:authorize="isAuthenticated()">
+                        <a class="btn btn-primary btn-sm" data-target="#reportIssueModal" data-toggle="modal"
+                           role="button" th:if="${isSupportEnabled}">Report Issue</a>
+                        <a class="btn btn-primary btn-sm" role="button" th:href="@{/admin}" th:if="${isAdmin}">Admin</a>
+                        <a class="btn btn-primary btn-sm" role="button" th:href="@{${logoutUrl}}" th:if="${isLoggedIn}">Sign
+                            Out</a>
+                    </div>
+                    <div class="navbar-right" sec:authorize="isAuthenticated()">
 					<span class="navbar-text">
 						<span class="glyphicon glyphicon-user"></span>
 						<span sec:authentication="name"></span>
 					</span>
-				</div>
-			</div>
-		</nav>
-		<script>
-			// fix padding of body as soon as navbar is rendered
-			let navbarHeight = $('.navbar-height').height();
-			if (navbarHeight !== undefined) {
-				$('body').css('padding-top', navbarHeight + 'px');
-			}
-		</script>
-		<div class="modal fade" id="reportIssueModal" role="dialog">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<form id="issueForm">
-						<div class="modal-header">
-							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-							<h4 class="modal-title">Report Issue</h4>
-						</div>
-						<div class="modal-body">
-							<div class="form-group">
-								<label for="customMessage"><span class="glyphicon glyphicon-chat"></span> Message to add to the report:</label>
-								<textarea class="form-control" id="customMessage" placeholder="Enter message" cols="40" rows="5" name="customMessage"></textarea>
-								<input type="hidden" name="currentLocation"></input>
-							</div>
-						</div>
-						<div class="modal-footer">
-							<button type="submit" class="btn btn-default btn-success">Submit</button>
-							<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-						</div>
-					</form>
-				</div>
-			</div>
-		</div>
+                    </div>
+                </div>
+            </nav>
+            <script>
+                // fix padding of body as soon as navbar is rendered
+                let navbarHeight = $('.navbar-height').height();
+                if (navbarHeight !== undefined) {
+                    $('body').css('padding-top', navbarHeight + 'px');
+                }
+            </script>
+            <div class="modal fade" id="reportIssueModal" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <form id="issueForm">
+                            <div class="modal-header">
+                                <button aria-hidden="true" class="close" data-dismiss="modal" type="button">&times;
+                                </button>
+                                <h4 class="modal-title">Report Issue</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label for="customMessage"><span class="glyphicon glyphicon-chat"></span> Message to
+                                        add to the report:</label>
+                                    <textarea class="form-control" cols="40" id="customMessage"
+                                              name="customMessage" placeholder="Enter message" rows="5"></textarea>
+                                    <input name="currentLocation" type="hidden"></input>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-default btn-success" type="submit">Submit</button>
+                                <button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
 
-		<script lang="JavaScript">
-			$(document).ready(function() {
-				$('input[name="currentLocation"]').val(window.location.href);
+            <script lang="JavaScript">
+                $(document).ready(function () {
+                    $('input[name="currentLocation"]').val(window.location.href);
 
-				$("#issueForm").submit(function(event){
-					event.preventDefault();
-					var formValues= $(this).serialize();
+                    $("#issueForm").submit(function (event) {
+                        event.preventDefault();
+                        var formValues = $(this).serialize();
 
-					$.post("[[${contextPath}]]" + "issue", formValues, function(data){
-						if (data.status === "success") {
-							$('#customMessage').val('');
-							$('#reportIssueModal').modal('hide');
-							alert("Your issue has been reported");
-						} else {
-							alert("Something went wrong when reporting your issue");
-						}
-					}).fail(function() {
-						alert("Something went wrong when reporting your issue");
-					});
-				});
-			});
-		</script>
+                        $.post("[[${contextPath}]]" + "issue", formValues, function (data) {
+                            if (data.status === "success") {
+                                $('#customMessage').val('');
+                                $('#reportIssueModal').modal('hide');
+                                alert("Your issue has been reported");
+                            } else {
+                                alert("Something went wrong when reporting your issue");
+                            }
+                        }).fail(function () {
+                            alert("Something went wrong when reporting your issue");
+                        });
+                    });
+                });
+            </script>
 
-	</div>
-</body>
+        </div>
+    </body>
 </html>

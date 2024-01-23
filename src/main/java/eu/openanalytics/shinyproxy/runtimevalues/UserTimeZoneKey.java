@@ -22,21 +22,21 @@ package eu.openanalytics.shinyproxy.runtimevalues;
 
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 
-public class UserTimeZoneKey extends RuntimeValueKey<String>  {
+public class UserTimeZoneKey extends RuntimeValueKey<String> {
+
+    public static final UserTimeZoneKey inst = new UserTimeZoneKey();
 
     public UserTimeZoneKey() {
         super("openanalytics.eu/sp-user-timezone",
                 "SHINYPROXY_USER_TIMEZONE",
-                false,
+            false,
                 true, // include as annotation so that the value can be recovered
-                false,
+            false,
                 true,
                 true,
                 false,
                 String.class);
     }
-
-    public static UserTimeZoneKey inst = new UserTimeZoneKey();
 
     @Override
     public String deserializeFromString(String value) {

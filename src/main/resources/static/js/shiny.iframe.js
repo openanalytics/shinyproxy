@@ -27,7 +27,10 @@ if (window.parent.Shiny !== undefined
 
     function ErrorHandlingWebSocket(url, protocols) {
         console.log("Called ErrorHandlingWebSocket");
-        var res = new oldWebsocket(url, protocols);
+        const newUrl = new URL(url); // url is always an absolute URL (starting with ws:// or wss://)
+        newUrl.searchParams.append("sp_proxy_id", shinyProxy.app.runtimeState.proxy.id );
+
+        var res = new oldWebsocket(newUrl, protocols);
 
         function handler() {
             console.log("Handling error of websocket connection.")
@@ -122,8 +125,8 @@ if (window.parent.Shiny !== undefined
                         shinyProxy.ui.showCrashedPage();
                     }
                 }
-        });
-        shinyProxy.app.runtimeState.lastHeartbeatTime = Date.now();
+            });
+            shinyProxy.app.runtimeState.lastHeartbeatTime = Date.now();
 
             return originalOpen.apply(this, arguments);
         }
@@ -133,7 +136,7 @@ if (window.parent.Shiny !== undefined
     _replaceOpen(window.XMLHttpRequest.prototype);
 
     // update the url when the page changes, e.g. plain HTTP apps
-    window.addEventListener('load', function() {
+    window.addEventListener('load', function () {
         shinyProxy.connections._updateIframeUrl(window.location.toString());
     });
 

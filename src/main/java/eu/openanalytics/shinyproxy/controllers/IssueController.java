@@ -37,7 +37,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.util.HashMap;
+import java.util.Map;
 
 @Controller
 public class IssueController extends BaseController {
@@ -49,7 +49,7 @@ public class IssueController extends BaseController {
     JavaMailSender mailSender;
 
     @RequestMapping(value = "/issue", method = RequestMethod.POST)
-    public ResponseEntity<HashMap<String, String>> postIssue(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<Map<String, String>> postIssue(HttpServletRequest request, HttpServletResponse response) {
         IssueForm form = new IssueForm();
         form.setUserName(userService.getCurrentUserId());
         form.setCurrentLocation(request.getParameter("currentLocation"));
@@ -63,9 +63,7 @@ public class IssueController extends BaseController {
 //        Proxy activeProxy = proxyService.findUserProxy(p -> p.getSpecId().equals(form.getAppName()));
 //        sendSupportMail(form, activeProxy);
 //
-        return ResponseEntity.ok(new HashMap<>() {{
-            put("status", "success");
-        }});
+        return ResponseEntity.ok(Map.of("status", "success"));
     }
 
     public void sendSupportMail(IssueForm form, Proxy proxy) {
@@ -104,8 +102,8 @@ public class IssueController extends BaseController {
                             helper.addAttachment(stderr.getName(), stderr);
                         }
                     } else {
-                        body.append(String.format("Log (stdout): %s%s", filePaths.getStdout().toString(), lineSep));
-                        body.append(String.format("Log (stderr): %s%s", filePaths.getStderr().toString(), lineSep));
+                        body.append(String.format("Log (stdout): %s%s", filePaths.getStdout(), lineSep));
+                        body.append(String.format("Log (stderr): %s%s", filePaths.getStderr(), lineSep));
                     }
                 }
             }

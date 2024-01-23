@@ -28,7 +28,6 @@ import eu.openanalytics.containerproxy.model.store.IProxyStore;
 import eu.openanalytics.shinyproxy.controllers.dto.ChangeProxyUserIdDto;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;

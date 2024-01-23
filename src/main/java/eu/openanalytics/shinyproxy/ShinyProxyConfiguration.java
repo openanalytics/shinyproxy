@@ -20,7 +20,6 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import eu.openanalytics.containerproxy.backend.dispatcher.proxysharing.ProxySharingDispatcher;
 import eu.openanalytics.containerproxy.backend.dispatcher.proxysharing.ProxySharingScaler;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKeyRegistry;
 import eu.openanalytics.containerproxy.util.ContextPathHelper;

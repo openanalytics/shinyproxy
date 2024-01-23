@@ -52,12 +52,12 @@ public class AppRequestInfo {
         Matcher appInstanceMatcher = APP_INSTANCE_PATTERN.matcher(uri);
         if (appInstanceMatcher.matches()) {
             String appName = appInstanceMatcher.group(2);
-            if (appName == null || appName.trim().equals("")) {
+            if (appName == null || appName.trim().isEmpty()) {
                 return null;
             }
 
             String appInstance = appInstanceMatcher.group(3);
-            if (appInstance == null || appInstance.trim().equals("")) {
+            if (appInstance == null || appInstance.trim().isEmpty()) {
                 return null;
             }
 
@@ -67,7 +67,7 @@ public class AppRequestInfo {
 
             String subPath = appInstanceMatcher.group(4);
             String appPath;
-            if (subPath == null || subPath.trim().equals("")) {
+            if (subPath == null || subPath.trim().isEmpty()) {
                 subPath = null;
                 appPath = uri;
             } else {
@@ -78,7 +78,7 @@ public class AppRequestInfo {
             return new AppRequestInfo(appName, appInstance, appPath, subPath);
         } else if (appMatcher.matches()) {
             String appName = appMatcher.group(2);
-            if (appName == null || appName.trim().equals("")) {
+            if (appName == null || appName.trim().isEmpty()) {
                 return null;
             }
 
@@ -86,7 +86,7 @@ public class AppRequestInfo {
 
             String subPath = appMatcher.group(3);
             String appPath;
-            if (subPath == null || subPath.trim().equals("")) {
+            if (subPath == null || subPath.trim().isEmpty()) {
                 subPath = null;
                 appPath = uri;
             } else {

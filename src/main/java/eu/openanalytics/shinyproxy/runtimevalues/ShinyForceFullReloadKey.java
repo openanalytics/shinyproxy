@@ -29,14 +29,14 @@ public class ShinyForceFullReloadKey extends RuntimeValueKey<Boolean> {
 
     public ShinyForceFullReloadKey() {
         super("openanalytics.eu/sp-shiny-force-full-reload",
-                "SHINYPROXY_FORCE_FULL_RELOAD",
+            "SHINYPROXY_FORCE_FULL_RELOAD",
             false,
-                true,
+            true,
             false,
-                true,
-                true,
-                false,
-                Boolean.class);
+            true,
+            true,
+            false,
+            Boolean.class);
     }
 
     @Override

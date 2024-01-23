@@ -37,11 +37,13 @@
                         <a class="btn btn-primary btn-sm" id="switchInstancesModal-btn" role="button"
                            th:if="${page == 'app' && appMaxInstances.get(appName) != 1}">Switch instance</a>
 
-                        <a class="btn btn-primary btn-sm btn-restart-app" onclick="Shiny.instances.eventHandlers.showAppDetails();"
+                        <a class="btn btn-primary btn-sm btn-restart-app"
+                           onclick="Shiny.instances.eventHandlers.showAppDetails();"
                            role="button"
                            th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">App details</a>
 
-                        <a class="btn btn-primary btn-sm btn-restart-app" onclick="Shiny.instances.eventHandlers.onRestartInstance();"
+                        <a class="btn btn-primary btn-sm btn-restart-app"
+                           onclick="Shiny.instances.eventHandlers.onRestartInstance();"
                            role="button"
                            th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">Restart app</a>
 

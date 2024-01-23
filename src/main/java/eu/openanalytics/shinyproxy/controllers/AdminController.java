@@ -64,24 +64,24 @@ public class AdminController extends BaseController {
 
     @Operation(summary = "Get active proxies of all users.", tags = "ShinyProxy")
     @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "Active proxies are returned.",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = ProxyInfoResponse.class),
-                                    examples = {
-                                            @ExampleObject(value = "{\"status\": \"success\", \"data\": [{\"status\": \"Up\", \"proxyId\": \"9cd90bbb-ae9c-4016-9b9c-d2852b3a0bf6\", \"userId\": \"jack\", \"appName\": \"01_hello\", " +
-                                                    "\"instanceName\": \"Default\", \"endpoint\": \"N/A\", \"uptime\": \"0:00:39\", \"lastHeartBeat\": \"0:00:05\", \"imageName\": \"openanalytics/shinyproxy-demo\", \"imageTag\": \"N/A\", " +
-                                                    "\"heartbeatTimeout\": null, \"maxLifetime\": \"0:02:00\", \"spInstance\": \"9bec0d32754eab6a036bf1ee032bca82f98df0c5\", \"backendContainerName\": " +
-                                                    "\"900b4f35b283401946db1d7cb8fe31ad5e6209d921b3cb9fd668ed6b9cbf7aa5\", \"parameters\": null}, {\"status\": \"Up\", \"proxyId\": \"b34d416e-ce6e-4351-a126-8836c88f2200\", \"userId\": " +
-                                                    "\"jack\", \"appName\": \"06_tabsets\", \"instanceName\": \"Default\", \"endpoint\": \"N/A\", \"uptime\": \"0:00:18\", \"lastHeartBeat\": \"0:00:02\", \"imageName\": " +
-                                                    "\"openanalytics/shinyproxy-demo\", \"imageTag\": \"N/A\", \"heartbeatTimeout\": null, \"maxLifetime\": \"0:02:00\", \"spInstance\": \"9bec0d32754eab6a036bf1ee032bca82f98df0c5\", " +
-                                                    "\"backendContainerName\": \"2158b5b49c4138a9d0d6313fc4b62eba074b359473143be1d98102ab06c74bf8\", \"parameters\": null}]}")
-                                    }
-                            )
-                    }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "Active proxies are returned.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProxyInfoResponse.class),
+                    examples = {
+                        @ExampleObject(value = "{\"status\": \"success\", \"data\": [{\"status\": \"Up\", \"proxyId\": \"9cd90bbb-ae9c-4016-9b9c-d2852b3a0bf6\", \"userId\": \"jack\", \"appName\": \"01_hello\", " +
+                            "\"instanceName\": \"Default\", \"endpoint\": \"N/A\", \"uptime\": \"0:00:39\", \"lastHeartBeat\": \"0:00:05\", \"imageName\": \"openanalytics/shinyproxy-demo\", \"imageTag\": \"N/A\", " +
+                            "\"heartbeatTimeout\": null, \"maxLifetime\": \"0:02:00\", \"spInstance\": \"9bec0d32754eab6a036bf1ee032bca82f98df0c5\", \"backendContainerName\": " +
+                            "\"900b4f35b283401946db1d7cb8fe31ad5e6209d921b3cb9fd668ed6b9cbf7aa5\", \"parameters\": null}, {\"status\": \"Up\", \"proxyId\": \"b34d416e-ce6e-4351-a126-8836c88f2200\", \"userId\": " +
+                            "\"jack\", \"appName\": \"06_tabsets\", \"instanceName\": \"Default\", \"endpoint\": \"N/A\", \"uptime\": \"0:00:18\", \"lastHeartBeat\": \"0:00:02\", \"imageName\": " +
+                            "\"openanalytics/shinyproxy-demo\", \"imageTag\": \"N/A\", \"heartbeatTimeout\": null, \"maxLifetime\": \"0:02:00\", \"spInstance\": \"9bec0d32754eab6a036bf1ee032bca82f98df0c5\", " +
+                            "\"backendContainerName\": \"2158b5b49c4138a9d0d6313fc4b62eba074b359473143be1d98102ab06c74bf8\", \"parameters\": null}]}")
+                    }
+                )
+            }),
     })
     @RequestMapping(value = "/admin/data", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
     @ResponseBody

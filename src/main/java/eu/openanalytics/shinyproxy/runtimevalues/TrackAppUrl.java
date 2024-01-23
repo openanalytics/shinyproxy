@@ -29,14 +29,14 @@ public class TrackAppUrl extends RuntimeValueKey<Boolean> {
 
     public TrackAppUrl() {
         super("openanalytics.eu/sp-track-app-url",
-                "SHINYPROXY_TRACK_APP_URL",
+            "SHINYPROXY_TRACK_APP_URL",
             false,
-                true,
+            true,
             false,
-                true,
-                true,
-                false,
-                Boolean.class);
+            true,
+            true,
+            false,
+            Boolean.class);
     }
 
     @Override

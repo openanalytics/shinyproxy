@@ -87,17 +87,14 @@ public abstract class BaseController {
     @Inject
     protected IdentifierService identifierService;
     @Inject
-    private IContainerBackend backend;
-    @Inject
     protected ContextPathHelper contextPathHelper;
     @Inject
     protected UserAndAppNameAndInstanceNameProxyIndex userAndAppNameAndInstanceNameProxyIndex;
     @Inject
     protected UserAndTargetIdProxyIndex userAndTargetIdProxyIndex;
-
-
-
     protected Boolean allowTransferApp;
+    @Inject
+    private IContainerBackend backend;
 
     @PostConstruct
     public void baseInit() {
@@ -140,26 +137,26 @@ public abstract class BaseController {
         map.put("jqueryJs", "/webjars/jquery/3.6.1/jquery.min.js");
         map.put("handlebars", "/webjars/handlebars/4.7.7/handlebars.runtime.min.js");
 
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		boolean isLoggedIn = authentication != null && !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated();
-		map.put("isLoggedIn", isLoggedIn);
-		map.put("isAdmin", userService.isAdmin(authentication));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean isLoggedIn = authentication != null && !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated();
+        map.put("isLoggedIn", isLoggedIn);
+        map.put("isAdmin", userService.isAdmin(authentication));
         map.put("isSupportEnabled", isLoggedIn && supportAddress != null);
-		map.put("logoutUrl", authenticationBackend.getLogoutURL());
-		map.put("page", ""); // defaults, used in navbar
-		map.put("maxInstances", 0); // defaults, used in navbar
-		map.put("contextPath", contextPathHelper.withEndingSlash());
-		map.put("resourcePrefix", "/" + identifierService.instanceId);
-		map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
-		map.put("pauseSupported", backend.supportsPause());
-		map.put("spInstance", identifierService.instanceId);
+        map.put("logoutUrl", authenticationBackend.getLogoutURL());
+        map.put("page", ""); // defaults, used in navbar
+        map.put("maxInstances", 0); // defaults, used in navbar
+        map.put("contextPath", contextPathHelper.withEndingSlash());
+        map.put("resourcePrefix", "/" + identifierService.instanceId);
+        map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
+        map.put("pauseSupported", backend.supportsPause());
+        map.put("spInstance", identifierService.instanceId);
         map.put("allowTransferApp", allowTransferApp);
 
-	}
-	
-	protected String getSupportAddress() {
-		return environment.getProperty("proxy.support.mail-to-address");
-	}
+    }
+
+    protected String getSupportAddress() {
+        return environment.getProperty("proxy.support.mail-to-address");
+    }
 
     protected LogoInfo getAppLogoInfo(ProxySpec proxySpec) {
         return logoInfCache.get(proxySpec.getId(), (specId) -> {
@@ -226,6 +223,10 @@ public abstract class BaseController {
         return currentAmountOfInstances < maxInstances;
     }
 
+    private <T> T coalesce(T first, T second) {
+        return first != null ? first : second;
+    }
+
     @Data
     @Builder
     @AllArgsConstructor
@@ -241,9 +242,5 @@ public abstract class BaseController {
 
         String classes;
 
-    }
-
-    private <T> T coalesce(T first, T second) {
-        return first != null ? first : second;
     }
 }

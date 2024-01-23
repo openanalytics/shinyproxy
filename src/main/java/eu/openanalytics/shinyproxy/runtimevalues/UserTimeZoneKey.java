@@ -28,14 +28,14 @@ public class UserTimeZoneKey extends RuntimeValueKey<String> {
 
     public UserTimeZoneKey() {
         super("openanalytics.eu/sp-user-timezone",
-                "SHINYPROXY_USER_TIMEZONE",
+            "SHINYPROXY_USER_TIMEZONE",
             false,
-                true, // include as annotation so that the value can be recovered
+            true, // include as annotation so that the value can be recovered
             false,
-                true,
-                true,
-                false,
-                String.class);
+            true,
+            true,
+            false,
+            String.class);
     }
 
     @Override

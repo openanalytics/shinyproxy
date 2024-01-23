@@ -55,11 +55,13 @@
                         th:data-app-id="${app.id}"
                         th:href="${@thymeleaf.openSwitchInstanceInsteadOfApp(app) ? '#' : @thymeleaf.getAppUrl(app)}"
                 >
-            <span class="app-list-title" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></span>
-            <th:block th:with="logo=${appLogos.get(app)}" th:if="${appLogos.get(app) != null}">
-                <br/>
-                <img th:src="${logo.src}" th:width="${logo.width}" th:height="${logo.height}" th:style="${logo.style}">
-            </th:block>
+                    <span class="app-list-title"
+                          th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></span>
+                    <th:block th:if="${appLogos.get(app) != null}" th:with="logo=${appLogos.get(app)}">
+                        <br/>
+                        <img th:height="${logo.height}" th:src="${logo.src}" th:style="${logo.style}"
+                             th:width="${logo.width}">
+                    </th:block>
                     <br th:if="${app.description != null}"/>
                     <span th:if="${app.description != null}" th:utext="${app.description}"></span>
                 </a>
@@ -98,7 +100,8 @@
                     <div class="myApps" id="myApps">
                     </div>
                     <div class="myApps-footer">
-                        <button class="btn pull-left btn-danger" id="stop-all-apps-btn" onclick="Shiny.common.onStopAllApps();"
+                        <button class="btn pull-left btn-danger" id="stop-all-apps-btn"
+                                onclick="Shiny.common.onStopAllApps();"
                                 type="button">Stop all apps
                         </button>
                         <button class="btn pull-left btn-danger" disabled id="stopping-all-apps-btn" type="button">

@@ -66,7 +66,8 @@
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button class="btn pull-left btn-danger" id="stop-all-apps-btn" onclick="Shiny.common.onStopAllApps();"
+                            <button class="btn pull-left btn-danger" id="stop-all-apps-btn"
+                                    onclick="Shiny.common.onStopAllApps();"
                                     type="button">Stop all apps
                             </button>
                             <button class="btn pull-left btn-danger" disabled id="stopping-all-apps-btn" type="button">
@@ -91,12 +92,13 @@
                             <button class="btn btn-default close-button" type="button">Close</button>
                         </div>
                     </div>
-                    <form th:if="${allowTransferApp}" id="changeUserIdForm" class="form-inline">
+                    <form class="form-inline" id="changeUserIdForm" th:if="${allowTransferApp}">
                         <div class="form-group">
-                            <label for="userIdField"><span class="glyphicon glyphicon-chat"></span>Transfer app to another user:</label><br>
+                            <label for="userIdField"><span class="glyphicon glyphicon-chat"></span>Transfer app to
+                                another user:</label><br>
                             <div class="input-group">
                                 <input class="form-control" id="userIdField" type="text">
-                                <button type="submit" class="btn btn-default btn-success">Transfer</button>
+                                <button class="btn btn-default btn-success" type="submit">Transfer</button>
                             </div>
                         </div>
                     </form>

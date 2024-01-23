@@ -67,12 +67,12 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 
             // Limit access to the app pages according to spec permissions
             http.authorizeHttpRequests(authz -> authz
-                    .requestMatchers(
-                             new MvcRequestMatcher(handlerMappingIntrospector, "/app/{specId}/**"),
-                             new MvcRequestMatcher(handlerMappingIntrospector, "/app_i/{specId}/**"),
-                             new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct/{specId}/**"),
-                             new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct_i/{specId}/**"))
-                    .access((authentication, context) -> new AuthorizationDecision(proxyAccessControlService.canAccessOrHasExistingProxy(authentication.get(), context)))
+                .requestMatchers(
+                    new MvcRequestMatcher(handlerMappingIntrospector, "/app/{specId}/**"),
+                    new MvcRequestMatcher(handlerMappingIntrospector, "/app_i/{specId}/**"),
+                    new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct/{specId}/**"),
+                    new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct_i/{specId}/**"))
+                .access((authentication, context) -> new AuthorizationDecision(proxyAccessControlService.canAccessOrHasExistingProxy(authentication.get(), context)))
             );
             http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
 
@@ -95,10 +95,10 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 
         // Limit access to the admin pages
         http.authorizeHttpRequests(authz -> authz
-                .requestMatchers(
-                        new MvcRequestMatcher(handlerMappingIntrospector,"/admin"),
-                        new MvcRequestMatcher(handlerMappingIntrospector,"/admin/data"))
-                .access((authentication, context) -> new AuthorizationDecision(userService.isAdmin(authentication.get())))
+            .requestMatchers(
+                new MvcRequestMatcher(handlerMappingIntrospector, "/admin"),
+                new MvcRequestMatcher(handlerMappingIntrospector, "/admin/data"))
+            .access((authentication, context) -> new AuthorizationDecision(userService.isAdmin(authentication.get())))
         );
 
     }

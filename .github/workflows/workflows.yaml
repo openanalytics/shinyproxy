@@ -1,6 +1,6 @@
 name: Tests
 
-on: [push]
+on: [ push ]
 
 jobs:
   tests:
@@ -38,4 +38,3 @@ jobs:
         with:
           name: dependency-check-report
           path: target/dependency-check-report.html
-

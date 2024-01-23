@@ -117,8 +117,8 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
         ByteBuffer out;
         // 1. check whether it's a html response and success
         if (exchange.getStatusCode() == HttpStatus.OK.value()
-                && exchange.getResponseHeaders().get("Content-Type") != null
-                && exchange.getResponseHeaders().get("Content-Type").stream().anyMatch(headerValue -> headerValue.contains("text/html"))) {
+            && exchange.getResponseHeaders().get("Content-Type") != null
+            && exchange.getResponseHeaders().get("Content-Type").stream().anyMatch(headerValue -> headerValue.contains("text/html"))) {
             // 2. inject script
             String r = outputStream.toString(StandardCharsets.UTF_8);
             r += "<script src='" + scriptPath + "'></script>";
@@ -152,9 +152,9 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
 
             try {
                 m = ServerFixedLengthStreamSinkConduit.class.getDeclaredMethod(
-                        "reset",
-                        long.class,
-                        HttpServerExchange.class);
+                    "reset",
+                    long.class,
+                    HttpServerExchange.class);
                 m.setAccessible(true);
             } catch (NoSuchMethodException | SecurityException ex) {
                 throw new RuntimeException("could not find ServerFixedLengthStreamSinkConduit.reset method", ex);

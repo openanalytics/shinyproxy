@@ -66,10 +66,10 @@ public class IndexController extends BaseController {
         map.put("apps", apps);
 
         // app logos
-		Map<ProxySpec, LogoInfo> appLogos = new HashMap<>();
+        Map<ProxySpec, LogoInfo> appLogos = new HashMap<>();
         for (ProxySpec app : apps) {
             appLogos.put(app, getAppLogoInfo(app));
-            }
+        }
         map.put("appLogos", appLogos);
 
         // template groups

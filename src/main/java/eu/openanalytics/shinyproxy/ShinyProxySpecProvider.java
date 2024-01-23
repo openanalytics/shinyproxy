@@ -77,15 +77,12 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
     private static final String PROP_DEFAULT_MAX_INSTANCES = "proxy.default-max-instances";
     private static final String PROP_DEFAULT_ALWAYS_SWITCH_INSTANCE = "proxy.default-always-switch-instance";
     private static Environment environment;
-    private List<ProxySpec> specs = new ArrayList<>();
     private final Map<String, ProxySpec> specsMap = new HashMap<>();
+    private final Cache<String, Map<String, Integer>> maxInstancesCache;
+    private List<ProxySpec> specs = new ArrayList<>();
     private List<TemplateGroup> templateGroups = new ArrayList<>();
     private String defaultMaxInstances;
-
     private Boolean defaultAlwaysSwitchInstance;
-
-    private final Cache<String, Map<String, Integer>> maxInstancesCache;
-
     @Inject
     private SpecExpressionResolver expressionResolver;
 
@@ -96,17 +93,17 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
     @Inject
     private List<ISpecExtensionProvider<?>> specExtensionProviders;
 
-    @Autowired
-    public void setEnvironment(Environment env) {
-        ShinyProxySpecProvider.environment = env;
-    }
-
     public ShinyProxySpecProvider() {
         // cache maxInstances results for (at least) 60 minutes, since this never changes during the lifetime of a session
         maxInstancesCache = Caffeine.newBuilder()
             .scheduler(Scheduler.systemScheduler())
             .expireAfterAccess(60, TimeUnit.MINUTES)
             .build();
+    }
+
+    @Autowired
+    public void setEnvironment(Environment env) {
+        ShinyProxySpecProvider.environment = env;
     }
 
     @PostConstruct
@@ -118,7 +115,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
         defaultAlwaysSwitchInstance = environment.getProperty(PROP_DEFAULT_ALWAYS_SWITCH_INSTANCE, Boolean.class, false);
         specs.forEach(ProxySpec::setContainerIndex);
         specs.forEach(spec -> specsMap.put(spec.getId(), spec));
-        for (ISpecExtensionProvider<?> specExtensionProvider: specExtensionProviders) {
+        for (ISpecExtensionProvider<?> specExtensionProvider : specExtensionProviders) {
             if (specExtensionProvider.getSpecs() != null) {
                 for (ISpecExtension specExtension : specExtensionProvider.getSpecs()) {
                     getSpec(specExtension.getId()).addSpecExtension(specExtension);
@@ -536,36 +533,36 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
             this.additionalPortMappings = additionalPortMappings;
         }
 
-        public void setAddDefaultHttpHeaders(boolean addDefaultHeaders) {
-            proxySpec.addDefaultHttpHeaders(addDefaultHeaders);
-        }
-
         public boolean getAddDefaultHttpHeaders() {
             return proxySpec.build().getAddDefaultHttpHeaders();
         }
 
-        public void setHttpHeaders(Map<String, String> headers) {
-            proxySpec.httpHeaders(new SpelField.StringMap(headers));
+        public void setAddDefaultHttpHeaders(boolean addDefaultHeaders) {
+            proxySpec.addDefaultHttpHeaders(addDefaultHeaders);
         }
 
         public SpelField.StringMap getHttpHeaders() {
             return proxySpec.build().getHttpHeaders();
         }
 
-        public void setCacheHeadersMode(CacheHeadersMode cacheHeadersMode){
-            proxySpec.cacheHeadersMode(cacheHeadersMode);
+        public void setHttpHeaders(Map<String, String> headers) {
+            proxySpec.httpHeaders(new SpelField.StringMap(headers));
         }
 
         public CacheHeadersMode getCacheHeadersMode() {
             return proxySpec.build().getCacheHeadersMode();
         }
 
-        public void setMaxTotalInstances(int maxTotalInstances) {
-            proxySpec.maxTotalInstances(maxTotalInstances);
+        public void setCacheHeadersMode(CacheHeadersMode cacheHeadersMode) {
+            proxySpec.cacheHeadersMode(cacheHeadersMode);
         }
 
         public int getMaxTotalInstances() {
             return proxySpec.build().getMaxTotalInstances();
+        }
+
+        public void setMaxTotalInstances(int maxTotalInstances) {
+            proxySpec.maxTotalInstances(maxTotalInstances);
         }
 
         public ProxySpec getProxySpec() {

@@ -28,7 +28,7 @@ if (window.parent.Shiny !== undefined
     function ErrorHandlingWebSocket(url, protocols) {
         console.log("Called ErrorHandlingWebSocket");
         const newUrl = new URL(url); // url is always an absolute URL (starting with ws:// or wss://)
-        newUrl.searchParams.append("sp_proxy_id", shinyProxy.app.runtimeState.proxy.id );
+        newUrl.searchParams.append("sp_proxy_id", shinyProxy.app.runtimeState.proxy.id);
 
         var res = new oldWebsocket(newUrl, protocols);
 

@@ -74,7 +74,7 @@ Shiny.api = {
     async changeProxyUserid(proxyId, newUserId) {
         const resp = await fetch(Shiny.api.buildURL("api/proxy/" + proxyId + '/userId'), {
             method: 'PUT',
-            body:  JSON.stringify({"userId": newUserId}),
+            body: JSON.stringify({"userId": newUserId}),
             headers: {
                 'Content-Type': 'application/json'
             },

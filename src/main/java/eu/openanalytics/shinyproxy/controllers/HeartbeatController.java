@@ -63,39 +63,39 @@ public class HeartbeatController {
      */
     @Operation(summary = "Force an heartbeat for an app.", tags = "ShinyProxy")
     @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "Heartbeat sent.",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    examples = {
-                                            @ExampleObject(value = "{\"status\":\"success\", \"data\": null}")
-                                    }
-                            )
-                    }),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "401",
-                    description = "User is not authenticated.",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    examples = {
-                                            @ExampleObject(value = "{\"message\":\"shinyproxy_authentication_required\",\"status\":\"fail\"}")
-                                    }
-                            )
-                    }),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "410",
-                    description = "App has been stopped or the app never existed or the user has no access to the app.",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    examples = {
-                                            @ExampleObject(value = "{\"message\":\"app_stopped_or_non_existent\",\"status\":\"fail\"}")
-                                    }
-                            )
-                    }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "Heartbeat sent.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {
+                        @ExampleObject(value = "{\"status\":\"success\", \"data\": null}")
+                    }
+                )
+            }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "User is not authenticated.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {
+                        @ExampleObject(value = "{\"message\":\"shinyproxy_authentication_required\",\"status\":\"fail\"}")
+                    }
+                )
+            }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "410",
+            description = "App has been stopped or the app never existed or the user has no access to the app.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {
+                        @ExampleObject(value = "{\"message\":\"app_stopped_or_non_existent\",\"status\":\"fail\"}")
+                    }
+                )
+            }),
     })
     @RequestMapping(value = "/heartbeat/{proxyId}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
@@ -117,40 +117,40 @@ public class HeartbeatController {
      */
     @Operation(summary = "Get heartbeat information for an app.", tags = "ShinyProxy")
     @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "Heartbeat info returned.",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = HeartBeatInfoDto.class),
-                                    examples = {
-                                            @ExampleObject(value = "{\"status\":\"success\"}")
-                                    }
-                            )
-                    }),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "401",
-                    description = "User is not authenticated.",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    examples = {
-                                            @ExampleObject(value = "{\"message\":\"shinyproxy_authentication_required\",\"status\":\"fail\"}")
-                                    }
-                            )
-                    }),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "410",
-                    description = "App has been stopped or the app never existed or the user has no access to the app.",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    examples = {
-                                            @ExampleObject(value = "{\"message\":\"app_stopped_or_non_existent\",\"status\":\"fail\"}")
-                                    }
-                            )
-                    }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "Heartbeat info returned.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = HeartBeatInfoDto.class),
+                    examples = {
+                        @ExampleObject(value = "{\"status\":\"success\"}")
+                    }
+                )
+            }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "User is not authenticated.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {
+                        @ExampleObject(value = "{\"message\":\"shinyproxy_authentication_required\",\"status\":\"fail\"}")
+                    }
+                )
+            }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "410",
+            description = "App has been stopped or the app never existed or the user has no access to the app.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {
+                        @ExampleObject(value = "{\"message\":\"app_stopped_or_non_existent\",\"status\":\"fail\"}")
+                    }
+                )
+            }),
     })
     @RequestMapping(value = "/heartbeat/{proxyId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody

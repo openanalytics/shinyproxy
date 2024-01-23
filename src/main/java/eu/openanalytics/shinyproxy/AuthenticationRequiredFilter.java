@@ -61,10 +61,10 @@ import java.io.IOException;
 public class AuthenticationRequiredFilter extends GenericFilterBean {
 
     private static final RequestMatcher REQUEST_MATCHER = new OrRequestMatcher(
-            new AntPathRequestMatcher("/app_proxy/**"),
-            new AntPathRequestMatcher("/heartbeat/*"),
-            new AntPathRequestMatcher("/api/**"),
-            new AntPathRequestMatcher("/admin/data")
+        new AntPathRequestMatcher("/app_proxy/**"),
+        new AntPathRequestMatcher("/heartbeat/*"),
+        new AntPathRequestMatcher("/api/**"),
+        new AntPathRequestMatcher("/admin/data")
     );
     private final ThrowableAnalyzer throwableAnalyzer = new DefaultThrowableAnalyzer();
 
@@ -116,7 +116,7 @@ public class AuthenticationRequiredFilter extends GenericFilterBean {
 
             registerExtractor(ServletException.class, throwable -> {
                 ThrowableAnalyzer.verifyThrowableHierarchy(throwable,
-                        ServletException.class);
+                    ServletException.class);
                 return ((ServletException) throwable).getRootCause();
             });
         }

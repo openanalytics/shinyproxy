@@ -84,6 +84,7 @@ Shiny.common = {
 
     loadAppDetails(appName, appInstanceName, proxyId) {
         Shiny.common.runtimeState.detailsAppId = proxyId;
+
         async function refresh() {
             const proxy = await Shiny.api.getProxyByIdFromCache(proxyId);
             const heartbeatInfo = await Shiny.api.getHeartBeatInfo(proxyId);

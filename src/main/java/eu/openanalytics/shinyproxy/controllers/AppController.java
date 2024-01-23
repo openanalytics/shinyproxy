@@ -136,7 +136,7 @@ public class AppController extends BaseController {
         prepareMap(map, request);
         map.put("heartbeatRate", heartbeatRate);
         map.put("page", "app");
-        map.put("appName",  appName);
+        map.put("appName", appName);
         map.put("appInstance", appInstance);
         map.put("appInstanceDisplayName", getAppInstanceDisplayName(appInstance));
         map.put("appPath", appPath);
@@ -176,71 +176,71 @@ public class AppController extends BaseController {
             map.put("parameterIds", null);
             map.put("parameterFragment", null);
         }
-       return new ModelAndView("app", map);
+        return new ModelAndView("app", map);
     }
 
     // TODO add example with timezone
     @Operation(summary = "Start an app.", tags = "ShinyProxy",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AppBody.class),
-                            examples = {
-                                    @ExampleObject(name = "With parameters", value = "{\"parameters\":{\"resources\":\"2 CPU cores - 8G RAM\",\"other_parameter\":\"example\"}}"),
-                                    @ExampleObject(name = "With timezone", value = "{\"timezone\":\"Europe/Brussels\"}")
-                            }
-                    )
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = AppBody.class),
+                examples = {
+                    @ExampleObject(name = "With parameters", value = "{\"parameters\":{\"resources\":\"2 CPU cores - 8G RAM\",\"other_parameter\":\"example\"}}"),
+                    @ExampleObject(name = "With timezone", value = "{\"timezone\":\"Europe/Brussels\"}")
+                }
             )
+        )
     )
     @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "200",
-                    description = "The proxy has been created.",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    schema = @Schema(implementation = SwaggerDto.ProxyResponse.class),
-                                    examples = {
-                                            @ExampleObject(value = "{\"status\":\"success\",\"data\":{\"id\":\"cdaa8056-4f96-428e-91e8-bc13518d8987\",\"status\":\"New\",\"startupTimestamp\":0,\"createdTimestamp\":1671707875757," +
-                                                    "\"userId\":\"jack\",\"specId\":\"01_hello\",\"displayName\":\"Hello Application\",\"containers\":[],\"runtimeValues\":{\"SHINYPROXY_FORCE_FULL_RELOAD\":false," +
-                                                    "\"SHINYPROXY_WEBSOCKET_RECONNECTION_MODE\":\"None\",\"SHINYPROXY_MAX_INSTANCES\":100,\"SHINYPROXY_PUBLIC_PATH\":\"/app_proxy/cdaa8056-4f96-428e-91e8-bc13518d8987/\"," +
-                                                    "\"SHINYPROXY_APP_INSTANCE\":\"default\"}}}\n")
-                                    }
-                            )
-                    }),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid request, app not started.",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    examples = {
-                                            @ExampleObject(name = "Max instances reached", value = "{\"status\":\"fail\",\"data\":\"Cannot start new proxy because the maximum amount of instances of this proxy has been reached\"}"),
-                                            @ExampleObject(name = "Instance already exists", value = "{\"status\":\"fail\",\"data\":\"You already have an instance of this app with the given name\"}"),
-                                            @ExampleObject(name = "Parameters required", value = "{\"status\":\"fail\",\"data\":\"No parameters provided, but proxy spec expects parameters\"}"),
-                                            @ExampleObject(name = "Missing parameter", value = "{\"status\":\"fail\",\"data\":\"Missing value for parameter example\"}"),
-                                            @ExampleObject(name = "Invalid parameter value", value = "{\"status\":\"fail\",\"data\":\"Provided parameter values are not allowed\"}")
-                                    }
-                            )
-                    }),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "403",
-                    description = "Proxy spec not found or no permission to use this proxy spec.",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    examples = {@ExampleObject(value = "{\"status\": \"fail\", \"data\": \"forbidden\"}")}
-                            )
-                    }),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "500",
-                    description = "Failed to start proxy.",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    examples = {@ExampleObject(value = "{\"status\": \"fail\", \"data\": \"Failed to start proxy\"}")}
-                            )
-                    }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "The proxy has been created.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = SwaggerDto.ProxyResponse.class),
+                    examples = {
+                        @ExampleObject(value = "{\"status\":\"success\",\"data\":{\"id\":\"cdaa8056-4f96-428e-91e8-bc13518d8987\",\"status\":\"New\",\"startupTimestamp\":0,\"createdTimestamp\":1671707875757," +
+                            "\"userId\":\"jack\",\"specId\":\"01_hello\",\"displayName\":\"Hello Application\",\"containers\":[],\"runtimeValues\":{\"SHINYPROXY_FORCE_FULL_RELOAD\":false," +
+                            "\"SHINYPROXY_WEBSOCKET_RECONNECTION_MODE\":\"None\",\"SHINYPROXY_MAX_INSTANCES\":100,\"SHINYPROXY_PUBLIC_PATH\":\"/app_proxy/cdaa8056-4f96-428e-91e8-bc13518d8987/\"," +
+                            "\"SHINYPROXY_APP_INSTANCE\":\"default\"}}}\n")
+                    }
+                )
+            }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400",
+            description = "Invalid request, app not started.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {
+                        @ExampleObject(name = "Max instances reached", value = "{\"status\":\"fail\",\"data\":\"Cannot start new proxy because the maximum amount of instances of this proxy has been reached\"}"),
+                        @ExampleObject(name = "Instance already exists", value = "{\"status\":\"fail\",\"data\":\"You already have an instance of this app with the given name\"}"),
+                        @ExampleObject(name = "Parameters required", value = "{\"status\":\"fail\",\"data\":\"No parameters provided, but proxy spec expects parameters\"}"),
+                        @ExampleObject(name = "Missing parameter", value = "{\"status\":\"fail\",\"data\":\"Missing value for parameter example\"}"),
+                        @ExampleObject(name = "Invalid parameter value", value = "{\"status\":\"fail\",\"data\":\"Provided parameter values are not allowed\"}")
+                    }
+                )
+            }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "403",
+            description = "Proxy spec not found or no permission to use this proxy spec.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {@ExampleObject(value = "{\"status\": \"fail\", \"data\": \"forbidden\"}")}
+                )
+            }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "500",
+            description = "Failed to start proxy.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {@ExampleObject(value = "{\"status\": \"fail\", \"data\": \"Failed to start proxy\"}")}
+                )
+            }),
     })
     @ResponseBody
     @JsonView(Views.UserApi.class)
@@ -279,28 +279,28 @@ public class AppController extends BaseController {
 
     @Operation(summary = "Proxy request to app. This endpoint is used to serve the iframe, hence it makes some assumptions. Do not use it directly or for embedding.", tags = "ShinyProxy")
     @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "401",
-                    description = "User is not authenticated.",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    examples = {
-                                            @ExampleObject(value = "{\"message\":\"shinyproxy_authentication_required\",\"status\":\"fail\"}")
-                                    }
-                            )
-                    }),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                    responseCode = "410",
-                    description = "App has been stopped or the app never existed or the user has no access to the app.",
-                    content = {
-                            @Content(
-                                    mediaType = "application/json",
-                                    examples = {
-                                            @ExampleObject(value = "{\"message\":\"app_stopped_or_non_existent\",\"status\":\"fail\"}")
-                                    }
-                            )
-                    }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "User is not authenticated.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {
+                        @ExampleObject(value = "{\"message\":\"shinyproxy_authentication_required\",\"status\":\"fail\"}")
+                    }
+                )
+            }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "410",
+            description = "App has been stopped or the app never existed or the user has no access to the app.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {
+                        @ExampleObject(value = "{\"message\":\"app_stopped_or_non_existent\",\"status\":\"fail\"}")
+                    }
+                )
+            }),
     })
     @RequestMapping(value = {"/app_proxy/{targetId}/**"})
     public void appProxy(@PathVariable String targetId, HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -341,7 +341,7 @@ public class AppController extends BaseController {
         }
 
         Proxy proxy = userAndTargetIdProxyIndex.getProxy(userService.getCurrentUserId(), targetId);
-        if (proxy == null || proxy.getStatus().isUnavailable()  || !userService.isOwner(proxy)) {
+        if (proxy == null || proxy.getStatus().isUnavailable() || !userService.isOwner(proxy)) {
             ShinyProxyApiResponse.appStoppedOrNonExistent(response);
             return;
         }
@@ -372,15 +372,15 @@ public class AppController extends BaseController {
 
     private String buildContainerSubPath(HttpServletRequest request, String subPath) {
         String queryString = ServletUriComponentsBuilder.fromRequest(request)
-                .replaceQueryParam("sp_hide_navbar")
-                .replaceQueryParam("sp_automatic_reload")
-                .build().getQuery();
+            .replaceQueryParam("sp_hide_navbar")
+            .replaceQueryParam("sp_automatic_reload")
+            .build().getQuery();
 
         String res = UriComponentsBuilder
-                .fromPath(subPath)
-                .query(queryString)
-                .build(false) // #30932: queryString is not yet encoded
-                .toUriString();
+            .fromPath(subPath)
+            .query(queryString)
+            .build(false) // #30932: queryString is not yet encoded
+            .toUriString();
 
         if (res.startsWith("/")) {
             return res.substring(1);
@@ -419,8 +419,8 @@ public class AppController extends BaseController {
      * - /app/myapp/abc/test -> no redirect required
      * </p>
      *
-     * @param request        the current request
-     * @param spec           the spec of the current app
+     * @param request the current request
+     * @param spec    the spec of the current app
      * @return a RedirectView if a redirect is needed
      */
     private Optional<RedirectView> createRedirectIfRequired(HttpServletRequest request, String subPath, ProxySpec spec) {
@@ -445,15 +445,15 @@ public class AppController extends BaseController {
         // -> we have to check whether the provided subpath is a configured mapping (and thus point to a specific port on the app)
         // or whether it's just a subpath
         boolean isMappingWithoutSlash = spec.getContainerSpecs().get(0)
-                .getPortMapping()
-                .stream()
-                .anyMatch(it -> it.getName().equals(trimmedSubPath));
+            .getPortMapping()
+            .stream()
+            .anyMatch(it -> it.getName().equals(trimmedSubPath));
         if (isMappingWithoutSlash) {
             // the provided subpath is a configured mapping -> redirect so it ends with a slash
             String uri = ServletUriComponentsBuilder.fromRequest(request)
-                    .path("/")
-                    .build()
-                    .toUriString();
+                .path("/")
+                .build()
+                .toUriString();
             return Optional.of(new RedirectView(uri));
         }
 

@@ -240,7 +240,7 @@ Shiny.app = {
         // check that the app endpoint is still accessible
         try {
             const url = new URL(Shiny.app.runtimeState.containerPath, window.location.origin);
-            url.searchParams.append("sp_proxy_id", Shiny.app.runtimeState.proxy.id );
+            url.searchParams.append("sp_proxy_id", Shiny.app.runtimeState.proxy.id);
             const response = await fetch(url);
             if (response.status !== 503 && response.status !== 410) {
                 return false;

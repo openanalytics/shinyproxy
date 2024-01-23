@@ -32,7 +32,7 @@ public class ChangeProxyUserIdDto {
     }
 
     public void setUserId(String userId) {
-        this.userId= userId;
+        this.userId = userId;
     }
 
 }

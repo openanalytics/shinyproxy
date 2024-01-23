@@ -185,8 +185,7 @@ Shiny.instances = {
             }
             inputField.val('');
             Shiny.ui.hideModal();
-
-        },
+        }
     },
     _createUrlForInstance: function (instance) {
         return Shiny.common.staticState.contextPath + "app_i/" + Shiny.common.runtimeState.switchInstanceApp.appName + "/" + instance + "/";

@@ -98,6 +98,8 @@ public abstract class BaseController {
 
 
 
+    protected Boolean allowTransferApp;
+
     @PostConstruct
     public void baseInit() {
         defaultLogo = resolveImageURI(environment.getProperty("proxy.default-app-logo-url"));
@@ -111,6 +113,7 @@ public abstract class BaseController {
         heartbeatRate = heartbeatService.getHeartbeatRate();
         defaultShowNavbar = !Boolean.parseBoolean(environment.getProperty("proxy.hide-navbar"));
         supportAddress = environment.getProperty("proxy.support.mail-to-address");
+        allowTransferApp = environment.getProperty("proxy.allow-transfer-app", Boolean.class, false);
     }
 
     protected Proxy findUserProxy(AppRequestInfo appRequestInfo) {
@@ -138,20 +141,26 @@ public abstract class BaseController {
         map.put("jqueryJs", "/webjars/jquery/3.6.1/jquery.min.js");
         map.put("handlebars", "/webjars/handlebars/4.7.7/handlebars.runtime.min.js");
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        boolean isLoggedIn = authentication != null && !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated();
-        map.put("isLoggedIn", isLoggedIn);
-        map.put("isAdmin", userService.isAdmin(authentication));
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		boolean isLoggedIn = authentication != null && !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated();
+		map.put("isLoggedIn", isLoggedIn);
+		map.put("isAdmin", userService.isAdmin(authentication));
         map.put("isSupportEnabled", isLoggedIn && supportAddress != null);
-        map.put("logoutUrl", authenticationBackend.getLogoutURL());
-        map.put("page", ""); // defaults, used in navbar
-        map.put("maxInstances", 0); // defaults, used in navbar
-        map.put("contextPath", contextPathHelper.withEndingSlash());
-        map.put("resourcePrefix", "/" + identifierService.instanceId);
-        map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
-        map.put("pauseSupported", backend.supportsPause());
-        map.put("spInstance", identifierService.instanceId);
-    }
+		map.put("logoutUrl", authenticationBackend.getLogoutURL());
+		map.put("page", ""); // defaults, used in navbar
+		map.put("maxInstances", 0); // defaults, used in navbar
+		map.put("contextPath", contextPathHelper.withEndingSlash());
+		map.put("resourcePrefix", "/" + identifierService.instanceId);
+		map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
+		map.put("pauseSupported", backend.supportsPause());
+		map.put("spInstance", identifierService.instanceId);
+        map.put("allowTransferApp", allowTransferApp);
+
+	}
+	
+	protected String getSupportAddress() {
+		return environment.getProperty("proxy.support.mail-to-address");
+	}
 
     protected LogoInfo getAppLogoInfo(ProxySpec proxySpec) {
         return logoInfCache.get(proxySpec.getId(), (specId) -> {

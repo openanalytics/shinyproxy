@@ -31,6 +31,7 @@ Shiny.common = {
     },
     runtimeState: {
         switchInstanceApp: null,
+        detailsAppId: null // id of the proxy currently shown in the details modal
     },
     _refreshIntervalId: null,
     _detailsRefreshIntervalId: null,
@@ -82,6 +83,7 @@ Shiny.common = {
     },
 
     loadAppDetails(appName, appInstanceName, proxyId) {
+        Shiny.common.runtimeState.detailsAppId = proxyId;
         async function refresh() {
             const proxy = await Shiny.api.getProxyByIdFromCache(proxyId);
             const heartbeatInfo = await Shiny.api.getHeartBeatInfo(proxyId);
@@ -175,6 +177,29 @@ Shiny.common = {
             }
             await Shiny.common._refreshModal();
             $('#stopping-all-apps-btn').hide();
+        }
+    },
+
+    onChangeUserId: async function () {
+        const newUserField = $("#userIdField");
+        let newUser = newUserField.val().trim();
+        if (newUser === "") {
+            return;
+        }
+        const proxyId = Shiny.common.runtimeState.detailsAppId;
+        const proxy = await Shiny.api.getProxyByIdFromCache(proxyId);
+        if (newUser.toLowerCase() === proxy.userId.toLowerCase()) {
+            alert("Cannot change the userId: you are already the owner of this app");
+        } else if (!(await Shiny.api.changeProxyUserid(proxyId, newUser))) {
+            alert("Cannot change the userId of this app now, please try again later");
+        } else {
+            newUserField.val('');
+            if (Shiny.instances._isOpenedApp(proxyId)) {
+                Shiny.app.runtimeState.appStopped = true;
+                Shiny.ui.removeFrame();
+                Shiny.ui.showTransferredPage();
+            }
+            Shiny.ui.hideModal();
         }
     },
 

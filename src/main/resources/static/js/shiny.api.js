@@ -71,6 +71,17 @@ Shiny.api = {
             }
         }
     },
+    async changeProxyUserid(proxyId, newUserId) {
+        const resp = await fetch(Shiny.api.buildURL("api/proxy/" + proxyId + '/userId'), {
+            method: 'PUT',
+            body:  JSON.stringify({"userId": newUserId}),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+        const json = await Shiny.api._getResponseJson(resp);
+        return json !== null;
+    },
     getProxyById: async function (proxyId) {
         const resp = await fetch(Shiny.api.buildURL("api/proxy/" + proxyId));
         const json = await Shiny.api._getResponseJson(resp);

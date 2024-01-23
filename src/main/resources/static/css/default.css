@@ -264,6 +264,7 @@
 }
 
 #adminStoppingApps, #adminStoppedApps {
+    display: none;
 }
 
 #startFailedMessage {

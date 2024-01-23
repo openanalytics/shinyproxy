@@ -164,6 +164,14 @@ Shiny.ui = {
         $('#appCrashed').show();
     },
 
+    showTransferredPage: function () {
+        Shiny.app.runtimeState.appStopped = true;
+        $('#shinyframe').remove();
+        $('.loading').hide();
+        $('#modal').modal('hide')
+        $('#appTransferred').show();
+    },
+
     showLoggedOutPage: function () {
         Shiny.app.runtimeState.appStopped = true;
         if (!Shiny.app.runtimeState.navigatingAway) {

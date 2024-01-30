@@ -45,12 +45,6 @@
         <!-- navigation bar -->
         <div th:replace="~{fragments/navbar :: navbar}"></div>
 
-        <!-- Add the following code to show the notification banner -->
-        <div th:if="${notificationMessage != null}" class="notification-banner">
-            <span class="close-button" onclick="this.parentElement.style.display='none'">&times;</span>
-            <p th:text="${notificationMessage}"> </p>
-        </div>
-
         <!-- This is a fragment used to display a single app. -->
         <!-- Modify this in order to change how a single app looks. -->
         <th:block th:fragment="app(app)">
@@ -79,8 +73,12 @@
             <div class="row">
                 <div id="applist"
                      th:class="${myAppsMode == 'Inline' ? 'col-xs-12 col-md-4 col-md-offset-3 col-lg-5 col-lg-offset-3' : 'col-lg-6 col-lg-offset-3'}">
+                    <div class="alert alert-warning notification-message" role="alert" th:if="${notificationMessage != null}">
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <p th:utext="${notificationMessage}"> </p>
+                    </div>
                     <div class="alert alert-info" role="alert"
-                         s th:if="${groupedApps.isEmpty() && ungroupedApps.isEmpty()}">
+                         th:if="${groupedApps.isEmpty() && ungroupedApps.isEmpty()}">
                         <b>There are no apps available for you.</b>
                     </div>
                     <th:block th:each="group: ${templateGroups}">

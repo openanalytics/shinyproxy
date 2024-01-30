@@ -20,76 +20,104 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
+import eu.openanalytics.containerproxy.api.dto.ApiResponse;
 import eu.openanalytics.containerproxy.log.LogPaths;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.service.LogService;
-import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.containerproxy.service.StructuredLogger;
+import eu.openanalytics.shinyproxy.controllers.dto.ReportIssueDto;
+import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import jakarta.mail.internet.MimeMessage;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.inject.Inject;
 import java.io.File;
-import java.util.Map;
+
+import static net.logstash.logback.argument.StructuredArguments.kv;
 
 @Controller
 public class IssueController extends BaseController {
 
+    private final String mailFromAddress;
+
     @Inject
-    LogService logService;
+    private LogService logService;
 
     @Autowired(required = false)
-    JavaMailSender mailSender;
+    private JavaMailSender mailSender;
+
+    private Logger logger = LoggerFactory.getLogger(getClass());
+    private StructuredLogger slogger = new StructuredLogger(logger);
+
+    public IssueController(Environment environment) {
+        mailFromAddress = environment.getProperty("proxy.support.mail-from-address", "issues@shinyproxy.io");
+    }
+    // TODO add log message
 
     @RequestMapping(value = "/issue", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, String>> postIssue(HttpServletRequest request, HttpServletResponse response) {
-        IssueForm form = new IssueForm();
-        form.setUserName(userService.getCurrentUserId());
-        form.setCurrentLocation(request.getParameter("currentLocation"));
-        AppRequestInfo appRequestInfo = AppRequestInfo.fromURI(form.getCurrentLocation());
-        if (appRequestInfo != null) {
-            form.setAppName(appRequestInfo.getAppName());
+    public ResponseEntity<ApiResponse<Void>> postIssue(@RequestBody ReportIssueDto reportIssueDto) {
+        if (StringUtils.isBlank(supportAddress) || mailSender == null) {
+            return ApiResponse.fail("Report issue is not configured");
         }
-        form.setCustomMessage(request.getParameter("customMessage"));
+        if (StringUtils.isBlank(reportIssueDto.getMessage())) {
+            return ApiResponse.fail("Cannot report issue: no message provided");
+        }
+        if (StringUtils.isBlank(reportIssueDto.getCurrentLocation())) {
+            return ApiResponse.fail("Cannot report issue: no currentLocation provided");
+        }
+        Proxy proxy = null;
+        if (!StringUtils.isBlank(reportIssueDto.getProxyId())) {
+            proxy = proxyService.getProxy(reportIssueDto.getProxyId());
+            if (!userService.isOwner(proxy)) {
+                return ApiResponse.failForbidden();
+            }
+        }
 
-        // TODO this is not correct when using multiple instances, send proxyId in requests #31217
-//        Proxy activeProxy = proxyService.findUserProxy(p -> p.getSpecId().equals(form.getAppName()));
-//        sendSupportMail(form, activeProxy);
-//
-        return ResponseEntity.ok(Map.of("status", "success"));
+        if (sendSupportMail(proxy, reportIssueDto.getMessage(), reportIssueDto.getCurrentLocation())) {
+            return ApiResponse.success();
+        }
+        return ApiResponse.fail("Error while sending e-mail");
     }
 
-    public void sendSupportMail(IssueForm form, Proxy proxy) {
-        if (supportAddress == null) throw new RuntimeException("Cannot send mail: no support address configured");
-        if (mailSender == null) throw new RuntimeException("Cannot send mail: no smtp settings configured");
-
+    public boolean sendSupportMail(Proxy proxy, String message, String currentLocation) {
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            MimeMessage mailMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mailMessage, true);
 
             // Headers
-            helper.setFrom(environment.getProperty("proxy.support.mail-from-address", "issues@shinyproxy.io"));
+            helper.setFrom(mailFromAddress);
             helper.addTo(supportAddress);
             helper.setSubject("ShinyProxy Error Report");
 
             // Body
+            String lineSep = System.lineSeparator();
             StringBuilder body = new StringBuilder();
-            String lineSep = System.getProperty("line.separator");
             body.append(String.format("This is an error report generated by ShinyProxy%s", lineSep));
-            body.append(String.format("User: %s%s", form.userName, lineSep));
-            if (form.appName != null) body.append(String.format("App: %s%s", form.appName, lineSep));
-            if (form.currentLocation != null) body.append(String.format("Location: %s%s", form.currentLocation, lineSep));
-            if (form.customMessage != null) body.append(String.format("Message: %s%s", form.customMessage, lineSep));
-
-            // Attachments (only if container-logging is enabled)
+            body.append(String.format("User: %s%s", userService.getCurrentUserId(), lineSep));
+            body.append(String.format("Location: %s%s", currentLocation, lineSep));
+            body.append(String.format("Message: %s%s", message, lineSep));
             if (proxy != null) {
+                body.append(String.format("AppId: %s%s", proxy.getId(), lineSep));
+                body.append(String.format("App: %s%s", proxy.getSpecId(), lineSep));
+                String instanceName = proxy.getRuntimeValue(AppInstanceKey.inst);
+                if (instanceName.equals("_")) {
+                    body.append(String.format("Instance name: Default%s", lineSep));
+                } else {
+                    body.append(String.format("Instance name: %s%s", instanceName, lineSep));
+                }
+
+                // Attach logs (if container-logging is enabled)
                 LogPaths filePaths = logService.getLogs(proxy);
 
                 if (filePaths != null) {
@@ -109,49 +137,18 @@ public class IssueController extends BaseController {
             }
 
             helper.setText(body.toString());
-            mailSender.send(message);
+            mailSender.send(mailMessage);
+            if (proxy != null) {
+                slogger.info(proxy, "Sent issue report");
+            } else {
+                logger.info("[{}] Sent issue report" , kv("user", userService.getCurrentUserId()));
+            }
+            return true;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to send email", e);
+            logger.error("Error while sending issue report", e);
+            return false;
         }
     }
 
-    public static class IssueForm {
 
-        private String userName;
-        private String appName;
-        private String currentLocation;
-        private String customMessage;
-
-        public String getUserName() {
-            return userName;
-        }
-
-        public void setUserName(String userName) {
-            this.userName = userName;
-        }
-
-        public String getAppName() {
-            return appName;
-        }
-
-        public void setAppName(String appName) {
-            this.appName = appName;
-        }
-
-        public String getCurrentLocation() {
-            return currentLocation;
-        }
-
-        public void setCurrentLocation(String currentLocation) {
-            this.currentLocation = currentLocation;
-        }
-
-        public String getCustomMessage() {
-            return customMessage;
-        }
-
-        public void setCustomMessage(String customMessage) {
-            this.customMessage = customMessage;
-        }
-    }
 }

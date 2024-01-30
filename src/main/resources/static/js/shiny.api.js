@@ -180,6 +180,28 @@ Shiny.api = {
         }
         return json.data;
     },
+    reportIssue: async function(message) {
+        let proxyId = null;
+        if (Shiny.app.runtimeState.proxy && Shiny.app.runtimeState.proxy.status !== "Stopped" && Shiny.app.runtimeState.proxy.status !== "Stopping") {
+            proxyId = Shiny.app.runtimeState.proxy.id;
+        }
+
+        const body = {
+            message: message,
+            currentLocation: window.location.href,
+            proxyId: proxyId
+        }
+        let resp = await fetch(Shiny.api.buildURL("issue"), {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+        const json = await Shiny.api._getResponseJson(resp);
+        return json !== null;
+
+    },
     buildURL(location) {
         const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
         return new URL(location, baseURL);

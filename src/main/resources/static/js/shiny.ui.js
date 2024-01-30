@@ -202,6 +202,11 @@ Shiny.ui = {
         $('#modal').modal('show');
     },
 
+    showReportIssueModal: function () {
+        $('#reportIssueModal').show();
+        $('#modal').modal('show');
+    },
+
     hideModal: function () {
         $('#modal .modal-dialog').hide();
         $('#modal').modal('hide');
@@ -229,6 +234,22 @@ Shiny.ui = {
 
     removeFrame() {
         $('#shinyframe').remove();
+    },
+
+    async submitReportIssueForm() {
+        const inputField = $('#reportIssueMessage');
+        const message = inputField.val();
+        if (message.trim() === '') {
+            alert("Please provide a message explaining the issue");
+            return;
+        }
+        if (await Shiny.api.reportIssue(message)) {
+            inputField.val('');
+            Shiny.ui.hideModal();
+            alert("Your issue has been reported");
+        } else {
+            alert("Something went wrong when reporting your issue");
+        }
     },
 
     validateParameterForm() {

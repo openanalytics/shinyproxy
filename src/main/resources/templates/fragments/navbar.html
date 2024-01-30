@@ -58,8 +58,7 @@
                         <a class="btn btn-primary btn-sm" id="myAppsModal-btn" role="button"
                            th:if="${page == 'index' && myAppsMode == 'Modal'}">My apps</a>
 
-                        <a class="btn btn-primary btn-sm" data-target="#reportIssueModal" data-toggle="modal"
-                           role="button" th:if="${isSupportEnabled}">Report Issue</a>
+                        <a class="btn btn-primary btn-sm" role="button" th:if="${isSupportEnabled}" onclick="Shiny.ui.showReportIssueModal();">Report Issue</a>
                         <a class="btn btn-primary btn-sm" role="button" th:href="@{/admin}" th:if="${isAdmin}">Admin</a>
                         <a class="btn btn-primary btn-sm" role="button" th:href="@{${logoutUrl}}" th:if="${isLoggedIn}">Sign
                             Out</a>
@@ -79,56 +78,6 @@
                     $('body').css('padding-top', navbarHeight + 'px');
                 }
             </script>
-            <div class="modal fade" id="reportIssueModal" role="dialog">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <form id="issueForm">
-                            <div class="modal-header">
-                                <button aria-hidden="true" class="close" data-dismiss="modal" type="button">&times;
-                                </button>
-                                <h4 class="modal-title">Report Issue</h4>
-                            </div>
-                            <div class="modal-body">
-                                <div class="form-group">
-                                    <label for="customMessage"><span class="glyphicon glyphicon-chat"></span> Message to
-                                        add to the report:</label>
-                                    <textarea class="form-control" cols="40" id="customMessage"
-                                              name="customMessage" placeholder="Enter message" rows="5"></textarea>
-                                    <input name="currentLocation" type="hidden"></input>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button class="btn btn-default btn-success" type="submit">Submit</button>
-                                <button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <script lang="JavaScript">
-                $(document).ready(function () {
-                    $('input[name="currentLocation"]').val(window.location.href);
-
-                    $("#issueForm").submit(function (event) {
-                        event.preventDefault();
-                        var formValues = $(this).serialize();
-
-                        $.post("[[${contextPath}]]" + "issue", formValues, function (data) {
-                            if (data.status === "success") {
-                                $('#customMessage').val('');
-                                $('#reportIssueModal').modal('hide');
-                                alert("Your issue has been reported");
-                            } else {
-                                alert("Something went wrong when reporting your issue");
-                            }
-                        }).fail(function () {
-                            alert("Something went wrong when reporting your issue");
-                        });
-                    });
-                });
-            </script>
-
         </div>
     </body>
 </html>

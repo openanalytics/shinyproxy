@@ -103,5 +103,28 @@
                         </div>
                     </form>
                 </div>
+                <div class="modal-dialog" id="reportIssueModal">
+                    <div class="modal-content">
+                        <form id="reportIssueForm">
+                            <div class="modal-header">
+                                <button aria-hidden="true" class="close" data-dismiss="modal" type="button">&times;
+                                </button>
+                                <h4 class="modal-title">Report Issue</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label for="reportIssueMessage"><span class="glyphicon glyphicon-chat"></span> Message to add to the report:</label>
+                                    <textarea class="form-control" cols="40" id="reportIssueMessage" name="reportIssueMessage" placeholder="Enter message" rows="5"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-default btn-success" type="submit">Submit</button>
+                                <button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </th:block>
+    </body>
+</html>

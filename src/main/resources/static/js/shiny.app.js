@@ -306,6 +306,11 @@ $(window).on('load', function () {
         Shiny.instances.eventHandlers.onNewInstance();
     });
 
+    $('#reportIssueForm').submit(function (e) {
+        e.preventDefault();
+        Shiny.ui.submitReportIssueForm();
+    });
+
     $('#changeUserIdForm').submit(function (e) {
         e.preventDefault();
         Shiny.common.onChangeUserId();

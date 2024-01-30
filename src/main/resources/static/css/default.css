@@ -203,7 +203,7 @@
     margin-bottom: 0;
 }
 
-#switchInstancesModal, #myAppsModal, #appDetailsModal {
+#switchInstancesModal, #myAppsModal, #appDetailsModal, #reportIssueModal {
     display: none;
 }
 

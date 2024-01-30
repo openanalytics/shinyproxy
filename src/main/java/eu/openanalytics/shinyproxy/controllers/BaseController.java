@@ -154,6 +154,7 @@ public abstract class BaseController {
         map.put("pauseSupported", backend.supportsPause());
         map.put("spInstance", identifierService.instanceId);
         map.put("allowTransferApp", allowTransferApp);
+        map.put("notificationMessage", environment.getProperty("proxy.notification-message"));
 
         ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
         HttpServletRequest httpServletRequest = servletRequestAttributes.getRequest();

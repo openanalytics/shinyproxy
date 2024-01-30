@@ -272,3 +272,28 @@
     margin-bottom: 40px;
     display: none;
 }
+
+/* CSS stylesheet for the notification banner */
+.notification-banner {
+    background-color: #ffc107; /* Yellow background color */
+    color: #333; /* Text color */
+    padding: 10px; /* Padding around the notification content */
+    font-size: 16px; /* Font size */
+    text-align: center; /* Center-align the text */
+    position: fixed; /* Fix the banner position */
+    top: 0; /* Position at the top of the page */
+    left: 0; /* Position on the left */
+    width: 100%; /* Set the width to fill the entire page */
+    z-index: 9999; /* Set a high z-index to ensure the banner is on top */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+}
+
+/* CSS styles for the close button (X) */
+.notification-banner .close-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+}

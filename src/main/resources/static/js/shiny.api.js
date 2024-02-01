@@ -32,13 +32,13 @@ Shiny.api = {
         }
         return json.data;
     },
-    async changeProxyStatus(proxyId, desiredState, parameters) {
+    async changeProxyStatus(proxyId, status, parameters) {
         if (parameters === null) {
             parameters = {};
         }
-        const resp = await fetch(Shiny.api.buildURL("api/" + proxyId + '/status'), {
+        const resp = await fetch(Shiny.api.buildURL("api/proxy/" + proxyId + '/status'), {
             method: 'PUT',
-            body: JSON.stringify({"desiredState": desiredState, "parameters": parameters}),
+            body: JSON.stringify({"status": status, "parameters": parameters}),
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -49,7 +49,7 @@ Shiny.api = {
     async waitForStatusChange(proxyId) {
         let networkErrors = 0;
         while (true) {
-            const url = Shiny.api.buildURL('api/' + proxyId + "/status?watch=true&timeout=10");
+            const url = Shiny.api.buildURL('api/proxy/' + proxyId + "/status?watch=true&timeout=10");
             try {
                 const resp = await fetch(url);
                 const json = await Shiny.api._getResponseJson(resp);

@@ -283,26 +283,42 @@ Shiny.ui = {
         const equals = (a, b) =>
             a.length === b.length &&
             a.every((v, i) => v === b[i]);
-        const selectedValues = [];
-        const selectedIndex = target.selectedIndex;
-        const changedKey = $(target).prop('name');
-        const changedOptionIndex = Shiny.app.staticState.parameters.ids.indexOf(changedKey);
+        const combinationAllowed = (combination) => {
+            for (const allowedValue of Shiny.app.staticState.parameters.allowedCombinations) {
+                if (equals(allowedValue.slice(0, combination.length), combination)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        const selectedValues = []; // part of the currently selected combination that is valid
+        // check which part of the currently selected combination is valid
         for (let i = 0; i < Shiny.app.staticState.parameters.ids.length; i++) {
             const keyName = Shiny.app.staticState.parameters.ids[i];
-            if (i <= changedOptionIndex) {
-                let selected = $('select[name=' + keyName + ']').prop('selectedIndex');
-                selectedValues.push(selected);
+            const selected = $('select[name=' + keyName + ']').prop('selectedIndex');
+            if (selected === 0 || !combinationAllowed([...selectedValues, selected])) {
+                break;
             } else {
-                if (i === changedOptionIndex + 1 && selectedIndex !== 0) {
-                    $('select[name=' + keyName + ']').prop("disabled", false);
-                } else {
-                    $('select[name=' + keyName + ']').prop("disabled", true);
-                }
-                const nextOptions = $('select[name=' + keyName + '] option');
-                nextOptions.first().prop("selected", true);
+                selectedValues.push(selected);
             }
         }
 
+        // enable the next select box
+        const keyName = Shiny.app.staticState.parameters.ids[selectedValues.length];
+        $('select[name=' + keyName + ']').prop("disabled", false);
+        // reset the next select box
+        const nextSelectBox = $('select[name=' + keyName + '] option');
+        nextSelectBox.first().prop("selected", true);
+
+        // disable and reset all other select boxes
+        for (let i = selectedValues.length + 1; i < Shiny.app.staticState.parameters.ids.length; i++) {
+            const keyName = Shiny.app.staticState.parameters.ids[i];
+            $('select[name=' + keyName + ']').prop("disabled", true);
+            const nextSelectBox = $('select[name=' + keyName + '] option');
+            nextSelectBox.first().prop("selected", true);
+        }
+
+        // for the next select box, only show the options that are allowed
         const allowedNextValues = [];
         for (const allowedValue of Shiny.app.staticState.parameters.allowedCombinations) {
             if (equals(allowedValue.slice(0, selectedValues.length), selectedValues)) {

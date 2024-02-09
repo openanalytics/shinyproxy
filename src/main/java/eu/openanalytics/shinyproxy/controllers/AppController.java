@@ -58,6 +58,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -311,7 +312,7 @@ public class AppController extends BaseController {
         }
 
         Proxy proxy;
-        String proxyId = request.getParameter("sp_proxy_id");
+        String proxyId = extractQueryParameter(request, "sp_proxy_id");
         if (proxyId != null) {
             proxy = proxyService.getUserProxy(proxyId);
         } else {
@@ -368,6 +369,22 @@ public class AppController extends BaseController {
         } catch (Exception e) {
             throw new RuntimeException("Error routing proxy request", e);
         }
+    }
+
+    /**
+     * Extract a query parameter without reading the body of the request.
+     * This must be used for proxied requests, as otherwise the body cannot be sent.
+     * @param request the request
+     * @param name the name of the parameter
+     * @return the (first) value or null
+     */
+    private String extractQueryParameter(HttpServletRequest request, String name) {
+        MultiValueMap<String, String> params = ServletUriComponentsBuilder.fromRequest(request)
+            .build().getQueryParams();
+        if (!params.containsKey(name)) {
+            return null;
+        }
+        return params.getFirst(name);
     }
 
     private String buildContainerSubPath(HttpServletRequest request, String subPath) {

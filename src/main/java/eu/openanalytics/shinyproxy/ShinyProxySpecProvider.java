@@ -565,6 +565,15 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
             proxySpec.maxTotalInstances(maxTotalInstances);
         }
 
+        public SpelField.String getResourceName() {
+            return containerSpec.build().getResourceName();
+        }
+
+        public void setResourceName(SpelField.String resourceName) {
+            containerSpec.resourceName(resourceName);
+        }
+
+
         public ProxySpec getProxySpec() {
             additionalPortMappings.add(defaultPortMapping.build());
             containerSpec.portMapping(additionalPortMappings);

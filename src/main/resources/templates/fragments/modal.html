@@ -87,21 +87,20 @@
                         <div class="modal-body">
                             <div id="appDetails">
                             </div>
+                            <form class="form-inline" id="changeUserIdForm" th:if="${allowTransferApp}">
+                                <div class="form-group">
+                                    <label for="userIdField"><span class="glyphicon glyphicon-chat"></span>Transfer app to another user:</label><br>
+                                    <div class="input-group">
+                                        <input class="form-control" id="userIdField" type="text">
+                                        <button class="btn btn-default btn-success" type="submit">Transfer</button>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                         <div class="modal-footer">
                             <button class="btn btn-default close-button" type="button">Close</button>
                         </div>
                     </div>
-                    <form class="form-inline" id="changeUserIdForm" th:if="${allowTransferApp}">
-                        <div class="form-group">
-                            <label for="userIdField"><span class="glyphicon glyphicon-chat"></span>Transfer app to
-                                another user:</label><br>
-                            <div class="input-group">
-                                <input class="form-control" id="userIdField" type="text">
-                                <button class="btn btn-default btn-success" type="submit">Transfer</button>
-                            </div>
-                        </div>
-                    </form>
                 </div>
                 <div class="modal-dialog" id="reportIssueModal">
                     <div class="modal-content">
@@ -113,8 +112,10 @@
                             </div>
                             <div class="modal-body">
                                 <div class="form-group">
-                                    <label for="reportIssueMessage"><span class="glyphicon glyphicon-chat"></span> Message to add to the report:</label>
-                                    <textarea class="form-control" cols="40" id="reportIssueMessage" name="reportIssueMessage" placeholder="Enter message" rows="5"></textarea>
+                                    <label for="reportIssueMessage"><span class="glyphicon glyphicon-chat"></span>
+                                        Message to add to the report:</label>
+                                    <textarea class="form-control" cols="40" id="reportIssueMessage"
+                                              name="reportIssueMessage" placeholder="Enter message" rows="5"></textarea>
                                 </div>
                             </div>
                             <div class="modal-footer">

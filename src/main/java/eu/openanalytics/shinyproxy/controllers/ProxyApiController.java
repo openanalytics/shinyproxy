@@ -27,6 +27,10 @@ import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.store.IProxyStore;
 import eu.openanalytics.shinyproxy.controllers.dto.ChangeProxyUserIdDto;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -49,6 +53,67 @@ public class ProxyApiController extends BaseController {
     @Inject
     private IProxyStore proxyStore;
 
+    @Operation(summary = "Transfer an app to another user.", tags = "ShinyProxy")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "App transferred.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {
+                        @ExampleObject(value = "{\"status\":\"success\", \"data\": null}")
+                    }
+                )
+            }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "401",
+            description = "User is not authenticated.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {
+                        @ExampleObject(value = "{\"message\":\"shinyproxy_authentication_required\",\"status\":\"fail\"}")
+                    }
+                )
+            }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "403",
+            description = "No permission to transfer app.",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {@ExampleObject(value = "{\"status\": \"fail\", \"data\": \"forbidden\"}")}
+                )
+            }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400",
+            description = "Cannot transfer app because no userId is provided in the request",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {@ExampleObject(value = "{\"status\": \"fail\", \"data\": \"Cannot transfer app because no userId is provided in the request\"}")}
+                )
+            }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400",
+            description = "Cannot transfer app because the proxy is already owned by this user",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {@ExampleObject(value = "{\"status\": \"fail\", \"data\": \"Cannot transfer app because the proxy is already owned by this user\"}")}
+                )
+            }),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400",
+            description = "Cannot transfer app because it is not in Up status (status is Stopping)",
+            content = {
+                @Content(
+                    mediaType = "application/json",
+                    examples = {@ExampleObject(value = "{\"status\": \"fail\", \"data\": \"Cannot transfer app because it is not in Up status (status is Stopping)\"}")}
+                )
+            }),
+    })
     @RequestMapping(value = "/api/proxy/{proxyId}/userId", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApiResponse<Proxy>> changeProxyUserId(@PathVariable String proxyId, @RequestBody ChangeProxyUserIdDto changeProxyUserIdDto) {
         if (!allowTransferApp) {
@@ -62,15 +127,15 @@ public class ProxyApiController extends BaseController {
         }
 
         if (StringUtils.isBlank(changeProxyUserIdDto.getUserId())) {
-            return ApiResponse.fail("Cannot change userId of proxy because no userId is provided in the request");
+            return ApiResponse.fail("Cannot transfer app because no userId is provided in the request");
         }
 
         if (!proxy.getStatus().equals(ProxyStatus.Up)) {
-            return ApiResponse.fail(String.format("Cannot change userId of proxy because it is not in Up status (status is %s)", proxy.getStatus()));
+            return ApiResponse.fail(String.format("Cannot transfer app because it is not in Up status (status is %s)", proxy.getStatus()));
         }
 
         if (proxy.getUserId().equalsIgnoreCase(changeProxyUserIdDto.getUserId())) {
-            return ApiResponse.fail("Cannot change userId of proxy because the proxy is already owned by this user");
+            return ApiResponse.fail("Cannot transfer app because the proxy is already owned by this user");
         }
 
         try {

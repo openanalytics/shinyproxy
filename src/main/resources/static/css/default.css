@@ -99,12 +99,12 @@
     margin-bottom: 20px;
 }
 
-#instanceNameField {
+#instanceNameField, #userIdField {
     width: 450px;
     margin-right: 10px;
 }
 
-#newInstanceForm button {
+#newInstanceForm button, #changeUserIdForm button {
     width: 100px;
 }
 

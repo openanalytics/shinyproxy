@@ -190,9 +190,9 @@ Shiny.common = {
         const proxyId = Shiny.common.runtimeState.detailsAppId;
         const proxy = await Shiny.api.getProxyByIdFromCache(proxyId);
         if (newUser.toLowerCase() === proxy.userId.toLowerCase()) {
-            alert("Cannot change the userId: you are already the owner of this app");
+            alert("Cannot transfer app: you are already the owner of this app");
         } else if (!(await Shiny.api.changeProxyUserid(proxyId, newUser))) {
-            alert("Cannot change the userId of this app now, please try again later");
+            alert("Cannot transfer this app now, please try again later");
         } else {
             newUserField.val('');
             if (Shiny.instances._isOpenedApp(proxyId)) {

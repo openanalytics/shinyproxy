@@ -26,6 +26,16 @@ Shiny.ui = {
     setupIframe: function () {
         var $iframe = $('<iframe id="shinyframe" width="100%" style="display:none;" frameBorder="0"></iframe>')
         $iframe.attr("src", Shiny.app.runtimeState.containerPath);
+        $iframe.on("load", () => {
+            const _shinyFrame = document.getElementById('shinyframe');
+            const content = _shinyFrame.contentDocument.documentElement.textContent || _shinyFrame.contentDocument.documentElement.innerText;
+            if (content === '{"status":"fail", "data":"app_crashed"}' || content === '{\"status\":\"fail\", \"data\":\"app_stopped_or_non_existent\"}') {
+                Shiny.ui.showCrashedPage();
+            }
+            if (content === '{"status":"fail", "data":"shinyproxy_authentication_required"}') {
+                shinyProxy.ui.showLoggedOutPage();
+            }
+        });
         $('#iframeinsert').before($iframe); // insert the iframe into the HTML.
         Shiny.ui.setShinyFrameHeight();
     },

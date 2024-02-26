@@ -50,15 +50,15 @@ public class ProxyControllerTest {
     @Test
     public void testWithoutAuth() {
         Response resp = apiTestHelper.callWithoutAuth(apiTestHelper.createRequest("/api/proxyspec"));
-        resp.assertAuthenticationRequires();
+        resp.assertAuthenticationRequired();
         resp = apiTestHelper.callWithoutAuth(apiTestHelper.createRequest("/api/proxyspec/01_hello"));
-        resp.assertAuthenticationRequires();
+        resp.assertAuthenticationRequired();
         resp = apiTestHelper.callWithoutAuth(apiTestHelper.createRequest("/api/proxy"));
-        resp.assertAuthenticationRequires();
+        resp.assertAuthenticationRequired();
         resp = apiTestHelper.callWithoutAuth(apiTestHelper.createRequest("/api/proxy/" + RANDOM_UUID));
-        resp.assertAuthenticationRequires();
+        resp.assertAuthenticationRequired();
         resp = apiTestHelper.callWithoutAuth(apiTestHelper.createPostRequest("/api/proxy/01_hello"));
-        resp.assertAuthenticationRequires();
+        resp.assertAuthenticationRequired();
     }
 
     @Test

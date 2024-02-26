@@ -9,6 +9,7 @@ proxy:
   authentication: simple
   container-backend: docker
   heartbeat-timeout: -1
+  default-stop-proxy-on-logout: false
 
   users:
     - name: demo
@@ -48,7 +49,6 @@ proxy:
         - group1
       access-expression: "#{expression}"
       max-lifetime: 10
-      stop-on-logout: false
       heartbeat-timeout: 10
       cache-headers-mode: EnforceCacheAssets
       container-image: "openanalytics/shinyproxy-integration-test-app"
@@ -74,7 +74,6 @@ proxy:
       docker-registry-domain: example.com
       docker-registry-username: abc
       docker-registry-password: test
-      resource-name: abc
       kubernetes-pod-patches: |
         - op: add
           path: /spec/containers/0/env/-

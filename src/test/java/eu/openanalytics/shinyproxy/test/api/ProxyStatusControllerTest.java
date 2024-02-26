@@ -48,9 +48,9 @@ public class ProxyStatusControllerTest {
     @Test
     public void testWithoutAuth() {
         Response resp = apiTestHelper.callWithoutAuth(apiTestHelper.createRequest("/api/proxy/" + RANDOM_UUID + "/status"));
-        resp.assertAuthenticationRequires();
+        resp.assertAuthenticationRequired();
         resp = apiTestHelper.callWithoutAuth(apiTestHelper.createPutRequest("/api/proxy/" + RANDOM_UUID + "/status"));
-        resp.assertAuthenticationRequires();
+        resp.assertAuthenticationRequired();
     }
 
     @Test

@@ -36,7 +36,7 @@ public class Response {
         this.response = response;
     }
 
-    public void assertAuthenticationRequires() {
+    public void assertAuthenticationRequired() {
         Assertions.assertEquals(410, code());
         Assertions.assertEquals("{\"status\":\"fail\", \"data\":\"shinyproxy_authentication_required\"}", body());
     }
@@ -45,7 +45,6 @@ public class Response {
         Assertions.assertEquals(403, code());
         Assertions.assertEquals("{\"status\":\"fail\",\"data\":\"forbidden\"}", body());
     }
-
 
     private JsonValue parseJson() {
         JsonReader jsonReader = Json.createReader(response.body().byteStream());

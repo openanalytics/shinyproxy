@@ -1,0 +1,208 @@
+spring:
+  session:
+    store-type: none
+  data:
+    redis:
+      repositories:
+        enabled: false
+proxy:
+  authentication: simple
+  container-backend: docker
+  heartbeat-timeout: -1
+
+  users:
+    - name: demo
+      password: demo
+      groups:
+        - group1
+        - group2
+    - name: demo2
+      password: demo2
+
+  docker:
+    url: http://localhost:2375
+
+
+  specs:
+    - id: nobody
+      container-image: openanalytics/shinyproxy-integration-test-app:latest
+      access-users: nobody
+    - id: 01_hello
+      display-name: 01-hello
+      description: my description
+      max-total-instances: 2
+      max-instances: 2
+      add-default-http-headers: true
+      track-app-url: false
+      http-headers:
+        userId: "#{proxy.userId}"
+      logo-url: mylogo.png
+      logo-widht: "50px"
+      logo-height: "50px"
+      logo-style: "abc"
+      logo-classes: "abc"
+      faviconPath: "favicon.png"
+      access-users:
+        - jack
+      access-groups:
+        - group1
+      access-expression: "#{expression}"
+      max-lifetime: 10
+      stop-on-logout: false
+      heartbeat-timeout: 10
+      cache-headers-mode: EnforceCacheAssets
+      container-image: "openanalytics/shinyproxy-integration-test-app"
+      container-cmd: [ "R", "-e", "shinyproxy::run_01_hello()" ]
+      container-env:
+            MY_VAR: MY_VALUE
+      container-memory-limit: 500m
+      container-memory-request: 500m
+      container-cpu-limit: 2
+      container-cpu-request: 2
+      labels:
+            my-label: my-value
+      container-network: "bridge"
+      container-privileged: true
+      container-volumes:
+            - "/tmp/myvolume/:/mnt"
+      docker-swarm-secrets:
+            - name: abc
+              target: abc
+              gid: 10
+              uid: 10
+              mode: abc
+      docker-registry-domain: example.com
+      docker-registry-username: abc
+      docker-registry-password: test
+      resource-name: abc
+      kubernetes-pod-patches: |
+        - op: add
+          path: /spec/containers/0/env/-
+          value:
+              name: my-test
+              value: value
+      kubernetes-additional-manifests:
+        - |
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: manifests-secret-#{proxy.userId}-1
+          type: Opaque
+          data:
+                  password: cGFzc3dvcmQ=
+      kubernetes-authorized-persistent-manifests:
+        - |
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: manifests-secret-#{proxy.userId}-persistent-1
+          type: Opaque
+          data:
+              password: cGFzc3dvcmQ=
+      kubernetes-authorized-pod-patches:
+        - access-control:
+            users:
+              - jack
+          patches: |
+            - op: add
+              path: /spec/containers/0/env/-
+              value:
+                name: test
+                value: jack
+      kubernetes-authorized-additional-manifests:
+        - access-control:
+            users: jack
+          manifests:
+            - |
+              apiVersion: v1
+              kind: Secret
+              metadata:
+                name: manifests-secret-#{proxy.userId}-2
+              type: Opaque
+              data:
+                  password: cGFzc3dvcmQ=
+      kubernetes-authorized-additional-persistent-manifests:
+        - manifests:
+            - |
+              apiVersion: v1
+              kind: Secret
+              metadata:
+                name: manifests-secret-#{proxy.userId}-persistent-2
+              type: Opaque
+              data:
+                  password: cGFzc3dvcmQ=
+#      parameters:
+#        definitions:
+#          - id: parameter1
+#            default-value: A
+#            value-names:
+#              - value: A
+#                name: "The letter A"
+#              - value: Z
+#                name: "The letter Z"
+#          - id: parameter2
+#            default-value: 1
+#            value-names:
+#              - value: 1
+#                name: "The number 1"
+#              - value: 20
+#                name: "The number 20"
+#          - id: parameter3
+#            default-value: foo
+#            value-names:
+#              - value: foo
+#                name: "Foo"
+#              - value: bar
+#                name: "Bar"
+#          - id: parameter4
+#            default-value: yes
+#            value-names:
+#              - value: "yes"
+#                name: "YES"
+#              - value: "no"
+#                name: "NO"
+#          - id: parameter5
+#            default-value: abc
+#        value-sets:
+#          - name: the-first-value-set
+#            values:
+#              parameter1:
+#                - A
+#                - B
+#              parameter2:
+#                - 1
+#                - 20
+#              parameter3:
+#                - foo
+#              parameter4:
+#                - yes
+#              parameter5:
+#                - abc
+#                - xyz
+#          - name: the-second-value-set
+#            values:
+#              parameter1:
+#                - A
+#                - B
+#              parameter2:
+#                - 1
+#                - 20
+#              parameter3:
+#                - bar
+#              parameter4:
+#                - no
+#              parameter5:
+#                - abc
+#                - xyz
+#          - name: the-second-value-set
+#            values:
+#              parameter1:
+#                - C
+#              parameter2:
+#                - C
+#              parameter3:
+#                - C
+#              parameter4:
+#                - C
+#              parameter5:
+#                - C

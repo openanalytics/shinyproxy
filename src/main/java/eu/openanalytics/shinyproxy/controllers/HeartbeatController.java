@@ -125,7 +125,7 @@ public class HeartbeatController {
                     mediaType = "application/json",
                     schema = @Schema(implementation = HeartBeatInfoDto.class),
                     examples = {
-                        @ExampleObject(value = "{\"status\":\"success\"}")
+                        @ExampleObject(value = "{\"status\":\"success\",\"data\":{\"lastHeartbeat\":1704063600,\"heartbeatRate\":10000}}")
                     }
                 )
             }),

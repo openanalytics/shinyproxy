@@ -59,7 +59,7 @@ public class ShinyProxyTestStrategy implements IProxyTestStrategy {
         int timeoutMs = Integer.parseInt(environment.getProperty("proxy.container-wait-timeout", "5000"));
 
         if (proxy.getTargets().isEmpty()) return false;
-        URI targetURI = proxy.getTargets().get(""); // TODO
+        URI targetURI = proxy.getTargets().get("");
 
         return Retrying.retry((currentAttempt, maxAttempts) -> {
             try {

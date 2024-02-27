@@ -180,7 +180,6 @@ public class AppController extends BaseController {
         return new ModelAndView("app", map);
     }
 
-    // TODO add example with timezone
     @Operation(summary = "Start an app.", tags = "ShinyProxy",
         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
             content = @Content(

@@ -63,7 +63,6 @@ public class IssueController extends BaseController {
     public IssueController(Environment environment) {
         mailFromAddress = environment.getProperty("proxy.support.mail-from-address", "issues@shinyproxy.io");
     }
-    // TODO add log message
 
     @RequestMapping(value = "/issue", method = RequestMethod.POST)
     public ResponseEntity<ApiResponse<Void>> postIssue(@RequestBody ReportIssueDto reportIssueDto) {
@@ -139,9 +138,9 @@ public class IssueController extends BaseController {
             helper.setText(body.toString());
             mailSender.send(mailMessage);
             if (proxy != null) {
-                slogger.info(proxy, "Sent issue report");
+                slogger.info(proxy, "User reported an issue, location: " + currentLocation);
             } else {
-                logger.info("[{}] Sent issue report" , kv("user", userService.getCurrentUserId()));
+                logger.info("[{}] User reported an issue, location: " + currentLocation, kv("user", userService.getCurrentUserId()));
             }
             return true;
         } catch (Exception e) {

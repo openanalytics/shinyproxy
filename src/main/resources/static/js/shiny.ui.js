@@ -29,10 +29,10 @@ Shiny.ui = {
         $iframe.on("load", () => {
             const _shinyFrame = document.getElementById('shinyframe');
             const content = _shinyFrame.contentDocument.documentElement.textContent || _shinyFrame.contentDocument.documentElement.innerText;
-            if (content === '{"status":"fail", "data":"app_crashed"}' || content === '{\"status\":\"fail\", \"data\":\"app_stopped_or_non_existent\"}') {
+            if (content === '{"status":"fail","data":"app_crashed"}' || content === '{\"status\":\"fail\",\"data\":\"app_stopped_or_non_existent\"}') {
                 Shiny.ui.showCrashedPage();
             }
-            if (content === '{"status":"fail", "data":"shinyproxy_authentication_required"}') {
+            if (content === '{"status":"fail","data":"shinyproxy_authentication_required"}') {
                 shinyProxy.ui.showLoggedOutPage();
             }
         });

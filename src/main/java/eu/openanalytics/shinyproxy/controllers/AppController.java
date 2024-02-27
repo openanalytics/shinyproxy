@@ -428,7 +428,7 @@ public class AppController extends BaseController {
      * However, when the sub-path does not point to a specific target, it's not required that the URL ends with a slash.
      * </p>
      * <p>
-     * Assume an app called `myapp` has a additional-port-mapping named `abc`:
+     * Assume an app called `myapp` has an additional-port-mapping named `abc`:
      * - /app/myapp -> no redirect required (getPublicPath() always add a slash)
      * - /app/myapp/test123 -> no redirect required
      * - /app/myapp/abc -> redirect to /app/myapp/abc/

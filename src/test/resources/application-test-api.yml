@@ -5,11 +5,17 @@ spring:
     redis:
       repositories:
         enabled: false
+
 proxy:
+  support:
+    mail-to-address: test@shinyproxy.io
   authentication: simple
   container-backend: docker
   heartbeat-timeout: -1
   default-stop-proxy-on-logout: false
+
+  admin-users:
+    - demo
 
   users:
     - name: demo
@@ -49,7 +55,6 @@ proxy:
         - group1
       access-expression: "#{expression}"
       max-lifetime: 10
-      heartbeat-timeout: 10
       cache-headers-mode: EnforceCacheAssets
       container-image: "openanalytics/shinyproxy-integration-test-app"
       container-cmd: [ "R", "-e", "shinyproxy::run_01_hello()" ]
@@ -59,6 +64,10 @@ proxy:
       container-memory-request: 500m
       container-cpu-limit: 2
       container-cpu-request: 2
+      additional-port-mappings:
+        - name: abc
+          port: 3838
+          target-path: abc
       labels:
             my-label: my-value
       container-network: "bridge"

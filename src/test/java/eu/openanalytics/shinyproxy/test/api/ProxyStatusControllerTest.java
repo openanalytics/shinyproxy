@@ -82,8 +82,6 @@ public class ProxyStatusControllerTest {
         // 5. change status
         resp = apiTestHelper.callWithAuth(apiTestHelper.createPutRequest("/api/proxy/" + id + "/status", "{\"status\": \"Stopping\"}"));
         Assertions.assertEquals(JsonValue.NULL, resp.jsonSuccess());
-
-        inst.client.stopProxy(id);
     }
 
 }

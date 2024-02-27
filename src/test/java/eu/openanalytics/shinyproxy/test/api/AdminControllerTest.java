@@ -20,7 +20,6 @@
  */
 package eu.openanalytics.shinyproxy.test.api;
 
-import eu.openanalytics.containerproxy.api.ProxyController;
 import eu.openanalytics.containerproxy.test.helpers.ShinyProxyInstance;
 import eu.openanalytics.shinyproxy.test.helpers.ApiTestHelper;
 import eu.openanalytics.shinyproxy.test.helpers.Response;
@@ -28,12 +27,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-/**
- * Test the security (authorization of) {@link ProxyController}
- */
-public class ProxyRouteControllerTest {
-
-    private static final String RANDOM_UUID = "8402e8c3-eaef-4fc7-9f23-9e843739dd0f";
+public class AdminControllerTest {
 
     private static final ShinyProxyInstance inst = new ShinyProxyInstance("application-test-api.yml");
     private static final ApiTestHelper apiTestHelper = new ApiTestHelper(inst);
@@ -45,7 +39,29 @@ public class ProxyRouteControllerTest {
 
     @Test
     public void testWithoutAuth() {
-        // invalid app id
+        Response resp = apiTestHelper.callWithoutAuth(apiTestHelper.createRequest("/admin"));
+        resp.assertHtmlAuthenticationRequired();
+
+        resp = apiTestHelper.callWithoutAuth(apiTestHelper.createRequest("/admin/data"));
+        resp.assertAuthenticationRequired();
+    }
+
+    @Test
+    public void testNonAdminUser() {
+        Response resp = apiTestHelper.callWithAuthDemo2(apiTestHelper.createRequest("/admin"));
+        resp.assertForbidden();
+
+        resp = apiTestHelper.callWithAuthDemo2(apiTestHelper.createRequest("/admin/data"));
+        resp.assertAuthenticationRequired();
+    }
+
+    @Test
+    public void testAdminUser() {
+        Response resp = apiTestHelper.callWithAuth(apiTestHelper.createRequest("/admin"));
+        resp.assertHtmlSuccess();
+
+        resp = apiTestHelper.callWithAuth(apiTestHelper.createRequest("/admin/data"));
+        resp.jsonSuccess();
     }
 
 }

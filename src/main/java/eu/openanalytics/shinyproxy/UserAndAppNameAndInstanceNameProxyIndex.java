@@ -26,11 +26,17 @@ import eu.openanalytics.containerproxy.service.ProxyIdIndex;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import org.springframework.stereotype.Component;
 
+import java.util.Objects;
+
 @Component
 public class UserAndAppNameAndInstanceNameProxyIndex extends ProxyIdIndex<UserAndAppNameAndInstanceNameProxyIndex.UserAndAppNameAndInstanceNameKey> {
 
     public UserAndAppNameAndInstanceNameProxyIndex(IProxyStore proxyStore) {
-        super(proxyStore, (key, proxy) -> proxy.getSpecId().equals(key.appName) && proxy.getUserId().equals(key.userId) && proxy.getRuntimeValue(AppInstanceKey.inst).equals(key.instanceName));
+        super(proxyStore, (key, proxy) ->
+            Objects.equals(proxy.getSpecId(), key.appName)
+                && Objects.equals(proxy.getUserId(), key.userId)
+                && Objects.equals(proxy.getRuntimeObjectOrNull(AppInstanceKey.inst), key.instanceName));
+        // use Objects.equals because some proxies might not yet be initialized
     }
 
     public Proxy getProxy(String userId, String appname, String appInstance) {

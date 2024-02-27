@@ -26,11 +26,15 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonValue;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 
 public class Response {
+
     private final okhttp3.Response response;
+    private String body;
 
     public Response(okhttp3.Response response) {
         this.response = response;
@@ -38,7 +42,17 @@ public class Response {
 
     public void assertAuthenticationRequired() {
         Assertions.assertEquals(410, code());
-        Assertions.assertEquals("{\"status\":\"fail\", \"data\":\"shinyproxy_authentication_required\"}", body());
+        Assertions.assertEquals("{\"status\":\"fail\",\"data\":\"shinyproxy_authentication_required\"}", body());
+    }
+
+    public void assertAppStoppedOrNonExistent() {
+        Assertions.assertEquals(410, code());
+        Assertions.assertEquals("{\"status\":\"fail\",\"data\":\"app_stopped_or_non_existent\"}", body());
+    }
+
+    public void assertHtmlAuthenticationRequired() {
+        Assertions.assertEquals(302, code());
+        Assertions.assertNotNull(response.header("Location"));
     }
 
     public void assertForbidden() {
@@ -46,8 +60,13 @@ public class Response {
         Assertions.assertEquals("{\"status\":\"fail\",\"data\":\"forbidden\"}", body());
     }
 
+    public void assertFail(String message) {
+        Assertions.assertEquals(400, code());
+        Assertions.assertEquals("{\"status\":\"fail\",\"data\":\"" + message + "\"}", body());
+    }
+
     private JsonValue parseJson() {
-        JsonReader jsonReader = Json.createReader(response.body().byteStream());
+        JsonReader jsonReader = Json.createReader(new ByteArrayInputStream(body().getBytes(StandardCharsets.UTF_8)));
         JsonObject object = jsonReader.readObject();
         jsonReader.close();
         Assertions.assertTrue(object.containsKey("status"));
@@ -65,19 +84,31 @@ public class Response {
         return parseJson();
     }
 
+    public void assertHtmlSuccess() {
+        Assertions.assertEquals(200, code());
+        Assertions.assertTrue(response.header("Content-Type", "").startsWith("text/html"));
+        Assertions.assertNotNull(body());
+    }
+
     public String body() {
-        try {
-            if (response.body() == null) {
-                throw new RuntimeException("Body is null");
+        if (body == null) {
+            try {
+                if (response.body() == null) {
+                    throw new RuntimeException("Body is null");
+                }
+                body = response.body().string();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            return response.body().string();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
+        return body;
     }
 
     public int code() {
         return response.code();
     }
 
+    public String header(String location) {
+        return response.header(location);
+    }
 }

@@ -57,8 +57,8 @@ public class IssueController extends BaseController {
     @Autowired(required = false)
     private JavaMailSender mailSender;
 
-    private Logger logger = LoggerFactory.getLogger(getClass());
-    private StructuredLogger slogger = new StructuredLogger(logger);
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final StructuredLogger slogger = new StructuredLogger(logger);
 
     public IssueController(Environment environment) {
         mailFromAddress = environment.getProperty("proxy.support.mail-from-address", "issues@shinyproxy.io");

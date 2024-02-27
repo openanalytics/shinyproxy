@@ -25,6 +25,7 @@ import eu.openanalytics.containerproxy.test.helpers.ShinyProxyInstance;
 import eu.openanalytics.shinyproxy.test.helpers.ApiTestHelper;
 import eu.openanalytics.shinyproxy.test.helpers.Response;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -45,6 +46,11 @@ public class ProxyControllerTest {
     @AfterAll
     public static void afterAll() {
         inst.close();
+    }
+
+    @AfterEach
+    public void afterEach() {
+        inst.stopAllApps();
     }
 
     @Test
@@ -99,8 +105,6 @@ public class ProxyControllerTest {
         resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/api/proxy/01_hello"));
         JsonObject proxy = resp.jsonCreated().asJsonObject();
         apiTestHelper.validateProxyObject(proxy);
-
-        inst.client.stopProxy(proxy.getString("id"));
     }
 
     @Test
@@ -120,8 +124,6 @@ public class ProxyControllerTest {
         // 3. try to get proxy details as other user
         resp = apiTestHelper.callWithAuthDemo2(apiTestHelper.createRequest("/api/proxy/" + id));
         resp.assertForbidden();
-
-        inst.client.stopProxy(proxy.getString("id"));
     }
 
     @Test
@@ -131,7 +133,7 @@ public class ProxyControllerTest {
         Assertions.assertEquals(0, resp.jsonSuccess().asJsonArray().size());
 
         // start proxy
-        String id = inst.client.startProxy("01_hello");
+        inst.client.startProxy("01_hello");
 
         // 2. get proxies -> response may not contain any sensitive values
         resp = apiTestHelper.callWithAuth(apiTestHelper.createRequest("/api/proxy"));
@@ -144,7 +146,5 @@ public class ProxyControllerTest {
         // 3. get proxies as other user
         resp = apiTestHelper.callWithAuthDemo2(apiTestHelper.createRequest("/api/proxy"));
         Assertions.assertEquals(0, resp.jsonSuccess().asJsonArray().size());
-
-        inst.client.stopProxy(proxy.getString("id"));
     }
 }

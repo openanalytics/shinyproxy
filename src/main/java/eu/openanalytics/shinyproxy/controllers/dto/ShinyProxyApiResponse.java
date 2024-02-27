@@ -34,11 +34,11 @@ public class ShinyProxyApiResponse {
     }
 
     public static void appStoppedOrNonExistent(HttpServletResponse response) throws IOException {
-        ImmediateJsonResponse.write(response, 410, "{\"status\":\"fail\", \"data\":\"app_stopped_or_non_existent\"}");
+        ImmediateJsonResponse.write(response, 410, "{\"status\":\"fail\",\"data\":\"app_stopped_or_non_existent\"}");
     }
 
     public static void authenticationRequired(HttpServletResponse response) throws IOException {
-        ImmediateJsonResponse.write(response, 410, "{\"status\":\"fail\", \"data\":\"shinyproxy_authentication_required\"}");
+        ImmediateJsonResponse.write(response, 410, "{\"status\":\"fail\",\"data\":\"shinyproxy_authentication_required\"}");
     }
 
 }

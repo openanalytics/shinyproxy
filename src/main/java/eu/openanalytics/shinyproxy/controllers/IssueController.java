@@ -23,8 +23,11 @@ package eu.openanalytics.shinyproxy.controllers;
 import eu.openanalytics.containerproxy.api.dto.ApiResponse;
 import eu.openanalytics.containerproxy.log.LogPaths;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.service.LogService;
 import eu.openanalytics.containerproxy.service.StructuredLogger;
+import eu.openanalytics.containerproxy.spec.IProxySpecProvider;
+import eu.openanalytics.shinyproxy.ShinyProxySpecExtension;
 import eu.openanalytics.shinyproxy.controllers.dto.ReportIssueDto;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import jakarta.mail.internet.MimeMessage;
@@ -54,6 +57,9 @@ public class IssueController extends BaseController {
     @Inject
     private LogService logService;
 
+    @Inject
+    private IProxySpecProvider proxySpecProvider;
+
     @Autowired(required = false)
     private JavaMailSender mailSender;
 
@@ -66,7 +72,7 @@ public class IssueController extends BaseController {
 
     @RequestMapping(value = "/issue", method = RequestMethod.POST)
     public ResponseEntity<ApiResponse<Void>> postIssue(@RequestBody ReportIssueDto reportIssueDto) {
-        if (StringUtils.isBlank(supportAddress) || mailSender == null) {
+        if (StringUtils.isBlank(defaultSupportAddress) || mailSender == null) {
             return ApiResponse.fail("Report issue is not configured");
         }
         if (StringUtils.isBlank(reportIssueDto.getMessage())) {
@@ -76,20 +82,28 @@ public class IssueController extends BaseController {
             return ApiResponse.fail("Cannot report issue: no currentLocation provided");
         }
         Proxy proxy = null;
+        String supportAddress = defaultSupportAddress;
         if (!StringUtils.isBlank(reportIssueDto.getProxyId())) {
-            proxy = proxyService.getProxy(reportIssueDto.getProxyId());
-            if (!userService.isOwner(proxy)) {
+            proxy = proxyService.getUserProxy(reportIssueDto.getProxyId());
+            if (proxy == null) {
                 return ApiResponse.failForbidden();
+            }
+            ProxySpec proxySpec = proxySpecProvider.getSpec(proxy.getSpecId());
+            if (proxySpec != null) {
+                ShinyProxySpecExtension extension = proxySpec.getSpecExtension(ShinyProxySpecExtension.class);
+                if (extension.getSupportMailToAddress() != null) {
+                    supportAddress = extension.getSupportMailToAddress();
+                }
             }
         }
 
-        if (sendSupportMail(proxy, reportIssueDto.getMessage(), reportIssueDto.getCurrentLocation())) {
+        if (sendSupportMail(proxy, supportAddress, reportIssueDto.getMessage(), reportIssueDto.getCurrentLocation())) {
             return ApiResponse.success();
         }
         return ApiResponse.fail("Error while sending e-mail");
     }
 
-    public boolean sendSupportMail(Proxy proxy, String message, String currentLocation) {
+    public boolean sendSupportMail(Proxy proxy, String supportAddress, String message, String currentLocation) {
         try {
             MimeMessage mailMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mailMessage, true);

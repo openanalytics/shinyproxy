@@ -69,7 +69,7 @@ public abstract class BaseController {
     protected String logo;
     protected long heartbeatRate;
     protected boolean defaultShowNavbar;
-    protected String supportAddress;
+    protected String defaultSupportAddress;
     protected String defaultLogo;
     protected String defaultLogoWidth;
     protected String defaultLogoHeight;
@@ -111,7 +111,7 @@ public abstract class BaseController {
         title = environment.getProperty("proxy.title", "ShinyProxy");
         heartbeatRate = heartbeatService.getHeartbeatRate();
         defaultShowNavbar = !Boolean.parseBoolean(environment.getProperty("proxy.hide-navbar"));
-        supportAddress = environment.getProperty("proxy.support.mail-to-address");
+        defaultSupportAddress = environment.getProperty("proxy.support.mail-to-address");
         allowTransferApp = environment.getProperty("proxy.allow-transfer-app", Boolean.class, false);
     }
 
@@ -144,7 +144,7 @@ public abstract class BaseController {
         boolean isLoggedIn = authentication != null && !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated();
         map.put("isLoggedIn", isLoggedIn);
         map.put("isAdmin", userService.isAdmin(authentication));
-        map.put("isSupportEnabled", isLoggedIn && supportAddress != null);
+        map.put("isSupportEnabled", isLoggedIn && defaultSupportAddress != null);
         map.put("logoutUrl", authenticationBackend.getLogoutURL());
         map.put("page", ""); // defaults, used in navbar
         map.put("maxInstances", 0); // defaults, used in navbar
@@ -163,7 +163,7 @@ public abstract class BaseController {
         map.put("response", httpServletResponse);
     }
 
-    protected String getSupportAddress() {
+    protected String getDefaultSupportAddress() {
         return environment.getProperty("proxy.support.mail-to-address");
     }
 

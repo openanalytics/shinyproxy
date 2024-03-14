@@ -64,6 +64,7 @@ public class ShinyProxySpecExtension extends AbstractSpecExtension {
     Map<String, String> templateProperties = new HashMap<>();
 
     String supportMailToAddress;
+    String supportMailSubject;
 
     @Override
     public ShinyProxySpecExtension firstResolve(SpecExpressionResolver resolver, SpecExpressionContext context) {

@@ -53,6 +53,7 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 public class IssueController extends BaseController {
 
     private final String mailFromAddress;
+    private final String defaultMailSubject;
 
     @Inject
     private LogService logService;
@@ -68,6 +69,7 @@ public class IssueController extends BaseController {
 
     public IssueController(Environment environment) {
         mailFromAddress = environment.getProperty("proxy.support.mail-from-address", "issues@shinyproxy.io");
+        defaultMailSubject = environment.getProperty("proxy.support.mail-subject", "ShinyProxy Error Report");
     }
 
     @RequestMapping(value = "/issue", method = RequestMethod.POST)
@@ -83,6 +85,7 @@ public class IssueController extends BaseController {
         }
         Proxy proxy = null;
         String supportAddress = defaultSupportAddress;
+        String subject = defaultMailSubject;
         if (!StringUtils.isBlank(reportIssueDto.getProxyId())) {
             proxy = proxyService.getUserProxy(reportIssueDto.getProxyId());
             if (proxy == null) {
@@ -94,16 +97,19 @@ public class IssueController extends BaseController {
                 if (extension.getSupportMailToAddress() != null) {
                     supportAddress = extension.getSupportMailToAddress();
                 }
+                if (extension.getSupportMailSubject() != null) {
+                    subject = extension.getSupportMailSubject();
+                }
             }
         }
 
-        if (sendSupportMail(proxy, supportAddress, reportIssueDto.getMessage(), reportIssueDto.getCurrentLocation())) {
+        if (sendSupportMail(proxy, supportAddress, subject, reportIssueDto.getMessage(), reportIssueDto.getCurrentLocation())) {
             return ApiResponse.success();
         }
         return ApiResponse.fail("Error while sending e-mail");
     }
 
-    public boolean sendSupportMail(Proxy proxy, String supportAddress, String message, String currentLocation) {
+    private boolean sendSupportMail(Proxy proxy, String supportAddress, String subject, String message, String currentLocation) {
         try {
             MimeMessage mailMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mailMessage, true);
@@ -111,7 +117,7 @@ public class IssueController extends BaseController {
             // Headers
             helper.setFrom(mailFromAddress);
             helper.addTo(supportAddress);
-            helper.setSubject("ShinyProxy Error Report");
+            helper.setSubject(subject);
 
             // Body
             String lineSep = System.lineSeparator();

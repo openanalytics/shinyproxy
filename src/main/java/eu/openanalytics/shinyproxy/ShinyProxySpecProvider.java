@@ -27,6 +27,7 @@ import eu.openanalytics.containerproxy.model.runtime.runtimevalues.CacheHeadersM
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.AccessControl;
 import eu.openanalytics.containerproxy.model.spec.ContainerSpec;
+import eu.openanalytics.containerproxy.model.spec.DockerDeviceRequest;
 import eu.openanalytics.containerproxy.model.spec.DockerSwarmSecret;
 import eu.openanalytics.containerproxy.model.spec.ISpecExtension;
 import eu.openanalytics.containerproxy.model.spec.Parameters;
@@ -573,6 +574,29 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
             containerSpec.resourceName(resourceName);
         }
 
+        public void setDockerRuntime(SpelField.String runtime) {
+            containerSpec.dockerRuntime(runtime);
+        }
+
+        public SpelField.String getDockerRuntime() {
+            return containerSpec.build().getDockerRuntime();
+        }
+
+        public void setDockerDeviceRequests(List<DockerDeviceRequest> dockerDeviceRequests) {
+            containerSpec.dockerDeviceRequests(dockerDeviceRequests);
+        }
+
+        public List<DockerDeviceRequest> getDockerDeviceRequests() {
+            return containerSpec.build().getDockerDeviceRequests();
+        }
+
+        public void setDockerUser(SpelField.String user) {
+            containerSpec.dockerUser(user);
+        }
+
+        public SpelField.String getDockerUser() {
+            return containerSpec.build().getDockerUser();
+        }
 
         public ProxySpec getProxySpec() {
             additionalPortMappings.add(defaultPortMapping.build());

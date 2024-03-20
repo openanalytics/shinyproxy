@@ -87,7 +87,7 @@
                         <div class="modal-body">
                             <div id="appDetails">
                             </div>
-                            <form class="form-inline" id="changeUserIdForm" th:if="${allowTransferApp}">
+                            <form class="form-inline" id="changeUserIdForm" th:if="${allowTransferApp && page != 'admin'}">
                                 <div class="form-group">
                                     <label for="userIdField"><span class="glyphicon glyphicon-chat"></span>Transfer app to another user:</label><br>
                                     <div class="input-group">

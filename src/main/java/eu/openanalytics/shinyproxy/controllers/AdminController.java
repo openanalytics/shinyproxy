@@ -58,6 +58,7 @@ public class AdminController extends BaseController {
     @RequestMapping("/admin")
     private String admin(ModelMap map, HttpServletRequest request) {
         prepareMap(map, request);
+        map.put("page", "admin");
 
         return "admin";
     }
@@ -152,7 +153,7 @@ public class AdminController extends BaseController {
                 backendContainerName = "N/A";
             }
 
-            if (proxy.getTargets().containsKey(proxy.getId())) {
+            if (proxy.getTargets().containsKey("")) {
                 endpoint = proxy.getTargets().get("").toString();
             } else {
                 endpoint = "N/A";

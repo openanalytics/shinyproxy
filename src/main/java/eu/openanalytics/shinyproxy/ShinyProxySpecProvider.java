@@ -598,6 +598,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
             return containerSpec.build().getDockerUser();
         }
 
+        public void setDockerIpc(SpelField.String ipc) {
+            containerSpec.dockerIpc(ipc);
+        }
+
+        public SpelField.String getDockerIpc() {
+            return containerSpec.build().getDockerIpc();
+        }
+
         public ProxySpec getProxySpec() {
             additionalPortMappings.add(defaultPortMapping.build());
             containerSpec.portMapping(additionalPortMappings);

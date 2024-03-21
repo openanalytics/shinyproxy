@@ -41,6 +41,22 @@ import java.util.stream.Collectors;
 @Controller
 public class IndexController extends BaseController {
 
+	/**
+	 * Allows users on a ShinyProxy deployment <b>with only one app defined</b> to be redirected straight
+	 * to the only existing app, without going through the Index page.
+	 */
+	private static final String PROXY_LANDING_PAGE_SINGLE_APP_OPTION = "SingleApp";
+	/**
+	 * Allows users on any ShinyProxy deployment to be redirected straight to the first available app,
+	 * without going through the Index page.
+	 */
+	private static final String PROXY_LANDING_PAGE_FIRST_APP_OPTION = "FirstApp";
+
+	/**
+	 * Redirects users on a ShinyProxy deployment to the index page.
+	 */
+	private static final String PROXY_LANDING_PAGE_INDEX_OPTION = "/";
+
 	@Inject
 	private ShinyProxySpecProvider shinyProxySpecProvider;
 
@@ -57,12 +73,26 @@ public class IndexController extends BaseController {
 	@RequestMapping("/")
     private Object index(ModelMap map, HttpServletRequest request) {
 		String landingPage = environment.getProperty("proxy.landing-page", "/");
-		if (!landingPage.equals("/")) return new RedirectView(landingPage);	
+
+		if (!landingPage.equals(PROXY_LANDING_PAGE_INDEX_OPTION)
+				&& !landingPage.equals(PROXY_LANDING_PAGE_SINGLE_APP_OPTION)
+				&& !landingPage.equals(PROXY_LANDING_PAGE_FIRST_APP_OPTION)) {
+			return new RedirectView(landingPage, true);
+		}
 		
 		prepareMap(map, request);
 		
 		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
 		map.put("apps", apps);
+
+		// If set to `FirstApp`, redirect to the first app available to the logged-in user
+		if (apps.length > 0 && landingPage.equals(PROXY_LANDING_PAGE_FIRST_APP_OPTION)) {
+			return new RedirectView("/app/" + apps[0].getId(), true);
+		}
+		// If set to `SingleApp` and only one app is available to the logged-in user, redirect to it
+		if (apps.length == 1 && landingPage.equals(PROXY_LANDING_PAGE_SINGLE_APP_OPTION)) {
+			return new RedirectView("/app/" + apps[0].getId(), true);
+		}
 
 		Map<ProxySpec, String> appLogos = new HashMap<>();
 		map.put("appLogos", appLogos);

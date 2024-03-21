@@ -21,7 +21,6 @@
 package eu.openanalytics.shinyproxy.controllers;
 
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
-import eu.openanalytics.shinyproxy.ShinyProxySpecExtension;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.env.Environment;
@@ -32,10 +31,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Controller
 public class IndexController extends BaseController {
@@ -93,34 +89,6 @@ public class IndexController extends BaseController {
         }
 
         prepareMap(map, request);
-
-        map.put("apps", apps);
-
-        // app logos
-        Map<ProxySpec, LogoInfo> appLogos = new HashMap<>();
-        for (ProxySpec app : apps) {
-            appLogos.put(app, getAppLogoInfo(app));
-        }
-        map.put("appLogos", appLogos);
-
-        // template groups
-        HashMap<String, ArrayList<ProxySpec>> groupedApps = new HashMap<>();
-        List<ProxySpec> ungroupedApps = new ArrayList<>();
-
-        for (ProxySpec app : apps) {
-            String groupId = app.getSpecExtension(ShinyProxySpecExtension.class).getTemplateGroup();
-            if (groupId != null) {
-                groupedApps.putIfAbsent(groupId, new ArrayList<>());
-                groupedApps.get(groupId).add(app);
-            } else {
-                ungroupedApps.add(app);
-            }
-        }
-
-        List<ShinyProxySpecProvider.TemplateGroup> templateGroups = shinyProxySpecProvider.getTemplateGroups().stream().filter((g) -> groupedApps.containsKey(g.getId())).toList();
-        map.put("templateGroups", templateGroups);
-        map.put("groupedApps", groupedApps);
-        map.put("ungroupedApps", ungroupedApps);
 
         // navbar
         map.put("page", "index");

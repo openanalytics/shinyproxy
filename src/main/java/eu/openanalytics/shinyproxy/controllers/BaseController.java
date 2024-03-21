@@ -33,6 +33,7 @@ import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.shinyproxy.ShinyProxySpecExtension;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.UserAndAppNameAndInstanceNameProxyIndex;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,6 +51,7 @@ import org.springframework.ui.ModelMap;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.servlet.view.RedirectView;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -57,7 +59,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public abstract class BaseController {
@@ -155,6 +161,35 @@ public abstract class BaseController {
         map.put("spInstance", identifierService.instanceId);
         map.put("allowTransferApp", allowTransferApp);
         map.put("notificationMessage", environment.getProperty("proxy.notification-message"));
+
+        List<ProxySpec> apps = proxyService.getUserSpecs();
+        map.put("apps", apps);
+
+        // app logos
+        Map<ProxySpec, LogoInfo> appLogos = new HashMap<>();
+        for (ProxySpec app : apps) {
+            appLogos.put(app, getAppLogoInfo(app));
+        }
+        map.put("appLogos", appLogos);
+
+        // template groups
+        HashMap<String, ArrayList<ProxySpec>> groupedApps = new HashMap<>();
+        List<ProxySpec> ungroupedApps = new ArrayList<>();
+
+        for (ProxySpec app : apps) {
+            String groupId = app.getSpecExtension(ShinyProxySpecExtension.class).getTemplateGroup();
+            if (groupId != null) {
+                groupedApps.putIfAbsent(groupId, new ArrayList<>());
+                groupedApps.get(groupId).add(app);
+            } else {
+                ungroupedApps.add(app);
+            }
+        }
+
+        List<ShinyProxySpecProvider.TemplateGroup> templateGroups = shinyProxySpecProvider.getTemplateGroups().stream().filter((g) -> groupedApps.containsKey(g.getId())).toList();
+        map.put("templateGroups", templateGroups);
+        map.put("groupedApps", groupedApps);
+        map.put("ungroupedApps", ungroupedApps);
 
         ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
         HttpServletRequest httpServletRequest = servletRequestAttributes.getRequest();

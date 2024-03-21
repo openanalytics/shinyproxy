@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2023 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -20,8 +20,6 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import eu.openanalytics.containerproxy.util.ContextPathHelper;
-import io.netty.buffer.ByteBuf;
 import io.undertow.UndertowMessages;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.server.protocol.http.ServerFixedLengthStreamSinkConduit;
@@ -53,6 +51,7 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
 
     private final ByteArrayOutputStream outputStream;
     private final HttpServerExchange exchange;
+    private final String scriptPath;
 
     /**
      * Construct a new instance.
@@ -60,9 +59,10 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
      * @param next     the delegate conduit to set
      * @param exchange the exchange
      */
-    public ShinyProxyIframeScriptInjector(StreamSinkConduit next, HttpServerExchange exchange) {
+    public ShinyProxyIframeScriptInjector(StreamSinkConduit next, HttpServerExchange exchange, String scriptPath) {
         super(next);
         this.exchange = exchange;
+        this.scriptPath = scriptPath;
         long length = exchange.getResponseContentLength();
         if (length <= 0L) {
             outputStream = new ByteArrayOutputStream();
@@ -114,16 +114,19 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
 
     @Override
     public void terminateWrites() throws IOException {
+        ByteBuffer out;
         // 1. check whether it's a html response and success
         if (exchange.getStatusCode() == HttpStatus.OK.value()
-                && exchange.getResponseHeaders().get("Content-Type") != null
-                && exchange.getResponseHeaders().get("Content-Type").stream().anyMatch(headerValue -> headerValue.contains("text/html"))) {
+            && exchange.getResponseHeaders().get("Content-Type") != null
+            && exchange.getResponseHeaders().get("Content-Type").stream().anyMatch(headerValue -> headerValue.contains("text/html"))) {
             // 2. inject script
-            String r = "<script src='" + ContextPathHelper.withEndingSlash() + "js/shiny.iframe.js'></script>";
-            outputStream.write(r.getBytes(StandardCharsets.UTF_8));
+            String r = outputStream.toString(StandardCharsets.UTF_8);
+            r += "<script src='" + scriptPath + "'></script>";
+            out = ByteBuffer.wrap(r.getBytes(StandardCharsets.UTF_8));
+        } else {
+            // 2. read bytes
+            out = ByteBuffer.wrap(outputStream.toByteArray());
         }
-
-        ByteBuffer out = ByteBuffer.wrap(outputStream.toByteArray());
         // 3. set Content-Length header
         updateContentLength(exchange, out);
         // 4. write new response (to the next stream)
@@ -149,19 +152,17 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
 
             try {
                 m = ServerFixedLengthStreamSinkConduit.class.getDeclaredMethod(
-                        "reset",
-                        long.class,
-                        HttpServerExchange.class);
+                    "reset",
+                    long.class,
+                    HttpServerExchange.class);
                 m.setAccessible(true);
-            }
-            catch (NoSuchMethodException | SecurityException ex) {
+            } catch (NoSuchMethodException | SecurityException ex) {
                 throw new RuntimeException("could not find ServerFixedLengthStreamSinkConduit.reset method", ex);
             }
 
             try {
                 m.invoke(next, length, exchange);
-            }
-            catch (Throwable ex) {
+            } catch (Throwable ex) {
                 throw new RuntimeException("could not access BUFFERED_REQUEST_DATA field", ex);
             }
         }

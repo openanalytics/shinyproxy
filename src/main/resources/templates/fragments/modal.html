@@ -2,7 +2,7 @@
 
     ShinyProxy
 
-    Copyright (C) 2016-2023 Open Analytics
+    Copyright (C) 2016-2024 Open Analytics
 
     ===========================================================================
 
@@ -23,72 +23,109 @@
 <!DOCTYPE html>
 <html
         xmlns:th="http://www.thymeleaf.org"
-        xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
-<head></head>
-<body>
-<th:block th:fragment="modal">
-    <div class="modal fade" id="modal" role="dialog">
-        <div class="modal-dialog" id="switchInstancesModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">Switch instance</h4>
-                </div>
-                <div class="modal-body">
-                    <div id="appInstances" class="myApps">
+>
+    <head></head>
+    <body>
+        <th:block th:fragment="modal">
+            <div class="modal fade" id="modal" role="dialog">
+                <div class="modal-dialog" id="switchInstancesModal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button aria-hidden="true" class="close" data-dismiss="modal" type="button">&times;</button>
+                            <h4 class="modal-title">Switch instance</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="myApps" id="appInstances">
+                            </div>
+                            <form class="form-inline" id="newInstanceForm">
+                                <div class="form-group">
+                                    <label for="instanceNameField"><span class="glyphicon glyphicon-chat"></span>Name of
+                                        new
+                                        instance:</label><br>
+                                    <div class="input-group">
+                                        <input class="form-control" id="instanceNameField" type="text">
+                                        <button class="btn btn-default btn-success" type="submit">Start</button>
+                                    </div>
+                                </div>
+                            </form>
+                            Max instances: <span id="maxInstances"></span>, used: <span id="usedInstances"></span>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
+                        </div>
                     </div>
-                    <form id="newInstanceForm" class="form-inline">
-                        <div class="form-group">
-                            <label for="instanceNameField"><span class="glyphicon glyphicon-chat"></span>Name of new
-                                instance:</label><br>
-                            <div class="input-group">
-                                <input class="form-control" id="instanceNameField" type="text">
-                                <button type="submit" class="btn btn-default btn-success">Start</button>
+                </div>
+                <div class="modal-dialog" id="myAppsModal" th:if="${myAppsMode == 'Modal'}">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button aria-hidden="true" class="close" data-dismiss="modal" type="button">&times;</button>
+                            <h4 class="modal-title">My apps</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="myApps" id="myApps">
                             </div>
                         </div>
-                    </form>
-                    Max instances: <span id="maxInstances"></span>, used: <span id="usedInstances"></span>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-        <div th:if="${myAppsMode == 'Modal'}" class="modal-dialog" id="myAppsModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">My apps</h4>
-                </div>
-                <div class="modal-body">
-                    <div id="myApps" class="myApps">
+                        <div class="modal-footer">
+                            <button class="btn pull-left btn-danger" id="stop-all-apps-btn"
+                                    onclick="Shiny.common.onStopAllApps();"
+                                    type="button">Stop all apps
+                            </button>
+                            <button class="btn pull-left btn-danger" disabled id="stopping-all-apps-btn" type="button">
+                                Stopping
+                                all apps...
+                            </button>
+                            <button class="btn btn-default" data-dismiss="modal" type="button">Close</button>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button onclick="Shiny.common.onStopAllApps();" id="stop-all-apps-btn" type="button"
-                            class="btn pull-left btn-danger">Stop all apps
-                    </button>
-                    <button type="button" disabled class="btn pull-left btn-danger" id="stopping-all-apps-btn">Stopping
-                        all apps...
-                    </button>
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-        <div class="modal-dialog" id="appDetailsModal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4 class="modal-title">App Details</h4>
-                </div>
-                <div class="modal-body">
-                    <div id="appDetails">
+                <div class="modal-dialog" id="appDetailsModal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button aria-hidden="true" class="close" data-dismiss="modal" type="button">&times;</button>
+                            <h4 class="modal-title">App Details</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div id="appDetails">
+                            </div>
+                            <form class="form-inline" id="changeUserIdForm" th:if="${allowTransferApp && page != 'admin'}">
+                                <div class="form-group">
+                                    <label for="userIdField"><span class="glyphicon glyphicon-chat"></span>Transfer app to another user:</label><br>
+                                    <div class="input-group">
+                                        <input class="form-control" id="userIdField" type="text">
+                                        <button class="btn btn-default btn-success" type="submit">Transfer</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-default close-button" type="button">Close</button>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default close-button">Close</button>
+                <div class="modal-dialog" id="reportIssueModal">
+                    <div class="modal-content">
+                        <form id="reportIssueForm">
+                            <div class="modal-header">
+                                <button aria-hidden="true" class="close" data-dismiss="modal" type="button">&times;
+                                </button>
+                                <h4 class="modal-title">Report Issue</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group">
+                                    <label for="reportIssueMessage"><span class="glyphicon glyphicon-chat"></span>
+                                        Message to add to the report:</label>
+                                    <textarea class="form-control" cols="40" id="reportIssueMessage"
+                                              name="reportIssueMessage" placeholder="Enter message" rows="5"></textarea>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-default btn-success" type="submit">Submit</button>
+                                <button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-</th:block>
+        </th:block>
+    </body>
+</html>

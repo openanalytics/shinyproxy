@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2023 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -22,21 +22,21 @@ package eu.openanalytics.shinyproxy.runtimevalues;
 
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 
-public class AppInstanceKey extends RuntimeValueKey<String>  {
+public class AppInstanceKey extends RuntimeValueKey<String> {
+
+    public static final AppInstanceKey inst = new AppInstanceKey();
 
     public AppInstanceKey() {
         super("openanalytics.eu/sp-app-instance",
-                "SHINYPROXY_APP_INSTANCE",
-                false,
-                true, // include as annotation so that the value can be recovered
-                false,
-                true,
-                true,
-                false,
-                String.class);
+            "SHINYPROXY_APP_INSTANCE",
+            false,
+            true, // include as annotation so that the value can be recovered
+            false,
+            true,
+            true,
+            false,
+            String.class);
     }
-
-    public static AppInstanceKey inst = new AppInstanceKey();
 
     @Override
     public String deserializeFromString(String value) {

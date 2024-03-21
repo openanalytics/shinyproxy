@@ -1,7 +1,7 @@
 /*
  * ShinyProxy
  *
- * Copyright (C) 2016-2023 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -26,6 +26,16 @@ Shiny.ui = {
     setupIframe: function () {
         var $iframe = $('<iframe id="shinyframe" width="100%" style="display:none;" frameBorder="0"></iframe>')
         $iframe.attr("src", Shiny.app.runtimeState.containerPath);
+        $iframe.on("load", () => {
+            const _shinyFrame = document.getElementById('shinyframe');
+            const content = _shinyFrame.contentDocument.documentElement.textContent || _shinyFrame.contentDocument.documentElement.innerText;
+            if (content === '{"status":"fail","data":"app_crashed"}' || content === '{\"status\":\"fail\",\"data\":\"app_stopped_or_non_existent\"}') {
+                Shiny.ui.showCrashedPage();
+            }
+            if (content === '{"status":"fail","data":"shinyproxy_authentication_required"}') {
+                shinyProxy.ui.showLoggedOutPage();
+            }
+        });
         $('#iframeinsert').before($iframe); // insert the iframe into the HTML.
         Shiny.ui.setShinyFrameHeight();
     },
@@ -35,7 +45,7 @@ Shiny.ui = {
      */
     showLoading: function () {
         $('#appStopped').hide();
-        $('#shinyframe').hide();
+        $('#shinyframe').remove();
         $("#loading").show();
     },
 
@@ -136,10 +146,13 @@ Shiny.ui = {
         $("#reloadFailed").show();
     },
 
-    showStartFailedPage: function () {
+    showStartFailedPage: function (errorMessage) {
         $('#shinyframe').hide();
         $('.loading').hide();
         $("#startFailed").show();
+        if (errorMessage) {
+            $('#startFailedMessage').text(errorMessage).show();
+        }
     },
 
     showStoppedPage: function () {
@@ -159,6 +172,14 @@ Shiny.ui = {
         $("#reconnecting").hide();
         $('#modal').modal('hide')
         $('#appCrashed').show();
+    },
+
+    showTransferredPage: function () {
+        Shiny.app.runtimeState.appStopped = true;
+        $('#shinyframe').remove();
+        $('.loading').hide();
+        $('#modal').modal('hide')
+        $('#appTransferred').show();
     },
 
     showLoggedOutPage: function () {
@@ -191,6 +212,11 @@ Shiny.ui = {
         $('#modal').modal('show');
     },
 
+    showReportIssueModal: function () {
+        $('#reportIssueModal').show();
+        $('#modal').modal('show');
+    },
+
     hideModal: function () {
         $('#modal .modal-dialog').hide();
         $('#modal').modal('hide');
@@ -218,6 +244,22 @@ Shiny.ui = {
 
     removeFrame() {
         $('#shinyframe').remove();
+    },
+
+    async submitReportIssueForm() {
+        const inputField = $('#reportIssueMessage');
+        const message = inputField.val();
+        if (message.trim() === '') {
+            alert("Please provide a message explaining the issue");
+            return;
+        }
+        if (await Shiny.api.reportIssue(message)) {
+            inputField.val('');
+            Shiny.ui.hideModal();
+            alert("Your issue has been reported");
+        } else {
+            alert("Something went wrong when reporting your issue");
+        }
     },
 
     validateParameterForm() {
@@ -251,26 +293,42 @@ Shiny.ui = {
         const equals = (a, b) =>
             a.length === b.length &&
             a.every((v, i) => v === b[i]);
-        const selectedValues = [];
-        const selectedIndex = target.selectedIndex;
-        const changedKey = $(target).prop('name');
-        const changedOptionIndex = Shiny.app.staticState.parameters.ids.indexOf(changedKey);
+        const combinationAllowed = (combination) => {
+            for (const allowedValue of Shiny.app.staticState.parameters.allowedCombinations) {
+                if (equals(allowedValue.slice(0, combination.length), combination)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        const selectedValues = []; // part of the currently selected combination that is valid
+        // check which part of the currently selected combination is valid
         for (let i = 0; i < Shiny.app.staticState.parameters.ids.length; i++) {
             const keyName = Shiny.app.staticState.parameters.ids[i];
-            if (i <= changedOptionIndex) {
-                let selected = $('select[name=' + keyName + ']').prop('selectedIndex');
-                selectedValues.push(selected);
+            const selected = $('select[name=' + keyName + ']').prop('selectedIndex');
+            if (selected === 0 || !combinationAllowed([...selectedValues, selected])) {
+                break;
             } else {
-                if (i === changedOptionIndex + 1 && selectedIndex !== 0) {
-                    $('select[name=' + keyName + ']').prop("disabled", false);
-                } else {
-                    $('select[name=' + keyName + ']').prop("disabled", true);
-                }
-                const nextOptions = $('select[name=' + keyName + '] option');
-                nextOptions.first().prop("selected", true);
+                selectedValues.push(selected);
             }
         }
 
+        // enable the next select box
+        const keyName = Shiny.app.staticState.parameters.ids[selectedValues.length];
+        $('select[name=' + keyName + ']').prop("disabled", false);
+        // reset the next select box
+        const nextSelectBox = $('select[name=' + keyName + '] option');
+        nextSelectBox.first().prop("selected", true);
+
+        // disable and reset all other select boxes
+        for (let i = selectedValues.length + 1; i < Shiny.app.staticState.parameters.ids.length; i++) {
+            const keyName = Shiny.app.staticState.parameters.ids[i];
+            $('select[name=' + keyName + ']').prop("disabled", true);
+            const nextSelectBox = $('select[name=' + keyName + '] option');
+            nextSelectBox.first().prop("selected", true);
+        }
+
+        // for the next select box, only show the options that are allowed
         const allowedNextValues = [];
         for (const allowedValue of Shiny.app.staticState.parameters.allowedCombinations) {
             if (equals(allowedValue.slice(0, selectedValues.length), selectedValues)) {

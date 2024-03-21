@@ -1,7 +1,7 @@
 /*
  * ShinyProxy
  *
- * Copyright (C) 2016-2023 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -21,6 +21,9 @@
 Shiny = window.Shiny || {};
 Shiny.api = {
     _proxiesCache: null,
+    /**
+     * @return {Promise.<Array.<Shiny.Proxy>>}
+     */
     getProxies: async function () {
         const resp = await fetch(Shiny.api.buildURL("api/proxy"));
         const json = await Shiny.api._getResponseJson(resp);
@@ -29,13 +32,13 @@ Shiny.api = {
         }
         return json.data;
     },
-    async changeProxyStatus(proxyId, desiredState, parameters) {
+    async changeProxyStatus(proxyId, status, parameters) {
         if (parameters === null) {
             parameters = {};
         }
-        const resp = await fetch(Shiny.api.buildURL("api/" + proxyId + '/status'), {
+        const resp = await fetch(Shiny.api.buildURL("api/proxy/" + proxyId + '/status'), {
             method: 'PUT',
-            body:  JSON.stringify({"desiredState": desiredState, "parameters": parameters}),
+            body: JSON.stringify({"status": status, "parameters": parameters}),
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -46,14 +49,15 @@ Shiny.api = {
     async waitForStatusChange(proxyId) {
         let networkErrors = 0;
         while (true) {
-            const url = Shiny.api.buildURL('api/' + proxyId + "/status?watch=true&timeout=10");
+            const url = Shiny.api.buildURL('api/proxy/' + proxyId + "/status?watch=true&timeout=10");
             try {
                 const resp = await fetch(url);
                 const json = await Shiny.api._getResponseJson(resp);
                 if (json === null) {
                     return null;
                 }
-                if (json.data.status === "Up" || json.data.status === "Stopped" || json.data.status === "Paused" ) {
+                if (json.data.status === "Up" || json.data.status === "Stopped" || json.data.status === "Paused") {
+                    console.log("App status changed, id: " + json.data.id + " status: " + json.data.status);
                     return json.data;
                 }
             } catch (e) {
@@ -66,6 +70,17 @@ Shiny.api = {
                 }
             }
         }
+    },
+    async changeProxyUserid(proxyId, newUserId) {
+        const resp = await fetch(Shiny.api.buildURL("api/proxy/" + proxyId + '/userId'), {
+            method: 'PUT',
+            body: JSON.stringify({"userId": newUserId}),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+        const json = await Shiny.api._getResponseJson(resp);
+        return json !== null;
     },
     getProxyById: async function (proxyId) {
         const resp = await fetch(Shiny.api.buildURL("api/proxy/" + proxyId));
@@ -165,6 +180,28 @@ Shiny.api = {
         }
         return json.data;
     },
+    reportIssue: async function(message) {
+        let proxyId = null;
+        if (Shiny.app.runtimeState.proxy && Shiny.app.runtimeState.proxy.status !== "Stopped" && Shiny.app.runtimeState.proxy.status !== "Stopping") {
+            proxyId = Shiny.app.runtimeState.proxy.id;
+        }
+
+        const body = {
+            message: message,
+            currentLocation: window.location.href,
+            proxyId: proxyId
+        }
+        let resp = await fetch(Shiny.api.buildURL("issue"), {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        });
+        const json = await Shiny.api._getResponseJson(resp);
+        return json !== null;
+
+    },
     buildURL(location) {
         const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
         return new URL(location, baseURL);
@@ -174,7 +211,7 @@ Shiny.api = {
         const appInstance = app.runtimeValues.SHINYPROXY_APP_INSTANCE;
         return Shiny.common.staticState.contextPath + "app_i/" + appName + "/" + appInstance + "/";
     },
-    _getResponseJson: async function(response) {
+    _getResponseJson: async function (response) {
         if (response.status !== 200) {
             console.log("Received invalid response (not 200 OK) ", response);
             return null;

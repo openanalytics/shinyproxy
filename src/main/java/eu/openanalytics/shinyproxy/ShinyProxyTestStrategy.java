@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2023 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -33,6 +33,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * This component tests the responsiveness of Shiny containers by making an HTTP GET request to the container's published port (default 3838).
@@ -42,54 +43,58 @@ import java.util.Arrays;
 @Primary
 public class ShinyProxyTestStrategy implements IProxyTestStrategy {
 
-	private final StructuredLogger log = StructuredLogger.create(getClass());
-	
-	@Inject
-	private Environment environment;
-	
-	@Override
-	public boolean testProxy(Proxy proxy) {
+    private final StructuredLogger log = StructuredLogger.create(getClass());
 
-		int totalWaitMs = Integer.parseInt(environment.getProperty("proxy.container-wait-time", "20000"));
-		int timeoutMs = Integer.parseInt(environment.getProperty("proxy.container-wait-timeout", "5000"));
+    @Inject
+    private Environment environment;
 
-		if (proxy.getContainers().get(0).getTargets().isEmpty()) return false;
-		URI targetURI = proxy.getContainers().get(0).getTargets().get(proxy.getId());
+    @Override
+    public boolean testProxy(Proxy proxy) {
+        if (!Objects.equals(proxy.getTargetId(), proxy.getId())) {
+            // Proxy points to a different target, should not test it
+            return true;
+        }
 
-		return Retrying.retry((currentAttempt, maxAttempts) -> {
-			try {
-				if (proxy.getStatus().isUnavailable()) {
-					// proxy got stopped while loading -> no need to try to connect it since the container will already be deleted
-					return true;
-				}
-				URL testURL = new URL(targetURI.toString() + "/");
-				HttpURLConnection connection = ((HttpURLConnection) testURL.openConnection());
-				if (currentAttempt <= 5) {
-					// When the container has only just started (or when the k8s service has only just been created),
-					// it could be that our traffic ends in a black hole, and we need to wait the full 5s seconds of
-					// the timeout. Therefore, we first try a few attempts with a lower timeout. If the container is
-					// fast, this will result in a faster startup. If the container is slow to startup, not time is waste.
-					connection.setConnectTimeout(200);
-					connection.setReadTimeout(200);
-				} else {
-					connection.setConnectTimeout(timeoutMs);
-					connection.setReadTimeout(timeoutMs);
-				}
-				connection.setInstanceFollowRedirects(false);
-				int responseCode = connection.getResponseCode();
-				if (Arrays.asList(200, 301, 302, 303, 307, 308).contains(responseCode)) {
-					if (currentAttempt > 10) {
-						log.info(proxy, "Container responsive");
-					}
-					return true;
-				}
-			} catch (Exception e) {
-				if (currentAttempt > 10) {
-					log.warn(proxy, String.format("Container unresponsive, trying again (%d/%d): %s", currentAttempt, maxAttempts, targetURI));
-				}
-			}
-			return false;
-		}, totalWaitMs);
-	}
+        int totalWaitMs = Integer.parseInt(environment.getProperty("proxy.container-wait-time", "20000"));
+        int timeoutMs = Integer.parseInt(environment.getProperty("proxy.container-wait-timeout", "5000"));
+
+        if (proxy.getTargets().isEmpty()) return false;
+        URI targetURI = proxy.getTargets().get("");
+
+        return Retrying.retry((currentAttempt, maxAttempts) -> {
+            try {
+                if (proxy.getStatus().isUnavailable()) {
+                    // proxy got stopped while loading -> no need to try to connect it since the container will already be deleted
+                    return true;
+                }
+                URL testURL = new URL(targetURI.toString() + "/");
+                HttpURLConnection connection = ((HttpURLConnection) testURL.openConnection());
+                if (currentAttempt <= 5) {
+                    // When the container has only just started (or when the k8s service has only just been created),
+                    // it could be that our traffic ends in a black hole, and we need to wait the full 5s seconds of
+                    // the timeout. Therefore, we first try a few attempts with a lower timeout. If the container is
+                    // fast, this will result in a faster startup. If the container is slow to startup, not time is waste.
+                    connection.setConnectTimeout(200);
+                    connection.setReadTimeout(200);
+                } else {
+                    connection.setConnectTimeout(timeoutMs);
+                    connection.setReadTimeout(timeoutMs);
+                }
+                connection.setInstanceFollowRedirects(false);
+                int responseCode = connection.getResponseCode();
+                if (Arrays.asList(200, 301, 302, 303, 307, 308).contains(responseCode)) {
+                    if (currentAttempt > 10) {
+                        log.info(proxy, "Container responsive");
+                    }
+                    return true;
+                }
+            } catch (Exception e) {
+                if (currentAttempt > 10) {
+                    log.warn(proxy, String.format("Container unresponsive, trying again (%d/%d): %s", currentAttempt, maxAttempts, targetURI));
+                }
+            }
+            return false;
+        }, totalWaitMs);
+    }
 
 }

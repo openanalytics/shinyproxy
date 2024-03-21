@@ -3,6 +3,9 @@
 /application.yml
 /.project
 *.gz
+*.zip
+.vscode/
+.idea/
 .project
 .classpath
 .settings

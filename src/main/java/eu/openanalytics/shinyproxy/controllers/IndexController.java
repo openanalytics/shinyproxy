@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2023 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -20,7 +20,9 @@
  */
 package eu.openanalytics.shinyproxy.controllers;
 
+import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -29,43 +31,77 @@ import org.springframework.web.servlet.view.RedirectView;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 @Controller
 public class IndexController extends BaseController {
 
-	@Inject
-	private ShinyProxySpecProvider shinyProxySpecProvider;
+    /**
+     * Allows users on a ShinyProxy deployment <b>with only one app defined</b> to be redirected straight
+     * to the only existing app, without going through the Index page.
+     */
+    private static final String PROXY_LANDING_PAGE_SINGLE_APP_OPTION = "SingleApp";
 
-	@Inject
-	private Environment environment;
+    /**
+     * Allows users on any ShinyProxy deployment to be redirected straight to the first available app,
+     * without going through the Index page.
+     */
+    private static final String PROXY_LANDING_PAGE_FIRST_APP_OPTION = "FirstApp";
 
-	private MyAppsMode myAppsMode;
+    /**
+     * Redirects users on a ShinyProxy deployment to the index page.
+     */
+    private static final String PROXY_LANDING_PAGE_INDEX_OPTION = "/";
 
-	@PostConstruct
-	public void init() {
-		myAppsMode = environment.getProperty("proxy.my-apps-mode", MyAppsMode.class, MyAppsMode.None);
-	}
+    @Inject
+    private ShinyProxySpecProvider shinyProxySpecProvider;
 
-	@RequestMapping("/")
-    private Object index(ModelMap map, HttpServletRequest request) {
-		String landingPage = environment.getProperty("proxy.landing-page", "/");
-		if (!landingPage.equals("/")) return new RedirectView(landingPage);	
-		
-		prepareMap(map, request);
+    @Inject
+    private Environment environment;
 
-		// navbar
-		map.put("page", "index");
+    private MyAppsMode myAppsMode;
 
-		map.put("myAppsMode", myAppsMode.toString());
+    private String landingPage;
 
-		return "index";
+    @PostConstruct
+    public void init() {
+        myAppsMode = environment.getProperty("proxy.my-apps-mode", MyAppsMode.class, MyAppsMode.None);
+        landingPage = environment.getProperty("proxy.landing-page", "/");
     }
 
-	public enum MyAppsMode {
-		Inline,
-		Modal,
-		None
-	}
+    @RequestMapping("/")
+    private Object index(ModelMap map, HttpServletRequest request) {
+        if (!landingPage.equals(PROXY_LANDING_PAGE_INDEX_OPTION)
+            && !landingPage.equals(PROXY_LANDING_PAGE_SINGLE_APP_OPTION)
+            && !landingPage.equals(PROXY_LANDING_PAGE_FIRST_APP_OPTION)) {
+            return new RedirectView(landingPage, true);
+        }
+
+        List<ProxySpec> apps = proxyService.getUserSpecs();
+
+        // If set to `FirstApp`, redirect to the first app available to the logged-in user
+        if (!apps.isEmpty() && landingPage.equals(PROXY_LANDING_PAGE_FIRST_APP_OPTION)) {
+            return new RedirectView("/app/" + apps.get(0).getId(), true);
+        }
+        // If set to `SingleApp` and only one app is available to the logged-in user, redirect to it
+        if (apps.size() == 1 && landingPage.equals(PROXY_LANDING_PAGE_SINGLE_APP_OPTION)) {
+            return new RedirectView("/app/" + apps.get(0).getId(), true);
+        }
+
+        prepareMap(map, request);
+
+        // navbar
+        map.put("page", "index");
+
+        map.put("myAppsMode", myAppsMode.toString());
+
+        return "index";
+    }
+
+    public enum MyAppsMode {
+        Inline,
+        Modal,
+        None
+    }
 
 }

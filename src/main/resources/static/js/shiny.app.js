@@ -1,7 +1,7 @@
 /*
  * ShinyProxy
  *
- * Copyright (C) 2016-2023 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -20,27 +20,23 @@
  */
 // noinspection ES6ConvertVarToLetConst
 
-/*
- * ShinyProxy
- *
- * Copyright (C) 2016-2021 Open Analytics
- *
- * ===========================================================================
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the Apache License as published by
- * The Apache Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * Apache License for more details.
- *
- * You should have received a copy of the Apache License
- * along with this program.  If not, see <http://www.apache.org/licenses/>
+/**
+ * @typedef {Object} Shiny.RuntimeValues
+ * @property {string} SHINYPROXY_PUBLIC_PATH
+ * @property {string} SHINYPROXY_WEBSOCKET_RECONNECTION_MODE
+ * @property {string} SHINYPROXY_FORCE_FULL_RELOAD
+ * @property {string} SHINYPROXY_TRACK_APP_URL
+ * @property {string} SHINYPROXY_APP_INSTANCE
  */
-
+/**
+ * A number, or a string containing a number.
+ * @typedef {Object} Shiny.Proxy
+ * @property {string} id
+ * @property {string} targetId
+ * @property {string} specId
+ * @property {string} status
+ * @property {Shiny.RuntimeValues} runtimeValues
+ */
 
 Shiny = window.Shiny || {};
 Shiny.app = {
@@ -59,11 +55,12 @@ Shiny.app = {
         },
         appPath: null,
         containerSubPath: null,
+        wasAutomaticReloaded: false
     },
 
     runtimeState: {
         /**
-         * @type {?{id: string, status: string, runtimeValues: {SHINYPROXY_PUBLIC_PATH: string, SHINYPROXY_WEBSOCKET_RECONNECTION_MODE: string, SHINYPROXY_FORCE_FULL_RELOAD: boolean, SHINYPROXY_TRACK_APP_URL: boolean}}}
+         * @type {Shiny.Proxy}
          */
         proxy: null,
         containerPath: null,
@@ -102,10 +99,15 @@ Shiny.app = {
         Shiny.app.staticState.parameters.names = parameterDefinitions;
         Shiny.app.staticState.parameters.ids = parametersIds;
         Shiny.app.runtimeState.proxy = proxy;
+        Shiny.app.checkWasAutomaticReload();
         Shiny.app.loadApp();
     },
     async loadApp() {
+        if (Shiny.app.runtimeState.proxy) {
+            console.log("Load app, id: " + Shiny.app.runtimeState.proxy.id + " status: " + Shiny.app.runtimeState.proxy.status);
+        }
         if (Shiny.app.runtimeState.proxy === null) {
+            console.log("Start app");
             if (Shiny.app.staticState.parameters.names !== null) {
                 Shiny.ui.showParameterForm();
             } else {
@@ -124,20 +126,17 @@ Shiny.app = {
             }
         } else if (Shiny.app.runtimeState.proxy.status === "Up") {
             Shiny.app.runtimeState.containerPath = Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH + Shiny.app.staticState.containerSubPath + window.location.hash;
-            if (!(await Shiny.app.checkAppHealth())) {
-                return;
-            }
             Shiny.ui.setupIframe();
             Shiny.ui.showFrame();
             Shiny.connections.startHeartBeats();
 
             const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
-            let parentUrl = new URL(Shiny.app.staticState.appPath , baseURL).toString();
+            let parentUrl = new URL(Shiny.app.staticState.appPath, baseURL).toString();
             if (!parentUrl.endsWith("/")) {
                 parentUrl = parentUrl + "/";
             }
             Shiny.app.runtimeState.parentFrameUrl = parentUrl;
-            let baseFrameUrl = new URL(Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH , baseURL).toString();
+            let baseFrameUrl = new URL(Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_PUBLIC_PATH, baseURL).toString();
             if (!baseFrameUrl.endsWith("/")) {
                 baseFrameUrl = parentUrl + "/";
             }
@@ -167,6 +166,18 @@ Shiny.app = {
             Shiny.app.startupFailed();
         } else {
             Shiny.app.loadApp();
+            if (!Shiny.app.staticState.wasAutomaticReloaded) {
+                Shiny.app.checkAppCrashedOrStopped(false).then((appCrashedOrStopped) => {
+                    if (appCrashedOrStopped) {
+                        Shiny.ui.showLoading();
+                        const url = new URL(window.location);
+                        url.searchParams.append("sp_automatic_reload", "true");
+                        window.location = url;
+                    }
+                });
+            } else {
+                Shiny.app.checkAppCrashedOrStopped();
+            }
         }
     },
     submitParameters(parameters) {
@@ -192,44 +203,73 @@ Shiny.app = {
         let url = Shiny.api.buildURL('app_i/' + Shiny.app.staticState.appName + '/' + Shiny.app.staticState.appInstanceName);
         let response = await fetch(url, {
             method: 'POST',
-            body:  JSON.stringify(body),
+            body: JSON.stringify(body),
             headers: {
                 'Content-Type': 'application/json'
             },
         });
-        if (response.status !== 200) {
+        try {
+            const json = await response.json();
+            if (response.status !== 200) {
+                if (json.status === "fail" && json.data !== null) {
+                    Shiny.app.startupFailed(json.data);
+                } else {
+                    Shiny.app.startupFailed();
+                }
+                return;
+            }
+            if (json.status !== "success") {
+                Shiny.app.startupFailed();
+                return;
+            }
+            Shiny.app.runtimeState.proxy = json.data;
+            await Shiny.app.waitForAppStart();
+        } catch {
             Shiny.app.startupFailed();
-            return;
         }
-        response = await response.json();
-        if (response.status !== "success") {
-            Shiny.app.startupFailed();
-            return;
-        }
-        Shiny.app.runtimeState.proxy = response.data;
-        await Shiny.app.waitForAppStart();
     },
-    startupFailed() {
+    startupFailed(errorMessage) {
         if (!Shiny.app.runtimeState.appStopped && !Shiny.app.runtimeState.navigatingAway) {
-            Shiny.ui.showStartFailedPage();
+            Shiny.ui.showStartFailedPage(errorMessage);
         }
     },
-    async checkAppHealth() {
+    async checkAppCrashedOrStopped(showError = true) {
         // check that the app endpoint is still accessible
-        const response = await fetch(Shiny.app.runtimeState.containerPath);
-        if (response.status !== 503) {
-            return true;
+        try {
+            const url = new URL(Shiny.app.runtimeState.containerPath, window.location.origin);
+            url.searchParams.append("sp_proxy_id", Shiny.app.runtimeState.proxy.id);
+            const response = await fetch(url);
+            if (response.status !== 503 && response.status !== 410) {
+                return false;
+            }
+            const json = await response.json();
+            if (json.status === "fail" && json.data === "app_stopped_or_non_existent") {
+                if (showError) {
+                    Shiny.ui.showStoppedPage();
+                }
+                return true;
+            }
+            if (json.status === "fail" && json.data === "app_crashed") {
+                if (showError) {
+                    Shiny.ui.showCrashedPage();
+                }
+                return true;
+            }
+        } catch (e) {
+            // ignore, server might not be reachable now, so app may still be running
         }
-        const json = await response.json();
-        if (json.status === "error" && json.message === "app_stopped_or_non_existent") {
-            Shiny.ui.showStoppedPage();
-            return false;
+        return false;
+    },
+    checkWasAutomaticReload() {
+        // If the app crashes immediately after starting it, ShinyProxy will reload the page a single time.
+        // A flag in the URL indicates that the page was automatically reloaded and thus a second reload should not
+        // be attempted. After reload this flag is removed from the URL.
+        const url = new URL(window.location);
+        if (url.searchParams.has("sp_automatic_reload")) {
+            Shiny.app.staticState.wasAutomaticReloaded = true;
+            url.searchParams.delete("sp_automatic_reload");
+            window.history.replaceState(null, null, url);
         }
-        if (json.status === "error" && json.message === "app_crashed") {
-            Shiny.ui.showCrashedPage();
-            return false;
-        }
-        return true;
     }
 }
 
@@ -251,7 +291,7 @@ $(window).on('load', function () {
         Shiny.instances.eventHandlers.showAppDetails();
     });
 
-    $('.app-link').on('click auxclick', function(e) {
+    $('.app-link').on('click auxclick', function (e) {
         e.preventDefault();
         const appId = $(this).data("app-id");
         Shiny.ui.showInstanceModal();
@@ -261,6 +301,16 @@ $(window).on('load', function () {
     $('#newInstanceForm').submit(function (e) {
         e.preventDefault();
         Shiny.instances.eventHandlers.onNewInstance();
+    });
+
+    $('#reportIssueForm').submit(function (e) {
+        e.preventDefault();
+        Shiny.ui.submitReportIssueForm();
+    });
+
+    $('#changeUserIdForm').submit(function (e) {
+        e.preventDefault();
+        Shiny.common.onChangeUserId();
     });
 
     $('#myAppsModal-btn').click(function () {

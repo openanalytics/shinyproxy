@@ -30,6 +30,7 @@ import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
+import eu.openanalytics.shinyproxy.ShinyProxySpecExtension;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import org.apache.logging.log4j.LogManager;
@@ -47,10 +48,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public abstract class BaseController {
 
@@ -103,7 +107,7 @@ public abstract class BaseController {
 	}
 
 	protected void prepareMap(ModelMap map, HttpServletRequest request) {
-        map.put("application_name", environment.getProperty("spring.application.name")); // name of ShinyProxy, ContainerProxy etc
+		map.put("application_name", environment.getProperty("spring.application.name")); // name of ShinyProxy, ContainerProxy etc
 		map.put("title", environment.getProperty("proxy.title", "ShinyProxy"));
 		map.put("logo", resolveImageURI(environment.getProperty("proxy.logo-url")));
 
@@ -132,6 +136,41 @@ public abstract class BaseController {
 		map.put("appMaxInstances", shinyProxySpecProvider.getMaxInstances());
 		map.put("pauseSupported", backend.supportsPause());
 		map.put("spInstance", identifierService.instanceId);
+
+		ProxySpec[] apps = proxyService.getProxySpecs(null, false).toArray(new ProxySpec[0]);
+		map.put("apps", apps);
+
+		Map<ProxySpec, String> appLogos = new HashMap<>();
+		map.put("appLogos", appLogos);
+
+		boolean displayAppLogos = false;
+		for (ProxySpec app: apps) {
+			if (app.getLogoURL() != null) {
+				displayAppLogos = true;
+				appLogos.put(app, resolveImageURI(app.getLogoURL()));
+			}
+		}
+		map.put("displayAppLogos", displayAppLogos);
+
+		// template groups
+		HashMap<String, ArrayList<ProxySpec>> groupedApps = new HashMap<>();
+		List<ProxySpec> ungroupedApps = new ArrayList<>();
+
+		for (ProxySpec app: apps) {
+			String groupId = app.getSpecExtension(ShinyProxySpecExtension.class).getTemplateGroup();
+			if (groupId != null) {
+				groupedApps.putIfAbsent(groupId, new ArrayList<>());
+				groupedApps.get(groupId).add(app);
+			} else {
+				ungroupedApps.add(app);
+			}
+		}
+
+		List<ShinyProxySpecProvider.TemplateGroup> templateGroups = shinyProxySpecProvider.getTemplateGroups().stream().filter((g) -> groupedApps.containsKey(g.getId())).collect(
+			Collectors.toList());
+		map.put("templateGroups", templateGroups);
+		map.put("groupedApps", groupedApps);
+		map.put("ungroupedApps", ungroupedApps);
 	}
 	
 	protected String getSupportAddress() {

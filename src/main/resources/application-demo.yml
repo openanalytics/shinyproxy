@@ -16,7 +16,6 @@ proxy:
       password: password
       groups: mathematicians
   docker:
-    url: http://localhost:2375
     port-range-start: 20000
   specs:
     - id: 01_hello

@@ -88,7 +88,7 @@ public class AppDirectController extends BaseController {
             ProxySpec spec = proxyService.getUserSpec(appRequestInfo.getAppName());
 
             if (spec == null) {
-                response.setStatus(HttpStatus.FORBIDDEN.value());
+                request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, HttpStatus.FORBIDDEN.value());
                 request.getRequestDispatcher("/error").forward(request, response);
                 return null;
             }

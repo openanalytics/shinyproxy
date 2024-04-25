@@ -121,14 +121,14 @@ public class AppController extends BaseController {
         Proxy proxy = findUserProxy(appName, appInstance);
 
         ProxySpec spec = proxyService.getUserSpec(appName);
-        Optional<RedirectView> redirect = createRedirectIfRequired(request, subPath, spec);
-        if (redirect.isPresent()) {
-            return new ModelAndView(redirect.get());
-        }
-
         if (proxy == null && spec == null) {
             request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, HttpStatus.FORBIDDEN.value());
             return new ModelAndView("forward:/error");
+        }
+
+        Optional<RedirectView> redirect = createRedirectIfRequired(request, subPath, spec);
+        if (redirect.isPresent()) {
+            return new ModelAndView(redirect.get());
         }
 
         // if the proxy exists, the proxy object is non-null and the spec might be null (if the spec no longer exists or the user no longer has access to the spec)

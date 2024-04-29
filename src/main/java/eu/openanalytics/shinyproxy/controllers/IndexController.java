@@ -69,12 +69,17 @@ public class IndexController extends BaseController {
         landingPage = environment.getProperty("proxy.landing-page", "/");
     }
 
-    @RequestMapping("/")
+    @RequestMapping(path={"", "/"})
     private Object index(ModelMap map, HttpServletRequest request) {
         if (!landingPage.equals(PROXY_LANDING_PAGE_INDEX_OPTION)
             && !landingPage.equals(PROXY_LANDING_PAGE_SINGLE_APP_OPTION)
             && !landingPage.equals(PROXY_LANDING_PAGE_FIRST_APP_OPTION)) {
             return new RedirectView(landingPage, true);
+        }
+
+        if (request.getServletPath().equals("")) {
+            // ensure URL has trailing slash
+            return new RedirectView("/", true);
         }
 
         List<ProxySpec> apps = proxyService.getUserSpecs();

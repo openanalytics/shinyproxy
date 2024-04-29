@@ -53,7 +53,7 @@ Shiny.app = {
             names: null,
             ids: null
         },
-        appPath: null,
+        appPath: null, //  guaranteed to start with /
         containerSubPath: null,
         wasAutomaticReloaded: false
     },
@@ -73,7 +73,7 @@ Shiny.app = {
         websocketConnections: [],
         lastHeartbeatTime: null,
         appStopped: false,
-        parentFrameUrl: null, // the current url of the shinyproxy page, i.e. the location of the browser (e.g. http://localhost:8080/app/01_hello); guaranteed to end with /
+        parentFrameUrl: null, // the current url of the shinyproxy page, i.e. the location of the browser (e.g. http://localhost:8080/app/01_hello/); guaranteed to end with /
         baseFrameUrl: null, // the base url of the app iframe (i.e. without any subpath, query parameters, hash location etc.); guaranteed to end with /
     },
 
@@ -131,7 +131,7 @@ Shiny.app = {
             Shiny.connections.startHeartBeats();
 
             const baseURL = new URL(Shiny.common.staticState.contextPath, window.location.origin);
-            let parentUrl = new URL(Shiny.app.staticState.appPath, baseURL).toString();
+            let parentUrl = new URL(Shiny.app.staticState.appPath.substring(1), baseURL).toString();
             if (!parentUrl.endsWith("/")) {
                 parentUrl = parentUrl + "/";
             }

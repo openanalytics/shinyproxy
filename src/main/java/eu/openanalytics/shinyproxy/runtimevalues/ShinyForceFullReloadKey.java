@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2023 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -25,19 +25,19 @@ import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueK
 
 public class ShinyForceFullReloadKey extends RuntimeValueKey<Boolean> {
 
+    public static final ShinyForceFullReloadKey inst = new ShinyForceFullReloadKey();
+
     public ShinyForceFullReloadKey() {
         super("openanalytics.eu/sp-shiny-force-full-reload",
-                "SHINYPROXY_FORCE_FULL_RELOAD",
-                false,
-                true,
-                false,
-                true,
-                true,
-                false,
-                Boolean.class);
+            "SHINYPROXY_FORCE_FULL_RELOAD",
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            Boolean.class);
     }
-
-    public static ShinyForceFullReloadKey inst = new ShinyForceFullReloadKey();
 
     @Override
     public Boolean deserializeFromString(String value) {

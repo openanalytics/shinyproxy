@@ -5,20 +5,12 @@ metadata:
   labels:
     ci: shinyproxy-build
 spec:
-  securityContext:
-    fsGroup: 65534
   containers:
     - name: containerproxy-build
-      image: 196229073436.dkr.ecr.eu-west-1.amazonaws.com/openanalytics/containerproxy-build
-      securityContext:
-        privileged: true
-      command: [ "sh" ]
-      args: [ "/usr/src/app/docker-entrypoint.sh" ]
+      image: public.ecr.aws/docker/library/maven:3-eclipse-temurin-17-focal
+      command:
+        - cat
       tty: true
-      volumeMounts:
-        - name: workspace-volume
-          subPath: docker
-          mountPath: /var/lib/docker
       resources:
         requests:
           ephemeral-storage: "20Gi"

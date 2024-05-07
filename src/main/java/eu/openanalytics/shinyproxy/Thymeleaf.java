@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2023 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -21,6 +21,7 @@
 package eu.openanalytics.shinyproxy;
 
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.shinyproxy.external.ExternalAppSpecExtension;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -34,6 +35,11 @@ public class Thymeleaf {
     private ShinyProxySpecProvider shinyProxySpecProvider;
 
     public String getAppUrl(ProxySpec proxySpec) {
+        String externalUrl = proxySpec.getSpecExtension(ExternalAppSpecExtension.class).getExternalUrl();
+        if (externalUrl != null && !externalUrl.isBlank()) {
+            return externalUrl;
+        }
+
         UriComponentsBuilder builder = ServletUriComponentsBuilder.fromCurrentContextPath().pathSegment("app", proxySpec.getId());
 
         if (shinyProxySpecProvider.getHideNavbarOnMainPageLink(proxySpec)) {

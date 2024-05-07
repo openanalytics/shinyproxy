@@ -1,7 +1,7 @@
 /*
  * ShinyProxy
  *
- * Copyright (C) 2016-2023 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -53,7 +53,7 @@ Shiny.instances = {
             clearInterval(Shiny.instances._refreshIntervalId);
             clearInterval(Shiny.instances._detailsRefreshIntervalId); // just to be sure
         },
-        showAppDetails: function(event, appName, appInstanceName, proxyId) {
+        showAppDetails: function (event, appName, appInstanceName, proxyId) {
             if (event) {
                 event.preventDefault();
             }
@@ -122,13 +122,10 @@ Shiny.instances = {
             if (event) {
                 event.preventDefault();
             }
-            const overrideUrl = new URL(window.location);
-            overrideUrl.searchParams.delete("sp_instance_override");
-
             if (Shiny.app.runtimeState.appStopped
                 || Shiny.app.runtimeState.proxy.status === "Stopped"
                 || Shiny.app.runtimeState.proxy.status === "Paused") {
-                window.location = overrideUrl;
+                window.location.reload();
                 return;
             } else if (confirm("Are you sure you want to restart the current instance?")) {
                 Shiny.app.runtimeState.appStopped = true;
@@ -138,7 +135,7 @@ Shiny.instances = {
                 await Shiny.api.changeProxyStatus(Shiny.app.runtimeState.proxy.id, 'Stopping');
                 Shiny.app.runtimeState.proxy = await Shiny.api.waitForStatusChange(Shiny.app.runtimeState.proxy.id);
 
-                window.location = overrideUrl;
+                window.location.reload();
             }
         },
         onNewInstance: async function () {
@@ -165,19 +162,20 @@ Shiny.instances = {
             }
 
             const existingInstances = await Shiny.api.getProxies();
-            if (existingInstances.hasOwnProperty(appName)) {
-                const currentAmountOfInstances = existingInstances[appName].length;
-                const maxInstances = Shiny.common.runtimeState.switchInstanceApp.maxInstances;
-                if (maxInstances !== -1 && currentAmountOfInstances >= maxInstances) {
-                    alert("You cannot start a new instance because you are using the maximum amount of instances of this app!");
-                    return;
-                }
-                for (const existingInstance of existingInstances[appName]) {
-                    if (existingInstance.runtimeValues.SHINYPROXY_APP_INSTANCE === instance) {
+            const maxInstances = Shiny.common.runtimeState.switchInstanceApp.maxInstances;
+            let currentAmountOfInstances = 0;
+            for (const existingInstance of existingInstances) {
+                if (existingInstance.specId === appName) {
+                    currentAmountOfInstances++;
+                    if (existingInstance.runtimeValues.SHINYPROXY_APP_INSTANCE.toLowerCase() === instance.toLowerCase()) {
                         alert("You are already using an instance with this name!");
                         return;
                     }
                 }
+            }
+            if (maxInstances !== -1 && currentAmountOfInstances >= maxInstances) {
+                alert("You cannot start a new instance because you are using the maximum amount of instances of this app!");
+                return;
             }
 
             if (Shiny.common.runtimeState.switchInstanceApp.newTab) {
@@ -187,8 +185,7 @@ Shiny.instances = {
             }
             inputField.val('');
             Shiny.ui.hideModal();
-
-        },
+        }
     },
     _createUrlForInstance: function (instance) {
         return Shiny.common.staticState.contextPath + "app_i/" + Shiny.common.runtimeState.switchInstanceApp.appName + "/" + instance + "/";

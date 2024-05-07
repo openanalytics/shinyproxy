@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2023 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -20,7 +20,8 @@
  */
 package eu.openanalytics.shinyproxy;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,12 +52,12 @@ public class AppRequestInfo {
         Matcher appInstanceMatcher = APP_INSTANCE_PATTERN.matcher(uri);
         if (appInstanceMatcher.matches()) {
             String appName = appInstanceMatcher.group(2);
-            if (appName == null || appName.trim().equals("")) {
+            if (appName == null || appName.trim().isEmpty()) {
                 return null;
             }
 
             String appInstance = appInstanceMatcher.group(3);
-            if (appInstance == null || appInstance.trim().equals("")) {
+            if (appInstance == null || appInstance.trim().isEmpty()) {
                 return null;
             }
 
@@ -66,18 +67,18 @@ public class AppRequestInfo {
 
             String subPath = appInstanceMatcher.group(4);
             String appPath;
-            if (subPath == null || subPath.trim().equals("")) {
+            if (subPath == null || subPath.trim().isEmpty()) {
                 subPath = null;
                 appPath = uri;
             } else {
-                subPath = subPath.trim();
+                subPath = subPath.trim().substring(1); // remove first slash
                 appPath = uri.substring(0, uri.length() - subPath.length());
             }
 
             return new AppRequestInfo(appName, appInstance, appPath, subPath);
         } else if (appMatcher.matches()) {
             String appName = appMatcher.group(2);
-            if (appName == null || appName.trim().equals("")) {
+            if (appName == null || appName.trim().isEmpty()) {
                 return null;
             }
 
@@ -85,11 +86,11 @@ public class AppRequestInfo {
 
             String subPath = appMatcher.group(3);
             String appPath;
-            if (subPath == null || subPath.trim().equals("")) {
+            if (subPath == null || subPath.trim().isEmpty()) {
                 subPath = null;
                 appPath = uri;
             } else {
-                subPath = subPath.trim();
+                subPath = subPath.trim().substring(1); // remove first slash
                 appPath = uri.substring(0, uri.length() - subPath.length());
             }
 
@@ -99,15 +100,7 @@ public class AppRequestInfo {
         }
     }
 
-
     public String getAppInstance() {
-        return appInstance;
-    }
-
-    public String getAppInstanceDisplayName() {
-        if (appInstance.equals("_")) {
-            return "Default";
-        }
         return appInstance;
     }
 

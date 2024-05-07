@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2023 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -42,7 +42,7 @@ import java.util.Map;
 @Setter
 @Getter
 @Builder(toBuilder = true)
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // force Spring to not use constructor
 @NoArgsConstructor(force = true, access = AccessLevel.PRIVATE) // Jackson deserialize compatibility
 public class ShinyProxySpecExtension extends AbstractSpecExtension {
 
@@ -62,6 +62,9 @@ public class ShinyProxySpecExtension extends AbstractSpecExtension {
     String templateGroup;
 
     Map<String, String> templateProperties = new HashMap<>();
+
+    String supportMailToAddress;
+    String supportMailSubject;
 
     @Override
     public ShinyProxySpecExtension firstResolve(SpecExpressionResolver resolver, SpecExpressionContext context) {

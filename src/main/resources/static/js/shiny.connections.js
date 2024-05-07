@@ -1,7 +1,7 @@
 /*
  * ShinyProxy
  *
- * Copyright (C) 2016-2023 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -30,12 +30,12 @@ Shiny.connections = {
     startHeartBeats: function () {
         Shiny.connections.sendHeartBeat(); // send heartbeat right after loading app to validate the app is working
         setInterval(function () {
-            if (Shiny.app.runtimeState.appStopped) {
+            if (Shiny.app.runtimeState.appStopped || Shiny.app.runtimeState.proxy === null) {
                 return;
             }
             if (!Shiny.connections._webSocketConnectionIsOpen()) {
-                var lastHeartbeat = Date.now() - Shiny.app.runtimeState.lastHeartbeatTime;
-                if (lastHeartbeat > Shiny.app.staticState.heartBeatRate && Shiny.app.runtimeState.proxy !== null) {
+                const lastHeartbeat = Date.now() - Shiny.app.runtimeState.lastHeartbeatTime;
+                if (Shiny.app.runtimeState.proxy.id !== Shiny.app.runtimeState.proxy.targetId || lastHeartbeat > Shiny.app.staticState.heartBeatRate) {
                     Shiny.connections.sendHeartBeat();
                 }
             }
@@ -45,9 +45,10 @@ Shiny.connections = {
     /**
      * Send heartbeat and process the result.
      */
-    sendHeartBeat: function() {
+    sendHeartBeat: function () {
         // contextPath is guaranteed to end with a slash
-        $.post(Shiny.api.buildURL("heartbeat/" + Shiny.app.runtimeState.proxy.id), function() {})
+        $.post(Shiny.api.buildURL("heartbeat/" + Shiny.app.runtimeState.proxy.id), function () {
+        })
             .fail(function (response) {
                 if (Shiny.app.runtimeState.appStopped) {
                     // if stopped in meantime -> ignore
@@ -73,10 +74,9 @@ Shiny.connections = {
             });
     },
 
-    startOpenidRefresh: function() {
-        setInterval(function() {
+    startOpenidRefresh: function () {
+        setInterval(function () {
             if (Shiny.app.runtimeState.proxy && Shiny.app.runtimeState.proxy.status === "Stopped") {
-                console.log("no openid refresh");
                 return;
             }
             $.post(Shiny.api.buildURL("refresh-openid"));
@@ -96,41 +96,27 @@ Shiny.connections = {
             return;
         }
         Shiny.app.runtimeState.tryingToReconnect = true;
-        if (reconnectionMode === "None") {
-            // check if app has been stopped but ignore the error (i.e. don't try to reconnect)
-            Shiny.connections._checkAppHasBeenStopped(function (isStopped) {
-                if (isStopped) {
-                    // app was stopped, show stopped screen
-                    Shiny.ui.showStoppedPage();
-                }
-            });
-            return;
-        }
-        if (Shiny.app.runtimeState.reloadDismissed) {
-            // user already dismissed confirmation -> do not ask again
-            return;
-        }
-        if (Shiny.app.runtimeState.appStopped) {
-            // app has been stopped -> no need to reconnect
-            return;
-        }
 
-        // Check if the app has been stopped by another tab
-        Shiny.connections._checkAppHasBeenStopped(function (isStopped) {
-            if (isStopped) {
-                // app was stopped, show stopped screen
-                Shiny.ui.showStoppedPage();
-                return;
-            }
-            Shiny.ui.hideModal();
-            if (reconnectionMode === "Auto"
-                || (reconnectionMode === "Confirm"
-                    && confirm("Connection to server lost, try to reconnect to the application?"))
-            ) {
-                Shiny.connections._reloadPage();
-            } else {
-                Shiny.app.runtimeState.reloadDismissed = true;
-                Shiny.app.runtimeState.tryingToReconnect = false;
+        Shiny.app.checkAppCrashedOrStopped().then((appStoppedOrCrashed) => {
+            if (!appStoppedOrCrashed && reconnectionMode !== "None") {
+                if (Shiny.app.runtimeState.reloadDismissed) {
+                    // user already dismissed confirmation -> do not ask again
+                    return;
+                }
+                if (Shiny.app.runtimeState.appStopped) {
+                    // app has been stopped -> no need to reconnect
+                    return;
+                }
+                Shiny.ui.hideModal();
+                if (reconnectionMode === "Auto"
+                    || (reconnectionMode === "Confirm"
+                        && confirm("Connection to server lost, try to reconnect to the application?"))
+                ) {
+                    Shiny.connections._reloadPage();
+                } else {
+                    Shiny.app.runtimeState.reloadDismissed = true;
+                    Shiny.app.runtimeState.tryingToReconnect = false;
+                }
             }
         });
     },
@@ -175,12 +161,10 @@ Shiny.connections = {
         }
 
         // Check if the app has been stopped by ShinyProxy server (because of the timeout)
-        Shiny.connections._checkAppHasBeenStopped(function (isStopped) {
-            if (isStopped) {
+        Shiny.app.checkAppCrashedOrStopped().then((appStoppedOrCrashed) => {
+            if (appStoppedOrCrashed) {
                 Shiny.app.runtimeState.tryingToReconnect = false;
                 Shiny.app.runtimeState.reloadAttempts = 0;
-                // app was stopped, show stopped screen
-                Shiny.ui.showStoppedPage();
                 return;
             }
 
@@ -235,7 +219,7 @@ Shiny.connections = {
     _checkReloadSucceeded: function (checks = 0) {
         var completed = document.getElementById('shinyframe').contentDocument !== null
             && document.getElementById('shinyframe').contentDocument.readyState === "complete"
-            && document.getElementById('shinyframe').contentDocument.baseURI !== "about:blank"
+            && document.getElementById('shinyframe').contentDocument.baseURI.includes("/app_proxy/")
             && !Shiny.connections._checkIfIframeHasStartupMessage();
 
         if (completed) {
@@ -280,37 +264,6 @@ Shiny.connections = {
         setTimeout(() => Shiny.connections._checkShinyReloadSucceeded(checks + 1), 250);
     },
 
-    _checkAppHasBeenStopped: function (cb) {
-        $.ajax({
-            method: 'POST',
-            url: Shiny.api.buildURL("heartbeat/" + Shiny.app.runtimeState.proxy.id),
-            timeout: 3000,
-            success: function () {
-                cb(false);
-            },
-            error: function (response) {
-                try {
-                    var res = JSON.parse(response.responseText);
-                    if (res !== null && res.status === "fail") {
-                        if (res.data === "app_stopped_or_non_existent") {
-                            cb(true);
-                            return;
-                        } else if (res.data === "shinyproxy_authentication_required") {
-                            Shiny.ui.showLoggedOutPage();
-                            // never call call-back, but just redirect to login page
-                            return;
-                        }
-                    }
-                } catch (e) {
-                    // carry-on
-                }
-
-                cb(false);
-            }
-        });
-
-    },
-
     /**
      * @returns {boolean} whether at least one WebSocket connection is open
      */
@@ -324,7 +277,7 @@ Shiny.connections = {
         return false;
     },
 
-    _updateIframeUrl: function(url) {
+    _updateIframeUrl: function (url) {
         if (!Shiny.app.runtimeState.proxy.runtimeValues.SHINYPROXY_TRACK_APP_URL) {
             return;
         }

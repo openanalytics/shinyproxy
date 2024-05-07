@@ -1,7 +1,7 @@
 /*
  * ShinyProxy
  *
- * Copyright (C) 2016-2023 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -31,6 +31,7 @@ Shiny.common = {
     },
     runtimeState: {
         switchInstanceApp: null,
+        detailsAppId: null // id of the proxy currently shown in the details modal
     },
     _refreshIntervalId: null,
     _detailsRefreshIntervalId: null,
@@ -74,7 +75,7 @@ Shiny.common = {
         Shiny.common.loadAppDetails(appName, appInstanceName, proxyId);
     },
 
-    closeAppDetails: function() {
+    closeAppDetails: function () {
         clearInterval(Shiny.common._detailsRefreshIntervalId);
         if (Shiny.admin !== undefined) {
             clearInterval(Shiny.admin._detailsRefreshIntervalId);
@@ -82,10 +83,12 @@ Shiny.common = {
     },
 
     loadAppDetails(appName, appInstanceName, proxyId) {
+        Shiny.common.runtimeState.detailsAppId = proxyId;
+
         async function refresh() {
             const proxy = await Shiny.api.getProxyByIdFromCache(proxyId);
             const heartbeatInfo = await Shiny.api.getHeartBeatInfo(proxyId);
-            if (proxy === null ||  proxy.status === "Stopped" || proxy.status === "Stopping") {
+            if (proxy === null || proxy.status === "Stopped" || proxy.status === "Stopping") {
                 const templateData = {
                     appName: appName,
                     proxyId: proxyId,
@@ -150,8 +153,9 @@ Shiny.common = {
             }
             document.getElementById('appDetails').innerHTML = Handlebars.templates.app_details(templateData);
         }
+
         refresh();
-        Shiny.common._detailsRefreshIntervalId = setInterval(function() {
+        Shiny.common._detailsRefreshIntervalId = setInterval(function () {
             if (!document.hidden) {
                 refresh();
             }
@@ -177,6 +181,29 @@ Shiny.common = {
         }
     },
 
+    onChangeUserId: async function () {
+        const newUserField = $("#userIdField");
+        let newUser = newUserField.val().trim();
+        if (newUser === "") {
+            return;
+        }
+        const proxyId = Shiny.common.runtimeState.detailsAppId;
+        const proxy = await Shiny.api.getProxyByIdFromCache(proxyId);
+        if (newUser.toLowerCase() === proxy.userId.toLowerCase()) {
+            alert("Cannot transfer app: you are already the owner of this app");
+        } else if (!(await Shiny.api.changeProxyUserid(proxyId, newUser))) {
+            alert("Cannot transfer this app now, please try again later");
+        } else {
+            newUserField.val('');
+            if (Shiny.instances._isOpenedApp(proxyId)) {
+                Shiny.app.runtimeState.appStopped = true;
+                Shiny.ui.removeFrame();
+                Shiny.ui.showTransferredPage();
+            }
+            Shiny.ui.hideModal();
+        }
+    },
+
     async _areAllProxiesDeleted(proxyIds) {
         const proxies = await Shiny.api.getProxies()
         for (const proxy of proxies) {
@@ -195,7 +222,7 @@ Shiny.common = {
         });
         templateData['pauseSupported'] = Shiny.common.staticState.pauseSupported;
         document.getElementById('myApps').innerHTML = Handlebars.templates.my_apps(templateData);
-        if (templateData.apps.length === 0 ) {
+        if (templateData.apps.length === 0) {
             $('#stop-all-apps-btn').hide();
         } else if ($("#stopping-all-apps-btn").is(":hidden")) {
             // only show it if we are not stopping all apps

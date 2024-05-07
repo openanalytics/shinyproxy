@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2023 Open Analytics
+ * Copyright (C) 2016-2024 Open Analytics
  *
  * ===========================================================================
  *
@@ -25,19 +25,19 @@ import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueK
 
 public class TrackAppUrl extends RuntimeValueKey<Boolean> {
 
+    public static final TrackAppUrl inst = new TrackAppUrl();
+
     public TrackAppUrl() {
         super("openanalytics.eu/sp-track-app-url",
-                "SHINYPROXY_TRACK_APP_URL",
-                false,
-                true,
-                false,
-                true,
-                true,
-                false,
-                Boolean.class);
+            "SHINYPROXY_TRACK_APP_URL",
+            false,
+            true,
+            false,
+            true,
+            true,
+            false,
+            Boolean.class);
     }
-
-    public static TrackAppUrl inst = new TrackAppUrl();
 
     @Override
     public Boolean deserializeFromString(String value) {

@@ -362,7 +362,6 @@ public class AppController extends BaseController {
         try {
             String scriptPath = contextPathHelper.withEndingSlash() + identifierService.instanceId + "/js/shiny.iframe.js";
             mappingManager.dispatchAsync(proxy, subPath, request, response, (exchange) -> {
-                exchange.getRequestHeaders().remove("Accept-Encoding"); // ensure no encoding is used
                 exchange.addResponseWrapper((factory, exchange1) -> new ShinyProxyIframeScriptInjector(factory.create(), exchange1, scriptPath));
             });
         } catch (Exception e) {

@@ -118,6 +118,7 @@ public class ShinyProxyIframeScriptInjector extends AbstractStreamSinkConduit<St
         // 1. check whether it's a html response and success
         if (exchange.getStatusCode() == HttpStatus.OK.value()
             && exchange.getResponseHeaders().get("Content-Type") != null
+            && exchange.getResponseHeaders().get("Content-Encoding") == null
             && exchange.getResponseHeaders().get("Content-Type").stream().anyMatch(headerValue -> headerValue.contains("text/html"))) {
             // 2. inject script
             String r = outputStream.toString(StandardCharsets.UTF_8);

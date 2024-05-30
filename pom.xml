@@ -5,7 +5,7 @@
 
     <groupId>eu.openanalytics</groupId>
     <artifactId>shinyproxy</artifactId>
-    <version>3.1.0</version>
+    <version>3.1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>ShinyProxy</name>
@@ -28,9 +28,10 @@
         <java.version>17</java.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <containerproxy.version>1.1.0</containerproxy.version>
+        <containerproxy.version>1.1.1-SNAPSHOT</containerproxy.version>
         <resource.delimiter>&amp;</resource.delimiter>
         <spring-boot.version>3.2.2</spring-boot.version>
+        <project.build.outputTimestamp>2024-05-29T12:57:38.443Z</project.build.outputTimestamp>
     </properties>
 
     <distributionManagement>

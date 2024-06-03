@@ -30,7 +30,14 @@ Shiny.ui = {
             const _shinyFrame = document.getElementById('shinyframe');
             const content = _shinyFrame.contentDocument.documentElement.textContent || _shinyFrame.contentDocument.documentElement.innerText;
             if (content === '{"status":"fail","data":"app_crashed"}' || content === '{\"status\":\"fail\",\"data\":\"app_stopped_or_non_existent\"}') {
-                Shiny.ui.showCrashedPage();
+                if (!Shiny.app.staticState.noAutomaticReloaded) {
+                    Shiny.ui.showLoading();
+                    const url = new URL(window.location);
+                    url.searchParams.append("sp_automatic_reload", "true");
+                    window.location = url;
+                } else {
+                    Shiny.ui.showCrashedPage();
+                }
             }
             if (content === '{"status":"fail","data":"shinyproxy_authentication_required"}') {
                 shinyProxy.ui.showLoggedOutPage();

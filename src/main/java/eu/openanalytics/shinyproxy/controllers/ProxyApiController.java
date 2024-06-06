@@ -145,11 +145,12 @@ public class ProxyApiController extends BaseController {
             }
             instanceName = StringUtils.left(proxy.getUserId() + "-" + instanceName, 64);
 
+            proxyStore.removeProxy(proxy); // required to clear all caches
             proxy = proxy.toBuilder()
                 .userId(changeProxyUserIdDto.getUserId())
                 .addRuntimeValue(new RuntimeValue(AppInstanceKey.inst, instanceName), true)
                 .build();
-            proxyStore.updateProxy(proxy);
+            proxyStore.addProxy(proxy);
         } catch (AccessDeniedException ex) {
             return ApiResponse.failForbidden();
         }

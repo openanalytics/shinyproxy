@@ -49,6 +49,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.undertow.util.HttpString;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -88,6 +89,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 public class AppController extends BaseController {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final HttpString acceptEncodingHeader = new HttpString("Accept-Encoding");
     @Inject
     private ProxyMappingManager mappingManager;
     @Inject
@@ -362,7 +364,7 @@ public class AppController extends BaseController {
         try {
             String scriptPath = contextPathHelper.withEndingSlash() + identifierService.instanceId + "/js/shiny.iframe.js";
             mappingManager.dispatchAsync(proxy, subPath, request, response, (exchange) -> {
-                exchange.getRequestHeaders().remove("Accept-Encoding"); // ensure no encoding is used
+                exchange.getRequestHeaders().put(acceptEncodingHeader, "identity"); // ensure no encoding is used
                 exchange.addResponseWrapper((factory, exchange1) -> new ShinyProxyIframeScriptInjector(factory.create(), exchange1, scriptPath));
             });
         } catch (Exception e) {

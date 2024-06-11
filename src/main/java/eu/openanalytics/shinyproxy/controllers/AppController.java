@@ -42,6 +42,7 @@ import eu.openanalytics.containerproxy.service.ParametersService;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.shinyproxy.ShinyProxyIframeScriptInjector;
 import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
+import eu.openanalytics.shinyproxy.external.ExternalAppSpecExtension;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.UserTimeZoneKey;
 import io.swagger.v3.oas.annotations.Operation;
@@ -442,6 +443,12 @@ public class AppController extends BaseController {
      * @return a RedirectView if a redirect is needed
      */
     private Optional<RedirectView> createRedirectIfRequired(HttpServletRequest request, String subPath, ProxySpec spec) {
+        // if it's an external app -> redirect
+        String externalUrl = spec.getSpecExtension(ExternalAppSpecExtension.class).getExternalUrl();
+        if (externalUrl != null) {
+            return Optional.of(new RedirectView(externalUrl));
+        }
+
         // if sub-path is empty or it's a slash -> no redirect required
         if (subPath.isEmpty() || subPath.equals("/")) {
             return Optional.empty();

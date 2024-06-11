@@ -82,6 +82,20 @@ public class ProxyStatusControllerTest {
         // 5. change status
         resp = apiTestHelper.callWithAuth(apiTestHelper.createPutRequest("/api/proxy/" + id + "/status", "{\"status\": \"Stopping\"}"));
         Assertions.assertEquals(JsonValue.NULL, resp.jsonSuccess());
+
+        // 3. create proxy as non-admin user (demo2) and get status
+        String id2 = inst.getClient("demo2").startProxy("all-access");
+        resp = apiTestHelper.callWithAuth(apiTestHelper.createRequest("/api/proxy/" + id2 + "/status"));
+        proxy = resp.jsonSuccess().asJsonObject();
+        apiTestHelper.validateProxyObject(proxy);
+
+        // 6. try to change status as admin (demo) of other user (demo2)
+        resp = apiTestHelper.callWithAuth(apiTestHelper.createPutRequest("/api/proxy/" + id2 + "/status", "{\"status\": \"Pausing\"}"));
+        resp.assertForbidden();
+
+        // 7. try to change status as admin
+        resp = apiTestHelper.callWithAuth(apiTestHelper.createPutRequest("/api/proxy/" + id2 + "/status", "{\"status\": \"Stopping\"}"));
+        Assertions.assertEquals(JsonValue.NULL, resp.jsonSuccess());
     }
 
 }

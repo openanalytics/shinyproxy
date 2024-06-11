@@ -114,6 +114,12 @@ public class ApiTestHelper {
             .url(baseUrl + path);
     }
 
+    public Request.Builder createDeleteRequest(String path) {
+        return new Request.Builder()
+            .delete()
+            .url(baseUrl + path);
+    }
+
     public Response callWithAuth(Request.Builder request) {
         try {
             return new Response(clientDemo.newCall(request.build()).execute());

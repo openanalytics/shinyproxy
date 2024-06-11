@@ -1,0 +1,37 @@
+spring:
+  session:
+    store-type: none
+  data:
+    redis:
+      repositories:
+        enabled: false
+
+proxy:
+  support:
+    mail-to-address: test@shinyproxy.io
+  authentication: simple
+  container-backend: docker
+  heartbeat-timeout: -1
+  default-stop-proxy-on-logout: false
+
+  admin-users:
+    - demo
+
+  users:
+    - name: demo
+      password: demo
+      groups:
+        - group1
+        - group2
+    - name: demo2
+      password: demo2
+
+  docker:
+    url: http://localhost:2375
+
+
+  specs:
+    - id: 01_hello
+      display-name: 01-hello
+      description: my description
+      minium-seats-available: 1

@@ -71,7 +71,7 @@ public class ProxyControllerTest {
     public void testListSpecs() {
         Response resp = apiTestHelper.callWithAuth(apiTestHelper.createRequest("/api/proxyspec"));
         JsonArray specs = resp.jsonSuccess().asJsonArray();
-        Assertions.assertEquals(1, specs.size());
+        Assertions.assertEquals(2, specs.size());
         JsonObject spec = specs.getJsonObject(0);
         // response may not contain any sensitive values
         Assertions.assertEquals(List.of("id", "displayName", "description", "logoWidth", "logoHeight", "logoStyle", "logoClasses"), spec.keySet().stream().toList());

@@ -128,4 +128,14 @@
         <!-- Related to nim lang, not Java-->
         <cve>CVE-2020-23171</cve>
     </suppress>
+
+    <suppress>
+        <!-- Not applicable, Spring does not accept requests without Host header -->
+        <cve>CVE-2016-6311</cve>
+    </suppress>
+
+    <suppress>
+        <!-- Disputed by developers, not relevant for ShinyProxy  -->
+        <cve>CVE-2023-35116</cve>
+    </suppress>
 </suppressions>

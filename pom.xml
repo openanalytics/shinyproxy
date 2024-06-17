@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.2</version>
+        <version>3.2.6</version>
         <relativePath/>
     </parent>
 
@@ -30,8 +30,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <containerproxy.version>1.1.1-SNAPSHOT</containerproxy.version>
         <resource.delimiter>&amp;</resource.delimiter>
-        <spring-boot.version>3.2.2</spring-boot.version>
-        <project.build.outputTimestamp>2024-05-29T12:57:38.443Z</project.build.outputTimestamp>
+        <spring-boot.version>3.2.6</spring-boot.version>
     </properties>
 
     <distributionManagement>

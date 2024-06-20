@@ -87,6 +87,7 @@ public class AdminController extends BaseController {
     @RequestMapping(value = "/admin/data", produces = MediaType.APPLICATION_JSON_VALUE, method = RequestMethod.GET)
     @ResponseBody
     private ResponseEntity<ApiResponse<List<ProxyInfo>>> adminData() {
+        // TODO rename to /admin/proxy
         List<Proxy> proxies = proxyService.getAllProxies();
         List<ProxyInfo> proxyInfos = proxies.stream().map(ProxyInfo::new).toList();
         return ApiResponse.success(proxyInfos);

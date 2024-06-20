@@ -42,6 +42,7 @@ import eu.openanalytics.containerproxy.service.ParametersService;
 import eu.openanalytics.containerproxy.util.ProxyMappingManager;
 import eu.openanalytics.shinyproxy.ShinyProxyIframeScriptInjector;
 import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
+import eu.openanalytics.shinyproxy.external.ExternalAppSpecExtension;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import eu.openanalytics.shinyproxy.runtimevalues.UserTimeZoneKey;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,6 +50,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.undertow.util.HttpString;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -88,6 +90,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 public class AppController extends BaseController {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final HttpString acceptEncodingHeader = new HttpString("Accept-Encoding");
     @Inject
     private ProxyMappingManager mappingManager;
     @Inject
@@ -362,7 +365,7 @@ public class AppController extends BaseController {
         try {
             String scriptPath = contextPathHelper.withEndingSlash() + identifierService.instanceId + "/js/shiny.iframe.js";
             mappingManager.dispatchAsync(proxy, subPath, request, response, (exchange) -> {
-                exchange.getRequestHeaders().remove("Accept-Encoding"); // ensure no encoding is used
+                exchange.getRequestHeaders().put(acceptEncodingHeader, "identity"); // ensure no encoding is used
                 exchange.addResponseWrapper((factory, exchange1) -> new ShinyProxyIframeScriptInjector(factory.create(), exchange1, scriptPath));
             });
         } catch (Exception e) {
@@ -440,6 +443,12 @@ public class AppController extends BaseController {
      * @return a RedirectView if a redirect is needed
      */
     private Optional<RedirectView> createRedirectIfRequired(HttpServletRequest request, String subPath, ProxySpec spec) {
+        // if it's an external app -> redirect
+        String externalUrl = spec.getSpecExtension(ExternalAppSpecExtension.class).getExternalUrl();
+        if (externalUrl != null) {
+            return Optional.of(new RedirectView(externalUrl));
+        }
+
         // if sub-path is empty or it's a slash -> no redirect required
         if (subPath.isEmpty() || subPath.equals("/")) {
             return Optional.empty();

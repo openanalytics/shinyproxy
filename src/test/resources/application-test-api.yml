@@ -139,6 +139,8 @@ proxy:
               type: Opaque
               data:
                   password: cGFzc3dvcmQ=
+    - id: all-access
+      container-image: openanalytics/shinyproxy-integration-test-app:latest
 #      parameters:
 #        definitions:
 #          - id: parameter1

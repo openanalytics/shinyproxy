@@ -193,7 +193,7 @@ public class AppControllerTest {
         resp = apiTestHelper.callWithAuth(apiTestHelper.createRequest("/app_proxy/" + id + "/").addHeader("Accept", "text/html"));
         resp.assertHtmlSuccess();
         Assertions.assertTrue(resp.body().contains("Welcome to nginx!"));
-        Assertions.assertTrue(resp.body().endsWith("<script src='/5e89c377af39026486b5a487ad46f0b55d6031aa/js/shiny.iframe.js'></script>"));
+        Assertions.assertTrue(resp.body().endsWith("<script src='/9f0e4e7085654f8393139ec029b480b1ca8bbe96/js/shiny.iframe.js'></script>"));
 
         // normal sub-path request
         resp = apiTestHelper.callWithAuth(apiTestHelper.createRequest("/app_proxy/" + id + "/my-path"));

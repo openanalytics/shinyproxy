@@ -55,7 +55,7 @@ Shiny.app = {
         },
         appPath: null, //  guaranteed to start with /
         containerSubPath: null,
-        wasAutomaticReloaded: false
+        noAutomaticReloaded: null
     },
 
     runtimeState: {
@@ -166,18 +166,6 @@ Shiny.app = {
             Shiny.app.startupFailed();
         } else {
             Shiny.app.loadApp();
-            if (!Shiny.app.staticState.wasAutomaticReloaded) {
-                Shiny.app.checkAppCrashedOrStopped(false).then((appCrashedOrStopped) => {
-                    if (appCrashedOrStopped) {
-                        Shiny.ui.showLoading();
-                        const url = new URL(window.location);
-                        url.searchParams.append("sp_automatic_reload", "true");
-                        window.location = url;
-                    }
-                });
-            } else {
-                Shiny.app.checkAppCrashedOrStopped();
-            }
         }
     },
     submitParameters(parameters) {
@@ -266,9 +254,13 @@ Shiny.app = {
         // be attempted. After reload this flag is removed from the URL.
         const url = new URL(window.location);
         if (url.searchParams.has("sp_automatic_reload")) {
-            Shiny.app.staticState.wasAutomaticReloaded = true;
             url.searchParams.delete("sp_automatic_reload");
             window.history.replaceState(null, null, url);
+            Shiny.app.staticState.noAutomaticReloaded = true;
+        } else if (Shiny.app.runtimeState.proxy && Shiny.app.runtimeState.proxy.status === "Up") {
+            Shiny.app.staticState.noAutomaticReloaded = true;
+        } else{
+            Shiny.app.staticState.noAutomaticReloaded = false;
         }
     }
 }

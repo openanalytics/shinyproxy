@@ -6,17 +6,15 @@ metadata:
     ci: shinyproxy-build
 spec:
   containers:
-    - name: containerproxy-build
+    - name: shinyproxy-build
       image: public.ecr.aws/docker/library/maven:3-eclipse-temurin-17-focal
       command:
         - cat
       tty: true
       resources:
         requests:
-          ephemeral-storage: "20Gi"
-          memory: "2Gi"
-          cpu: "1.0"
+          memory: "4Gi"
+          cpu: "2"
         limits:
           memory: "4Gi"
-          cpu: "1.5"
-          ephemeral-storage: "20Gi"
+          cpu: "2"

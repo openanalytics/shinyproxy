@@ -24,6 +24,7 @@ import eu.openanalytics.containerproxy.api.dto.ApiResponse;
 import eu.openanalytics.containerproxy.model.runtime.Container;
 import eu.openanalytics.containerproxy.model.runtime.ParameterNames;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.BackendContainerName;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.BackendContainerNameKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.ContainerImageKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.HeartbeatTimeoutKey;
@@ -147,7 +148,7 @@ public class AdminController extends BaseController {
                 } else {
                     imageTag = "N/A";
                 }
-                backendContainerName = container.getRuntimeObjectOrDefault(BackendContainerNameKey.inst, "N/A");
+                backendContainerName = container.getRuntimeObjectOrDefault(BackendContainerNameKey.inst, new BackendContainerName("N/A", "N/A")).getValue();
             } else {
                 imageName = "N/A";
                 imageTag = "N/A";

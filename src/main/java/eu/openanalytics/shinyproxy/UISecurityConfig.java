@@ -97,7 +97,8 @@ public class UISecurityConfig implements ICustomSecurityConfig {
         http.authorizeHttpRequests(authz -> authz
             .requestMatchers(
                 new MvcRequestMatcher(handlerMappingIntrospector, "/admin"),
-                new MvcRequestMatcher(handlerMappingIntrospector, "/admin/**"))
+                new MvcRequestMatcher(handlerMappingIntrospector, "/admin/**"),
+                new MvcRequestMatcher(handlerMappingIntrospector, "/grafana/**"))
             .access((authentication, context) -> new AuthorizationDecision(userService.isAdmin(authentication.get())))
         );
 

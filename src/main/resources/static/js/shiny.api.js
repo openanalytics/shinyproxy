@@ -180,6 +180,14 @@ Shiny.api = {
         }
         return json.data;
     },
+    getCustomAppDetails: async function (proxyId) {
+        const resp = await fetch(Shiny.api.buildURL("api/proxy/" + proxyId + "/details"))
+        const json = await Shiny.api._getResponseJson(resp);
+        if (json === null) {
+            return null;
+        }
+        return json.data;
+    },
     reportIssue: async function(message) {
         let proxyId = null;
         if (Shiny.app.runtimeState.proxy && Shiny.app.runtimeState.proxy.status !== "Stopped" && Shiny.app.runtimeState.proxy.status !== "Stopping") {

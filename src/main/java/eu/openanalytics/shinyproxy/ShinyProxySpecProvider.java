@@ -39,6 +39,8 @@ import eu.openanalytics.containerproxy.spec.ISpecExtensionProvider;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionContext;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionResolver;
 import eu.openanalytics.containerproxy.spec.expression.SpelField;
+import eu.openanalytics.shinyproxy.runtimevalues.CustomAppDetails;
+import eu.openanalytics.shinyproxy.runtimevalues.CustomAppDetailsKey;
 import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
 import eu.openanalytics.shinyproxy.runtimevalues.TrackAppUrl;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
@@ -163,6 +165,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
             trackAppUrl = environment.getProperty("proxy.default-track-app-url", Boolean.class, false);
         }
         runtimeValues.add(new RuntimeValue(TrackAppUrl.inst, trackAppUrl));
+        runtimeValues.add(new RuntimeValue(CustomAppDetailsKey.inst, new CustomAppDetails(proxy.getSpecExtension(ShinyProxySpecExtension.class).getCustomAppDetails())));
 
         return runtimeValues;
     }

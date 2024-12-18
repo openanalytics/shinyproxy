@@ -24,6 +24,7 @@ import eu.openanalytics.containerproxy.backend.dispatcher.proxysharing.ProxyShar
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKeyRegistry;
 import eu.openanalytics.containerproxy.util.ContextPathHelper;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
+import eu.openanalytics.shinyproxy.runtimevalues.CustomAppDetailsKey;
 import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
 import eu.openanalytics.shinyproxy.runtimevalues.TrackAppUrl;
 import eu.openanalytics.shinyproxy.runtimevalues.UserTimeZoneKey;
@@ -44,6 +45,7 @@ public class ShinyProxyConfiguration {
         RuntimeValueKeyRegistry.addRuntimeValueKey(WebSocketReconnectionModeKey.inst);
         RuntimeValueKeyRegistry.addRuntimeValueKey(TrackAppUrl.inst);
         RuntimeValueKeyRegistry.addRuntimeValueKey(UserTimeZoneKey.inst);
+        RuntimeValueKeyRegistry.addRuntimeValueKey(CustomAppDetailsKey.inst);
     }
 
     @Inject

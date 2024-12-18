@@ -26,10 +26,6 @@ proxy:
     - name: demo2
       password: demo2
 
-  docker:
-    url: http://localhost:2375
-
-
   specs:
     - id: nobody
       container-image: openanalytics/shinyproxy-integration-test-app:latest
@@ -56,7 +52,7 @@ proxy:
       access-expression: "#{expression}"
       max-lifetime: 10
       cache-headers-mode: EnforceCacheAssets
-      container-image: "openanalytics/shinyproxy-integration-test-app"
+      container-image: openanalytics/shinyproxy-integration-test-app:latest
       container-cmd: [ "R", "-e", "shinyproxy::run_01_hello()" ]
       container-env:
             MY_VAR: MY_VALUE

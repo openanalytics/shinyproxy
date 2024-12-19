@@ -27,6 +27,7 @@ import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.model.store.IProxyStore;
 import eu.openanalytics.containerproxy.service.ProxyService;
+import eu.openanalytics.containerproxy.service.StructuredLogger;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionContext;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionResolver;
 import eu.openanalytics.shinyproxy.controllers.dto.ChangeProxyUserIdDto;
@@ -71,6 +72,8 @@ public class ProxyApiController extends BaseController {
 
     @Inject
     private SpecExpressionResolver specExpressionResolver;
+
+    private final StructuredLogger slogger = StructuredLogger.create(getClass());
 
     @Operation(summary = "Transfer an app to another user.", tags = "ShinyProxy")
     @ApiResponses(value = {
@@ -241,7 +244,11 @@ public class ProxyApiController extends BaseController {
         List<CustomAppDetail> result = new ArrayList<>();
 
         for (CustomAppDetail customAppDetail : customAppDetails) {
-            result.add(customAppDetail.toBuilder().value(specExpressionResolver.evaluateToString(customAppDetail.getValue(), context)).build());
+            try {
+                result.add(customAppDetail.toBuilder().value(specExpressionResolver.evaluateToString(customAppDetail.getValue(), context)).build());
+            } catch (Exception e) {
+                slogger.warn(proxy, e, String.format("Error while resolving CustomAppDetail expression '%s'", customAppDetail.getName()));
+            }
         }
 
         return ApiResponse.success(result);

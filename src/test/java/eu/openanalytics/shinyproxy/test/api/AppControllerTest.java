@@ -20,7 +20,10 @@
  */
 package eu.openanalytics.shinyproxy.test.api;
 
+import eu.openanalytics.containerproxy.model.runtime.Proxy;
+import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.test.helpers.ShinyProxyInstance;
+import eu.openanalytics.containerproxy.test.helpers.TestHelperException;
 import eu.openanalytics.shinyproxy.test.helpers.ApiTestHelper;
 import eu.openanalytics.shinyproxy.test.helpers.Response;
 import org.junit.jupiter.api.AfterAll;
@@ -109,10 +112,22 @@ public class AppControllerTest {
     }
 
     @Test
-    public void testStartApp() {
+    public void testStartApp() throws InterruptedException {
         // start app
         Response resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_/"));
         String id = apiTestHelper.validateProxyObject(resp.jsonSuccess().asJsonObject());
+
+        for (int i = 0; i < 120; i++) {
+            Proxy proxy = inst.proxyService.getProxy(id);
+            if (proxy.getStatus().equals(ProxyStatus.Up)) {
+                break;
+            }
+            Thread.sleep(1_000);
+        }
+        Proxy proxy = inst.proxyService.getProxy(id);
+        if (!proxy.getStatus().equals(ProxyStatus.Up)) {
+            throw new TestHelperException("App failed to start up");
+        }
 
         // load app page
         resp = apiTestHelper.callWithAuth(apiTestHelper.createRequest("/app/01_hello/"));
@@ -193,7 +208,7 @@ public class AppControllerTest {
         resp = apiTestHelper.callWithAuth(apiTestHelper.createRequest("/app_proxy/" + id + "/").addHeader("Accept", "text/html"));
         resp.assertHtmlSuccess();
         Assertions.assertTrue(resp.body().contains("Welcome to nginx!"));
-        Assertions.assertTrue(resp.body().endsWith("<script src='/9f0e4e7085654f8393139ec029b480b1ca8bbe96/js/shiny.iframe.js'></script>"));
+        Assertions.assertTrue(resp.body().endsWith("<script src='/12021caeaa8e333d7ac0131d8f85062c256dfeb2/js/shiny.iframe.js'></script>"));
 
         // normal sub-path request
         resp = apiTestHelper.callWithAuth(apiTestHelper.createRequest("/app_proxy/" + id + "/my-path"));

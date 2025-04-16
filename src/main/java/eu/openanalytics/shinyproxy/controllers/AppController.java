@@ -481,7 +481,7 @@ public class AppController extends BaseController {
                 .stream()
                 .anyMatch(it -> it.getName().equals(trimmedSubPath));
         } else if (spec != null) {
-            isMappingWithoutSlash = spec.getContainerSpecs().get(0)
+            isMappingWithoutSlash = spec.getContainerSpecs().getFirst()
                 .getPortMapping()
                 .stream()
                 .anyMatch(it -> it.getName().equals(trimmedSubPath));

@@ -72,7 +72,7 @@ public class HeartbeatControllerTest {
 
         resp = apiTestHelper.callWithAuth(apiTestHelper.createRequest("/heartbeat/" + id));
         JsonObject json = resp.jsonSuccess().asJsonObject();
-        Assertions.assertEquals(2, json.keySet().size());
+        Assertions.assertEquals(2, json.size());
         Assertions.assertNotNull(json.getJsonNumber("lastHeartbeat"));
         Assertions.assertNotNull(json.getJsonNumber("heartbeatRate"));
 

@@ -85,7 +85,7 @@ public class UISecurityConfig implements ICustomSecurityConfig {
                         // before auth, the user tried to open the page of an app, redirect back to that app
                         // (we don't redirect to any other page, see  #30648 and #28624)
                         // remove ?continue from the url (see #31733)
-                        String newUrl = ServletUriComponentsBuilder.fromHttpUrl(url).replaceQueryParam("continue").build().toUriString();
+                        String newUrl = ServletUriComponentsBuilder.fromUriString(url).replaceQueryParam("continue").build().toUriString();
                         request.getSession().setAttribute(AUTH_SUCCESS_URL_SESSION_ATTR, newUrl);
                     }
                     response.sendRedirect(ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth-success").build().toUriString());

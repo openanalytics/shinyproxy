@@ -20,19 +20,25 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.6</version>
+        <version>3.4.4</version>
         <relativePath/>
     </parent>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>17</java.version>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <containerproxy.version>1.2.0-SNAPSHOT</containerproxy.version>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <resource.delimiter>&amp;</resource.delimiter>
-        <spring-boot.version>3.2.6</spring-boot.version>
-        <maven.license.plugin.version>4.6</maven.license.plugin.version>
+        <!-- Dependency versions -->
+        <containerproxy.version>1.2.0-SNAPSHOT</containerproxy.version>
+        <spring-boot.version>3.4.4</spring-boot.version>
+        <datatables.version>1.13.5</datatables.version>
+        <datatables-buttons.version>2.4.1</datatables-buttons.version>
+        <datatables-responsive.version>2.2.7</datatables-responsive.version>
+        <handlebars.version>4.7.7</handlebars.version>
+        <!-- Plugin versions -->
+        <maven.license-plugin.version>4.6</maven.license-plugin.version>
         <maven.build-helper-maven.plugin.version>3.6.0</maven.build-helper-maven.plugin.version>
     </properties>
 
@@ -94,22 +100,22 @@
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>datatables</artifactId>
-            <version>1.13.2</version>
+            <version>${datatables.version}</version>
         </dependency>
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>datatables-buttons</artifactId>
-            <version>2.3.3</version>
+            <version>${datatables-buttons.version}</version>
         </dependency>
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>datatables-responsive</artifactId>
-            <version>2.2.7</version>
+            <version>${datatables-responsive.version}</version>
         </dependency>
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>handlebars</artifactId>
-            <version>4.7.7</version>
+            <version>${handlebars.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -202,7 +208,7 @@
             <plugin>
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
-                <version>${maven.license.plugin.version}</version>
+                <version>${maven.license-plugin.version}</version>
 
                 <executions>
                     <execution>

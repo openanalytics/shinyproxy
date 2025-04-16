@@ -27,8 +27,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import javax.json.JsonArray;
-import javax.json.JsonObject;
-import java.util.List;
 import java.util.Map;
 
 public class ProxyApiControllerTest {

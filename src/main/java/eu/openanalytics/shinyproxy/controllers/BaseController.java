@@ -56,7 +56,8 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLConnection;
 import java.util.Base64;
 import java.util.HashMap;
@@ -216,11 +217,11 @@ public abstract class BaseController {
             if (mimetype == null) {
                 logger.warn("Cannot determine mimetype for resource: " + resourceURI);
             } else {
-                try (InputStream input = new URL(resourceURI).openConnection().getInputStream()) {
+                try (InputStream input = new URI(resourceURI).toURL().openConnection().getInputStream()) {
                     byte[] data = StreamUtils.copyToByteArray(input);
                     String encoded = Base64.getEncoder().encodeToString(data);
                     resolvedValue = String.format("data:%s;base64,%s", mimetype, encoded);
-                } catch (IOException e) {
+                } catch (IOException | URISyntaxException e) {
                     logger.warn("Failed to convert file URI to data URI: " + resourceURI, e);
                 }
             }

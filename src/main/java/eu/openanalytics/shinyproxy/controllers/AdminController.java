@@ -140,7 +140,7 @@ public class AdminController extends BaseController {
             }
 
             if (!proxy.getContainers().isEmpty()) {
-                Container container = proxy.getContainers().get(0);
+                Container container = proxy.getContainers().getFirst();
                 String[] parts = container.getRuntimeValue(ContainerImageKey.inst).split(":");
                 imageName = parts[0];
                 if (parts.length > 1) {

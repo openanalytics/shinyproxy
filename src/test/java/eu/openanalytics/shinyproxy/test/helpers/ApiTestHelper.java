@@ -22,15 +22,15 @@ package eu.openanalytics.shinyproxy.test.helpers;
 
 import eu.openanalytics.containerproxy.test.helpers.BasicAuthInterceptor;
 import eu.openanalytics.containerproxy.test.helpers.ShinyProxyInstance;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonValue;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import org.junit.jupiter.api.Assertions;
 
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonValue;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.List;

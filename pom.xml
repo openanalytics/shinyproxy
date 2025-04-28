@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.4</version>
+        <version>3.4.5</version>
         <relativePath/>
     </parent>
 
@@ -32,7 +32,7 @@
         <resource.delimiter>&amp;</resource.delimiter>
         <!-- Dependency versions -->
         <containerproxy.version>1.2.0-SNAPSHOT</containerproxy.version>
-        <spring-boot.version>3.4.4</spring-boot.version>
+        <spring-boot.version>3.4.5</spring-boot.version>
         <datatables.version>1.13.5</datatables.version>
         <datatables-buttons.version>2.4.1</datatables-buttons.version>
         <datatables-responsive.version>2.2.7</datatables-responsive.version>

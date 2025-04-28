@@ -23,10 +23,10 @@ package eu.openanalytics.shinyproxy.test.api;
 import eu.openanalytics.containerproxy.test.helpers.ShinyProxyInstance;
 import eu.openanalytics.shinyproxy.test.helpers.ApiTestHelper;
 import eu.openanalytics.shinyproxy.test.helpers.Response;
+import jakarta.json.JsonArray;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import javax.json.JsonArray;
 import java.util.Map;
 
 public class ProxyApiControllerTest {

@@ -23,12 +23,12 @@ package eu.openanalytics.shinyproxy.test.api;
 import eu.openanalytics.containerproxy.test.helpers.ShinyProxyInstance;
 import eu.openanalytics.shinyproxy.test.helpers.ApiTestHelper;
 import eu.openanalytics.shinyproxy.test.helpers.Response;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonValue;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import javax.json.JsonObject;
-import javax.json.JsonValue;
 
 /**
  * Test the security (authorization of) {@link eu.openanalytics.containerproxy.api.ProxyStatusController}

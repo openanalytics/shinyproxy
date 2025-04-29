@@ -177,6 +177,25 @@
     width: 8em;
 }
 
+.admin-tabs {
+    margin-top: 20px;
+    font-size: 24px;
+}
+
+.admin-tab-content {
+    border: 1px solid #ddd;
+    border-top: none;
+    padding: 15px;
+}
+
+.admin-about td {
+    min-width: 200px;
+}
+
+.admin-about tr:first-child td {
+    border-top: 0;
+}
+
 #stopping-all-apps-btn {
     display: none;
 }

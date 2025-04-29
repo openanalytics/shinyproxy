@@ -39,6 +39,8 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.commons.io.FileUtils;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -48,6 +50,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.inject.Inject;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.util.List;
 
 @Controller
@@ -56,10 +60,37 @@ public class AdminController extends BaseController {
     @Inject
     private ActiveProxiesService activeProxiesService;
 
+    @Inject
+    private BuildProperties buildProperties;
+
     @RequestMapping("/admin")
     private String admin(ModelMap map, HttpServletRequest request) {
         prepareMap(map, request);
         map.put("page", "admin");
+        map.put("subPage", "main");
+
+        return "admin";
+    }
+
+    @RequestMapping("/admin/about")
+    private String adminAbout(ModelMap map, HttpServletRequest request) {
+        prepareMap(map, request);
+        map.put("page", "admin");
+        map.put("subPage", "about");
+
+        RuntimeMXBean runtimeMxBean = ManagementFactory.getRuntimeMXBean();
+        List<String> arguments = runtimeMxBean.getInputArguments();
+
+        map.put("runtimeId", identifierService.runtimeId);
+        map.put("instanceId", identifierService.instanceId);
+        map.put("realmId", identifierService.realmId);
+        map.put("shinyProxyVersion", buildProperties.getVersion());
+        map.put("containerProxyVersion", buildProperties.get("containerProxyVersion"));
+        map.put("jvmVersion", runtimeMxBean.getVmName() + " (" + runtimeMxBean.getVmVendor() + ") " + Runtime.version().toString());
+        map.put("jvmArguments", String.join("\n", arguments));
+        map.put("heapSize", FileUtils.byteCountToDisplaySize(Runtime.getRuntime().totalMemory()));
+        map.put("heapFreeSize", FileUtils.byteCountToDisplaySize(Runtime.getRuntime().freeMemory()));
+        map.put("heapMaxSize", FileUtils.byteCountToDisplaySize(Runtime.getRuntime().maxMemory()));
 
         return "admin";
     }

@@ -180,6 +180,10 @@
     text-decoration: underline;
 }
 
+.list-group-item {
+    cursor: pointer;
+}
+
 @media (min-width: 1200px) {
     .myApps-inline {
         max-width: 760px;

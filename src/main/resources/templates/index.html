@@ -49,11 +49,11 @@
         <!-- Modify this in order to change how a single app looks. -->
         <th:block th:fragment="app(app)">
             <th:block th:if="${app != null}">
-                <a
+                <div
                         class="list-group-item"
-                        th:classappend="${@thymeleaf.openSwitchInstanceInsteadOfApp(app) ? 'app-link' : ''}"
+                        th:classappend="${@thymeleaf.openSwitchInstanceInsteadOfApp(app) ? 'app-link-switch' : 'app-link-open'}"
                         th:data-app-id="${app.id}"
-                        th:href="${@thymeleaf.openSwitchInstanceInsteadOfApp(app) ? '#' : @thymeleaf.getAppUrl(app)}"
+                        th:data-app-url="${@thymeleaf.openSwitchInstanceInsteadOfApp(app) ? '' : @thymeleaf.getAppUrl(app)}"
                 >
                     <span class="app-list-title"
                           th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></span>
@@ -64,7 +64,7 @@
                     </th:block>
                     <br th:if="${app.description != null}"/>
                     <span th:if="${app.description != null}" th:utext="${app.description}"></span>
-                </a>
+                </div>
             </th:block>
         </th:block>
         <!--End of the template.-->

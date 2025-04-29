@@ -283,11 +283,25 @@ $(window).on('load', function () {
         Shiny.instances.eventHandlers.showAppDetails();
     });
 
-    $('.app-link').on('click auxclick', function (e) {
+    $('.app-link-switch').on('click auxclick', function (e) {
+        if ($(e.target).is("a")) {
+            return;
+        }
         e.preventDefault();
         const appId = $(this).data("app-id");
         Shiny.ui.showInstanceModal();
         Shiny.instances.eventHandlers.onShow(appId);
+    });
+
+    $('.app-link-open').on('click', function (e) {
+        console.log(e);
+        e.preventDefault();
+        window.location = $(this).data("app-url");
+    });
+
+    $('.app-link-open').on('auxclick', function (e) {
+        e.preventDefault();
+        window.open($(this).data("app-url"), '_blank').focus();
     });
 
     $('#newInstanceForm').submit(function (e) {

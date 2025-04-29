@@ -41,31 +41,31 @@
                     </div>
                     <div class="collapse navbar-collapse" id="navbar-collapse">
                         <div class="navbar-form navbar-right navbar-buttons">
-                            <a class="btn btn-primary btn-sm" id="switchInstancesModal-btn" role="button"
+                            <a class="btn btn-primary btn-sm" role="button" data-toggle="collapse" data-target="#navbar-collapse" id="switchInstancesModal-btn"
                                th:if="${page == 'app' && appMaxInstances.get(appName) != 1}">Switch instance</a>
 
                             <a class="btn btn-primary btn-sm btn-restart-app"
                                onclick="Shiny.instances.eventHandlers.showAppDetails();"
-                               role="button"
+                               role="button" data-toggle="collapse" data-target="#navbar-collapse"
                                th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">App details</a>
 
                             <a class="btn btn-primary btn-sm btn-restart-app"
                                onclick="Shiny.instances.eventHandlers.onRestartInstance();"
-                               role="button"
+                               role="button" data-toggle="collapse" data-target="#navbar-collapse"
                                th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">Restart app</a>
 
                             <a class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onDeleteInstance();"
-                               role="button"
+                               role="button" data-toggle="collapse" data-target="#navbar-collapse"
                                th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">Stop app</a>
 
                             <a class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onPauseApp();"
-                               role="button"
+                               role="button" data-toggle="collapse" data-target="#navbar-collapse"
                                th:if="${page == 'app' && pauseSupported && appMaxInstances.get(appName) == 1}">Pause app</a>
 
-                            <a class="btn btn-primary btn-sm" id="myAppsModal-btn" role="button"
+                            <a class="btn btn-primary btn-sm" id="myAppsModal-btn" role="button" data-toggle="collapse" data-target="#navbar-collapse"
                                th:if="${page == 'index' && myAppsMode == 'Modal'}">My apps</a>
 
-                            <a class="btn btn-primary btn-sm" role="button" th:if="${isSupportEnabled}" onclick="Shiny.ui.showReportIssueModal();">Report Issue</a>
+                            <a class="btn btn-primary btn-sm" role="button" th:if="${isSupportEnabled}" data-toggle="collapse" data-target="#navbar-collapse" onclick="Shiny.ui.showReportIssueModal();">Report Issue</a>
                             <a class="btn btn-primary btn-sm" role="button" th:href="@{/admin}" th:if="${isAdmin}">Admin</a>
                             <a class="btn btn-primary btn-sm" role="button" th:href="@{${logoutUrl}}" th:if="${isLoggedIn}">Sign
                                 Out</a>

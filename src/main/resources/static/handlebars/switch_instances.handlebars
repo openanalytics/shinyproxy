@@ -24,7 +24,7 @@
                         {{/if}}
                     {{/if}}
                 </div>
-                <span>{{{formatStatus status }}} {{#if uptime}}Uptime: {{ uptime }} {{/if}}</span>
+                <span class="app-status">{{{formatStatus status }}} {{#if uptime}}Uptime: {{ uptime }} {{/if}}</span>
             </div>
         {{else}}
             <a target="{{ ../target }}" href="{{ url }}" class="app-instance list-group-item">
@@ -47,7 +47,7 @@
                         {{/if}}
                     {{/if}}
                 </div>
-                <span>{{{formatStatus status }}} {{#if uptime}}Uptime: {{ uptime }} {{/if}}</span>
+                <span class="app-status">{{{formatStatus status }}} {{#if uptime}}Uptime: {{ uptime }} {{/if}}</span>
             </a>
         {{/if}}
     {{/each}}

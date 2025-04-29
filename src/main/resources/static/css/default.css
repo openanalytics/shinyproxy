@@ -99,8 +99,17 @@
     margin-bottom: 20px;
 }
 
+#newInstanceForm .form-group {
+    position: relative;
+    width: 100%;
+}
+
+#newInstanceForm .input-group {
+    width: 100%;
+}
+
 #instanceNameField, #userIdField {
-    width: 450px;
+    width: calc(100% - 110px);
     margin-right: 10px;
 }
 
@@ -138,6 +147,27 @@
 .app-instance:hover .app-instance-title {
     color: #23527c;
     text-decoration: underline;
+}
+
+.app-instance {
+    overflow: auto;
+}
+
+@media (max-width: 500px) {
+    .app-instance .active-app-instance-title , .app-instance .app-instance-title {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .app-instance .btn-group {
+        width: 100%;
+        float: left;
+        margin-bottom: 10px;
+        margin-left: 0px;
+    }
+    .app-instance .app-status {
+        display: block;
+        float: left;
+    }
 }
 
 .app-list-title {
@@ -203,6 +233,8 @@
 #parameterForm {
     display: none;
     width: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
 }
 
 #parameterForm .form-horizontal {

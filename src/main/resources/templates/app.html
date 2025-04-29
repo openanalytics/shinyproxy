@@ -24,7 +24,7 @@
 <html xmlns:th="http://www.thymeleaf.org"
 >
     <head lang="en">
-        <title th:text="${appTitle} + ' - ' + ${appInstanceDisplayName}"></title>
+        <title th:text="${appTitle} + (${appInstance} == '_' ? '' : (' - ' + ${appInstance}))"></title>
         <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"/>
         <meta content="width=device-width, initial-scale=1" name="viewport"/>
         <link rel="icon" th:href="@{${resourcePrefix} + '/favicon/' + ${appName}}">

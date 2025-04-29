@@ -143,7 +143,6 @@ public class AppController extends BaseController {
         map.put("page", "app");
         map.put("appName", appName);
         map.put("appInstance", appInstance);
-        map.put("appInstanceDisplayName", getAppInstanceDisplayName(appInstance));
         map.put("appPath", appPath);
         map.put("containerSubPath", buildContainerSubPath(request, subPath));
         map.put("refreshOpenidEnabled", authenticationBackend.getName().equals(OpenIDAuthenticationBackend.NAME));
@@ -520,13 +519,6 @@ public class AppController extends BaseController {
      */
     private Object secureProxy(Proxy proxy) {
         return objectMapper.convertValue(proxy, Object.class);
-    }
-
-    private String getAppInstanceDisplayName(String appInstance) {
-        if (appInstance.equals("_")) {
-            return "Default";
-        }
-        return appInstance;
     }
 
     private static class AppBody {

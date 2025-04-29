@@ -55,11 +55,14 @@
                         th:data-app-id="${app.id}"
                         th:data-app-url="${@thymeleaf.openSwitchInstanceInsteadOfApp(app) ? '' : @thymeleaf.getAppUrl(app)}"
                 >
-                    <span class="app-list-title app-list-title-before" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></span>
-                    <th:block th:if="${appLogos.get(app) != null}" th:with="logo=${appLogos.get(app)}">
-                        <img th:height="${logo.height}" th:src="${logo.src}" th:style="${logo.style}" th:width="${logo.width}">
-                    </th:block>
-                    <span class="app-list-title app-list-title-after" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></span>
+                    <a th:href="${@thymeleaf.openSwitchInstanceInsteadOfApp(app) ? '#' : @thymeleaf.getAppUrl(app)}"
+                       th:remove="${@thymeleaf.openSwitchInstanceInsteadOfApp(app)} ? tag : none">
+                        <span class="app-list-title app-list-title-before" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></span>
+                        <th:block th:if="${appLogos.get(app) != null}" th:with="logo=${appLogos.get(app)}">
+                            <img th:height="${logo.height}" th:src="${logo.src}" th:style="${logo.style}" th:width="${logo.width}">
+                        </th:block>
+                        <span class="app-list-title app-list-title-after" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></span>
+                    </a>
                     <span class="app-list-description" th:if="${app.description != null}" th:utext="${app.description}"></span>
                 </div>
             </th:block>

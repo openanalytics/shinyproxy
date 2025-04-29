@@ -144,10 +144,6 @@
     width: calc(100% - 205px);
 }
 
-.list-group-item:hover {
-    background-color: #f5f5f5;
-}
-
 .app-list-title-after {
     display: none !important;
 }
@@ -200,6 +196,14 @@
     cursor: pointer;
     word-break: break-word;
     overflow-x: hidden;
+}
+
+.list-group-item:hover {
+    background-color: #f5f5f5;
+}
+
+#applist .list-group-item > a:hover {
+    text-decoration: none;
 }
 
 @media (min-width: 1200px) {

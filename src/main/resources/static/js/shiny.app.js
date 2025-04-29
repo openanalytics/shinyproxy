@@ -294,12 +294,17 @@ $(window).on('load', function () {
     });
 
     $('.app-link-open').on('click', function (e) {
-        console.log(e);
+        if ($(e.target).is("a")) {
+            return;
+        }
         e.preventDefault();
         window.location = $(this).data("app-url");
     });
 
     $('.app-link-open').on('auxclick', function (e) {
+        if ($(e.target).is("a")) {
+            return;
+        }
         e.preventDefault();
         window.open($(this).data("app-url"), '_blank').focus();
     });

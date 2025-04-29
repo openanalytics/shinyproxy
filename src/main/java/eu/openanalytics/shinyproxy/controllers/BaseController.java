@@ -32,6 +32,7 @@ import eu.openanalytics.containerproxy.service.UserAndTargetIdProxyIndex;
 import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
 import eu.openanalytics.containerproxy.util.ContextPathHelper;
+import eu.openanalytics.containerproxy.util.EnvironmentUtils;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
 import eu.openanalytics.shinyproxy.Thymeleaf;
@@ -80,6 +81,7 @@ public abstract class BaseController {
     protected String defaultLogoHeight;
     protected String defaultLogoStyle;
     protected String defaultLogoClasses;
+    protected String bodyClasses;
     @Inject
     protected ShinyProxySpecProvider shinyProxySpecProvider;
     @Inject
@@ -120,6 +122,12 @@ public abstract class BaseController {
         defaultShowNavbar = !Boolean.parseBoolean(environment.getProperty("proxy.hide-navbar"));
         defaultSupportAddress = environment.getProperty("proxy.support.mail-to-address");
         allowTransferApp = environment.getProperty("proxy.allow-transfer-app", Boolean.class, false);
+        List<String> bodyClassesList = EnvironmentUtils.readList(environment, "proxy.body-classes");
+        if (bodyClassesList != null && !bodyClassesList.isEmpty()) {
+            bodyClasses = String.join(" ", bodyClassesList);
+        } else {
+            bodyClasses = "";
+        }
     }
 
     protected Proxy findUserProxy(AppRequestInfo appRequestInfo) {
@@ -162,6 +170,7 @@ public abstract class BaseController {
         map.put("spInstance", identifierService.instanceId);
         map.put("allowTransferApp", allowTransferApp);
         map.put("notificationMessage", environment.getProperty("proxy.notification-message"));
+        map.put("bodyClasses", bodyClasses);
 
         List<ProxySpec> apps = proxyService.getUserSpecs();
         Thymeleaf.GroupedProxySpecs groupedApps = thymeleaf.groupApps(apps);

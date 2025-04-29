@@ -47,7 +47,7 @@
         <script th:src="@{${resourcePrefix} + '/js/shiny.admin.js'}"></script>
         <script th:src="@{${resourcePrefix} + '/handlebars/precompiled.js'}"></script>
     </head>
-    <body>
+    <body th:class="${bodyClasses}">
         <div th:replace="~{fragments/navbar :: navbar}"></div>
 
         <div class="container-fluid">

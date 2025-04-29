@@ -41,7 +41,7 @@
         <script th:src="@{${resourcePrefix} + '/js/shiny.common.js'}"></script>
         <script th:src="@{${resourcePrefix} + '/handlebars/precompiled.js'}"></script>
     </head>
-    <body id="appPage">
+    <body id="appPage" th:class="${bodyClasses}">
         <div th:replace="~{fragments/navbar :: navbar}"></div>
 
         <div id="iframeinsert"></div>

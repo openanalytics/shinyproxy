@@ -41,7 +41,7 @@
         <script th:src="@{${resourcePrefix} + '/js/shiny.common.js'}"></script>
         <script th:src="@{${resourcePrefix} + '/handlebars/precompiled.js'}"></script>
     </head>
-    <body>
+    <body th:class="${bodyClasses}">
         <!-- navigation bar -->
         <div th:replace="~{fragments/navbar :: navbar}"></div>
 
@@ -55,15 +55,12 @@
                         th:data-app-id="${app.id}"
                         th:data-app-url="${@thymeleaf.openSwitchInstanceInsteadOfApp(app) ? '' : @thymeleaf.getAppUrl(app)}"
                 >
-                    <span class="app-list-title"
-                          th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></span>
+                    <span class="app-list-title app-list-title-before" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></span>
                     <th:block th:if="${appLogos.get(app) != null}" th:with="logo=${appLogos.get(app)}">
-                        <br/>
-                        <img th:height="${logo.height}" th:src="${logo.src}" th:style="${logo.style}"
-                             th:width="${logo.width}">
+                        <img th:height="${logo.height}" th:src="${logo.src}" th:style="${logo.style}" th:width="${logo.width}">
                     </th:block>
-                    <br th:if="${app.description != null}"/>
-                    <span th:if="${app.description != null}" th:utext="${app.description}"></span>
+                    <span class="app-list-title app-list-title-after" th:text="${app.displayName == null} ? ${app.id} : ${app.displayName}"></span>
+                    <span class="app-list-description" th:if="${app.description != null}" th:utext="${app.description}"></span>
                 </div>
             </th:block>
         </th:block>
@@ -83,17 +80,17 @@
                     </div>
                     <th:block th:each="group: ${templateGroups}">
                         <h2 th:text="${group.properties.get('display-name')}"></h2>
-                        <ul class="list-group">
+                        <div class="list-group">
                             <th:block th:each="app: ${groupedApps.get(group.id)}" th:insert="~{index :: app(${app})}"/>
-                        </ul>
+                        </div>
                         <br>
                     </th:block>
                     <th:block th:if="${ungroupedApps.size() > 0}">
                         <!-- Only show the "Other" header if there are other groups with apps -->
                         <h2 th:if="${groupedApps.size() > 0}">Other</h2>
-                        <ul class="list-group">
+                        <div class="list-group">
                             <th:block th:each="app: ${ungroupedApps}" th:insert="~{index :: app(${app})}"/>
-                        </ul>
+                        </div>
                     </th:block>
                 </div>
 

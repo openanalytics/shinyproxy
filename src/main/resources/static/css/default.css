@@ -144,9 +144,28 @@
     width: calc(100% - 205px);
 }
 
-.app-instance:hover .app-instance-title {
-    color: #23527c;
-    text-decoration: underline;
+.list-group-item:hover {
+    background-color: #f5f5f5;
+}
+
+.app-list-title-after {
+    display: none !important;
+}
+
+.shinyproxy-layout-grid .app-list-title-before {
+    display: none !important;
+}
+
+.shinyproxy-layout-grid .app-list-title-after {
+    display: block !important;
+}
+
+.shinyproxy-layout-grid #applist .list-group-item .app-list-title {
+    font-size: 24px;
+}
+
+.app-list-description {
+    display: block;
 }
 
 .app-instance {
@@ -173,15 +192,14 @@
 .app-list-title {
     color: #337ab7;
     text-decoration: none;
-}
-
-.list-group-item:hover .app-list-title {
-    color: #23527c;
-    text-decoration: underline;
+    width: 100%;
+    display: block;
 }
 
 .list-group-item {
     cursor: pointer;
+    word-break: break-word;
+    overflow-x: hidden;
 }
 
 @media (min-width: 1200px) {
@@ -308,6 +326,10 @@
     height: 60px;
 }
 
+#myApps h5 {
+    word-break: break-word;
+}
+
 #stop-all-apps-btn {
     display: none;
 }
@@ -351,4 +373,46 @@
     line-height: 50px;
     margin-top: 0;
     margin-bottom: 0;
+}
+
+.shinyproxy-layout-grid #applist .list-group-item {
+    margin-bottom: 25px;
+    width: 100%;
+    height: 100%;
+    background-clip: border-box;
+    border: 1px solid #eaeaea;
+    border-radius: .25rem;
+    padding: 15px;
+    box-shadow: #838383 1px 2px 4px;
+}
+
+.shinyproxy-layout-grid #applist .list-group {
+    display: grid;
+    grid-row-gap: 30px;
+    grid-column-gap: 30px;
+    margin-bottom: 45px;
+}
+
+.shinyproxy-layout-grid-2-columns #applist .list-group {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.shinyproxy-layout-grid-3-columns #applist .list-group {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.shinyproxy-layout-grid-4-columns #applist .list-group {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media only screen and (max-width : 768px) {
+    .shinyproxy-layout-grid #applist .list-group {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media only screen and (min-width : 768px) and (max-width : 1200px) {
+    .shinyproxy-layout-grid #applist .list-group {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }

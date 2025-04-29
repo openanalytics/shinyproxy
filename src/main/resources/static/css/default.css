@@ -291,3 +291,28 @@
     margin-bottom: 40px;
     display: none;
 }
+
+#navbar .navbar-form {
+    border: none;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+}
+
+#navbar .navbar-buttons {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+#navbar .btn {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#navbar .navbar-text {
+    height: 50px;
+    line-height: 50px;
+    margin-top: 0;
+    margin-bottom: 0;
+}

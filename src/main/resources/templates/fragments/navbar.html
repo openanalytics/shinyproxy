@@ -30,44 +30,52 @@
             <nav class="navbar navbar-inverse navbar-fixed-top navbar-height">
                 <div class="container-fluid">
                     <div class="navbar-header">
-                        <img class="navbar-brand" th:src="${logo}"/>
+                        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <img class="navbar-brand" th:src="${logo}" th:if="${logo != null}"/>
                         <a class="navbar-brand" th:href="@{/}" th:text="${title}"></a>
                     </div>
-                    <div class="navbar-form navbar-right">
-                        <a class="btn btn-primary btn-sm" id="switchInstancesModal-btn" role="button"
-                           th:if="${page == 'app' && appMaxInstances.get(appName) != 1}">Switch instance</a>
+                    <div class="collapse navbar-collapse" id="navbar-collapse">
+                        <div class="navbar-form navbar-right navbar-buttons">
+                            <a class="btn btn-primary btn-sm" id="switchInstancesModal-btn" role="button"
+                               th:if="${page == 'app' && appMaxInstances.get(appName) != 1}">Switch instance</a>
 
-                        <a class="btn btn-primary btn-sm btn-restart-app"
-                           onclick="Shiny.instances.eventHandlers.showAppDetails();"
-                           role="button"
-                           th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">App details</a>
+                            <a class="btn btn-primary btn-sm btn-restart-app"
+                               onclick="Shiny.instances.eventHandlers.showAppDetails();"
+                               role="button"
+                               th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">App details</a>
 
-                        <a class="btn btn-primary btn-sm btn-restart-app"
-                           onclick="Shiny.instances.eventHandlers.onRestartInstance();"
-                           role="button"
-                           th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">Restart app</a>
+                            <a class="btn btn-primary btn-sm btn-restart-app"
+                               onclick="Shiny.instances.eventHandlers.onRestartInstance();"
+                               role="button"
+                               th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">Restart app</a>
 
-                        <a class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onDeleteInstance();"
-                           role="button"
-                           th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">Stop app</a>
+                            <a class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onDeleteInstance();"
+                               role="button"
+                               th:if="${page == 'app' && appMaxInstances.get(appName) == 1}">Stop app</a>
 
-                        <a class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onPauseApp();"
-                           role="button"
-                           th:if="${page == 'app' && pauseSupported && appMaxInstances.get(appName) == 1}">Pause app</a>
+                            <a class="btn btn-primary btn-sm" onclick="Shiny.instances.eventHandlers.onPauseApp();"
+                               role="button"
+                               th:if="${page == 'app' && pauseSupported && appMaxInstances.get(appName) == 1}">Pause app</a>
 
-                        <a class="btn btn-primary btn-sm" id="myAppsModal-btn" role="button"
-                           th:if="${page == 'index' && myAppsMode == 'Modal'}">My apps</a>
+                            <a class="btn btn-primary btn-sm" id="myAppsModal-btn" role="button"
+                               th:if="${page == 'index' && myAppsMode == 'Modal'}">My apps</a>
 
-                        <a class="btn btn-primary btn-sm" role="button" th:if="${isSupportEnabled}" onclick="Shiny.ui.showReportIssueModal();">Report Issue</a>
-                        <a class="btn btn-primary btn-sm" role="button" th:href="@{/admin}" th:if="${isAdmin}">Admin</a>
-                        <a class="btn btn-primary btn-sm" role="button" th:href="@{${logoutUrl}}" th:if="${isLoggedIn}">Sign
-                            Out</a>
-                    </div>
-                    <div class="navbar-right" sec:authorize="isAuthenticated()">
-					<span class="navbar-text">
-						<span class="glyphicon glyphicon-user"></span>
-						<span sec:authentication="name"></span>
-					</span>
+                            <a class="btn btn-primary btn-sm" role="button" th:if="${isSupportEnabled}" onclick="Shiny.ui.showReportIssueModal();">Report Issue</a>
+                            <a class="btn btn-primary btn-sm" role="button" th:href="@{/admin}" th:if="${isAdmin}">Admin</a>
+                            <a class="btn btn-primary btn-sm" role="button" th:href="@{${logoutUrl}}" th:if="${isLoggedIn}">Sign
+                                Out</a>
+                        </div>
+                        <div class="navbar-right" sec:authorize="isAuthenticated()">
+                            <div class="navbar-text">
+                                <span class="glyphicon glyphicon-user"></span>
+                                <span sec:authentication="name"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </nav>

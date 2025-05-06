@@ -609,6 +609,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
             return containerSpec.build().getDockerIpc();
         }
 
+        public void setDockerGroupAdd(List<String> dockerGroupAdd) {
+            containerSpec.dockerGroupAdd(new SpelField.StringList(dockerGroupAdd));
+        }
+
+        public SpelField.StringList getDockerGroupAdd() {
+            return containerSpec.build().getDockerGroupAdd();
+        }
+
         public ProxySpec getProxySpec() {
             additionalPortMappings.add(defaultPortMapping.build());
             containerSpec.portMapping(additionalPortMappings);

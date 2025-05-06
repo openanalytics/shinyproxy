@@ -25,6 +25,9 @@ import eu.openanalytics.containerproxy.backend.strategy.IProxyTestStrategy;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.service.StructuredLogger;
 import eu.openanalytics.containerproxy.util.Retrying;
+import org.apache.logging.log4j.util.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -35,6 +38,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -46,6 +50,8 @@ import java.util.Objects;
 public class ShinyProxyTestStrategy implements IProxyTestStrategy {
 
     private final StructuredLogger slog = StructuredLogger.create(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final List<Integer> ALLOWED_RESPONSE_CODES = Arrays.asList(200, 301, 302, 303, 307, 308);
 
     @Inject
     private Environment environment;
@@ -97,8 +103,12 @@ public class ShinyProxyTestStrategy implements IProxyTestStrategy {
             }
             connection.setInstanceFollowRedirects(false);
             int responseCode = connection.getResponseCode();
-            if (Arrays.asList(200, 301, 302, 303, 307, 308).contains(responseCode)) {
+            if (ALLOWED_RESPONSE_CODES.contains(responseCode)) {
                 return Retrying.SUCCESS;
+            } else {
+                if (currentAttempt > 10) {
+                    logger.warn("Received invalid status code '{}' while checking reachability of application at {}, expected one of '{}'", responseCode, targetURI, ALLOWED_RESPONSE_CODES);
+                }
             }
             return Retrying.FAILURE;
         }, totalWaitMs, "Checking application reachable at " + targetURI, 10, proxy, slog);

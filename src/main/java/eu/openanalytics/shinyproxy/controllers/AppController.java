@@ -138,7 +138,7 @@ public class AppController extends BaseController {
         // if the proxy exists, the proxy object is non-null and the spec might be null (if the spec no longer exists or the user no longer has access to the spec)
         // if the proxy does not exists, the proxy object is null and the spec is non-null
 
-        prepareMap(map, request);
+        prepareMap(map, request, spec, proxy);
         map.put("heartbeatRate", heartbeatRate);
         map.put("page", "app");
         map.put("appName", appName);

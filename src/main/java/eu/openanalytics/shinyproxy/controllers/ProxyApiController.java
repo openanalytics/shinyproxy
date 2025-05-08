@@ -29,7 +29,6 @@ import eu.openanalytics.containerproxy.model.store.IProxyStore;
 import eu.openanalytics.containerproxy.service.ProxyService;
 import eu.openanalytics.containerproxy.service.StructuredLogger;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionContext;
-import eu.openanalytics.containerproxy.spec.expression.SpecExpressionResolver;
 import eu.openanalytics.shinyproxy.controllers.dto.ChangeProxyUserIdDto;
 import eu.openanalytics.shinyproxy.controllers.dto.ShinyProxyApiResponse;
 import eu.openanalytics.shinyproxy.controllers.dto.SwaggerDto;
@@ -69,9 +68,6 @@ public class ProxyApiController extends BaseController {
 
     @Inject
     private ProxyService proxyService;
-
-    @Inject
-    private SpecExpressionResolver specExpressionResolver;
 
     private final StructuredLogger slogger = StructuredLogger.create(getClass());
 
@@ -245,7 +241,7 @@ public class ProxyApiController extends BaseController {
 
         for (CustomAppDetail customAppDetail : customAppDetails) {
             try {
-                result.add(customAppDetail.toBuilder().value(specExpressionResolver.evaluateToString(customAppDetail.getValue(), context)).build());
+                result.add(customAppDetail.toBuilder().value(expressionResolver.evaluateToString(customAppDetail.getValue(), context)).build());
             } catch (Exception e) {
                 slogger.warn(proxy, e, String.format("Error while resolving CustomAppDetail expression '%s'", customAppDetail.getName()));
             }

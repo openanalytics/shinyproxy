@@ -239,7 +239,7 @@ public class ProxyApiController extends BaseController {
             spec,
             authentication,
             authentication.getPrincipal(),
-            authentication.getCredentials());
+            authentication.getCredentials()).build();
 
         List<CustomAppDetail> result = new ArrayList<>();
 

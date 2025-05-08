@@ -181,7 +181,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
             SpecExpressionContext context = SpecExpressionContext.create(
                 user,
                 user.getPrincipal(),
-                user.getCredentials());
+                user.getCredentials()).build();
 
             Map<String, Integer> result = new HashMap<>();
 

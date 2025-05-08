@@ -63,17 +63,16 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 
     @Override
     public void apply(HttpSecurity http) throws Exception {
+        // Limit access to the app pages according to spec permissions
+        http.authorizeHttpRequests(authz -> authz
+            .requestMatchers(
+                new MvcRequestMatcher(handlerMappingIntrospector, "/app/{specId}/**"),
+                new MvcRequestMatcher(handlerMappingIntrospector, "/app_i/{specId}/**"),
+                new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct/{specId}/**"),
+                new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct_i/{specId}/**"))
+            .access((authentication, context) -> new AuthorizationDecision(proxyAccessControlService.canAccessOrHasExistingProxy(authentication.get(), context)))
+        );
         if (auth.hasAuthorization()) {
-
-            // Limit access to the app pages according to spec permissions
-            http.authorizeHttpRequests(authz -> authz
-                .requestMatchers(
-                    new MvcRequestMatcher(handlerMappingIntrospector, "/app/{specId}/**"),
-                    new MvcRequestMatcher(handlerMappingIntrospector, "/app_i/{specId}/**"),
-                    new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct/{specId}/**"),
-                    new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct_i/{specId}/**"))
-                .access((authentication, context) -> new AuthorizationDecision(proxyAccessControlService.canAccessOrHasExistingProxy(authentication.get(), context)))
-            );
             http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
 
             savedRequestAwareAuthenticationSuccessHandler.setRedirectStrategy(new DefaultRedirectStrategy() {

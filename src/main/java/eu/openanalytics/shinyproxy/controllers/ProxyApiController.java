@@ -26,6 +26,7 @@ import eu.openanalytics.containerproxy.model.runtime.ProxyStatus;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.model.store.IProxyStore;
+import eu.openanalytics.containerproxy.service.AccessControlEvaluationService;
 import eu.openanalytics.containerproxy.service.ProxyService;
 import eu.openanalytics.containerproxy.service.StructuredLogger;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionContext;
@@ -68,6 +69,9 @@ public class ProxyApiController extends BaseController {
 
     @Inject
     private ProxyService proxyService;
+
+    @Inject
+    private AccessControlEvaluationService accessControlEvaluationService;
 
     private final StructuredLogger slogger = StructuredLogger.create(getClass());
 
@@ -152,7 +156,7 @@ public class ProxyApiController extends BaseController {
             return ApiResponse.fail(String.format("Cannot transfer app because it is not in Up status (status is %s)", proxy.getStatus()));
         }
 
-        if (proxy.getUserId().equalsIgnoreCase(changeProxyUserIdDto.getUserId())) {
+        if (accessControlEvaluationService.usernameEquals(proxy.getUserId(), changeProxyUserIdDto.getUserId())) {
             return ApiResponse.fail("Cannot transfer app because the proxy is already owned by this user");
         }
 

@@ -465,6 +465,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
             accessControl.setExpression(accessExpression);
         }
 
+        public String getAccessStrictExpression() {
+            return accessControl.getStrictExpression();
+        }
+
+        public void setAccessStrictExpression(String accessStrictExpression) {
+            accessControl.setStrictExpression(accessStrictExpression);
+        }
+
         public List<DockerSwarmSecret> getDockerSwarmSecrets() {
             return containerSpec.build().getDockerSwarmSecrets();
         }

@@ -395,6 +395,7 @@
     grid-row-gap: 30px;
     grid-column-gap: 30px;
     margin-bottom: 45px;
+    grid-template-columns: 1fr;
 }
 
 .shinyproxy-layout-grid-2-columns #applist .list-group {

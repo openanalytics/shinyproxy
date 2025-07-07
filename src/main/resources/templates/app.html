@@ -2,7 +2,7 @@
 
     ShinyProxy
 
-    Copyright (C) 2016-2024 Open Analytics
+    Copyright (C) 2016-2025 Open Analytics
 
     ===========================================================================
 
@@ -24,7 +24,7 @@
 <html xmlns:th="http://www.thymeleaf.org"
 >
     <head lang="en">
-        <title th:text="${appTitle} + ' - ' + ${appInstanceDisplayName}"></title>
+        <title th:text="${appTitle} + (${appInstance} == '_' ? '' : (' - ' + ${appInstance}))"></title>
         <meta content="text/html; charset=UTF-8" http-equiv="Content-Type"/>
         <meta content="width=device-width, initial-scale=1" name="viewport"/>
         <link rel="icon" th:href="@{${resourcePrefix} + '/favicon/' + ${appName}}">
@@ -41,7 +41,7 @@
         <script th:src="@{${resourcePrefix} + '/js/shiny.common.js'}"></script>
         <script th:src="@{${resourcePrefix} + '/handlebars/precompiled.js'}"></script>
     </head>
-    <body id="appPage">
+    <body id="appPage" th:class="${bodyClasses}">
         <div th:replace="~{fragments/navbar :: navbar}"></div>
 
         <div id="iframeinsert"></div>

@@ -1,7 +1,7 @@
-/**
+/*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -63,17 +63,16 @@ public class UISecurityConfig implements ICustomSecurityConfig {
 
     @Override
     public void apply(HttpSecurity http) throws Exception {
+        // Limit access to the app pages according to spec permissions
+        http.authorizeHttpRequests(authz -> authz
+            .requestMatchers(
+                new MvcRequestMatcher(handlerMappingIntrospector, "/app/{specId}/**"),
+                new MvcRequestMatcher(handlerMappingIntrospector, "/app_i/{specId}/**"),
+                new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct/{specId}/**"),
+                new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct_i/{specId}/**"))
+            .access((authentication, context) -> new AuthorizationDecision(proxyAccessControlService.canAccessOrHasExistingProxy(authentication.get(), context)))
+        );
         if (auth.hasAuthorization()) {
-
-            // Limit access to the app pages according to spec permissions
-            http.authorizeHttpRequests(authz -> authz
-                .requestMatchers(
-                    new MvcRequestMatcher(handlerMappingIntrospector, "/app/{specId}/**"),
-                    new MvcRequestMatcher(handlerMappingIntrospector, "/app_i/{specId}/**"),
-                    new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct/{specId}/**"),
-                    new MvcRequestMatcher(handlerMappingIntrospector, "/app_direct_i/{specId}/**"))
-                .access((authentication, context) -> new AuthorizationDecision(proxyAccessControlService.canAccessOrHasExistingProxy(authentication.get(), context)))
-            );
             http.addFilterAfter(new AuthenticationRequiredFilter(), ExceptionTranslationFilter.class);
 
             savedRequestAwareAuthenticationSuccessHandler.setRedirectStrategy(new DefaultRedirectStrategy() {
@@ -85,7 +84,7 @@ public class UISecurityConfig implements ICustomSecurityConfig {
                         // before auth, the user tried to open the page of an app, redirect back to that app
                         // (we don't redirect to any other page, see  #30648 and #28624)
                         // remove ?continue from the url (see #31733)
-                        String newUrl = ServletUriComponentsBuilder.fromHttpUrl(url).replaceQueryParam("continue").build().toUriString();
+                        String newUrl = ServletUriComponentsBuilder.fromUriString(url).replaceQueryParam("continue").build().toUriString();
                         request.getSession().setAttribute(AUTH_SUCCESS_URL_SESSION_ATTR, newUrl);
                     }
                     response.sendRedirect(ServletUriComponentsBuilder.fromCurrentContextPath().path("/auth-success").build().toUriString());
@@ -97,7 +96,8 @@ public class UISecurityConfig implements ICustomSecurityConfig {
         http.authorizeHttpRequests(authz -> authz
             .requestMatchers(
                 new MvcRequestMatcher(handlerMappingIntrospector, "/admin"),
-                new MvcRequestMatcher(handlerMappingIntrospector, "/admin/**"))
+                new MvcRequestMatcher(handlerMappingIntrospector, "/admin/**"),
+                new MvcRequestMatcher(handlerMappingIntrospector, "/grafana/**"))
             .access((authentication, context) -> new AuthorizationDecision(userService.isAdmin(authentication.get())))
         );
 

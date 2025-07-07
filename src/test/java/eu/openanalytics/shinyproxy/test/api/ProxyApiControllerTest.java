@@ -1,7 +1,7 @@
-/**
+/*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -23,6 +23,8 @@ package eu.openanalytics.shinyproxy.test.api;
 import eu.openanalytics.containerproxy.test.helpers.ShinyProxyInstance;
 import eu.openanalytics.shinyproxy.test.helpers.ApiTestHelper;
 import eu.openanalytics.shinyproxy.test.helpers.Response;
+import jakarta.json.JsonArray;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -86,6 +88,36 @@ public class ProxyApiControllerTest {
             resp = apiTestHelper.callWithAuthDemo2(apiTestHelper.createPutRequest("/api/proxy/" + id + "/userId", "{\"userId\": \"demo2\"}"));
             resp.assertForbidden();
         }
+    }
+
+    @Test
+    public void testCustomAppDetails() {
+        try (ShinyProxyInstance inst = new ShinyProxyInstance("application-test-api.yml")) {
+            ApiTestHelper apiTestHelper = new ApiTestHelper(inst);
+
+            // without auth, random id
+            Response resp = apiTestHelper.callWithoutAuth(apiTestHelper.createRequest("/api/proxy/" + RANDOM_UUID + "/details"));
+            resp.assertAuthenticationRequired();
+
+            // start app
+            resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_/"));
+            String id = apiTestHelper.validateProxyObject(resp.jsonSuccess().asJsonObject());
+            inst.client.waitForProxyStatus(id);
+
+            // without auth, real id
+            resp = apiTestHelper.callWithoutAuth(apiTestHelper.createRequest("/api/proxy/" + id + "/details"));
+            resp.assertAuthenticationRequired();
+
+            // with auth, real id
+            resp = apiTestHelper.callWithAuth(apiTestHelper.createRequest("/api/proxy/" + id + "/details"));
+            JsonArray details = resp.jsonSuccess().asJsonArray();
+            Assertions.assertEquals(0, details.size());
+
+            // with auth, real id, but wrong user
+            resp = apiTestHelper.callWithAuthDemo2(apiTestHelper.createRequest("/api/proxy/" + id + "/details"));
+            resp.assertAppStoppedOrNonExistent();
+        }
+
     }
 
 }

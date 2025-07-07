@@ -20,31 +20,43 @@
  */
 package eu.openanalytics.shinyproxy.runtimevalues;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
 
-public class AppInstanceKey extends RuntimeValueKey<String> {
+public class CustomAppDetailsKey extends RuntimeValueKey<CustomAppDetails> {
 
-    public static final AppInstanceKey inst = new AppInstanceKey();
+    public static final CustomAppDetailsKey inst = new CustomAppDetailsKey();
 
-    public AppInstanceKey() {
-        super("openanalytics.eu/sp-app-instance",
-            "SHINYPROXY_APP_INSTANCE",
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public CustomAppDetailsKey() {
+        super("openanalytics.eu/sp-custom-app-details",
+            "SHINYPROXY_CUSTOM_APP_DETAILS",
             false,
             true, // include as annotation so that the value can be recovered
             false,
-            true,
+            false,
             true,
             false,
-            String.class);
+            CustomAppDetails.class);
     }
 
     @Override
-    public String deserializeFromString(String value) {
-        return value;
+    public CustomAppDetails deserializeFromString(String value) {
+        try {
+            return objectMapper.readValue(value, CustomAppDetails.class);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public String serializeToString(String value) {
-        return value;
+    public String serializeToString(CustomAppDetails value) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

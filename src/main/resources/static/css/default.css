@@ -1,7 +1,7 @@
 /**
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -99,8 +99,17 @@
     margin-bottom: 20px;
 }
 
+#newInstanceForm .form-group {
+    position: relative;
+    width: 100%;
+}
+
+#newInstanceForm .input-group {
+    width: 100%;
+}
+
 #instanceNameField, #userIdField {
-    width: 450px;
+    width: calc(100% - 110px);
     margin-right: 10px;
 }
 
@@ -135,19 +144,66 @@
     width: calc(100% - 205px);
 }
 
-.app-instance:hover .app-instance-title {
-    color: #23527c;
-    text-decoration: underline;
+.app-list-title-after {
+    display: none !important;
+}
+
+.shinyproxy-layout-grid .app-list-title-before {
+    display: none !important;
+}
+
+.shinyproxy-layout-grid .app-list-title-after {
+    display: block !important;
+}
+
+.shinyproxy-layout-grid #applist .list-group-item .app-list-title {
+    font-size: 24px;
+}
+
+.app-list-description {
+    display: block;
+}
+
+.app-instance {
+    overflow: auto;
+}
+
+@media (max-width: 500px) {
+    .app-instance .active-app-instance-title , .app-instance .app-instance-title {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .app-instance .btn-group {
+        width: 100%;
+        float: left;
+        margin-bottom: 10px;
+        margin-left: 0px;
+    }
+    .app-instance .app-status {
+        display: block;
+        float: left;
+    }
 }
 
 .app-list-title {
     color: #337ab7;
     text-decoration: none;
+    width: 100%;
+    display: block;
 }
 
-.list-group-item:hover .app-list-title {
-    color: #23527c;
-    text-decoration: underline;
+.list-group-item {
+    cursor: pointer;
+    word-break: break-word;
+    overflow-x: hidden;
+}
+
+.list-group-item:hover {
+    background-color: #f5f5f5;
+}
+
+#applist .list-group-item > a:hover {
+    text-decoration: none;
 }
 
 @media (min-width: 1200px) {
@@ -177,6 +233,25 @@
     width: 8em;
 }
 
+.admin-tabs {
+    margin-top: 20px;
+    font-size: 24px;
+}
+
+.admin-tab-content {
+    border: 1px solid #ddd;
+    border-top: none;
+    padding: 15px;
+}
+
+.admin-about td {
+    min-width: 200px;
+}
+
+.admin-about tr:first-child td {
+    border-top: 0;
+}
+
 #stopping-all-apps-btn {
     display: none;
 }
@@ -184,6 +259,8 @@
 #parameterForm {
     display: none;
     width: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
 }
 
 #parameterForm .form-horizontal {
@@ -253,6 +330,10 @@
     height: 60px;
 }
 
+#myApps h5 {
+    word-break: break-word;
+}
+
 #stop-all-apps-btn {
     display: none;
 }
@@ -271,4 +352,72 @@
     font-size: 18px;
     margin-bottom: 40px;
     display: none;
+}
+
+#navbar .navbar-form {
+    border: none;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+}
+
+#navbar .navbar-buttons {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+#navbar .btn {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#navbar .navbar-text {
+    height: 50px;
+    line-height: 50px;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.shinyproxy-layout-grid #applist .list-group-item {
+    margin-bottom: 25px;
+    width: 100%;
+    height: 100%;
+    background-clip: border-box;
+    border: 1px solid #eaeaea;
+    border-radius: .25rem;
+    padding: 15px;
+    box-shadow: #838383 1px 2px 4px;
+}
+
+.shinyproxy-layout-grid #applist .list-group {
+    display: grid;
+    grid-row-gap: 30px;
+    grid-column-gap: 30px;
+    margin-bottom: 45px;
+    grid-template-columns: 1fr;
+}
+
+.shinyproxy-layout-grid-2-columns #applist .list-group {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.shinyproxy-layout-grid-3-columns #applist .list-group {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.shinyproxy-layout-grid-4-columns #applist .list-group {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media only screen and (max-width : 768px) {
+    .shinyproxy-layout-grid #applist .list-group {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media only screen and (min-width : 768px) and (max-width : 1200px) {
+    .shinyproxy-layout-grid #applist .list-group {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }

@@ -1,7 +1,7 @@
-/**
+/*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -141,11 +141,11 @@ public class IssueController extends BaseController {
 
                 if (filePaths != null) {
                     File stdout = filePaths.getStdout().toFile();
-                    if (stdout.exists()) {
+                    if (stdout.exists() && stdout.length() > 0) {
                         helper.addAttachment(stdout.getName(), stdout);
                         // if stderr exists add it as well (stdout may exists without stderr)
                         File stderr = filePaths.getStderr().toFile();
-                        if (stderr.exists()) {
+                        if (stderr.exists() && stderr.length() > 0) {
                             helper.addAttachment(stderr.getName(), stderr);
                         }
                     } else {

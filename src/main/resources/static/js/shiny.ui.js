@@ -1,7 +1,7 @@
 /*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -42,6 +42,7 @@ Shiny.ui = {
             if (content === '{"status":"fail","data":"shinyproxy_authentication_required"}') {
                 shinyProxy.ui.showLoggedOutPage();
             }
+            Shiny.app.staticState.noAutomaticReloaded = true;
         });
         $('#iframeinsert').before($iframe); // insert the iframe into the HTML.
         Shiny.ui.setShinyFrameHeight();

@@ -1,7 +1,7 @@
-/**
+/*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -23,12 +23,12 @@ package eu.openanalytics.shinyproxy.test.api;
 import eu.openanalytics.containerproxy.test.helpers.ShinyProxyInstance;
 import eu.openanalytics.shinyproxy.test.helpers.ApiTestHelper;
 import eu.openanalytics.shinyproxy.test.helpers.Response;
+import jakarta.json.JsonObject;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import javax.json.JsonObject;
 
 public class HeartbeatControllerTest {
 
@@ -72,7 +72,7 @@ public class HeartbeatControllerTest {
 
         resp = apiTestHelper.callWithAuth(apiTestHelper.createRequest("/heartbeat/" + id));
         JsonObject json = resp.jsonSuccess().asJsonObject();
-        Assertions.assertEquals(2, json.keySet().size());
+        Assertions.assertEquals(2, json.size());
         Assertions.assertNotNull(json.getJsonNumber("lastHeartbeat"));
         Assertions.assertNotNull(json.getJsonNumber("heartbeatRate"));
 

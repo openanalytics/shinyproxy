@@ -2,7 +2,7 @@
 
     ShinyProxy
 
-    Copyright (C) 2016-2024 Open Analytics
+    Copyright (C) 2016-2025 Open Analytics
 
     ===========================================================================
 
@@ -31,9 +31,9 @@
         <link media="screen" rel="stylesheet" th:href="@{${resourcePrefix} + ${bootstrapCss}}"/>
         <link media="screen" rel="stylesheet" th:href="@{${resourcePrefix} + '/css/default.css'}"/>
         <link media="screen" rel="stylesheet"
-              th:href="@{${resourcePrefix} + '/webjars/datatables/1.13.2/css/dataTables.bootstrap.min.css'}"/>
+              th:href="@{${resourcePrefix} + '/webjars/datatables/1.13.5/css/dataTables.bootstrap.min.css'}"/>
         <link media="screen" rel="stylesheet"
-              th:href="@{${resourcePrefix} + '/webjars/datatables-buttons/2.3.3/css/buttons.bootstrap.min.css'}">
+              th:href="@{${resourcePrefix} + '/webjars/datatables-buttons/2.4.1/css/buttons.bootstrap.min.css'}">
         <link media="screen" rel="stylesheet"
               th:href="@{${resourcePrefix} + '/webjars/datatables-responsive/2.2.7/css/responsive.bootstrap.min.css'}">
         <script th:src="@{${resourcePrefix} + ${jqueryJs}}"></script>
@@ -47,40 +47,109 @@
         <script th:src="@{${resourcePrefix} + '/js/shiny.admin.js'}"></script>
         <script th:src="@{${resourcePrefix} + '/handlebars/precompiled.js'}"></script>
     </head>
-    <body>
+    <body th:class="${bodyClasses}">
         <div th:replace="~{fragments/navbar :: navbar}"></div>
 
         <div class="container-fluid">
             <div id="admin">
-                <h3>Active Proxies</h3>
-                <div class="alert alert-warning" id="adminStoppingApps" role="alert" s>
-                    <b>Stopping all apps...</b>
+                <ul class="nav nav-tabs admin-tabs">
+                    <li th:class="${subPage == 'main' ? 'active' : ''}"><a th:href="@{/admin}">Active Proxies</a></li>
+                    <li th:class="${subPage == 'about' ? 'active' : ''}"><a th:href="@{/admin/about}">About</a></li>
+                </ul>
+                <div th:if="${subPage == 'main'}" class="admin-tab-content admin-main">
+                    <div class="alert alert-warning" id="adminStoppingApps" role="alert" s>
+                        <b>Stopping all apps...</b>
+                    </div>
+                    <div class="alert alert-success" id="adminStoppedApps" role="alert" s>
+                        <button aria-label="Close" class="close" data-dismiss="alert" type="button"><span
+                                aria-hidden="true">&times;</span></button>
+                        <b>All apps stopped!</b>
+                    </div>
+                    <div id="allApps">
+                        <table class="table table-condensed dt-responsive nowrap" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th data-priority="100">Server</th>
+                                    <th data-priority="100">ID</th>
+                                    <th>Status</th>
+                                    <th>User</th>
+                                    <th>Appname</th>
+                                    <th>Instance</th>
+                                    <th>Endpoint</th>
+                                    <th>Uptime</th>
+                                    <th>Last heartbeat</th>
+                                    <th>Image</th>
+                                    <th>Image tag</th>
+                                    <th data-priority="100">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div class="alert alert-success" id="adminStoppedApps" role="alert" s>
-                    <button aria-label="Close" class="close" data-dismiss="alert" type="button"><span
-                            aria-hidden="true">&times;</span></button>
-                    <b>All apps stopped!</b>
-                </div>
-                <div id="allApps">
-                    <table class="table table-condensed dt-responsive nowrap" style="width:100%">
-                        <thead>
-                            <tr>
-                                <th data-priority="100">Server</th>
-                                <th data-priority="100">ID</th>
-                                <th>Status</th>
-                                <th>User</th>
-                                <th>Appname</th>
-                                <th>Instance</th>
-                                <th>Endpoint</th>
-                                <th>Uptime</th>
-                                <th>Last heartbeat</th>
-                                <th>Image</th>
-                                <th>Image tag</th>
-                                <th data-priority="100">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
+                <div th:if="${subPage == 'about'}" class="admin-tab-content admin-about table-responsive">
+                    <table class="table table-condensed">
+                        <tr>
+                            <td>
+                                <b>ShinyProxy RuntimeID</b>
+                            </td>
+                            <td class="admin-monospace" th:text="${runtimeId}"></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>ShinyProxy InstanecId</b>
+                            </td>
+                            <td class="admin-monospace" th:text="${instanceId}"></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>ShinyProxy RealmID</b>
+                            </td>
+                            <td class="admin-monospace" th:text="${realmId}"></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>ShinyProxy version</b>
+                            </td>
+                            <td class="admin-monospace" th:text="${shinyProxyVersion}"></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>ContainerProxy version</b>
+                            </td>
+                            <td class="admin-monospace" th:text="${containerProxyVersion}"></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>JVM version</b>
+                            </td>
+                            <td class="admin-monospace" th:text="${jvmVersion}"></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>JVM arguments</b>
+                            </td>
+                            <td class="admin-monospace" style="white-space: pre;" th:text="${jvmArguments}"></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Heap size</b>
+                            </td>
+                            <td class="admin-monospace" th:text="${heapSize}"></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Heap free size</b>
+                            </td>
+                            <td class="admin-monospace" th:text="${heapFreeSize}"></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <b>Heap max size</b>
+                            </td>
+                            <td class="admin-monospace" th:text="${heapMaxSize}"></td>
+                        </tr>
                     </table>
                 </div>
             </div>
@@ -88,15 +157,15 @@
 
         <div th:replace="~{fragments/modal :: modal}"></div>
 
-        <script th:src="@{/webjars/datatables/1.13.2/js/jquery.dataTables.min.js}"></script>
-        <script th:src="@{/webjars/datatables/1.13.2/js/dataTables.bootstrap.min.js}"></script>
-        <script th:src="@{/webjars/datatables-buttons/2.3.3/js/dataTables.buttons.min.js}"></script>
-        <script th:src="@{/webjars/datatables-buttons/2.3.3/js/buttons.bootstrap.min.js}"></script>
-        <script th:src="@{/webjars/datatables-buttons/2.3.3/js/buttons.html5.min.js}"></script>
+        <script th:src="@{/webjars/datatables/1.13.5/js/jquery.dataTables.min.js}"></script>
+        <script th:src="@{/webjars/datatables/1.13.5/js/dataTables.bootstrap.min.js}"></script>
+        <script th:src="@{/webjars/datatables-buttons/2.4.1/js/dataTables.buttons.min.js}"></script>
+        <script th:src="@{/webjars/datatables-buttons/2.4.1/js/buttons.bootstrap.min.js}"></script>
+        <script th:src="@{/webjars/datatables-buttons/2.4.1/js/buttons.html5.min.js}"></script>
         <script th:src="@{/webjars/datatables-responsive/2.2.7/js/dataTables.responsive.min.js}"></script>
         <script th:src="@{/webjars/datatables-responsive/2.2.7/js/responsive.bootstrap.min.js}"></script>
 
-        <script th:inline="javascript" type="text/javascript">
+        <script th:if="${subPage == 'main'}" th:inline="javascript" type="text/javascript">
             $(window).on('load', function () {
                 window.Shiny.common.init([[${contextPath}]], [[${application_name}]], [[${spInstance}]], [[${pauseSupported}]]);
                 window.Shiny.admin.init();

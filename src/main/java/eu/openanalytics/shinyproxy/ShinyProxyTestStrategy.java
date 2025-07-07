@@ -1,7 +1,7 @@
-/**
+/*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -20,19 +20,25 @@
  */
 package eu.openanalytics.shinyproxy;
 
+import eu.openanalytics.containerproxy.backend.dispatcher.ProxyDispatcherService;
 import eu.openanalytics.containerproxy.backend.strategy.IProxyTestStrategy;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.service.StructuredLogger;
 import eu.openanalytics.containerproxy.util.Retrying;
+import org.apache.logging.log4j.util.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -43,10 +49,24 @@ import java.util.Objects;
 @Primary
 public class ShinyProxyTestStrategy implements IProxyTestStrategy {
 
-    private final StructuredLogger log = StructuredLogger.create(getClass());
+    private final StructuredLogger slog = StructuredLogger.create(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    private static final List<Integer> ALLOWED_RESPONSE_CODES = Arrays.asList(200, 301, 302, 303, 307, 308);
 
     @Inject
     private Environment environment;
+
+    @Inject
+    private ProxyDispatcherService proxyDispatcherService;
+
+    private int totalWaitMs;
+    private int requestTimeout;
+
+    @PostConstruct
+    public void init() {
+        totalWaitMs = Integer.parseInt(environment.getProperty("proxy.container-wait-time", "20000"));
+        requestTimeout = Integer.parseInt(environment.getProperty("proxy.container-wait-timeout", "5000"));
+    }
 
     @Override
     public boolean testProxy(Proxy proxy) {
@@ -55,46 +75,43 @@ public class ShinyProxyTestStrategy implements IProxyTestStrategy {
             return true;
         }
 
-        int totalWaitMs = Integer.parseInt(environment.getProperty("proxy.container-wait-time", "20000"));
-        int timeoutMs = Integer.parseInt(environment.getProperty("proxy.container-wait-timeout", "5000"));
-
         if (proxy.getTargets().isEmpty()) return false;
         URI targetURI = proxy.getTargets().get("");
 
         return Retrying.retry((currentAttempt, maxAttempts) -> {
-            try {
-                if (proxy.getStatus().isUnavailable()) {
-                    // proxy got stopped while loading -> no need to try to connect it since the container will already be deleted
-                    return true;
-                }
-                URL testURL = new URL(targetURI.toString() + "/");
-                HttpURLConnection connection = ((HttpURLConnection) testURL.openConnection());
-                if (currentAttempt <= 5) {
-                    // When the container has only just started (or when the k8s service has only just been created),
-                    // it could be that our traffic ends in a black hole, and we need to wait the full 5s seconds of
-                    // the timeout. Therefore, we first try a few attempts with a lower timeout. If the container is
-                    // fast, this will result in a faster startup. If the container is slow to startup, not time is waste.
-                    connection.setConnectTimeout(200);
-                    connection.setReadTimeout(200);
-                } else {
-                    connection.setConnectTimeout(timeoutMs);
-                    connection.setReadTimeout(timeoutMs);
-                }
-                connection.setInstanceFollowRedirects(false);
-                int responseCode = connection.getResponseCode();
-                if (Arrays.asList(200, 301, 302, 303, 307, 308).contains(responseCode)) {
-                    if (currentAttempt > 10) {
-                        log.info(proxy, "Container responsive");
-                    }
-                    return true;
-                }
-            } catch (Exception e) {
-                if (currentAttempt > 10) {
-                    log.warn(proxy, String.format("Container unresponsive, trying again (%d/%d): %s", currentAttempt, maxAttempts, targetURI));
+            if (proxy.getStatus().isUnavailable()) {
+                // proxy got stopped while loading -> no need to try to connect it since the container will already be deleted
+                return new Retrying.Result(false, false);
+            }
+            if (currentAttempt > 5) {
+                if (!proxyDispatcherService.getDispatcher(proxy.getSpecId()).isProxyHealthy(proxy)) {
+                    return new Retrying.Result(false, false);
                 }
             }
-            return false;
-        }, totalWaitMs);
+            URL testURL = new URI(targetURI.toString() + "/").toURL();
+            HttpURLConnection connection = ((HttpURLConnection) testURL.openConnection());
+            if (currentAttempt <= 5) {
+                // When the container has only just started (or when the k8s service has only just been created),
+                // it could be that our traffic ends in a black hole, and we need to wait the full 5s seconds of
+                // the timeout. Therefore, we first try a few attempts with a lower timeout. If the container is
+                // fast, this will result in a faster startup. If the container is slow to startup, not time is wasted.
+                connection.setConnectTimeout(200);
+                connection.setReadTimeout(200);
+            } else {
+                connection.setConnectTimeout(requestTimeout);
+                connection.setReadTimeout(requestTimeout);
+            }
+            connection.setInstanceFollowRedirects(false);
+            int responseCode = connection.getResponseCode();
+            if (ALLOWED_RESPONSE_CODES.contains(responseCode)) {
+                return Retrying.SUCCESS;
+            } else {
+                if (currentAttempt > 10) {
+                    logger.warn("Received invalid status code '{}' while checking reachability of application at {}, expected one of '{}'", responseCode, targetURI, ALLOWED_RESPONSE_CODES);
+                }
+            }
+            return Retrying.FAILURE;
+        }, totalWaitMs, "Checking application reachable at " + targetURI, 10, proxy, slog);
     }
 
 }

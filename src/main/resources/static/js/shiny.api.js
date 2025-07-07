@@ -1,7 +1,7 @@
 /*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -174,6 +174,14 @@ Shiny.api = {
     },
     getHeartBeatInfo: async function (proxyId) {
         const resp = await fetch(Shiny.api.buildURL("heartbeat/" + proxyId))
+        const json = await Shiny.api._getResponseJson(resp);
+        if (json === null) {
+            return null;
+        }
+        return json.data;
+    },
+    getCustomAppDetails: async function (proxyId) {
+        const resp = await fetch(Shiny.api.buildURL("api/proxy/" + proxyId + "/details"))
         const json = await Shiny.api._getResponseJson(resp);
         if (json === null) {
             return null;

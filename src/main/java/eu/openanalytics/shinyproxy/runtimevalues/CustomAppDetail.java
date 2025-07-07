@@ -20,32 +20,24 @@
  */
 package eu.openanalytics.shinyproxy.runtimevalues;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
+@Data
+@Setter
+@Getter
+@Builder(toBuilder = true)
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // force Spring to not use constructor
+@NoArgsConstructor(force = true, access = AccessLevel.PRIVATE) // Jackson deserialize compatibility
+public class CustomAppDetail {
 
-public class TrackAppUrl extends RuntimeValueKey<Boolean> {
+    String name;
+    String description;
+    String value;
 
-    public static final TrackAppUrl inst = new TrackAppUrl();
-
-    public TrackAppUrl() {
-        super("openanalytics.eu/sp-track-app-url",
-            "SHINYPROXY_TRACK_APP_URL",
-            false,
-            true,
-            false,
-            true,
-            true,
-            false,
-            Boolean.class);
-    }
-
-    @Override
-    public Boolean deserializeFromString(String value) {
-        return Boolean.valueOf(value);
-    }
-
-    @Override
-    public String serializeToString(Boolean value) {
-        return value.toString();
-    }
 }

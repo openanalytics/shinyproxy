@@ -1,0 +1,62 @@
+pipeline {
+
+    agent {
+        kubernetes {
+            inheritFrom "default"
+            yamlFile 'kubernetesPod.yaml'
+            yamlMergeStrategy merge()
+        }
+    }
+
+    parameters {
+        booleanParam(name: 'SkipTests', defaultValue: false)
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '3'))
+    }
+
+    stages {
+        stage('prepare') {
+            steps {
+                container('docker') {
+                    sh 'docker pull openanalytics/shinyproxy-integration-test-app'
+                }
+            }
+        }
+
+        stage('build'){
+            steps {
+                container('shinyproxy-build') {
+                     configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+                         sh 'mvn -Dmaven.repo.local=/tmp/m2 -B -s $MAVEN_SETTINGS_RSB -U clean package -DskipTests'
+                     }
+                }
+            }
+        }
+
+        stage('test'){
+            when {
+                equals expected: false, actual: params.SkipTests
+            }
+
+            steps {
+                container('shinyproxy-build') {
+                    configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+                        sh 'mvn -Dmaven.repo.local=/tmp/m2 -B -s $MAVEN_SETTINGS_RSB test'
+                    }
+                }
+            }
+        }
+
+        stage('deploy to Nexus'){
+            steps {
+                container('shinyproxy-build') {
+                    configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+                        sh 'mvn -Dmaven.repo.local=/tmp/m2 -B -s $MAVEN_SETTINGS_RSB deploy -DskipTests'
+                    }
+                }
+            }
+        }
+    }
+}

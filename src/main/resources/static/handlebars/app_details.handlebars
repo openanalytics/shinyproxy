@@ -152,4 +152,21 @@
             </tr>
         {{/each}}
     {{/if}}
+    {{#if customAppDetails}}
+        {{#each customAppDetails}}
+            <tr>
+                <td>
+                    <b>{{ name }}</b>
+                    {{#if description}}
+                        <span class="help-block">
+                            {{{ description }}}
+                        </span>
+                    {{/if}}
+                </td>
+                <td>
+                    {{ value }}
+                </td>
+            </tr>
+        {{/each}}
+    {{/if}}
 </table>

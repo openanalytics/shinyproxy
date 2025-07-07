@@ -18,34 +18,17 @@
  * You should have received a copy of the Apache License
  * along with this program.  If not, see <http://www.apache.org/licenses/>
  */
-package eu.openanalytics.shinyproxy.runtimevalues;
+package eu.openanalytics.shinyproxy.controllers.dto;
 
+import eu.openanalytics.shinyproxy.runtimevalues.CustomAppDetail;
 
-import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
+import java.util.List;
 
-public class TrackAppUrl extends RuntimeValueKey<Boolean> {
+public class SwaggerDto {
 
-    public static final TrackAppUrl inst = new TrackAppUrl();
-
-    public TrackAppUrl() {
-        super("openanalytics.eu/sp-track-app-url",
-            "SHINYPROXY_TRACK_APP_URL",
-            false,
-            true,
-            false,
-            true,
-            true,
-            false,
-            Boolean.class);
+    public static class CustomAppDetailsResponse {
+        public String status = "success";
+        public List<CustomAppDetail> data;
     }
 
-    @Override
-    public Boolean deserializeFromString(String value) {
-        return Boolean.valueOf(value);
-    }
-
-    @Override
-    public String serializeToString(Boolean value) {
-        return value.toString();
-    }
 }

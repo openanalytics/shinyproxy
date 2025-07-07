@@ -1,7 +1,7 @@
-/**
+/*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -31,10 +31,13 @@ import eu.openanalytics.containerproxy.service.ProxyService;
 import eu.openanalytics.containerproxy.service.UserAndTargetIdProxyIndex;
 import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.containerproxy.service.hearbeat.HeartbeatService;
+import eu.openanalytics.containerproxy.spec.expression.SpecExpressionContext;
+import eu.openanalytics.containerproxy.spec.expression.SpecExpressionResolver;
 import eu.openanalytics.containerproxy.util.ContextPathHelper;
+import eu.openanalytics.containerproxy.util.EnvironmentUtils;
 import eu.openanalytics.shinyproxy.AppRequestInfo;
-import eu.openanalytics.shinyproxy.ShinyProxySpecExtension;
 import eu.openanalytics.shinyproxy.ShinyProxySpecProvider;
+import eu.openanalytics.shinyproxy.Thymeleaf;
 import eu.openanalytics.shinyproxy.UserAndAppNameAndInstanceNameProxyIndex;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -51,28 +54,31 @@ import org.springframework.ui.ModelMap;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import org.springframework.web.servlet.view.RedirectView;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLConnection;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public abstract class BaseController {
 
     private static final Logger logger = LogManager.getLogger(BaseController.class);
-    private static final Cache<String, LogoInfo> logoInfCache = Caffeine.newBuilder().build();
+    private static final Cache<String, Optional<LogoInfo>> logoInfoCache = Caffeine.newBuilder().build();
     protected String applicationName;
     protected String title;
+    private Boolean titleContainsExpression;
+    private Boolean logoContainsExpression;
     protected String logo;
+    private final Cache<String, Optional<String>> logoCache = Caffeine.newBuilder().build();
     protected long heartbeatRate;
     protected boolean defaultShowNavbar;
     protected String defaultSupportAddress;
@@ -81,6 +87,7 @@ public abstract class BaseController {
     protected String defaultLogoHeight;
     protected String defaultLogoStyle;
     protected String defaultLogoClasses;
+    protected String bodyClasses;
     @Inject
     protected ShinyProxySpecProvider shinyProxySpecProvider;
     @Inject
@@ -104,21 +111,33 @@ public abstract class BaseController {
     protected Boolean allowTransferApp;
     @Inject
     private IContainerBackend backend;
+    @Inject
+    private Thymeleaf thymeleaf;
+    @Inject
+    protected SpecExpressionResolver expressionResolver;
 
     @PostConstruct
     public void baseInit() {
-        defaultLogo = resolveImageURI(environment.getProperty("proxy.default-app-logo-url"));
+        defaultLogo = resolveImageURI(environment.getProperty("proxy.default-app-logo-url")).orElse(null);
         defaultLogoWidth = environment.getProperty("proxy.default-app-logo-width");
         defaultLogoHeight = environment.getProperty("proxy.default-app-logo-height");
         defaultLogoStyle = environment.getProperty("proxy.default-app-logo-style");
         defaultLogoClasses = environment.getProperty("proxy.default-app-logo-classes");
-        logo = resolveImageURI(environment.getProperty("proxy.logo-url"));
+        logo = environment.getProperty("proxy.logo-url", "");
+        logoContainsExpression = logo.contains("#{");
         applicationName = environment.getProperty("spring.application.name");
         title = environment.getProperty("proxy.title", "ShinyProxy");
+        titleContainsExpression = title.contains("#{");
         heartbeatRate = heartbeatService.getHeartbeatRate();
         defaultShowNavbar = !Boolean.parseBoolean(environment.getProperty("proxy.hide-navbar"));
         defaultSupportAddress = environment.getProperty("proxy.support.mail-to-address");
         allowTransferApp = environment.getProperty("proxy.allow-transfer-app", Boolean.class, false);
+        List<String> bodyClassesList = EnvironmentUtils.readList(environment, "proxy.body-classes");
+        if (bodyClassesList != null && !bodyClassesList.isEmpty()) {
+            bodyClasses = String.join(" ", bodyClassesList);
+        } else {
+            bodyClasses = "";
+        }
     }
 
     protected Proxy findUserProxy(AppRequestInfo appRequestInfo) {
@@ -130,9 +149,14 @@ public abstract class BaseController {
     }
 
     protected void prepareMap(ModelMap map, HttpServletRequest request) {
+        prepareMap(map, request, null, null);
+    }
+
+    protected void prepareMap(ModelMap map, HttpServletRequest request, ProxySpec proxySpec, Proxy proxy) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String serverName = request.getServerName();
+        addTitleAndLogo(authentication, proxySpec, proxy, serverName, map);
         map.put("application_name", applicationName); // name of ShinyProxy, ContainerProxy etc
-        map.put("title", title);
-        map.put("logo", logo);
 
         String hideNavBarParam = request.getParameter("sp_hide_navbar");
         if (Objects.equals(hideNavBarParam, "true")) {
@@ -141,12 +165,11 @@ public abstract class BaseController {
             map.put("showNavbar", defaultShowNavbar);
         }
 
-        map.put("bootstrapCss", "/webjars/bootstrap/3.4.1/css/bootstrap.min.css");
-        map.put("bootstrapJs", "/webjars/bootstrap/3.4.1/js/bootstrap.min.js");
+        map.put("bootstrapCss", "/css/bootstrap.css");
+        map.put("bootstrapJs", "/js/bootstrap.js");
         map.put("jqueryJs", "/webjars/jquery/3.7.1/jquery.min.js");
         map.put("handlebars", "/webjars/handlebars/4.7.7/handlebars.runtime.min.js");
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         boolean isLoggedIn = authentication != null && !(authentication instanceof AnonymousAuthenticationToken) && authentication.isAuthenticated();
         map.put("isLoggedIn", isLoggedIn);
         map.put("isAdmin", userService.isAdmin(authentication));
@@ -161,35 +184,22 @@ public abstract class BaseController {
         map.put("spInstance", identifierService.instanceId);
         map.put("allowTransferApp", allowTransferApp);
         map.put("notificationMessage", environment.getProperty("proxy.notification-message"));
+        map.put("bodyClasses", bodyClasses);
 
         List<ProxySpec> apps = proxyService.getUserSpecs();
+        Thymeleaf.GroupedProxySpecs groupedApps = thymeleaf.groupApps(apps);
         map.put("apps", apps);
+        map.put("appIds", groupedApps.getIds());
+        map.put("templateGroups", groupedApps.getTemplateGroups());
+        map.put("groupedApps", groupedApps.getGroupedApps());
+        map.put("ungroupedApps", groupedApps.getUngroupedApps());
 
         // app logos
         Map<ProxySpec, LogoInfo> appLogos = new HashMap<>();
-        for (ProxySpec app : apps) {
+        for (ProxySpec app : shinyProxySpecProvider.getSpecs()) {
             appLogos.put(app, getAppLogoInfo(app));
         }
         map.put("appLogos", appLogos);
-
-        // template groups
-        HashMap<String, ArrayList<ProxySpec>> groupedApps = new HashMap<>();
-        List<ProxySpec> ungroupedApps = new ArrayList<>();
-
-        for (ProxySpec app : apps) {
-            String groupId = app.getSpecExtension(ShinyProxySpecExtension.class).getTemplateGroup();
-            if (groupId != null) {
-                groupedApps.putIfAbsent(groupId, new ArrayList<>());
-                groupedApps.get(groupId).add(app);
-            } else {
-                ungroupedApps.add(app);
-            }
-        }
-
-        List<ShinyProxySpecProvider.TemplateGroup> templateGroups = shinyProxySpecProvider.getTemplateGroups().stream().filter((g) -> groupedApps.containsKey(g.getId())).toList();
-        map.put("templateGroups", templateGroups);
-        map.put("groupedApps", groupedApps);
-        map.put("ungroupedApps", ungroupedApps);
 
         ServletRequestAttributes servletRequestAttributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
         HttpServletRequest httpServletRequest = servletRequestAttributes.getRequest();
@@ -203,43 +213,44 @@ public abstract class BaseController {
     }
 
     protected LogoInfo getAppLogoInfo(ProxySpec proxySpec) {
-        return logoInfCache.get(proxySpec.getId(), (specId) -> {
-            String src = coalesce(resolveImageURI(proxySpec.getLogoURL()), defaultLogo);
+        return logoInfoCache.get(proxySpec.getId(), (specId) -> {
+            String src = resolveImageURI(proxySpec.getLogoURL()).orElse(defaultLogo);
             if (src == null) {
-                return null;
+                return Optional.empty();
             }
 
-            return LogoInfo.builder()
+            return Optional.of(LogoInfo.builder()
                 .src(src)
                 .width(coalesce(proxySpec.getLogoWidth(), defaultLogoWidth))
                 .height(coalesce(proxySpec.getLogoHeight(), defaultLogoHeight))
                 .style(coalesce(proxySpec.getLogoStyle(), defaultLogoStyle))
                 .classes(coalesce(proxySpec.getLogoClasses(), defaultLogoClasses))
-                .build();
-        });
+                .build());
+        }).orElse(null);
     }
 
-    protected String resolveImageURI(String resourceURI) {
-        if (resourceURI == null || resourceURI.isEmpty()) {
-            return null;
+    protected Optional<String> resolveImageURI(String resourceURI) {
+        if (resourceURI == null || resourceURI.isBlank()) {
+            return Optional.empty();
         }
 
-        String resolvedValue = resourceURI;
         if (resourceURI.toLowerCase().startsWith("file://")) {
             String mimetype = URLConnection.guessContentTypeFromName(resourceURI);
             if (mimetype == null) {
-                logger.warn("Cannot determine mimetype for resource: " + resourceURI);
+                logger.warn("Cannot determine mimetype for resource: {}", resourceURI);
+                return Optional.empty();
             } else {
-                try (InputStream input = new URL(resourceURI).openConnection().getInputStream()) {
+                try (InputStream input = new URI(resourceURI).toURL().openConnection().getInputStream()) {
                     byte[] data = StreamUtils.copyToByteArray(input);
                     String encoded = Base64.getEncoder().encodeToString(data);
-                    resolvedValue = String.format("data:%s;base64,%s", mimetype, encoded);
-                } catch (IOException e) {
+                    return Optional.of(String.format("data:%s;base64,%s", mimetype, encoded));
+                } catch (IOException | URISyntaxException e) {
                     logger.warn("Failed to convert file URI to data URI: " + resourceURI, e);
+                    return Optional.empty();
                 }
             }
         }
-        return resolvedValue;
+        return Optional.of(resourceURI);
     }
 
     /**
@@ -269,6 +280,33 @@ public abstract class BaseController {
 
     private <T> T coalesce(T first, T second) {
         return first != null ? first : second;
+    }
+
+    private void addTitleAndLogo(Authentication user, ProxySpec proxySpec, Proxy proxy, String serverName, ModelMap map) {
+        if (!titleContainsExpression && !logoContainsExpression) {
+            map.put("title", title);
+            map.put("logo", getLogo(logo));
+            return;
+        }
+        SpecExpressionContext context = SpecExpressionContext.create(
+                proxy, proxySpec, user, user.getPrincipal(), user.getCredentials()
+            )
+            .serverName(serverName)
+            .build();
+        if (titleContainsExpression) {
+            map.put("title", expressionResolver.evaluateToString(title, context));
+        } else {
+            map.put("title", title);
+        }
+        if (logoContainsExpression) {
+            map.put("logo", getLogo(expressionResolver.evaluateToString(logo, context)));
+        } else {
+            map.put("logo", getLogo(logo));
+        }
+    }
+
+    private String getLogo(String logo) {
+        return logoCache.get(logo, this::resolveImageURI).orElse(null);
     }
 
     @Data

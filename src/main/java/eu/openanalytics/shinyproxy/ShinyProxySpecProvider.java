@@ -1,7 +1,7 @@
-/**
+/*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -39,6 +39,8 @@ import eu.openanalytics.containerproxy.spec.ISpecExtensionProvider;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionContext;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionResolver;
 import eu.openanalytics.containerproxy.spec.expression.SpelField;
+import eu.openanalytics.shinyproxy.runtimevalues.CustomAppDetails;
+import eu.openanalytics.shinyproxy.runtimevalues.CustomAppDetailsKey;
 import eu.openanalytics.shinyproxy.runtimevalues.ShinyForceFullReloadKey;
 import eu.openanalytics.shinyproxy.runtimevalues.TrackAppUrl;
 import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
@@ -163,6 +165,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
             trackAppUrl = environment.getProperty("proxy.default-track-app-url", Boolean.class, false);
         }
         runtimeValues.add(new RuntimeValue(TrackAppUrl.inst, trackAppUrl));
+        runtimeValues.add(new RuntimeValue(CustomAppDetailsKey.inst, new CustomAppDetails(proxy.getSpecExtension(ShinyProxySpecExtension.class).getCustomAppDetails())));
 
         return runtimeValues;
     }
@@ -178,7 +181,7 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
             SpecExpressionContext context = SpecExpressionContext.create(
                 user,
                 user.getPrincipal(),
-                user.getCredentials());
+                user.getCredentials()).build();
 
             Map<String, Integer> result = new HashMap<>();
 
@@ -462,6 +465,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
             accessControl.setExpression(accessExpression);
         }
 
+        public String getAccessStrictExpression() {
+            return accessControl.getStrictExpression();
+        }
+
+        public void setAccessStrictExpression(String accessStrictExpression) {
+            accessControl.setStrictExpression(accessStrictExpression);
+        }
+
         public List<DockerSwarmSecret> getDockerSwarmSecrets() {
             return containerSpec.build().getDockerSwarmSecrets();
         }
@@ -604,6 +615,14 @@ public class ShinyProxySpecProvider implements IProxySpecProvider {
 
         public SpelField.String getDockerIpc() {
             return containerSpec.build().getDockerIpc();
+        }
+
+        public void setDockerGroupAdd(List<String> dockerGroupAdd) {
+            containerSpec.dockerGroupAdd(new SpelField.StringList(dockerGroupAdd));
+        }
+
+        public SpelField.StringList getDockerGroupAdd() {
+            return containerSpec.build().getDockerGroupAdd();
         }
 
         public ProxySpec getProxySpec() {

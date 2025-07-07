@@ -1,7 +1,7 @@
-/**
+/*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -22,6 +22,7 @@ package eu.openanalytics.shinyproxy;
 
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.store.IProxyStore;
+import eu.openanalytics.containerproxy.service.AccessControlEvaluationService;
 import eu.openanalytics.containerproxy.service.ProxyIdIndex;
 import eu.openanalytics.shinyproxy.runtimevalues.AppInstanceKey;
 import org.springframework.stereotype.Component;
@@ -31,8 +32,8 @@ import java.util.Objects;
 @Component
 public class UserAndAppNameAndInstanceNameProxyIndex extends ProxyIdIndex<UserAndAppNameAndInstanceNameProxyIndex.UserAndAppNameAndInstanceNameKey> {
 
-    public UserAndAppNameAndInstanceNameProxyIndex(IProxyStore proxyStore) {
-        super(proxyStore, (key, proxy) ->
+    public UserAndAppNameAndInstanceNameProxyIndex(IProxyStore proxyStore, AccessControlEvaluationService accessControlEvaluationService) {
+        super(proxyStore, accessControlEvaluationService, (key, proxy) ->
             Objects.equals(proxy.getSpecId(), key.appName)
                 && Objects.equals(proxy.getUserId(), key.userId)
                 && Objects.equals(proxy.getRuntimeObjectOrNull(AppInstanceKey.inst), key.instanceName));

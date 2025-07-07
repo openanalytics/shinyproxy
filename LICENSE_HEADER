@@ -1,6 +1,6 @@
-ShinyProxy
+${project.name}
 
-Copyright (C) 2016-2024 Open Analytics
+Copyright (C) ${project.inceptionYear}-${year} Open Analytics
 
 ===========================================================================
 

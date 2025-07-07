@@ -1,7 +1,7 @@
-/**
+/*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -86,11 +86,11 @@ public class IndexController extends BaseController {
 
         // If set to `FirstApp`, redirect to the first app available to the logged-in user
         if (!apps.isEmpty() && landingPage.equals(PROXY_LANDING_PAGE_FIRST_APP_OPTION)) {
-            return new RedirectView("/app/" + apps.get(0).getId(), true);
+            return new RedirectView("/app/" + apps.getFirst().getId(), true);
         }
         // If set to `SingleApp` and only one app is available to the logged-in user, redirect to it
         if (apps.size() == 1 && landingPage.equals(PROXY_LANDING_PAGE_SINGLE_APP_OPTION)) {
-            return new RedirectView("/app/" + apps.get(0).getId(), true);
+            return new RedirectView("/app/" + apps.getFirst().getId(), true);
         }
 
         prepareMap(map, request);

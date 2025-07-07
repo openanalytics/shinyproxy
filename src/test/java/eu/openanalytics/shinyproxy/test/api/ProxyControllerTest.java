@@ -1,7 +1,7 @@
-/**
+/*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -24,13 +24,13 @@ import eu.openanalytics.containerproxy.api.ProxyController;
 import eu.openanalytics.containerproxy.test.helpers.ShinyProxyInstance;
 import eu.openanalytics.shinyproxy.test.helpers.ApiTestHelper;
 import eu.openanalytics.shinyproxy.test.helpers.Response;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonObject;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import javax.json.JsonArray;
-import javax.json.JsonObject;
 import java.util.List;
 
 /**

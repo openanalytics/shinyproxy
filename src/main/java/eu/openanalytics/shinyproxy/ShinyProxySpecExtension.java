@@ -1,7 +1,7 @@
-/**
+/*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -24,6 +24,7 @@ import eu.openanalytics.containerproxy.model.spec.AbstractSpecExtension;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionContext;
 import eu.openanalytics.containerproxy.spec.expression.SpecExpressionResolver;
 import eu.openanalytics.containerproxy.spec.expression.SpelField;
+import eu.openanalytics.shinyproxy.runtimevalues.CustomAppDetail;
 import eu.openanalytics.shinyproxy.runtimevalues.WebsocketReconnectionMode;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -34,7 +35,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @EqualsAndHashCode(callSuper = true)
@@ -65,6 +68,8 @@ public class ShinyProxySpecExtension extends AbstractSpecExtension {
 
     String supportMailToAddress;
     String supportMailSubject;
+
+    List<CustomAppDetail> customAppDetails = new ArrayList<>();
 
     @Override
     public ShinyProxySpecExtension firstResolve(SpecExpressionResolver resolver, SpecExpressionContext context) {

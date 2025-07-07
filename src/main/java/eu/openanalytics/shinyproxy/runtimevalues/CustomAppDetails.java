@@ -20,32 +20,16 @@
  */
 package eu.openanalytics.shinyproxy.runtimevalues;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 
-import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValueKey;
+import java.util.ArrayList;
+import java.util.List;
 
-public class TrackAppUrl extends RuntimeValueKey<Boolean> {
+public class CustomAppDetails extends ArrayList<CustomAppDetail> {
 
-    public static final TrackAppUrl inst = new TrackAppUrl();
-
-    public TrackAppUrl() {
-        super("openanalytics.eu/sp-track-app-url",
-            "SHINYPROXY_TRACK_APP_URL",
-            false,
-            true,
-            false,
-            true,
-            true,
-            false,
-            Boolean.class);
+    @JsonCreator
+    public CustomAppDetails(List<CustomAppDetail> list) {
+        super(list);
     }
 
-    @Override
-    public Boolean deserializeFromString(String value) {
-        return Boolean.valueOf(value);
-    }
-
-    @Override
-    public String serializeToString(Boolean value) {
-        return value.toString();
-    }
 }

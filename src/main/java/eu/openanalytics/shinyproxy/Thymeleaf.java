@@ -1,7 +1,7 @@
-/**
+/*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -21,18 +21,26 @@
 package eu.openanalytics.shinyproxy;
 
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
+import eu.openanalytics.containerproxy.service.UserService;
 import eu.openanalytics.shinyproxy.external.ExternalAppSpecExtension;
+import lombok.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 @Component
 public class Thymeleaf {
 
     @Inject
     private ShinyProxySpecProvider shinyProxySpecProvider;
+
+    @Inject
+    private UserService userService;
 
     public String getAppUrl(ProxySpec proxySpec) {
         String externalUrl = proxySpec.getSpecExtension(ExternalAppSpecExtension.class).getExternalUrl();
@@ -67,6 +75,63 @@ public class Thymeleaf {
             return res;
         }
         return defaultValue;
+    }
+
+    /**
+     * Gets all apps.
+     */
+    public List<ProxySpec> getAllApps() {
+        return shinyProxySpecProvider.getSpecs();
+    }
+
+    /**
+     * Gets all apps the user does not have access to.
+     */
+    public List<ProxySpec> getAllUnauthorizedApps() {
+        return shinyProxySpecProvider.getSpecs().stream()
+            .filter(spec -> !userService.canAccess(spec))
+            .toList();
+    }
+
+
+    /**
+     * Groups the given list of apps according to the template groups.
+     * The result only contains a template group if that group contains at least one app.
+     */
+    public GroupedProxySpecs groupApps(List<ProxySpec> apps) {
+        HashMap<String, ArrayList<ProxySpec>> groupedApps = new HashMap<>();
+        List<ProxySpec> ungroupedApps = new ArrayList<>();
+
+        for (ProxySpec app : apps) {
+            String groupId = app.getSpecExtension(ShinyProxySpecExtension.class).getTemplateGroup();
+            if (groupId != null) {
+                groupedApps.putIfAbsent(groupId, new ArrayList<>());
+                groupedApps.get(groupId).add(app);
+            } else {
+                ungroupedApps.add(app);
+            }
+        }
+
+        List<ShinyProxySpecProvider.TemplateGroup> templateGroups = shinyProxySpecProvider.getTemplateGroups().stream().filter((g) -> groupedApps.containsKey(g.getId())).toList();
+        return new GroupedProxySpecs(
+            apps.stream().map(ProxySpec::getId).toList(),
+            apps,
+            templateGroups,
+            groupedApps,
+            ungroupedApps
+        );
+    }
+
+
+    @Value
+    public static class GroupedProxySpecs {
+
+        List<String> ids;
+        List<ProxySpec> apps;
+        List<ShinyProxySpecProvider.TemplateGroup> templateGroups;
+        HashMap<String, ArrayList<ProxySpec>> groupedApps;
+        List<ProxySpec> ungroupedApps;
+
     }
 
 }

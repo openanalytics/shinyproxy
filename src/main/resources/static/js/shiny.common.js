@@ -1,7 +1,7 @@
 /*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -88,6 +88,7 @@ Shiny.common = {
         async function refresh() {
             const proxy = await Shiny.api.getProxyByIdFromCache(proxyId);
             const heartbeatInfo = await Shiny.api.getHeartBeatInfo(proxyId);
+            const customAppDetails = await Shiny.api.getCustomAppDetails(proxyId);
             if (proxy === null || proxy.status === "Stopped" || proxy.status === "Stopping") {
                 const templateData = {
                     appName: appName,
@@ -149,7 +150,8 @@ Shiny.common = {
                 parameters: parameters,
                 isInUse: isInUse,
                 heartbeatTimeoutRemaining: heartbeatTimeoutRemaining,
-                maxLifetimeRemaining: maxLifetimeRemaining
+                maxLifetimeRemaining: maxLifetimeRemaining,
+                customAppDetails: customAppDetails
             }
             document.getElementById('appDetails').innerHTML = Handlebars.templates.app_details(templateData);
         }

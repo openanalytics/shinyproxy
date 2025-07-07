@@ -5,8 +5,9 @@
 
     <groupId>eu.openanalytics</groupId>
     <artifactId>shinyproxy</artifactId>
-    <version>3.1.1</version>
+    <version>3.2.0</version>
     <packaging>jar</packaging>
+    <inceptionYear>2016</inceptionYear>
 
     <name>ShinyProxy</name>
     <description>deploy Shiny apps in an enterprise context</description>
@@ -19,18 +20,26 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.6</version>
+        <version>3.4.5</version>
         <relativePath/>
     </parent>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>17</java.version>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <containerproxy.version>1.1.1</containerproxy.version>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <resource.delimiter>&amp;</resource.delimiter>
-        <spring-boot.version>3.2.6</spring-boot.version>
+        <!-- Dependency versions -->
+        <containerproxy.version>1.2.0</containerproxy.version>
+        <spring-boot.version>3.4.5</spring-boot.version>
+        <datatables.version>1.13.5</datatables.version>
+        <datatables-buttons.version>2.4.1</datatables-buttons.version>
+        <datatables-responsive.version>2.2.7</datatables-responsive.version>
+        <handlebars.version>4.7.7</handlebars.version>
+        <!-- Plugin versions -->
+        <maven.license-plugin.version>4.6</maven.license-plugin.version>
+        <maven.build-helper-maven.plugin.version>3.6.0</maven.build-helper-maven.plugin.version>
     </properties>
 
     <distributionManagement>
@@ -91,22 +100,22 @@
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>datatables</artifactId>
-            <version>1.13.2</version>
+            <version>${datatables.version}</version>
         </dependency>
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>datatables-buttons</artifactId>
-            <version>2.3.3</version>
+            <version>${datatables-buttons.version}</version>
         </dependency>
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>datatables-responsive</artifactId>
-            <version>2.2.7</version>
+            <version>${datatables-responsive.version}</version>
         </dependency>
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>handlebars</artifactId>
-            <version>4.7.7</version>
+            <version>${handlebars.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -197,31 +206,10 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>com.mycila.maven-license-plugin</groupId>
-                <artifactId>maven-license-plugin</artifactId>
-                <version>1.9.0</version>
-                <configuration>
-                    <header>LICENSE_HEADER</header>
-                    <aggregate>true</aggregate>
-                    <strictCheck>true</strictCheck>
-                    <excludes>
-                        <exclude>*.log</exclude>
-                        <exclude>mvnw.cmd</exclude>
-                        <exclude>mvnw</exclude>
-                        <exclude>**/*.properties</exclude>
-                        <exclude>**/*.yml</exclude>
-                        <exclude>**/*.xml</exclude>
-                        <exclude>LICENSE</exclude>
-                        <exclude>LICENSE_HEADER</exclude>
-                        <exclude>Dockerfile</exclude>
-                        <exclude>README.md</exclude>
-                        <exclude>**/*.json</exclude>
-                        <exclude>.gitignore</exclude>
-                        <exclude>src/deb/**</exclude>
-                        <exclude>templates/**</exclude>
-                        <exclude>src/main/resources/static/handlebars/node_modules/**</exclude>
-                    </excludes>
-                </configuration>
+                <groupId>com.mycila</groupId>
+                <artifactId>license-maven-plugin</artifactId>
+                <version>${maven.license-plugin.version}</version>
+
                 <executions>
                     <execution>
                         <id>check-copyright-headers</id>
@@ -229,6 +217,62 @@
                         <goals>
                             <goal>check</goal>
                         </goals>
+                    </execution>
+                </executions>
+
+                <configuration>
+                    <licenseSets>
+                        <licenseSet>
+                            <header>LICENSE_HEADER</header>
+                            <excludes>
+                                <exclude>**/*.bak</exclude>
+                                <exclude>**/*.conf</exclude>
+                                <exclude>**/*.json</exclude>
+                                <exclude>**/*.pem</exclude>
+                                <exclude>**/*.properties</exclude>
+                                <exclude>**/*.raml</exclude>
+                                <exclude>**/*.sh</exclude>
+                                <exclude>**/*.txt</exclude>
+                                <exclude>**/*.xml</exclude>
+                                <exclude>**/*.yaml</exclude>
+                                <exclude>**/*.yml</exclude>
+                                <exclude>**/*.handlebars</exclude>
+                                <exclude>**/Dockerfile</exclude>
+                                <exclude>.editorconfig</exclude>
+                                <exclude>.gitignore</exclude>
+                                <exclude>JenkinsfileSCM</exclude>
+                                <exclude>LICENSE</exclude>
+                                <exclude>LICENSE_HEADER</exclude>
+                                <exclude>README.md</exclude>
+                                <exclude>docs/**</exclude>
+                                <exclude>src/main/resources/configs/**</exclude>
+                                <exclude>src/test/resources/**</exclude>
+                            </excludes>
+                        </licenseSet>
+                    </licenseSets>
+                    <aggregate>true</aggregate>
+                    <strictCheck>true</strictCheck>
+                    <properties>
+                        <year>${current.year}</year>
+                    </properties>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>${maven.build-helper-maven.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>timestamp-property</id>
+                        <goals>
+                            <goal>timestamp-property</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <name>current.year</name>
+                            <pattern>yyyy</pattern>
+                            <locale>en-GB</locale>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

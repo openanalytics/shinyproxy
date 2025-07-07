@@ -1,7 +1,7 @@
-/**
+/*
  * ShinyProxy
  *
- * Copyright (C) 2016-2024 Open Analytics
+ * Copyright (C) 2016-2025 Open Analytics
  *
  * ===========================================================================
  *
@@ -33,6 +33,7 @@ import eu.openanalytics.containerproxy.model.runtime.ParameterValues;
 import eu.openanalytics.containerproxy.model.runtime.Proxy;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.DisplayNameKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.ParameterValuesKey;
+import eu.openanalytics.containerproxy.model.runtime.runtimevalues.PortMappingsKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.PublicPathKey;
 import eu.openanalytics.containerproxy.model.runtime.runtimevalues.RuntimeValue;
 import eu.openanalytics.containerproxy.model.spec.ProxySpec;
@@ -129,7 +130,7 @@ public class AppController extends BaseController {
             return new ModelAndView("forward:/error");
         }
 
-        Optional<RedirectView> redirect = createRedirectIfRequired(request, subPath, spec);
+        Optional<RedirectView> redirect = createRedirectIfRequired(request, subPath, spec, proxy);
         if (redirect.isPresent()) {
             return new ModelAndView(redirect.get());
         }
@@ -137,23 +138,24 @@ public class AppController extends BaseController {
         // if the proxy exists, the proxy object is non-null and the spec might be null (if the spec no longer exists or the user no longer has access to the spec)
         // if the proxy does not exists, the proxy object is null and the spec is non-null
 
-        prepareMap(map, request);
+        prepareMap(map, request, spec, proxy);
         map.put("heartbeatRate", heartbeatRate);
         map.put("page", "app");
         map.put("appName", appName);
         map.put("appInstance", appInstance);
-        map.put("appInstanceDisplayName", getAppInstanceDisplayName(appInstance));
         map.put("appPath", appPath);
         map.put("containerSubPath", buildContainerSubPath(request, subPath));
         map.put("refreshOpenidEnabled", authenticationBackend.getName().equals(OpenIDAuthenticationBackend.NAME));
         ParameterValues previousParameters = null;
         if (proxy == null || proxy.getRuntimeObjectOrNull(DisplayNameKey.inst) == null) {
-            if (spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) {
+            if (spec == null) {
+                // this should only happen if the spec is removed while ShinyProxy is starting this spec
+                map.put("appTitle", "ShinyProxy");
+            } else if (spec.getDisplayName() == null || spec.getDisplayName().isEmpty()) {
                 map.put("appTitle", spec.getId());
             } else {
                 map.put("appTitle", spec.getDisplayName());
             }
-            map.put("proxy", null);
         } else {
             map.put("appTitle", proxy.getRuntimeValue(DisplayNameKey.inst));
             previousParameters = proxy.getRuntimeObjectOrNull(ParameterValuesKey.inst);
@@ -440,13 +442,16 @@ public class AppController extends BaseController {
      *
      * @param request the current request
      * @param spec    the spec of the current app
+     * @param proxy
      * @return a RedirectView if a redirect is needed
      */
-    private Optional<RedirectView> createRedirectIfRequired(HttpServletRequest request, String subPath, ProxySpec spec) {
+    private Optional<RedirectView> createRedirectIfRequired(HttpServletRequest request, String subPath, ProxySpec spec, Proxy proxy) {
         // if it's an external app -> redirect
-        String externalUrl = spec.getSpecExtension(ExternalAppSpecExtension.class).getExternalUrl();
-        if (externalUrl != null) {
-            return Optional.of(new RedirectView(externalUrl));
+        if (spec != null) {
+            String externalUrl = spec.getSpecExtension(ExternalAppSpecExtension.class).getExternalUrl();
+            if (externalUrl != null) {
+                return Optional.of(new RedirectView(externalUrl));
+            }
         }
 
         // if sub-path is empty or it's a slash -> no redirect required
@@ -469,10 +474,19 @@ public class AppController extends BaseController {
         // the provided subpath does not contain a slash (i.e. it's a single "directory" name)
         // -> we have to check whether the provided subpath is a configured mapping (and thus point to a specific port on the app)
         // or whether it's just a subpath
-        boolean isMappingWithoutSlash = spec.getContainerSpecs().get(0)
-            .getPortMapping()
-            .stream()
-            .anyMatch(it -> it.getName().equals(trimmedSubPath));
+        boolean isMappingWithoutSlash;
+        if (proxy != null) {
+            isMappingWithoutSlash = proxy.getContainer(0).getRuntimeObject(PortMappingsKey.inst).getPortMappings()
+                .stream()
+                .anyMatch(it -> it.getName().equals(trimmedSubPath));
+        } else if (spec != null) {
+            isMappingWithoutSlash = spec.getContainerSpecs().getFirst()
+                .getPortMapping()
+                .stream()
+                .anyMatch(it -> it.getName().equals(trimmedSubPath));
+        } else {
+            isMappingWithoutSlash = false;
+        }
         if (isMappingWithoutSlash) {
             // the provided subpath is a configured mapping -> redirect so it ends with a slash
             String uri = ServletUriComponentsBuilder.fromRequest(request)
@@ -505,13 +519,6 @@ public class AppController extends BaseController {
      */
     private Object secureProxy(Proxy proxy) {
         return objectMapper.convertValue(proxy, Object.class);
-    }
-
-    private String getAppInstanceDisplayName(String appInstance) {
-        if (appInstance.equals("_")) {
-            return "Default";
-        }
-        return appInstance;
     }
 
     private static class AppBody {

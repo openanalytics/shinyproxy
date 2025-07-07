@@ -5,7 +5,7 @@
 
     <groupId>eu.openanalytics</groupId>
     <artifactId>shinyproxy</artifactId>
-    <version>3.2.0-SNAPSHOT</version>
+    <version>3.2.0</version>
     <packaging>jar</packaging>
     <inceptionYear>2016</inceptionYear>
 
@@ -31,7 +31,7 @@
         <maven.compiler.target>21</maven.compiler.target>
         <resource.delimiter>&amp;</resource.delimiter>
         <!-- Dependency versions -->
-        <containerproxy.version>1.2.0-SNAPSHOT</containerproxy.version>
+        <containerproxy.version>1.2.0</containerproxy.version>
         <spring-boot.version>3.4.5</spring-boot.version>
         <datatables.version>1.13.5</datatables.version>
         <datatables-buttons.version>2.4.1</datatables-buttons.version>

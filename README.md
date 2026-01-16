@@ -16,7 +16,7 @@ Open Source Enterprise Deployment for Data Science Apps
 
 Learn more at <https://shinyproxy.io>
 
-**(c) Copyright Open Analytics NV, 2016-2025 - Apache License 2.0**
+**(c) Copyright Open Analytics NV, 2016-2026 - Apache License 2.0**
 
 ## Docs
 

@@ -114,7 +114,7 @@ public class AppControllerTest {
     @Test
     public void testStartApp() throws InterruptedException {
         // start app
-        Response resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_/"));
+        Response resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_"));
         String id = apiTestHelper.validateProxyObject(resp.jsonSuccess().asJsonObject());
 
         for (int i = 0; i < 120; i++) {
@@ -153,7 +153,7 @@ public class AppControllerTest {
         Assertions.assertTrue(resp.body().contains("\"" + id + "\""));
 
         // try to start app again
-        resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_/"));
+        resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_"));
         resp.assertFail("You already have an instance of this app with the given name");
     }
 
@@ -193,7 +193,7 @@ public class AppControllerTest {
     @Test
     public void testProxy() {
         // start app
-        Response resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_/"));
+        Response resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_"));
         String id = apiTestHelper.validateProxyObject(resp.jsonSuccess().asJsonObject());
 
         inst.client.waitForProxyStatus(id);

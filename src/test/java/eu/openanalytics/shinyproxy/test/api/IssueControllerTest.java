@@ -77,7 +77,7 @@ public class IssueControllerTest {
 
     @Test
     public void testWithApp() {
-        Response resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_/"));
+        Response resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_"));
         String id = apiTestHelper.validateProxyObject(resp.jsonSuccess().asJsonObject());
         inst.client.waitForProxyStatus(id);
 

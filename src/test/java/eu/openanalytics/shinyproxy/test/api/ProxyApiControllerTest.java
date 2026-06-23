@@ -38,7 +38,7 @@ public class ProxyApiControllerTest {
         try (ShinyProxyInstance inst = new ShinyProxyInstance("application-test-api.yml")) {
             ApiTestHelper apiTestHelper = new ApiTestHelper(inst);
             // start app
-            Response resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_/"));
+            Response resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_"));
             String id = apiTestHelper.validateProxyObject(resp.jsonSuccess().asJsonObject());
             inst.client.waitForProxyStatus(id);
 
@@ -53,7 +53,7 @@ public class ProxyApiControllerTest {
         try (ShinyProxyInstance inst = new ShinyProxyInstance("application-test-api.yml", Map.of("proxy.allow-transfer-app", "true"))) {
             ApiTestHelper apiTestHelper = new ApiTestHelper(inst);
             // start app
-            Response resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_/"));
+            Response resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_"));
             String id = apiTestHelper.validateProxyObject(resp.jsonSuccess().asJsonObject());
             inst.client.waitForProxyStatus(id);
 
@@ -72,7 +72,7 @@ public class ProxyApiControllerTest {
             resp.assertForbidden();
 
             // start app
-            resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_/"));
+            resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_"));
             String id = apiTestHelper.validateProxyObject(resp.jsonSuccess().asJsonObject());
             inst.client.waitForProxyStatus(id);
 
@@ -100,7 +100,7 @@ public class ProxyApiControllerTest {
             resp.assertAuthenticationRequired();
 
             // start app
-            resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_/"));
+            resp = apiTestHelper.callWithAuth(apiTestHelper.createPostRequest("/app_i/01_hello/_"));
             String id = apiTestHelper.validateProxyObject(resp.jsonSuccess().asJsonObject());
             inst.client.waitForProxyStatus(id);
 

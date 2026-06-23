@@ -32,8 +32,8 @@ import eu.openanalytics.shinyproxy.runtimevalues.WebSocketReconnectionModeKey;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
+import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
 
 @Configuration
 @PropertySource("classpath:application.properties")

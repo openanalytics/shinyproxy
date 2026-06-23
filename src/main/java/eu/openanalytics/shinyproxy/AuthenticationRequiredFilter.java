@@ -33,8 +33,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.ClientAuthorizationRequiredException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.ThrowableAnalyzer;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.GenericFilterBean;
@@ -62,11 +62,11 @@ import java.io.IOException;
 public class AuthenticationRequiredFilter extends GenericFilterBean {
 
     private static final RequestMatcher REQUEST_MATCHER = new OrRequestMatcher(
-        new AntPathRequestMatcher("/app_proxy/**"),
-        new AntPathRequestMatcher("/heartbeat/*"),
-        new AntPathRequestMatcher("/api/**"),
-        new AntPathRequestMatcher("/admin/data"),
-        new AntPathRequestMatcher("/issue")
+        PathPatternRequestMatcher.pathPattern("/app_proxy/**"),
+        PathPatternRequestMatcher.pathPattern("/heartbeat/*"),
+        PathPatternRequestMatcher.pathPattern("/api/**"),
+        PathPatternRequestMatcher.pathPattern("/admin/data"),
+        PathPatternRequestMatcher.pathPattern("/issue")
     );
     private final ThrowableAnalyzer throwableAnalyzer = new DefaultThrowableAnalyzer();
 

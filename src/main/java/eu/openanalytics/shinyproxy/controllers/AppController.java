@@ -21,7 +21,6 @@
 package eu.openanalytics.shinyproxy.controllers;
 
 import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.openanalytics.containerproxy.ProxyStartValidationException;
 import eu.openanalytics.containerproxy.api.dto.ApiResponse;
 import eu.openanalytics.containerproxy.api.dto.SwaggerDto;
@@ -78,8 +77,11 @@ import org.thymeleaf.spring6.dialect.SpringStandardDialect;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.StringTemplateResolver;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
+import jakarta.annotation.PostConstruct;
+import jakarta.inject.Inject;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -93,7 +95,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 @Controller
 public class AppController extends BaseController {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = JsonMapper.builder().defaultSerializationView(Views.UserApi.class).build();
     private final HttpString acceptEncodingHeader = new HttpString("Accept-Encoding");
     @Inject
     private ProxyMappingManager mappingManager;
@@ -103,10 +105,6 @@ public class AppController extends BaseController {
     private ParametersService parameterService;
 
     private int pathPrefixLength = 0;
-
-    public AppController() {
-        objectMapper.setConfig(objectMapper.getSerializationConfig().withView(Views.UserApi.class));
-    }
 
     @PostConstruct
     public void init() {

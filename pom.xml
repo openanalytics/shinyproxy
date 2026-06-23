@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.14</version>
+        <version>4.1.0</version>
         <relativePath/>
     </parent>
 
@@ -31,18 +31,21 @@
         <maven.compiler.target>21</maven.compiler.target>
         <resource.delimiter>&amp;</resource.delimiter>
         <!-- Dependency versions -->
-        <containerproxy.version>1.2.4</containerproxy.version>
-        <spring-boot.version>3.5.14</spring-boot.version>
-        <datatables.version>1.13.5</datatables.version>
-        <datatables-buttons.version>2.4.1</datatables-buttons.version>
-        <datatables-responsive.version>2.2.7</datatables-responsive.version>
+        <containerproxy.version>1.2.5</containerproxy.version>
+        <spring-boot.version>4.1.0</spring-boot.version>
+        <datatables.version>2.3.4</datatables.version>
+        <datatables-plugins.version>2.3.6</datatables-plugins.version>
+        <datatables-buttons.version>3.1.2</datatables-buttons.version>
+        <datatables-responsive.version>2.4.0</datatables-responsive.version>
         <handlebars.version>4.7.9</handlebars.version>
-        <sqlite-jdbc.version>3.50.3.0</sqlite-jdbc.version>
-        <commons-lang.version>3.18.0</commons-lang.version>
+        <sqlite-jdbc.version>3.53.2.0</sqlite-jdbc.version>
+        <commons-lang.version>3.20.0</commons-lang.version>
         <!-- Plugin versions -->
-        <maven.license-plugin.version>4.6</maven.license-plugin.version>
-        <maven.build-helper-maven.plugin.version>3.6.0</maven.build-helper-maven.plugin.version>
+        <maven.license-plugin.version>5.0.0</maven.license-plugin.version>
+        <maven.build-helper-maven.plugin.version>3.6.1</maven.build-helper-maven.plugin.version>
+        <maven.jar-plugin.version>3.4.2</maven.jar-plugin.version>
         <maven.dependency-check-plugin.version>12.1.7</maven.dependency-check-plugin.version>
+        <maven.versions-maven.plugin.version>2.21.0</maven.versions-maven.plugin.version>
     </properties>
 
     <distributionManagement>
@@ -160,7 +163,7 @@
         <dependency>
             <groupId>org.webjars</groupId>
             <artifactId>swagger-ui</artifactId>
-            <version>5.32.5</version>
+            <version>5.32.8</version>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -210,6 +213,7 @@
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -230,6 +234,7 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
@@ -282,6 +287,7 @@
                     </properties>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
@@ -301,6 +307,7 @@
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <groupId>net.nicoulaj.maven.plugins</groupId>
                 <artifactId>checksum-maven-plugin</artifactId>
@@ -332,6 +339,14 @@
                     </algorithms>
                     <attachChecksums>true</attachChecksums>
                     <csvSummary>false</csvSummary>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>${maven.versions-maven.plugin.version}</version>
+                <configuration>
                 </configuration>
             </plugin>
         </plugins>

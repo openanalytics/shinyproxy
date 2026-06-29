@@ -20,7 +20,6 @@
  */
 package eu.openanalytics.shinyproxy.runtimevalues;
 
-import eu.openanalytics.containerproxy.model.spec.ProxySpec;
 import eu.openanalytics.containerproxy.util.CleanHtml;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

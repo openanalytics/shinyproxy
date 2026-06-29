@@ -34,7 +34,6 @@ import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import jakarta.inject.Inject;

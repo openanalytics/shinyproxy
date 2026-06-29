@@ -277,6 +277,7 @@
                                 <exclude>docs/**</exclude>
                                 <exclude>src/main/resources/configs/**</exclude>
                                 <exclude>src/test/resources/**</exclude>
+                                <exclude>spring-boot-undertow/**</exclude>
                             </excludes>
                         </licenseSet>
                     </licenseSets>

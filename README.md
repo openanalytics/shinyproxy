@@ -43,7 +43,7 @@ The build will result in a single `.jar` file that is made available in the `tar
 ## Running the application
 
 ```
-java -jar shinyproxy-3.2.4.jar
+java -jar shinyproxy-3.2.5.jar
 ```
 
 Navigate to <http://localhost:8080> to access the application. To log in, use

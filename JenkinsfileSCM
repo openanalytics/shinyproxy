@@ -29,6 +29,9 @@ pipeline {
             steps {
                 container('shinyproxy-build') {
                      configFileProvider([configFile(fileId: 'maven-settings-rsb', variable: 'MAVEN_SETTINGS_RSB')]) {
+                         dir("spring-boot-undertow") {
+                             sh 'mvn -Dmaven.repo.local=/tmp/m2 -B -s $MAVEN_SETTINGS_RSB -U clean install'
+                         }
                          sh 'mvn -Dmaven.repo.local=/tmp/m2 -B -s $MAVEN_SETTINGS_RSB -U clean package -DskipTests'
                      }
                 }

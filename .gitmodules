@@ -1,0 +1,3 @@
+[submodule "spring-boot-undertow"]
+	path = spring-boot-undertow
+	url = https://github.com/jboss-fuse/spring-boot-undertow

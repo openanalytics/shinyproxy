@@ -33,7 +33,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 @SpringBootTest(classes = {ContainerProxyApplication.class})
 @ExtendWith(SpringExtension.class)
